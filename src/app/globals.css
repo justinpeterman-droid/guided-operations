@@ -216,6 +216,10 @@ a:focus-visible {
   text-underline-offset: 3px;
 }
 
+.preview-link + .preview-link {
+  margin-left: 18px;
+}
+
 .supporting-copy {
   margin: 12px 0 24px;
 }
@@ -549,6 +553,198 @@ a:focus-visible {
   color: var(--gow-navy-900);
 }
 
+.count-sheet-preview {
+  padding-block: 52px;
+}
+
+.count-sheet-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 20px;
+  max-width: 860px;
+}
+
+.count-sheet-heading h1 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  letter-spacing: -0.025em;
+}
+
+.count-sheet-heading p:last-child {
+  max-width: 670px;
+  margin: 14px 0 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
+
+.count-sheet-preview > .fictional-notice {
+  max-width: 860px;
+}
+
+.count-sheet-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.32fr);
+  gap: 24px;
+  margin-top: 28px;
+  align-items: start;
+}
+
+.count-sheet-table-wrap,
+.count-sheet-summary {
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-card);
+  box-shadow: var(--gow-shadow-card);
+}
+
+.count-sheet-table-wrap {
+  overflow-x: auto;
+}
+
+.count-sheet-table-wrap table {
+  width: 100%;
+  border-collapse: collapse;
+  color: var(--gow-navy-900);
+  font-size: 0.83rem;
+}
+
+.count-sheet-table-wrap caption {
+  padding: 18px 20px 12px;
+  color: var(--gow-muted);
+  caption-side: top;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.count-sheet-table-wrap th,
+.count-sheet-table-wrap td {
+  min-width: 92px;
+  padding: 10px;
+  border-top: 1px solid #dce5ec;
+  text-align: left;
+}
+
+.count-sheet-table-wrap thead th {
+  color: var(--gow-navy-950);
+  background: #edf4f8;
+  border-top: 0;
+  font-size: 0.75rem;
+}
+
+.count-sheet-table-wrap tbody th {
+  min-width: 148px;
+  font-size: 0.8rem;
+}
+
+.count-sheet-table-wrap input,
+.operational-inputs input {
+  width: 100%;
+  min-height: 38px;
+  padding: 0 10px;
+  color: var(--gow-ink);
+  background: #fff;
+  border: 1px solid #b9c9d5;
+  border-radius: 7px;
+}
+
+.count-total,
+.count-sheet-subtotal td,
+.count-sheet-total-row td,
+.count-sheet-total-row th {
+  font-weight: 800;
+}
+
+.count-sheet-subtotal {
+  background: #f4f8fb;
+}
+
+.count-sheet-total-row {
+  color: #f8fbfd;
+  background: var(--gow-navy-900);
+}
+
+.count-sheet-summary {
+  padding: 24px;
+}
+
+.count-sheet-summary dl {
+  display: grid;
+  gap: 10px;
+  margin: 18px 0;
+}
+
+.count-sheet-summary dl > div {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #dce5ec;
+}
+
+.count-sheet-summary dt {
+  color: var(--gow-muted);
+  font-size: 0.8rem;
+}
+
+.count-sheet-summary dd {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-size: 1.25rem;
+  font-weight: 800;
+}
+
+.count-status {
+  margin: 18px 0;
+  padding: 11px 12px;
+  border-left: 4px solid;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+
+.is-reconciled {
+  color: #155c41;
+  border-color: #2f916a;
+}
+
+.is-open {
+  color: #785115;
+  border-color: var(--gow-gold-500);
+}
+
+.operational-inputs {
+  display: grid;
+  gap: 12px;
+  padding-top: 20px;
+  border-top: 1px solid #dce5ec;
+}
+
+.operational-inputs h2 {
+  margin: 0 0 3px;
+  color: var(--gow-navy-950);
+  font-size: 0.94rem;
+}
+
+.operational-inputs label {
+  display: grid;
+  gap: 6px;
+  color: var(--gow-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.count-input-error {
+  margin: 16px 0 0;
+  color: #9e2f25;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
 @media (max-width: 860px) {
   .foundation-grid {
     grid-template-columns: 1fr;
@@ -557,6 +753,10 @@ a:focus-visible {
   }
 
   .report-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .count-sheet-grid {
     grid-template-columns: 1fr;
   }
 
@@ -599,6 +799,15 @@ a:focus-visible {
   .workflow-steps,
   .report-stage {
     padding: 24px;
+  }
+
+  .preview-link + .preview-link {
+    margin-left: 0;
+  }
+
+  .count-sheet-heading {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .workflow-steps ol,
