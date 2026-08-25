@@ -20,6 +20,9 @@
 /.next/
 /out/
 
+# repository-local tool runtimes
+/.tools/
+
 # production
 /build
 

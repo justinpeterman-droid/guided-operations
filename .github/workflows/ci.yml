@@ -44,5 +44,11 @@ jobs:
       - name: Run unit and component tests
         run: npm test
 
+      - name: Scan tracked files for secret patterns
+        run: npm run secrets:check
+
+      - name: Audit production dependencies
+        run: npm audit --omit=dev --audit-level=high
+
       - name: Build production application
         run: npm run build
