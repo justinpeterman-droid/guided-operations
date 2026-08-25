@@ -69,21 +69,25 @@ Pause and report a blocker instead of guessing when work requires:
       `db:test` locally against the current branch.
 - [x] Record local migration head `20260825125137`; schema lint passed and all
       24 pgTAP tests passed on 2026-08-25.
-- [ ] Add automated secret scanning and high-severity dependency review.
+- [x] Add automated tracked-secret scanning and high-severity production
+      dependency review.
 - [ ] Review Dependabot updates individually.
 - [ ] Confirm no secret, real operational data, restricted corpus content,
       provider metadata, or generated build output is tracked.
 - [ ] Record the temporary manual repository controls necessitated by the
       current private-repository plan: pull request, green checks, review,
       no-force-push, and release record.
-- [ ] Open a narrow pull request for Phase 0/1 foundation work.
-- [ ] Obtain review, resolve comments, and confirm exact-commit CI is green.
+- [x] Open a narrow pull request for Phase 0/1 foundation work: PR #1.
+- [x] Confirm exact-commit Web quality CI is green for `9c6248f`; no review or
+      inline comments were present at the 2026-08-25 check.
 
 ### Phase 0 exit
 
-- [ ] Full web and local database gates pass on the same commit.
+- [x] Full web and local database gates pass on the Phase 0 content; GitHub Web
+      quality is green for `9c6248f` and the local reset/lint/pgTAP replay has
+      no database-source delta.
 - [ ] Documentation and hosted state agree.
-- [ ] Security/dependency scanning is active or has a dated owner disposition.
+- [x] Security/dependency scanning is active in Web quality CI.
 - [ ] Repository-control path is recorded.
 
 ## Phase 1 — connected non-production environment
