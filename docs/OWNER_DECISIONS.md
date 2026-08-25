@@ -7,19 +7,22 @@ resource.
 
 ## Confirmed
 
-| ID    | Decision                                                                                                                                                     | Evidence date |
-| ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| O-001 | The replacement repository is named `guided-operations` and is private.                                                                                      | 2026-08-25    |
-| O-002 | The replacement is a web app only; the Microsoft Access client is out of scope.                                                                              | 2026-08-25    |
-| O-003 | The initial deployment serves one facility.                                                                                                                  | 2026-08-25    |
-| O-004 | The login experience should use employee number plus a personal PIN-like secret, or the safest practical equivalent. It must not use a shared facility code. | 2026-08-25    |
-| O-005 | Vercel and Supabase are the target hosting/data platforms. Google hosting is excluded.                                                                       | 2026-08-25    |
-| O-006 | OpenAI is acceptable as the initial AI provider; interfaces must permit another provider.                                                                    | 2026-08-25    |
-| O-007 | There is no real operational data. The existing RAG policy/reference content is the only real source material.                                               | 2026-08-25    |
-| O-008 | Prefer free plans where their terms and controls fit; do not weaken safety or readiness to remain free.                                                      | 2026-08-25    |
-| O-009 | Use a United States region; the exact paired regions are not yet approved.                                                                                   | 2026-08-25    |
-| O-010 | This is a personal, non-commercial hobby app for a small invited group of officers, not an official organization/facility system.                            | 2026-08-25    |
-| O-011 | Create a separate Supabase project named `guided-operations` in `justinpeterman-droid's Org`, in `us-east-1`, leaving the inactive project untouched.        | 2026-08-25    |
+| ID    | Decision                                                                                                                                                                | Evidence date |
+| ----- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| O-001 | The replacement repository is named `guided-operations` and is private.                                                                                                 | 2026-08-25    |
+| O-002 | The replacement is a web app only; the Microsoft Access client is out of scope.                                                                                         | 2026-08-25    |
+| O-003 | The initial deployment serves one facility.                                                                                                                             | 2026-08-25    |
+| O-004 | The login experience should use employee number plus a personal PIN-like secret, or the safest practical equivalent. It must not use a shared facility code.            | 2026-08-25    |
+| O-005 | Vercel and Supabase are the target hosting/data platforms. Google hosting is excluded.                                                                                  | 2026-08-25    |
+| O-006 | OpenAI is acceptable as the initial AI provider; interfaces must permit another provider.                                                                               | 2026-08-25    |
+| O-007 | There is no real operational data. The existing RAG policy/reference content is the only real source material.                                                          | 2026-08-25    |
+| O-008 | Prefer free plans where their terms and controls fit; do not weaken safety or readiness to remain free.                                                                 | 2026-08-25    |
+| O-009 | Use a United States region; the exact paired regions are not yet approved.                                                                                              | 2026-08-25    |
+| O-010 | This is a personal, non-commercial hobby app for a small invited group of officers, not an official organization/facility system.                                       | 2026-08-25    |
+| O-011 | Create a separate Supabase project named `guided-operations` in `justinpeterman-droid's Org`, in `us-east-1`, leaving the inactive project untouched.                   | 2026-08-25    |
+| O-012 | Officers and administrators use individual passcodes of at least eight characters. This is not a shared PIN or facility code.                                           | 2026-08-25    |
+| O-013 | Administrators use passcode-only access for the hobby foundation. MFA is deferred and must be reconsidered before any official or real-data use.                        | 2026-08-25    |
+| O-014 | The owner is the first/main administrator and is the only initial authority for additional-account creation, credential resets, unlocks, and temporary-secret delivery. | 2026-08-25    |
 
 ## Required before hosted development linkage
 
@@ -34,16 +37,17 @@ resource.
       continues to fit Vercel Hobby's personal/non-commercial terms and Supabase
       Free limits; otherwise approve the needed plan before deployment.
 
-## Required before authentication implementation
+## Authentication implementation constraints
 
-- [ ] **OQ-005 — Passcode policy:** approve the final secret format after the
-      Supabase alias-bridge spike. The current proposal is at least eight
-      alphanumeric characters with common-pattern and employee-number rejection.
-- [ ] **OQ-006 — Admin assurance:** decide whether administrators need TOTP,
-      passkey, or another second factor before any real operational use.
-- [ ] **OQ-007 — Recovery/bootstrap owners:** name who may create the first
-      admin, reset credentials, unlock accounts, and receive temporary
-      credentials.
+- **O-012 passcode policy:** at least eight characters for individual officer
+  and administrator passcodes. The implementation still rejects common patterns
+  and employee-number equality.
+- **O-013 admin assurance:** passcode-only access is approved only for the
+  no-data hobby foundation. Administrator MFA is mandatory for reconsideration
+  before official or real-data use.
+- **O-014 recovery/bootstrap owner:** the owner is the first/main administrator
+  and sole initial authority for account lifecycle actions. The app must never
+  print, log, or retain a temporary passcode after its protected delivery.
 
 ## Required before RAG migration
 

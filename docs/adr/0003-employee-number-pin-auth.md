@@ -139,6 +139,18 @@ credential is not an acceptable simplification.
 - Complete grants/RLS matrix passes direct bypass attempts.
 - First-admin bootstrap and secret delivery have an approved runbook.
 
+## Owner decisions — 2026-08-25
+
+- Officers and administrators use individual passcodes with a minimum length of
+  eight characters. The implementation must also reject common patterns and a
+  passcode equal to the normalized employee number.
+- The owner is the first/main administrator and is the sole initial authority to
+  create accounts, reset passcodes, unlock accounts, and deliver temporary
+  secrets.
+- Administrator MFA is deferred for the no-data hobby foundation. This decision
+  does not permit official adoption or real operational/personnel data, and MFA
+  must be reconsidered before either boundary changes.
+
 ## Consequences if accepted
 
 - Employee number is a lookup input, not the Auth provider identifier exposed to
