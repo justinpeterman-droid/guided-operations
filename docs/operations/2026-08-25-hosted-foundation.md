@@ -26,7 +26,8 @@ production release, or official facility use.
 - Hosted migrations: `20260825125137_foundation` and
   `20260825170000_incident_report_foundation`, followed by
   `20260825222811_account_lifecycle_guards` and
-  `20260825230000_enforce_report_revision_heads`
+  `20260825230000_enforce_report_revision_heads`, followed by
+  `20260825233000_add_idempotency_records`
 
 Verified after migration:
 
@@ -58,6 +59,14 @@ search path and have no execute grants to public or Data API roles. They allow
 only consecutive immutable revisions and advance the matching incident or report
 head after insertion. This is persistence-integrity groundwork only; it does not
 add a browser-accessible mutation path, accounts, records, or RLS policies.
+
+The idempotency migration is also verified in Development: the private retry
+control table has forced default-deny RLS, and its lifecycle guard uses
+`SECURITY DEFINER` with an empty search path and no execute grants to public or
+Data API roles. It preserves opaque request and key digests plus safe result
+metadata only; it stores no request body, narrative, credential, or model
+response content. This is groundwork for a future server-side mutation path; it
+grants no runtime account or browser access.
 
 ## Vercel preview
 

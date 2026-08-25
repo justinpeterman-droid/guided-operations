@@ -1,6 +1,6 @@
 begin;
 
-select plan(48);
+select plan(54);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -30,6 +30,11 @@ select has_table('app_private', 'incident_revisions', 'incident revisions table 
 select has_table('app_private', 'reports', 'reports table exists');
 select has_table('app_private', 'report_access', 'report access table exists');
 select has_table('app_private', 'report_revisions', 'report revisions table exists');
+select has_table(
+  'app_private',
+  'idempotency_records',
+  'idempotency records table exists'
+);
 
 select is(
   (
@@ -529,6 +534,81 @@ select throws_ok(
   $$,
   'Rows in app_private.report_revisions are append-only',
   'a report revision cannot be deleted after insertion'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.idempotency_records (
+      id,
+      actor_account_id,
+      action,
+      idempotency_key_digest,
+      request_digest,
+      expires_at
+    )
+    values (
+      '99999999-9999-4999-8999-999999999999',
+      '33333333-3333-4333-8333-333333333333',
+      'incident.create',
+      repeat('c', 64),
+      repeat('d', 64),
+      statement_timestamp() + interval '10 minutes'
+    );
+  $$,
+  'a fictional idempotency record starts pending without request content'
+);
+
+select throws_ok(
+  $$
+    update app_private.idempotency_records
+    set request_digest = repeat('e', 64)
+    where id = '99999999-9999-4999-8999-999999999999';
+  $$,
+  'Idempotency identity and request digest are immutable',
+  'a retry key cannot be reused for a different request'
+);
+
+select lives_ok(
+  $$
+    update app_private.idempotency_records
+    set status = 'succeeded',
+        result_reference_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',
+        result_code = 'incident.created'
+    where id = '99999999-9999-4999-8999-999999999999';
+  $$,
+  'a pending idempotency record can resolve with only safe result metadata'
+);
+
+select throws_ok(
+  $$
+    update app_private.idempotency_records
+    set status = 'failed',
+        result_code = 'incident.failed'
+    where id = '99999999-9999-4999-8999-999999999999';
+  $$,
+  'An idempotency record cannot change after completion',
+  'a completed idempotency record cannot be reopened or repurposed'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.idempotency_records (
+      actor_account_id,
+      action,
+      idempotency_key_digest,
+      request_digest,
+      expires_at
+    )
+    values (
+      '33333333-3333-4333-8333-333333333333',
+      'incident.create',
+      repeat('c', 64),
+      repeat('d', 64),
+      statement_timestamp() + interval '10 minutes'
+    );
+  $$,
+  'duplicate key value violates unique constraint "idempotency_records_actor_account_id_action_idempotency_key_key"',
+  'the same actor, action, and retry key cannot create a second record'
 );
 
 select * from finish();
