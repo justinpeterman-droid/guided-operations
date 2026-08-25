@@ -1,6 +1,6 @@
 begin;
 
-select plan(32);
+select plan(38);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -220,6 +220,137 @@ select ok(
       and pg_get_function_identity_arguments(procedure.oid) = ''
   ),
   'account lifecycle guard can enforce the last-admin rule despite forced RLS'
+);
+
+select lives_ok(
+  $$
+    insert into auth.users (id, email)
+    values (
+      '11111111-1111-4111-8111-111111111111',
+      'fixture-one@example.invalid'
+    );
+
+    insert into app_private.staff_members (
+      id,
+      facility_id,
+      employee_lookup_hash,
+      employee_number_hint,
+      display_name,
+      status
+    )
+    select
+      '22222222-2222-4222-8222-222222222222',
+      facility.id,
+      repeat('a', 64),
+      '11',
+      'Fixture One',
+      'active'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.user_accounts (
+      auth_user_id,
+      staff_member_id,
+      sign_in_alias,
+      role,
+      status,
+      must_change_passcode
+    )
+    values (
+      '11111111-1111-4111-8111-111111111111',
+      '22222222-2222-4222-8222-222222222222',
+      'fixture-one-auth-alias@example.invalid',
+      'administrator',
+      'active',
+      false
+    );
+  $$,
+  'a fictional sole active administrator can be created'
+);
+
+select throws_ok(
+  $$
+    update app_private.user_accounts
+    set status = 'locked'
+    where auth_user_id = '11111111-1111-4111-8111-111111111111';
+  $$,
+  'A locked account requires a future locked_until timestamp',
+  'locking requires a future expiry'
+);
+
+select throws_ok(
+  $$
+    update app_private.user_accounts
+    set status = 'disabled'
+    where auth_user_id = '11111111-1111-4111-8111-111111111111';
+  $$,
+  'Cannot remove the last active administrator',
+  'the final active administrator cannot be disabled'
+);
+
+select lives_ok(
+  $$
+    insert into auth.users (id, email)
+    values (
+      '33333333-3333-4333-8333-333333333333',
+      'fixture-two@example.invalid'
+    );
+
+    insert into app_private.staff_members (
+      id,
+      facility_id,
+      employee_lookup_hash,
+      employee_number_hint,
+      display_name,
+      status
+    )
+    select
+      '44444444-4444-4444-8444-444444444444',
+      facility.id,
+      repeat('b', 64),
+      '22',
+      'Fixture Two',
+      'active'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.user_accounts (
+      auth_user_id,
+      staff_member_id,
+      sign_in_alias,
+      role,
+      status,
+      must_change_passcode
+    )
+    values (
+      '33333333-3333-4333-8333-333333333333',
+      '44444444-4444-4444-8444-444444444444',
+      'fixture-two-auth-alias@example.invalid',
+      'administrator',
+      'active',
+      false
+    );
+  $$,
+  'a second fictional active administrator permits a lifecycle change'
+);
+
+select lives_ok(
+  $$
+    update app_private.user_accounts
+    set status = 'disabled'
+    where auth_user_id = '11111111-1111-4111-8111-111111111111';
+  $$,
+  'an administrator can be disabled when another active administrator remains'
+);
+
+select is(
+  (
+    select auth_version
+    from app_private.user_accounts
+    where auth_user_id = '11111111-1111-4111-8111-111111111111'
+  ),
+  2,
+  'a security-relevant account state change advances auth_version'
 );
 
 select * from finish();
