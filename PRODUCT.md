@@ -21,10 +21,10 @@ The new repository currently contains a Next.js foundation, Supabase
 connection/migration scaffolding, a liveness route, shared visual tokens, a
 tested pure Count Sheet calculation/schema slice, and a tested policy-answer
 grounding schema. These are useful technical and contract foundations; they are
-not accepted end-user feature parity. At this baseline, there is no complete
-migrated product route, production authentication, hosted production database,
-migrated RAG corpus, Vercel production deployment, linked Supabase production
-project, or Google Cloud retirement.
+not accepted end-user feature parity. The hosted Supabase foundation now exists,
+but there is still no complete migrated product route, production
+authentication, application-to-Supabase environment linkage, migrated RAG
+corpus, verified Vercel production deployment, or Google Cloud retirement.
 
 Use these labels in plans, issues, pull requests, and documentation:
 

@@ -5,9 +5,12 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 
 ## Current status
 
-- Application hosting configured: **not established by this repository**
-- Supabase projects configured: **not established**
-- CI/release automation configured: **not established**
+- Application hosting configured: **protected Vercel preview created; linkage
+  and application verification incomplete**
+- Supabase projects configured: **new `us-east-1` foundation project healthy; no
+  users or operational data**
+- CI/release automation configured: **GitHub web and database quality workflows
+  pass**
 - Backups and restore exercise: **not established**
 - Monitoring and alerts: **not established**
 - Production domain or traffic: **not established**
@@ -21,6 +24,10 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 No checklist item may be marked complete without dated evidence identifying the
 environment, commit/deployment, actor, command or dashboard observation, result,
 and retained artifact location.
+
+See the dated
+[`2026-08-25 hosted foundation record`](2026-08-25-hosted-foundation.md) for the
+current provider evidence and explicit limitations.
 
 ## Control labels
 

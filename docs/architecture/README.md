@@ -1,10 +1,11 @@
 # Architecture Documentation
 
-These documents describe the target system. The repository currently has an
-unlinked local foundation: a static preview, health route, Supabase client
-factories, initial locked migration/tests, Count Sheet domain tests, and a
-grounded-policy schema. Nothing is hosted or deployed unless a document records
-specific verification evidence.
+These documents describe the target system. The repository currently has a
+static foundation, health route, Supabase client factories, initial locked
+migration/tests, Count Sheet domain tests, and a grounded-policy schema. The
+database foundation is hosted and a protected Vercel preview exists; the exact
+evidence and remaining gaps are recorded in the operations handbook. No other
+hosted or deployed claim is valid without specific verification evidence.
 
 1. [System context](system-context.md)
 2. [Containers and trust boundaries](containers.md)

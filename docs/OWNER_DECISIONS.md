@@ -19,14 +19,15 @@ resource.
 | O-008 | Prefer free plans where their terms and controls fit; do not weaken safety or readiness to remain free.                                                      | 2026-08-25    |
 | O-009 | Use a United States region; the exact paired regions are not yet approved.                                                                                   | 2026-08-25    |
 | O-010 | This is a personal, non-commercial hobby app for a small invited group of officers, not an official organization/facility system.                            | 2026-08-25    |
+| O-011 | Create a separate Supabase project named `guided-operations` in `justinpeterman-droid's Org`, in `us-east-1`, leaving the inactive project untouched.        | 2026-08-25    |
 
 ## Required before hosted development linkage
 
 - [ ] **OQ-001 — Provider login:** owner authenticates the Vercel and Supabase
       CLIs/accounts. Tokens must stay in provider credential stores, not Git.
-- [ ] **OQ-002 — Exact region:** approve the actual Supabase region and aligned
-      Vercel function region. The provisional technical candidate is Supabase
-      `us-east-1` plus Vercel `iad1`.
+- [ ] **OQ-002 — Vercel region:** Supabase `us-east-1` is approved and
+      provisioned. Confirm the aligned Vercel function region; the provisional
+      technical candidate remains `iad1`.
 - [ ] **OQ-003 — Facility label:** supply the non-sensitive facility display
       name and URL/domain naming preference. Do not add a real roster.
 - [ ] **OQ-004 — Plan eligibility:** confirm the intended invited-officer use

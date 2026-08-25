@@ -1,6 +1,7 @@
 # Guided Operations Target Architecture
 
-- **Status:** Target design with an unlinked local foundation
+- **Status:** Target design with hosted Supabase foundation and protected Vercel
+  preview
 - **Last updated:** 2026-08-25
 - **Scope:** Private, web-only, single-facility application
 
@@ -13,12 +14,14 @@ real operational data.
 The repository now contains a Next.js 16/React 19 scaffold with an honest static
 preview, a health route, server/browser Supabase client factories, an initial
 `app_private` database migration with seed and pgTAP checks, Count Sheet domain
-tests, and the first grounded-policy schema. These pieces are local source only:
-no Supabase project is linked, no migration has been applied to a hosted
-project, and nothing is deployed to Vercel. Authentication, usable database
-access policies/RPCs, queues, corpus ingest/retrieval, exports, observability,
-and the full domain remain target work. Everything labelled **target** is a
-constraint, not a claim that the current foundation proves the behavior.
+tests, and the first grounded-policy schema. The migration is applied to a new
+Supabase project in `us-east-1`, with empty application tables and deny-all
+foundation access. A protected Vercel preview exists, but Git linkage,
+environment variables, and authenticated application-content verification are
+not complete. Authentication, usable database access policies/RPCs, queues,
+corpus ingest/retrieval, exports, observability, and the full domain remain
+target work. Everything labelled **target** is a constraint, not a claim that
+the current foundation proves the behavior.
 
 The replacement is intentionally a new system, but it preserves the useful
 domain rules and contract tests from the former prison-policy-ai project. It

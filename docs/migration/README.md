@@ -28,8 +28,9 @@ a later evidence record explicitly says otherwise.
 - RAG: the old Git manifest names 292 unique PDFs, but the audit did not prove
   that 292 authoritative source byte streams are recoverable, current, or
   rights-approved.
-- Deployment: no Vercel production deployment or linked hosted Supabase
-  production project is evidenced at this baseline.
+- Deployment: a new hosted Supabase foundation and protected Vercel preview now
+  exist. No verified Vercel production deployment, application environment
+  linkage, user account, or corpus import is evidenced.
 - Google Cloud: no resource is authorized for deletion merely because these
   plans exist.
 

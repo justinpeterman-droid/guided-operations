@@ -1,6 +1,6 @@
 # Legacy Migration and Reconciliation
 
-**Status:** Planning baseline; local foundation only, with no legacy data import
+**Status:** Planning baseline; hosted foundation with no legacy data import
 
 ## Source baseline
 
@@ -15,17 +15,17 @@ coupling, legacy surfaces, deployment assumptions, and secrets.
 
 ## Current foundation versus target
 
-| Area       | Current new repository                                                                                       | Target                                                                       |
-| ---------- | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Web        | Next.js 16/React 19 scaffold, honest static preview, health route                                            | Full operational workspace in App Router                                     |
-| API        | Health route and server/client factories only                                                                | Same-origin /api/web/v1 BFF                                                  |
-| Auth       | Disabled-signup local config; no qualified login flow                                                        | Supabase Auth with proposed employee-number bridge                           |
-| Database   | Initial locked `app_private` policy/account/corpus foundation and pgTAP source; unapplied to hosted Supabase | Complete private schema, narrow grants/RPCs, RLS policies, records, and jobs |
-| Storage    | Two private bucket definitions in an unapplied migration; no object workflows                                | Qualified private Supabase buckets and policies                              |
-| AI/RAG     | Grounded-policy domain/schema foundation; no live provider or retrieval path                                 | Provider-neutral adapters, OpenAI initial, pgvector hybrid search            |
-| Jobs       | None                                                                                                         | Durable database job/outbox plus Supabase Queues                             |
-| Worker     | None                                                                                                         | Conditional non-Google worker                                                |
-| Deployment | None                                                                                                         | Protected Vercel + Supabase environments                                     |
+| Area       | Current new repository                                                                                 | Target                                                                       |
+| ---------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
+| Web        | Next.js 16/React 19 scaffold, honest static preview, health route                                      | Full operational workspace in App Router                                     |
+| API        | Health route and server/client factories only                                                          | Same-origin /api/web/v1 BFF                                                  |
+| Auth       | Disabled-signup local config; no qualified login flow                                                  | Supabase Auth with proposed employee-number bridge                           |
+| Database   | Initial locked `app_private` policy/account/corpus foundation applied to hosted Supabase; tables empty | Complete private schema, narrow grants/RPCs, RLS policies, records, and jobs |
+| Storage    | Two private buckets created; no objects or object workflows                                            | Qualified private Supabase buckets and policies                              |
+| AI/RAG     | Grounded-policy domain/schema foundation; no live provider or retrieval path                           | Provider-neutral adapters, OpenAI initial, pgvector hybrid search            |
+| Jobs       | None                                                                                                   | Durable database job/outbox plus Supabase Queues                             |
+| Worker     | None                                                                                                   | Conditional non-Google worker                                                |
+| Deployment | Protected Vercel preview plus hosted Supabase foundation; app linkage and preview verification open    | Protected Vercel + Supabase environments                                     |
 
 No target control may be marked complete based on old repository code alone.
 
