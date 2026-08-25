@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(30);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -25,6 +25,11 @@ select has_table(
   'policy_chunk_embeddings table exists'
 );
 select has_table('app_private', 'audit_events', 'audit_events table exists');
+select has_table('app_private', 'incidents', 'incidents table exists');
+select has_table('app_private', 'incident_revisions', 'incident revisions table exists');
+select has_table('app_private', 'reports', 'reports table exists');
+select has_table('app_private', 'report_access', 'report access table exists');
+select has_table('app_private', 'report_revisions', 'report revisions table exists');
 
 select is(
   (
@@ -138,6 +143,24 @@ select ok(
       and not trigger_row.tgisinternal
   ),
   'embedding profile identity has an immutability trigger'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_trigger as trigger_row
+    where trigger_row.tgrelid = 'app_private.incident_revisions'::regclass
+      and trigger_row.tgname = 'incident_revisions_immutable'
+      and not trigger_row.tgisinternal
+  )
+  and exists (
+    select 1
+    from pg_trigger as trigger_row
+    where trigger_row.tgrelid = 'app_private.report_revisions'::regclass
+      and trigger_row.tgname = 'report_revisions_immutable'
+      and not trigger_row.tgisinternal
+  ),
+  'incident and report revisions have immutability triggers'
 );
 
 select is(
