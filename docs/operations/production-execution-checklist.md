@@ -105,21 +105,26 @@ Pause and report a blocker instead of guessing when work requires:
       public Preview/Production values.
 - [ ] Confirm the secondary non-authoritative Vercel project cannot receive
       production traffic or secrets.
-- [ ] Independently verify Supabase public signup/recovery settings.
+- [x] Verify public signup, manual linking, anonymous sign-in, email
+      confirmation, Site URL, and redirect allow-list in Development Supabase.
+      Hosted Supabase has no separate recovery-disable toggle while
+      email/password sign-in remains enabled; application recovery remains
+      prohibited pending the approved private reset ceremony.
 - [x] Add `APP_ENV` and exact `APP_ORIGIN` validation; unit tests reject paths,
       queries, and fragments (`291cc5d`).
 - [x] Add `/api/health/ready` without exposing provider details; it returns only
       service readiness and maps invalid/unavailable configuration to `503`
       (`291cc5d`).
-- [ ] Verify readiness locally and in a protected Preview.
+- [x] Verify readiness locally and in a protected Preview (`94dfd61`,
+      `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`).
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,
       focus, and protection boundaries.
 
 ### Phase 1 exit
 
-- [ ] Protected Preview deployment ID maps to the reviewed commit.
-- [ ] Preview points only to non-production Supabase services.
-- [ ] Hosted page, liveness, readiness, and protection are independently
+- [x] Protected Preview deployment ID maps to the reviewed commit.
+- [x] Preview points only to non-production Supabase services.
+- [x] Hosted page, liveness, readiness, and protection are independently
       verified.
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap

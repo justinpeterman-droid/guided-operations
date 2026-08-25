@@ -78,6 +78,31 @@ authoritative project for this repository. Its production deployment
 This is a verified, no-data foundation release. It does not approve accounts,
 operational data, corpus import, or official facility use.
 
+## Connected protected Preview — 2026-08-25
+
+- Application commit: `94dfd61`
+  (`fix: probe public Supabase readiness endpoint`)
+- Deployment ID: `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`
+- Target: protected Vercel Preview; it is not Production traffic.
+- Preview variables are scoped only to Preview: `APP_ENV=preview`, the
+  Development Supabase URL, and its browser-safe publishable key. No database
+  password, service-role key, or other server secret was added.
+- Remote verification through Vercel's authenticated access path returned the
+  intended foundation page, `GET /api/health/live` `200`/`ok`, and
+  `GET /api/health/ready` `200`/`ready`.
+- Readiness deliberately probes Supabase Auth's public settings endpoint. The
+  Data API root correctly rejects publishable keys on this project and is not
+  used as a readiness signal.
+
+Development Supabase Auth was also checked in the hosted dashboard: public
+signup, manual account linking, and anonymous sign-in are disabled; email
+confirmation is enabled. The Site URL is `https://guided-operations.vercel.app`
+and the redirect allow-list contains the canonical Vercel URL, the Vercel
+Preview wildcard, and local development. Supabase does not expose a separate
+hosted toggle that disables password recovery while retaining email/password
+sign-in. The application must therefore never expose or invoke recovery until an
+approved private reset ceremony exists.
+
 ## Secondary Vercel project
 
 An additional project was created under `justin-peterman-s-projects`
@@ -89,11 +114,9 @@ configuration for the authoritative project.
 ## Still open
 
 - Confirm the aligned Vercel function region.
-- Independently verify and configure hosted Supabase Auth self-signup and
-  recovery before any account workflow is built. A separate disposable
-  alias-spike project retained its provider defaults, which allowed signup and
-  required email confirmation; no setting from that project may be assumed for
-  this development project.
+- Do not expose or invoke password recovery until the approved private reset
+  ceremony is implemented; hosted Supabase has no separate recovery-disable
+  setting while email/password sign-in remains enabled.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.
 - Keep the RAG corpus out of the hosted project until the corpus migration gate
   is approved and reconciled.
