@@ -1,0 +1,53 @@
+name: Bug report
+description:
+  Report a reproducible Guided Operations defect without sensitive data.
+title: "[Bug]: "
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Never include names, employee numbers, incident narratives, resident data,
+        policy source text, credentials, tokens, or screenshots containing real data.
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Observed outcome
+      description: What happened, using fictional or redacted examples only?
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected outcome
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction
+      description:
+        Provide the smallest fictional-data sequence that reproduces it.
+    validations:
+      required: true
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Environment
+      options:
+        - Local
+        - Preview
+        - Staging
+        - Production
+        - Unknown
+    validations:
+      required: true
+  - type: checkboxes
+    id: sensitive
+    attributes:
+      label: Data check
+      options:
+        - label:
+            I confirmed this report contains no sensitive or real operational
+            data.
+          required: true

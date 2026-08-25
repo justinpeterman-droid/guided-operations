@@ -1,0 +1,37 @@
+name: Feature proposal
+description:
+  Propose a bounded product change with safety and evidence requirements.
+title: "[Feature]: "
+labels: [enhancement, triage]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Operational problem
+      description:
+        Describe the user and job-to-be-done without including real data.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Desired outcome
+      description: State the result, not a preferred implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Safety and records impact
+      description:
+        Note authorization, retention, audit, AI, policy, print, or
+        physical-workflow implications.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Acceptance evidence
+      description: What would prove this works and remains safe?
+    validations:
+      required: true
