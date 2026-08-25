@@ -1,6 +1,6 @@
 begin;
 
-select plan(30);
+select plan(32);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -197,6 +197,29 @@ select is(
   ),
   2,
   'private bucket size and MIME controls match the reviewed configuration'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_trigger as trigger_row
+    where trigger_row.tgrelid = 'app_private.user_accounts'::regclass
+      and trigger_row.tgname = 'user_accounts_enforce_lifecycle'
+      and not trigger_row.tgisinternal
+  ),
+  'user accounts have the lifecycle-enforcement trigger'
+);
+
+select ok(
+  (
+    select procedure.prosecdef
+    from pg_proc as procedure
+    join pg_namespace as namespace on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'app_private'
+      and procedure.proname = 'enforce_user_account_lifecycle'
+      and pg_get_function_identity_arguments(procedure.oid) = ''
+  ),
+  'account lifecycle guard can enforce the last-admin rule despite forced RLS'
 );
 
 select * from finish();
