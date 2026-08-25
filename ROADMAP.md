@@ -175,7 +175,8 @@ Status: **partially complete; provider projects exist but linkage is open**
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap
 
-Status: **blocked on OQ-005, OQ-006, OQ-007, and ADR-0003**
+Status: **in progress; ADR-0003 security acceptance remains required before
+production login**
 
 ### Steps
 
