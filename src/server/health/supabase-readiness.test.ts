@@ -15,7 +15,7 @@ describe("Supabase readiness", () => {
     ).resolves.toBe(true);
 
     expect(request).toHaveBeenCalledWith(
-      new URL("https://project.supabase.co/rest/v1/"),
+      new URL("https://project.supabase.co/auth/v1/settings"),
       expect.objectContaining({
         cache: "no-store",
         headers: { apikey: "publishable" },
