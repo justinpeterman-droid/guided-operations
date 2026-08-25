@@ -58,14 +58,35 @@ claim the application page or liveness route is remotely verified from this
 preview. The same commit passed local production-browser checks at desktop and
 mobile sizes.
 
+## Vercel project and production attempt
+
+- Team: `justin-peterman-s-projects` (Justin Peterman's projects)
+- Project: `guided-operations` (`prj_BMU1Piqg20muXIC1PzcdF3Cvig0i`)
+- The public Supabase URL and publishable key were added as non-sensitive
+  configuration for Development, Preview, and Production. No server secret,
+  OpenAI key, database password, or service-role key was added.
+- Vercel CLI could not connect the private GitHub repository. Git pushes will
+  not automatically deploy until the Vercel GitHub integration is authorized.
+
+On 2026-08-25, the local Vercel production build completed successfully. The
+prebuilt upload failed while Vercel processed a generated Next.js error-page
+artifact (`ENOENT` under `.vercel/output/functions`); the standard Vercel
+production deploy fallback created deployment `dpl_79pt5uYLDy94G8GPB22Btc8MEFLb`
+but remained `UNKNOWN` in the Vercel CLI after several minutes. Its deployment
+URL served Vercel authentication rather than the application, its expected
+production alias returned 404, and no runtime logs were available. It is
+therefore **not a verified production release** and must not be presented as a
+live application.
+
 ## Still open
 
-- Link the Vercel project to the private GitHub repository.
-- Configure the Supabase project URL and publishable key in Vercel environment
-  settings without committing values.
+- Authorize Vercel's GitHub integration for the private repository, or document
+  a reviewed manual deployment procedure.
+- Resolve the Vercel deployment state/alias before retrying production.
 - Confirm the aligned Vercel function region.
-- Obtain explicit production-promotion approval, then deploy the exact accepted
-  artifact.
+- Configure hosted Supabase Auth to disallow public self-signup before any
+  account workflow is built. This cannot be established by the database
+  migration and was not changed in this foundation pass.
 - Verify the live page and `/api/health/live` with a real browser, including
   console errors and failed assets.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.

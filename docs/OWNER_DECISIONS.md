@@ -57,6 +57,17 @@ resource.
       prohibited. The current target uses no Google hosting or Google-specific
       AI runtime either way.
 
+## Required before private hobby production
+
+- [ ] **OQ-016 — Repository enforcement:** choose a GitHub plan that supports
+      branch protection/rulesets for the private repository, or explicitly
+      accept documented manual pull-request, independent-review, green-check,
+      no-force-push, and release-record controls that GitHub cannot enforce.
+- [ ] **OQ-017 — Production URL protection:** decide whether application
+      authentication is sufficient on the publicly reachable Vercel Hobby
+      Production domain, or approve a plan/add-on that provides the required
+      provider-level Production protection.
+
 ## Required before any future official adoption or real-data use
 
 - [ ] **OQ-011 — Operational data authorization:** complete a separate written

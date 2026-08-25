@@ -13,14 +13,18 @@ use real operational/personnel data to demonstrate a finding.
 
 ## Current state versus target
 
-The repository now has a static preview, health route, Supabase client
-factories, an initial locked `app_private` migration with seed and pgTAP checks,
-Count Sheet domain tests, and a grounded-policy schema. Nothing is linked to
-Supabase or deployed to Vercel. The migration deliberately grants no runtime
-role access; authentication, authorized RPC/DAL paths, complete RLS policies,
-queues, corpus ingest/retrieval, exports, and most controls below remain
-implementation work. A missing target control is a gap; code that claims to
-establish a boundary but fails to do so is a security finding.
+The repository now has a static foundation page, health route, Supabase client
+factories, an initial locked `app_private` migration with fictional seed and
+pgTAP checks, Count Sheet domain tests, and a grounded-policy schema. The empty
+foundation migration is applied to a new Supabase Free project in `us-east-1`,
+and a protected Vercel Preview deployment was created. The application is not
+yet connected to Supabase, the Vercel project is not linked to GitHub, and the
+protected hosted application content has not been remotely verified. The
+migration deliberately grants no runtime role access; authentication, authorized
+RPC/DAL paths, complete RLS policies, queues, corpus ingest/retrieval, exports,
+and most controls below remain implementation work. A missing target control is
+a gap; code that claims to establish a boundary but fails to do so is a security
+finding.
 
 The target is a private, internet-reachable web application:
 
