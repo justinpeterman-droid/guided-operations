@@ -133,7 +133,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add a tested, provider-neutral minimum-passcode/common-pattern/employee-
       equality policy primitive without prematurely deciding the final
       identifier format or creating hosted accounts (`ab66239`).
-- [ ] Build disposable hosted alias-bridge spike.
+- [x] Build disposable hosted alias-bridge spike: a generated non-deliverable
+      alias issued a password session through server-side provisioning, and
+      known-wrong/unknown aliases returned the same provider failure status; the
+      temporary account was deleted. See ADR-0003 (2026-08-25).
 - [ ] Prove the internal alias is absent from UI, APIs, redirects, recovery,
       email, logs, analytics, cookies, and browser storage.
 - [ ] Threat-model enumeration, timing, lockout denial, credential stuffing,

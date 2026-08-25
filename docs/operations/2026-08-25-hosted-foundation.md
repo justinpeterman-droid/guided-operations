@@ -23,12 +23,15 @@ production release, or official facility use.
 - Plan quote confirmed by owner: USD 0 monthly
 - Region: `us-east-1`
 - Observed state after creation: `ACTIVE_HEALTHY`
-- Hosted migration: `20260825125137_foundation`
+- Hosted migrations: `20260825125137_foundation` and
+  `20260825170000_incident_report_foundation`
 
 Verified after migration:
 
 - the `api` and `app_private` schemas exist;
-- all nine application tables are empty and have RLS enabled and forced;
+- all fourteen application tables are empty and have RLS enabled and forced;
+- incident/report heads, immutable incident/report revisions, and report-access
+  relationships are present but have no application policies or grants yet;
 - `anon` and `authenticated` have zero table grants and zero routine grants in
   `app_private`; no application access policies exist yet;
 - `pgcrypto` and `vector` are installed in `extensions`;
@@ -86,9 +89,11 @@ configuration for the authoritative project.
 ## Still open
 
 - Confirm the aligned Vercel function region.
-- Independently recheck the hosted Supabase Auth self-signup setting before any
-  account workflow is built. The owner confirmed it was disabled, but the
-  setting cannot be proven by the database migration.
+- Independently verify and configure hosted Supabase Auth self-signup and
+  recovery before any account workflow is built. A separate disposable
+  alias-spike project retained its provider defaults, which allowed signup and
+  required email confirmation; no setting from that project may be assumed for
+  this development project.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.
 - Keep the RAG corpus out of the hosted project until the corpus migration gate
   is approved and reconciled.

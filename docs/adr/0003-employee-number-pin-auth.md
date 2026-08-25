@@ -151,6 +151,34 @@ credential is not an acceptable simplification.
   does not permit official adoption or real operational/personnel data, and MFA
   must be reconsidered before either boundary changes.
 
+## Hosted alias-spike evidence — 2026-08-25
+
+The disposable hosted Auth-spike project was used only with one random,
+non-deliverable `invalid.example` alias and a generated test secret. The account
+was created through a server-side administrative path, marked email confirmed,
+signed in successfully through the ordinary password endpoint, and was
+immediately deleted. No alias, secret, access token, refresh token, or
+test-account identifier was retained in this repository or report.
+
+Observed results:
+
+- the internal alias can authenticate with a password and issue a normal
+  access/refresh session;
+- Auth returns that alias only to the server-side caller, so the product must
+  never forward the provider user object or error body to a browser, log, audit
+  event, analytics sink, or public endpoint;
+- a known alias with the wrong secret and a random unknown alias both received
+  the same HTTP failure status (`400`) from the provider endpoint;
+- the spike project's default settings still allowed public signup and required
+  email confirmation. Those settings are unsuitable for this product and must be
+  disabled/configured through the approved protected configuration path before
+  any development or live account exists.
+
+This evidence supports Option A but does not accept it. It does not yet prove
+the required SSR cookie lifecycle, recovery/email absence, rate limits,
+enumeration timing bounds, Auth-admin isolation, bootstrap ceremony, or RLS
+authorization matrix.
+
 ## Consequences if accepted
 
 - Employee number is a lookup input, not the Auth provider identifier exposed to
@@ -166,7 +194,7 @@ credential is not an acceptable simplification.
 
 1. [ ] Decide final secret length, alphabet, normalization, and admin MFA
        requirement.
-2. [ ] Spike random internal aliases on a disposable hosted Supabase project.
+2. [x] Spike random internal aliases on a disposable hosted Supabase project.
 3. [ ] Prove no email/recovery/alias exposure and document account lifecycle.
 4. [ ] Implement SSR cookies and session revocation tests in a vertical slice.
 5. [ ] Threat-model enumeration, lockout denial, Auth admin secret, and
