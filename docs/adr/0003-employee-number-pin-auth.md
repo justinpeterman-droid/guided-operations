@@ -179,6 +179,26 @@ the required SSR cookie lifecycle, recovery/email absence, rate limits,
 enumeration timing bounds, Auth-admin isolation, bootstrap ceremony, or RLS
 authorization matrix.
 
+## Threat model — 2026-08-25
+
+This model covers the no-data hobby foundation. It does not authorize real
+personnel or operational information.
+
+| Threat                                            | Required control                                                                                                                         | Required evidence before acceptance                                                                                  |
+| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Employee-number enumeration or timing comparison  | Keyed lookup digest, a dummy password-auth path for unknown accounts, generic external responses, and bounded timing tests               | Known/unknown/disabled/locked cases have indistinguishable public responses and measured bounded timing difference   |
+| Credential stuffing and lockout denial of service | Account, device, network, and global rate limits; short bounded lockouts; administrator unlock only after step-up                        | Direct route tests cover each dimension, retry guidance, lock expiry, unlock, and distributed failure behavior       |
+| Stolen refresh token or stale JWT                 | Secure HttpOnly SameSite cookies, provider refresh rotation, short expiry, and current `auth_version`/status check on protected requests | Browser tests prove rotation, logout, logout-all, reset/status/role-change invalidation, and rejected stale sessions |
+| Auth-admin secret misuse                          | Separate server-only admin adapter, no routine request access, purpose-bound administrator step-up, audit allowlist                      | Static secret scan, adapter-boundary tests, authorization tests, and a denied direct routine-DAL attempt             |
+| Alias disclosure or public recovery               | Alias remains server-only; no provider user/error forwarding; no recovery UI or product call; public signup disabled                     | Browser/network/log/audit/redirect checks and a hosted Auth configuration review                                     |
+| Bootstrap or last-admin loss                      | Transactional zero-account bootstrap, generated temporary secret, one-time protected delivery, lifecycle trigger, and last-admin check   | Rollback-only database tests plus first-admin and last-admin integration tests without credentials in logs           |
+| Cross-account/role data access                    | Current-account server gate plus operation-specific RLS and narrow grants                                                                | Direct database/API/Storage negative matrix for officer, administrator, disabled, missing, and unrelated identities  |
+| CSRF and unsafe redirects                         | Exact Origin/Fetch-Metadata validation, CSRF token, closed schemas, and allow-listed redirects                                           | Route/browser tests for cross-site POST, missing/invalid token, and hostile redirect targets                         |
+
+The lifecycle trigger and current-account gate now cover only portions of the
+bootstrap, stale-session, and last-admin controls. They do not satisfy this
+threat model by themselves.
+
 ## Consequences if accepted
 
 - Employee number is a lookup input, not the Auth provider identifier exposed to
@@ -197,6 +217,7 @@ authorization matrix.
 2. [x] Spike random internal aliases on a disposable hosted Supabase project.
 3. [ ] Prove no email/recovery/alias exposure and document account lifecycle.
 4. [ ] Implement SSR cookies and session revocation tests in a vertical slice.
-5. [ ] Threat-model enumeration, lockout denial, Auth admin secret, and
-       bootstrap.
+5. [x] Threat-model enumeration, lockout denial, Auth admin secret, and
+       bootstrap requirements are recorded above. Implement and test each listed
+       control before acceptance.
 6. [ ] Obtain product/security acceptance or record Option B as a new ADR.
