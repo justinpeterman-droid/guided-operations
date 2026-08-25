@@ -1,0 +1,119 @@
+import { describe, expect, it } from "vitest";
+
+import {
+  INCIDENT_SCHEMA_VERSION,
+  incidentRevisionInputSchema,
+  reportDraftRequestSchema,
+} from "./schema";
+
+const noteId = "11111111-1111-4111-8111-111111111111";
+const confirmedFactId = "22222222-2222-4222-8222-222222222222";
+const unknownFactId = "33333333-3333-4333-8333-333333333333";
+
+const incidentRevision = {
+  schemaVersion: INCIDENT_SCHEMA_VERSION,
+  incidentName: "Fictional training scenario",
+  incidentNumber: "TRAINING-001",
+  occurredAt: "2026-08-25T15:30:00-05:00",
+  category: "training",
+  fieldNotes: [
+    {
+      id: noteId,
+      text: "This is a fictional qualification note.",
+      recordedAt: "2026-08-25T15:31:00-05:00",
+    },
+  ],
+  reviewedFacts: [
+    {
+      id: confirmedFactId,
+      field: "Location",
+      state: "confirmed",
+      value: "Training room",
+      sourceNoteIds: [noteId],
+    },
+    {
+      id: unknownFactId,
+      field: "Witness statement",
+      state: "unknown",
+      reason: "No fictional witness was included in this scenario.",
+    },
+  ],
+};
+
+describe("incident revision contract", () => {
+  it("accepts confirmed facts and explicit unknowns with provenance", () => {
+    expect(incidentRevisionInputSchema.parse(incidentRevision)).toMatchObject({
+      reviewedFacts: [
+        { state: "confirmed", sourceNoteIds: [noteId] },
+        { state: "unknown" },
+      ],
+    });
+  });
+
+  it("rejects a confirmed fact without a source note", () => {
+    const withoutProvenance = {
+      ...incidentRevision,
+      reviewedFacts: [
+        {
+          id: confirmedFactId,
+          field: "Location",
+          state: "confirmed",
+          value: "Training room",
+          sourceNoteIds: [],
+        },
+      ],
+    };
+
+    expect(
+      incidentRevisionInputSchema.safeParse(withoutProvenance).success,
+    ).toBe(false);
+  });
+
+  it("rejects duplicate fact identifiers", () => {
+    const duplicateFact = {
+      ...incidentRevision,
+      reviewedFacts: [
+        incidentRevision.reviewedFacts[0],
+        {
+          id: confirmedFactId,
+          field: "Witness statement",
+          state: "unknown",
+          reason: "No fictional witness was included in this scenario.",
+        },
+      ],
+    };
+
+    expect(incidentRevisionInputSchema.safeParse(duplicateFact).success).toBe(
+      false,
+    );
+  });
+});
+
+describe("report draft contract", () => {
+  const draftRequest = {
+    schemaVersion: INCIDENT_SCHEMA_VERSION,
+    incidentId: "44444444-4444-4444-8444-444444444444",
+    sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
+    reportType: "incident_report",
+    confirmedFactIds: [confirmedFactId],
+  };
+
+  it("accepts a draft request that references confirmed facts by opaque ID", () => {
+    expect(reportDraftRequestSchema.parse(draftRequest)).toEqual(draftRequest);
+  });
+
+  it("rejects narrative content and duplicate fact references", () => {
+    expect(
+      reportDraftRequestSchema.safeParse({
+        ...draftRequest,
+        confirmedFactIds: [confirmedFactId, confirmedFactId],
+      }).success,
+    ).toBe(false);
+    expect(
+      reportDraftRequestSchema.safeParse({
+        ...draftRequest,
+        narrative: "Unreviewed content must not enter through this request.",
+      }).success,
+    ).toBe(false);
+  });
+});
