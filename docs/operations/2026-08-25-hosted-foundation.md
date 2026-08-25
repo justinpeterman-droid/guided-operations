@@ -24,7 +24,8 @@ production release, or official facility use.
 - Region: `us-east-1`
 - Observed state after creation: `ACTIVE_HEALTHY`
 - Hosted migrations: `20260825125137_foundation` and
-  `20260825170000_incident_report_foundation`
+  `20260825170000_incident_report_foundation`, followed by
+  `20260825222811_account_lifecycle_guards`
 
 Verified after migration:
 
@@ -43,6 +44,12 @@ Verified after migration:
 
 No hosted seed, user account, policy object, embedding, or operational record
 was created.
+
+The account-lifecycle migration is also verified in the Development project: the
+private `user_accounts` trigger exists, its guard has no executable grant to
+public/Data API roles, and it retains the intended default-deny RLS posture. The
+provider security advisor reports only the expected informational no-policy
+notices for the still-unexposed `app_private` foundation tables.
 
 ## Vercel preview
 
