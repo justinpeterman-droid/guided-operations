@@ -106,8 +106,11 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Confirm the secondary non-authoritative Vercel project cannot receive
       production traffic or secrets.
 - [ ] Independently verify Supabase public signup/recovery settings.
-- [ ] Add `APP_ENV` and exact `APP_ORIGIN` validation.
-- [ ] Add `/api/health/ready` without exposing provider details.
+- [x] Add `APP_ENV` and exact `APP_ORIGIN` validation; unit tests reject paths,
+      queries, and fragments (`291cc5d`).
+- [x] Add `/api/health/ready` without exposing provider details; it returns only
+      service readiness and maps invalid/unavailable configuration to `503`
+      (`291cc5d`).
 - [ ] Verify readiness locally and in a protected Preview.
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,
       focus, and protection boundaries.
@@ -127,6 +130,9 @@ Pause and report a blocker instead of guessing when work requires:
       lifecycle authority.
 - [x] Admin MFA is explicitly deferred only for the no-data hobby boundary.
 - [ ] Define employee-number normalization and allowed passcode alphabet.
+- [x] Add a tested, provider-neutral minimum-passcode/common-pattern/employee-
+      equality policy primitive without prematurely deciding the final identifier
+      format or creating hosted accounts (`ab66239`).
 - [ ] Build disposable hosted alias-bridge spike.
 - [ ] Prove the internal alias is absent from UI, APIs, redirects, recovery,
       email, logs, analytics, cookies, and browser storage.
