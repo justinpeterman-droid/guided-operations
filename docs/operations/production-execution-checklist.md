@@ -131,8 +131,8 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Admin MFA is explicitly deferred only for the no-data hobby boundary.
 - [ ] Define employee-number normalization and allowed passcode alphabet.
 - [x] Add a tested, provider-neutral minimum-passcode/common-pattern/employee-
-      equality policy primitive without prematurely deciding the final identifier
-      format or creating hosted accounts (`ab66239`).
+      equality policy primitive without prematurely deciding the final
+      identifier format or creating hosted accounts (`ab66239`).
 - [ ] Build disposable hosted alias-bridge spike.
 - [ ] Prove the internal alias is absent from UI, APIs, redirects, recovery,
       email, logs, analytics, cookies, and browser storage.
