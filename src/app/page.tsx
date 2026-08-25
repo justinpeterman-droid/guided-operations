@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function Home() {
   return (
     <main className="foundation-page">
@@ -85,6 +87,10 @@ export default function Home() {
             No live operational data or user accounts are connected to this
             preview.
           </p>
+
+          <Link className="preview-link" href="/preview/report-assistant">
+            View the fictional report workspace
+          </Link>
         </aside>
       </section>
 
