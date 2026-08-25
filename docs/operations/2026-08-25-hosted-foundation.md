@@ -27,7 +27,8 @@ production release, or official facility use.
   `20260825170000_incident_report_foundation`, followed by
   `20260825222811_account_lifecycle_guards` and
   `20260825230000_enforce_report_revision_heads`, followed by
-  `20260825233000_add_idempotency_records`
+  `20260825233000_add_idempotency_records` and
+  `20260825234000_add_auth_attempt_guards`
 
 Verified after migration:
 
@@ -67,6 +68,13 @@ Data API roles. It preserves opaque request and key digests plus safe result
 metadata only; it stores no request body, narrative, credential, or model
 response content. This is groundwork for a future server-side mutation path; it
 grants no runtime account or browser access.
+
+The authentication-attempt migration is also verified in Development: its
+short-lived private rate-limit metadata accepts only keyed subject digests and
+never raw employee numbers, IP addresses, device identifiers, aliases, or
+passcodes. RLS is enabled and forced, with no table access for anonymous,
+authenticated, or service roles. The provider advisor's no-policy notice is
+expected for this intentionally default-deny internal table.
 
 ## Vercel preview
 
