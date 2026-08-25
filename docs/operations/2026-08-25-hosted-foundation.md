@@ -25,7 +25,8 @@ production release, or official facility use.
 - Observed state after creation: `ACTIVE_HEALTHY`
 - Hosted migrations: `20260825125137_foundation` and
   `20260825170000_incident_report_foundation`, followed by
-  `20260825222811_account_lifecycle_guards`
+  `20260825222811_account_lifecycle_guards` and
+  `20260825230000_enforce_report_revision_heads`
 
 Verified after migration:
 
@@ -50,6 +51,13 @@ private `user_accounts` trigger exists, its guard has no executable grant to
 public/Data API roles, and it retains the intended default-deny RLS posture. The
 provider security advisor reports only the expected informational no-policy
 notices for the still-unexposed `app_private` foundation tables.
+
+The incident/report revision-head migration is also verified in Development: the
+four private serialized trigger functions use `SECURITY DEFINER` with an empty
+search path and have no execute grants to public or Data API roles. They allow
+only consecutive immutable revisions and advance the matching incident or report
+head after insertion. This is persistence-integrity groundwork only; it does not
+add a browser-accessible mutation path, accounts, records, or RLS policies.
 
 ## Vercel preview
 

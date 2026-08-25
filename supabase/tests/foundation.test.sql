@@ -1,6 +1,6 @@
 begin;
 
-select plan(38);
+select plan(48);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -351,6 +351,184 @@ select is(
   ),
   2,
   'a security-relevant account state change advances auth_version'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.incidents (
+      id,
+      facility_id,
+      created_by_account_id,
+      incident_number,
+      display_name,
+      occurred_at,
+      category
+    )
+    select
+      '55555555-5555-4555-8555-555555555555',
+      facility.id,
+      '33333333-3333-4333-8333-333333333333',
+      'FICTIONAL-001',
+      'Fictional training scenario',
+      '2026-01-01T00:00:00Z'::timestamptz,
+      'training'
+    from app_private.facilities as facility
+    limit 1;
+  $$,
+  'a fictional incident starts with revision head zero'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.incident_revisions (
+      incident_id,
+      revision_number,
+      editor_account_id,
+      schema_version,
+      field_notes,
+      reviewed_facts
+    )
+    values (
+      '55555555-5555-4555-8555-555555555555',
+      2,
+      '33333333-3333-4333-8333-333333333333',
+      1,
+      '[]'::jsonb,
+      '[]'::jsonb
+    );
+  $$,
+  'Incident revision must advance exactly one revision from the current head',
+  'incident revisions cannot skip the current head'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.incident_revisions (
+      id,
+      incident_id,
+      revision_number,
+      editor_account_id,
+      schema_version,
+      field_notes,
+      reviewed_facts
+    )
+    values (
+      '66666666-6666-4666-8666-666666666666',
+      '55555555-5555-4555-8555-555555555555',
+      1,
+      '33333333-3333-4333-8333-333333333333',
+      1,
+      '[]'::jsonb,
+      '[]'::jsonb
+    );
+  $$,
+  'the first immutable incident revision advances the head'
+);
+
+select is(
+  (
+    select current_revision_number
+    from app_private.incidents
+    where id = '55555555-5555-4555-8555-555555555555'
+  ),
+  1,
+  'incident head matches the latest inserted revision'
+);
+
+select throws_ok(
+  $$
+    update app_private.incident_revisions
+    set reason = 'rewritten'
+    where id = '66666666-6666-4666-8666-666666666666';
+  $$,
+  'Rows in app_private.incident_revisions are append-only',
+  'an incident revision cannot be rewritten after insertion'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.reports (
+      id,
+      incident_id,
+      report_type,
+      reporting_account_id,
+      prepared_by_account_id
+    )
+    values (
+      '77777777-7777-4777-8777-777777777777',
+      '55555555-5555-4555-8555-555555555555',
+      'fictional_training_report',
+      '33333333-3333-4333-8333-333333333333',
+      '33333333-3333-4333-8333-333333333333'
+    );
+  $$,
+  'a fictional report starts with revision head zero'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.report_revisions (
+      report_id,
+      revision_number,
+      editor_account_id,
+      source_incident_revision_id,
+      narrative,
+      schema_version
+    )
+    values (
+      '77777777-7777-4777-8777-777777777777',
+      2,
+      '33333333-3333-4333-8333-333333333333',
+      '66666666-6666-4666-8666-666666666666',
+      'Fictional training narrative.',
+      1
+    );
+  $$,
+  'Report revision must advance exactly one revision from the current head',
+  'report revisions cannot skip the current head'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.report_revisions (
+      id,
+      report_id,
+      revision_number,
+      editor_account_id,
+      source_incident_revision_id,
+      narrative,
+      schema_version
+    )
+    values (
+      '88888888-8888-4888-8888-888888888888',
+      '77777777-7777-4777-8777-777777777777',
+      1,
+      '33333333-3333-4333-8333-333333333333',
+      '66666666-6666-4666-8666-666666666666',
+      'Fictional training narrative.',
+      1
+    );
+  $$,
+  'the first immutable report revision advances the head'
+);
+
+select is(
+  (
+    select current_revision_number
+    from app_private.reports
+    where id = '77777777-7777-4777-8777-777777777777'
+  ),
+  1,
+  'report head matches the latest inserted revision'
+);
+
+select throws_ok(
+  $$
+    delete from app_private.report_revisions
+    where id = '88888888-8888-4888-8888-888888888888';
+  $$,
+  'Rows in app_private.report_revisions are append-only',
+  'a report revision cannot be deleted after insertion'
 );
 
 select * from finish();
