@@ -176,6 +176,10 @@ Pause and report a blocker instead of guessing when work requires:
       report-draft references that exclude unreviewed narrative (`45f0c0b`).
 - [ ] Add incident, fact, draft, revision, export, audit, and idempotency
       schema.
+- [x] Add the initial default-deny incident/report foundation: incident and
+      report heads, immutable revisions, report access relationships, indexes,
+      forced RLS, revoked direct grants, and pgTAP checks (`25ad616`; local
+      replay/lint/30 pgTAP and GitHub Database quality passed).
 - [ ] Add constraints, indexes, grants, forced RLS, and append-only protections.
 - [ ] Implement server-only reads and authorized transactional mutations.
 - [ ] Port the accepted officer shell and design primitives from pinned source.
