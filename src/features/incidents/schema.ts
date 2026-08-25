@@ -92,3 +92,4 @@ export const reportDraftRequestSchema = z
 
 export type IncidentRevisionInput = z.infer<typeof incidentRevisionInputSchema>;
 export type ReportDraftRequest = z.infer<typeof reportDraftRequestSchema>;
+export type ReviewedFact = z.infer<typeof reviewedFactSchema>;
