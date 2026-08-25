@@ -1,6 +1,6 @@
 begin;
 
-select plan(54);
+select plan(57);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -34,6 +34,11 @@ select has_table(
   'app_private',
   'idempotency_records',
   'idempotency records table exists'
+);
+select has_table(
+  'app_private',
+  'auth_attempt_events',
+  'private authentication attempt events table exists'
 );
 
 select is(
@@ -609,6 +614,41 @@ select throws_ok(
   $$,
   'duplicate key value violates unique constraint "idempotency_records_actor_account_id_action_idempotency_key_key"',
   'the same actor, action, and retry key cannot create a second record'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.auth_attempt_events (
+      subject_kind,
+      subject_digest,
+      outcome,
+      expires_at
+    ) values (
+      'account',
+      repeat('f', 64),
+      'failed',
+      statement_timestamp() + interval '10 minutes'
+    );
+  $$,
+  'a rate-limit event stores only a fictional opaque subject digest'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.auth_attempt_events (
+      subject_kind,
+      subject_digest,
+      outcome,
+      expires_at
+    ) values (
+      'account',
+      'raw-employee-number',
+      'failed',
+      statement_timestamp() + interval '10 minutes'
+    );
+  $$,
+  'new row for relation "auth_attempt_events" violates check constraint "auth_attempt_events_subject_digest_check"',
+  'raw identifiers cannot enter auth rate-limit metadata'
 );
 
 select * from finish();
