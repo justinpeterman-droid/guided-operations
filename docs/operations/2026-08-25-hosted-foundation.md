@@ -58,38 +58,37 @@ claim the application page or liveness route is remotely verified from this
 preview. The same commit passed local production-browser checks at desktop and
 mobile sizes.
 
-## Vercel project and production attempt
+## Authoritative Vercel production foundation
 
-- Team: `justin-peterman-s-projects` (Justin Peterman's projects)
-- Project: `guided-operations` (`prj_BMU1Piqg20muXIC1PzcdF3Cvig0i`)
-- The public Supabase URL and publishable key were added as non-sensitive
-  configuration for Development, Preview, and Production. No server secret,
-  OpenAI key, database password, or service-role key was added.
-- The owner confirmed the private GitHub repository was connected in the Vercel
-  project settings after commit `2ddccf1`. The next Git push is the first
-  deployment-event verification for that connection.
+The Git-connected Vercel project under `justinpeterman-3079` is the
+authoritative project for this repository. Its production deployment
+`dpl_FxygRKNYSLFB1yAsPZ8JtM8VEJvm` built commit
+`1491cff133f766939ac60384a2f4923a68808d13` successfully in 13 seconds.
 
-On 2026-08-25, the local Vercel production build completed successfully. The
-prebuilt upload failed while Vercel processed a generated Next.js error-page
-artifact (`ENOENT` under `.vercel/output/functions`); the standard Vercel
-production deploy fallback created deployment `dpl_79pt5uYLDy94G8GPB22Btc8MEFLb`
-but remained `UNKNOWN` in the Vercel CLI after several minutes. Its deployment
-URL served Vercel authentication rather than the application, its expected
-production alias returned 404, and no runtime logs were available. It is
-therefore **not a verified production release** and must not be presented as a
-live application.
+- Canonical URL: `https://guided-operations.vercel.app`
+- The live homepage was inspected in a real browser: it renders the intended
+  foundation screen, keeps both sign-in fields and the sign-in button disabled,
+  and reported no console errors.
+- The live `GET /api/health/live` endpoint returned HTTP 200 with
+  `{"service":"guided-operations-web","status":"ok"}`.
+
+This is a verified, no-data foundation release. It does not approve accounts,
+operational data, corpus import, or official facility use.
+
+## Secondary Vercel project
+
+An additional project was created under `justin-peterman-s-projects`
+(`prj_BMU1Piqg20muXIC1PzcdF3Cvig0i`) during setup. Its CLI deployment remained
+`UNKNOWN` and it is not the Git-connected or authoritative project. Its public
+Supabase URL and publishable key configuration must not be treated as production
+configuration for the authoritative project.
 
 ## Still open
 
-- Authorize Vercel's GitHub integration for the private repository, or document
-  a reviewed manual deployment procedure.
-- Resolve the Vercel deployment state/alias before retrying production.
 - Confirm the aligned Vercel function region.
-- Configure hosted Supabase Auth to disallow public self-signup before any
-  account workflow is built. This cannot be established by the database
-  migration and was not changed in this foundation pass.
-- Verify the live page and `/api/health/live` with a real browser, including
-  console errors and failed assets.
+- Independently recheck the hosted Supabase Auth self-signup setting before any
+  account workflow is built. The owner confirmed it was disabled, but the
+  setting cannot be proven by the database migration.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.
 - Keep the RAG corpus out of the hosted project until the corpus migration gate
   is approved and reconciled.
