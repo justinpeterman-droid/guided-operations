@@ -65,8 +65,9 @@ mobile sizes.
 - The public Supabase URL and publishable key were added as non-sensitive
   configuration for Development, Preview, and Production. No server secret,
   OpenAI key, database password, or service-role key was added.
-- Vercel CLI could not connect the private GitHub repository. Git pushes will
-  not automatically deploy until the Vercel GitHub integration is authorized.
+- The owner confirmed the private GitHub repository was connected in the Vercel
+  project settings after commit `2ddccf1`. The next Git push is the first
+  deployment-event verification for that connection.
 
 On 2026-08-25, the local Vercel production build completed successfully. The
 prebuilt upload failed while Vercel processed a generated Next.js error-page
