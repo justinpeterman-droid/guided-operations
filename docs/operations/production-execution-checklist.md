@@ -171,7 +171,9 @@ Pause and report a blocker instead of guessing when work requires:
 ## Phase 3 — incident and report vertical slice
 
 - [ ] Freeze the first parity slice and record omissions.
-- [ ] Define versioned Zod/domain contracts.
+- [x] Define versioned Zod/domain contracts for fictional incident revisions,
+      confirmed-fact provenance, explicit unknown/not-applicable states, and
+      report-draft references that exclude unreviewed narrative (`45f0c0b`).
 - [ ] Add incident, fact, draft, revision, export, audit, and idempotency
       schema.
 - [ ] Add constraints, indexes, grants, forced RLS, and append-only protections.
