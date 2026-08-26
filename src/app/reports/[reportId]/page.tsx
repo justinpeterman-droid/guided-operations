@@ -2,7 +2,9 @@ import Link from "next/link";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
+import { listReportRevisionsForCurrentSession } from "@/server/incidents/list-report-revisions";
 
+import { ReportHistory } from "./report-history";
 import { ReportRevisionForm } from "./report-revision-form";
 
 export const dynamic = "force-dynamic";
@@ -69,9 +71,26 @@ export default async function ReportPage({
           reportId={reportId}
           revisionNumber={result.report.revisionNumber}
         />
+        <ReportHistory
+          currentRevisionNumber={result.report.revisionNumber}
+          reportId={reportId}
+          revisions={await loadHistory(reportId)}
+        />
       </article>
     </main>
   );
+}
+
+async function loadHistory(reportId: string) {
+  try {
+    const result = await listReportRevisionsForCurrentSession(
+      reportId,
+      await createSupabaseServerClient(),
+    );
+    return result.kind === "listed" ? result.revisions : [];
+  } catch {
+    return [];
+  }
 }
 
 async function loadReport(reportId: string) {

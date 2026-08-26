@@ -194,6 +194,16 @@ database locks the report and rejects a stale base revision with
 and returns only its revision number. It never updates, removes, or exposes an
 earlier report revision.
 
+The server-only `api.list_report_revisions` RPC returns a revision-history
+timeline—revision number, correction reason, timestamp, current marker, and
+restore provenance—to an active collaborator or active same-facility
+administrator. It deliberately excludes report narrative from the history
+summary. `api.restore_report_revision` is more restrictive: only the active
+report owner may restore a prior revision. It requires the current base
+revision, a bounded restoration reason, and idempotency data, then creates a new
+immutable revision rather than changing the prior one. Administrative restore
+remains unavailable until the required step-up workflow is implemented.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export

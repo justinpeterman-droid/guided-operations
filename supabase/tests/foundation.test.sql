@@ -1,6 +1,6 @@
 begin;
 
-select plan(98);
+select plan(105);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -930,6 +930,60 @@ select lives_ok($$ select api.append_report_revision(current_setting('app.test.r
 reset role;
 select throws_ok($$ set local role authenticated; select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true); select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64)); $$,'Report revision conflict','a stale report revision is rejected instead of overwriting the newer immutable revision');
 
+reset role;
+select ok(
+  has_function_privilege('authenticated', 'api.list_report_revisions(uuid)', 'execute')
+  and not has_function_privilege('anon', 'api.list_report_revisions(uuid)', 'execute'),
+  'only authenticated users can execute the report-revision history RPC'
+);
+select ok(
+  has_function_privilege('authenticated', 'api.restore_report_revision(uuid,integer,integer,text,text,text)', 'execute')
+  and not has_function_privilege('anon', 'api.restore_report_revision(uuid,integer,integer,text,text,text)', 'execute'),
+  'only authenticated users can execute the report-restore RPC'
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select is(
+  (select count(*)::integer from api.list_report_revisions(current_setting('app.test.report_id')::uuid)),
+  2,
+  'an authorized owner can see metadata for every immutable report revision'
+);
+select is(
+  api.restore_report_revision(
+    current_setting('app.test.report_id')::uuid,
+    2,
+    1,
+    'Fictional restore after review.',
+    repeat('2', 64),
+    repeat('3', 64)
+  ),
+  3,
+  'an authorized owner restores a prior revision by creating revision three'
+);
+select ok(
+  exists (
+    select 1
+    from api.list_report_revisions(current_setting('app.test.report_id')::uuid)
+    where revision_number = 3
+      and is_current
+      and restored_from_revision_number = 1
+  ),
+  'the restored revision records its immutable provenance and becomes the current head'
+);
+select is(
+  api.restore_report_revision(
+    current_setting('app.test.report_id')::uuid,
+    3,
+    1,
+    'Fictional restore after review.',
+    repeat('2', 64),
+    repeat('3', 64)
+  ),
+  3,
+  'a retry returns the exact restored revision rather than a later report head'
+);
+reset role;
+
 select throws_ok(
   $$
     select set_config(
@@ -1149,6 +1203,15 @@ select is(
   (select count(*)::integer from api.list_reports(50)),
   0,
   'an unrelated active officer cannot list another account’s reports through direct RPC access'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_report_revisions(current_setting('app.test.report_id')::uuid)
+  ),
+  0,
+  'an unrelated active officer cannot read another account’s report history through direct RPC access'
 );
 
 reset role;
