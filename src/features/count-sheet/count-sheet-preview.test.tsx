@@ -21,8 +21,8 @@ describe("CountSheetPreview", () => {
     const user = userEvent.setup();
     render(<CountSheetPreview structure={structure} />);
 
-    await user.type(screen.getByLabelText("Dining, unit 1"), "2");
-    await user.type(screen.getByLabelText("In housing, unit 1"), "8");
+    await user.type(screen.getByLabelText("Dining, 1"), "2");
+    await user.type(screen.getByLabelText("In housing, 1"), "8");
     await user.type(screen.getByLabelText("Operational total, on site"), "10");
 
     expect(
@@ -35,7 +35,7 @@ describe("CountSheetPreview", () => {
     const user = userEvent.setup();
     render(<CountSheetPreview structure={structure} />);
 
-    await user.type(screen.getByLabelText("In housing, unit 1"), "8");
+    await user.type(screen.getByLabelText("In housing, 1"), "8");
     await user.type(screen.getByLabelText("Operational total, on site"), "5");
 
     expect(
@@ -43,7 +43,7 @@ describe("CountSheetPreview", () => {
         "Open difference — review the values; do not balance by guessing.",
       ),
     ).toBeVisible();
-    expect(screen.getByLabelText("In housing, unit 1")).toHaveValue("8");
+    expect(screen.getByLabelText("In housing, 1")).toHaveValue("8");
     expect(screen.getByLabelText("Operational total, on site")).toHaveValue(
       "5",
     );

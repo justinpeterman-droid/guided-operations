@@ -126,7 +126,7 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
                 <th scope="col">Area</th>
                 {structure.columns.map((column) => (
                   <th key={column} scope="col">
-                    Unit {column}
+                    {column}
                   </th>
                 ))}
                 <th scope="col">Area total</th>
@@ -140,7 +140,7 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
                     <td key={column}>
                       {renderCountInput(
                         { group: "cell", area, field: column },
-                        `${area}, unit ${column}`,
+                        `${area}, ${column}`,
                       )}
                     </td>
                   ))}
@@ -160,7 +160,7 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
                   <td key={column}>
                     {renderCountInput(
                       { group: "housing", field: column },
-                      `In housing, unit ${column}`,
+                      `In housing, ${column}`,
                     )}
                   </td>
                 ))}

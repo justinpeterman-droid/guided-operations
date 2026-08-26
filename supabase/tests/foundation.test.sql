@@ -1,6 +1,6 @@
 begin;
 
-select plan(105);
+select plan(108);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1294,6 +1294,36 @@ select is(
 );
 
 reset role;
+
+select has_column(
+  'app_private',
+  'staff_members',
+  'shift_code',
+  'staff members retain the administrator-assigned Count Sheet shift code'
+);
+
+select lives_ok(
+  $$
+    update app_private.staff_members
+    set shift_code = 'U'
+    where id = '22222222-2222-4222-8222-222222222222';
+
+    update app_private.staff_members
+    set shift_code = 'F'
+    where id = '44444444-4444-4444-8444-444444444444';
+  $$,
+  'five-day-week and five-day-week field assignments are accepted'
+);
+
+select throws_ok(
+  $$
+    update app_private.staff_members
+    set shift_code = 'Z'
+    where id = '22222222-2222-4222-8222-222222222222';
+  $$,
+  'new row for relation "staff_members" violates check constraint "staff_members_shift_code_check"',
+  'an unapproved Count Sheet shift code is rejected'
+);
 
 select * from finish();
 rollback;

@@ -171,7 +171,11 @@ not an acceptable control.
 - Session maximum age, idle timeout, concurrent-session limit, and
   trusted-device policy.
 - Which minimal staff fields officers may see in pickers.
-- Whether count sheets are officer-private, shift-shared, or
-  administrator-visible.
+- Count Sheets are **shift-shared**: active officers with the same
+  administrator-assigned `shift_code` may view and work on the same shift’s
+  sheet. A missing shift assignment grants no Count Sheet access. This decision
+  does not grant unrelated report or administrative access.
+- The initial Count Sheet shift codes are: `A` and `B` for day shift; `C` and
+  `D` for night shift; `U` for five-day week; and `F` for five-day-week field.
 - Retention and legal-hold requirements for account, audit, incident, report,
   and generated-artifact data if real operational use is later approved.
