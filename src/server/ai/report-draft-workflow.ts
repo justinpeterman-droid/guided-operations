@@ -5,8 +5,10 @@ import { z } from "zod";
 import {
   buildReportDraftSource,
   ReportDraftSourceError,
+  type ReportDraftSource,
 } from "@/features/incidents/report-draft-source";
 import type { ReportDraftRequest } from "@/features/incidents/schema";
+import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import {
   getIncidentRevisionForCurrentSession,
   type GetIncidentRevisionSessionClient,
@@ -21,7 +23,13 @@ import {
 const sourceRevisionNumberSchema = z.number().int().positive();
 
 export type ReportDraftWorkflowOutcome =
-  | ReportDraftOutcome
+  | Readonly<{
+      kind: "draft";
+      draft: GeneratedReportDraft;
+      source: ReportDraftSource;
+      providerKey: string;
+    }>
+  | Exclude<ReportDraftOutcome, Readonly<{ kind: "draft" }>>
   | Readonly<{ kind: "denied" }>
   | Readonly<{ kind: "not_found" }>
   | Readonly<{ kind: "unavailable" }>;
@@ -67,7 +75,10 @@ export function createReportDraftWorkflow(
           revision.revision.incidentRevisionId,
           revision.revision.reviewedFacts,
         );
-        return draftService.draft(source);
+        const outcome = await draftService.draft(source);
+        return outcome.kind === "draft"
+          ? { ...outcome, source, providerKey: generation.providerKey }
+          : outcome;
       } catch (error) {
         if (
           error instanceof ReportDraftSourceError ||

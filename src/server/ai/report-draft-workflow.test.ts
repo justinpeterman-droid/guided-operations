@@ -82,11 +82,25 @@ describe("report draft workflow", () => {
 
     await expect(workflow.draft(request, 1, client())).resolves.toEqual({
       kind: "draft",
+      providerKey: "fictional",
       draft: {
         paragraphs: [
           {
             text: "Fictional draft paragraph.",
             sourceFactIds: [source.reviewed_facts[0].id],
+          },
+        ],
+      },
+      source: {
+        incidentId: source.incident_id,
+        sourceIncidentRevisionId: source.incident_revision_id,
+        reportType: request.reportType,
+        confirmedFacts: [
+          {
+            id: source.reviewed_facts[0].id,
+            field: source.reviewed_facts[0].field,
+            value: source.reviewed_facts[0].value,
+            sourceNoteIds: source.reviewed_facts[0].sourceNoteIds,
           },
         ],
       },
