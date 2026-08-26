@@ -1,6 +1,6 @@
 begin;
 
-select plan(84);
+select plan(86);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -824,6 +824,35 @@ select is(
   1,
   'the report draft candidate is stored once as review-only history'
 );
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.get_report_draft_candidate(uuid)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.get_report_draft_candidate(uuid)',
+    'execute'
+  ),
+  'only authenticated users can read a report draft candidate'
+);
+
+select set_config(
+  'app.test.candidate_id',
+  (select id::text from app_private.report_draft_candidates limit 1),
+  true
+);
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select lives_ok(
+  $$ select * from api.get_report_draft_candidate(current_setting('app.test.candidate_id')::uuid) $$,
+  'an authorized owner can read one immutable review-only report draft candidate'
+);
+
+reset role;
 
 select throws_ok(
   $$
