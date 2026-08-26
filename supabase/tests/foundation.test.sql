@@ -1,6 +1,6 @@
 begin;
 
-select plan(115);
+select plan(119);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1425,6 +1425,49 @@ select throws_ok(
   'Rows in app_private.paperwork_revisions are append-only',
   'a Count Sheet revision cannot be altered after it is written'
 );
+
+select lives_ok(
+  $$
+    update app_private.staff_members
+    set shift_code = 'B'
+    where id = '66666666-6666-4666-8666-666666666666';
+  $$,
+  'a fictional officer can receive a different Count Sheet shift assignment'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_count_sheets(date '2026-08-26')
+  ),
+  1,
+  'an active same-facility administrator can list Count Sheet summaries'
+);
+
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_count_sheets(date '2026-08-26')
+  ),
+  0,
+  'an active officer cannot list another shift Count Sheet summary'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.get_count_sheet('77777777-7777-4777-8777-777777777777')
+  ),
+  0,
+  'an active officer cannot read another shift Count Sheet values'
+);
+
+reset role;
 
 select * from finish();
 rollback;

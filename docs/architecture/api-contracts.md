@@ -253,6 +253,14 @@ endpoint remains a later implementation item.
 - GET/POST/PATCH revisioned paperwork routes
 - GET/POST print-template preview/action routes
 
+The first private Count Sheet read primitives are `api.list_count_sheets(date)`
+and `api.get_count_sheet(record_id)`. They are not browser routes yet. An active
+officer can receive only the sheet for their administrator-assigned shift;
+active same-facility administrators can oversee all facility shifts. Both
+functions return no rows for a missing, inactive, cross-facility, or
+unauthorized request. Count Sheet creation and revision-save endpoints remain
+unimplemented until the server-side closed structure/payload validator is added.
+
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.
 
