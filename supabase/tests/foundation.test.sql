@@ -1,6 +1,6 @@
 begin;
 
-select plan(95);
+select plan(98);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -922,6 +922,13 @@ select ok(
   'an active report owner can list the authorized finalized report summary'
 );
 reset role;
+
+select ok(has_function_privilege('authenticated','api.append_report_revision(uuid,integer,text,text,text,text)','execute') and not has_function_privilege('anon','api.append_report_revision(uuid,integer,text,text,text,text)','execute'),'only authenticated users can append report revisions');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select lives_ok($$ select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional corrected narrative.','Fictional correction.',repeat('d',64),repeat('e',64)) $$,'an authorized owner appends an immutable report correction');
+reset role;
+select throws_ok($$ set local role authenticated; select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true); select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64)); $$,'Report revision conflict','a stale report revision is rejected instead of overwriting the newer immutable revision');
 
 select throws_ok(
   $$
