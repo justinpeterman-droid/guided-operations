@@ -1,6 +1,6 @@
 begin;
 
-select plan(131);
+select plan(134);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -64,6 +64,26 @@ select ok(
 select ok(
   not has_table_privilege('authenticated', 'app_private.user_accounts', 'select'),
   'an authenticated caller cannot read private accounts directly'
+);
+select ok(
+  exists (
+    select 1
+    from pg_proc as procedure
+    join pg_namespace as namespace on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'api'
+      and procedure.proname = 'list_admin_audit_events'
+      and procedure.prosecdef
+  ),
+  'administrator audit listing is a security-definer API routine'
+);
+select ok(
+  has_function_privilege('authenticated', 'api.list_admin_audit_events(integer)', 'execute')
+  and not has_function_privilege('anon', 'api.list_admin_audit_events(integer)', 'execute'),
+  'only authenticated callers can execute the administrator audit-list RPC'
+);
+select ok(
+  not has_table_privilege('authenticated', 'app_private.audit_events', 'select'),
+  'an authenticated caller cannot read private audit records directly'
 );
 
 select ok(

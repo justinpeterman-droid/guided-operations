@@ -62,12 +62,11 @@ export default async function AdminPage() {
           <span aria-hidden="true">2</span>
           <div>
             <h2>Audit and health</h2>
-            <p>
-              These pages will show only safe, redacted information when the
-              monitoring work is complete.
-            </p>
+            <p>Review safe, redacted activity while monitoring is added.</p>
           </div>
-          <em>Planned</em>
+          <Link className="reports-home-link" href="/admin/audit">
+            View activity
+          </Link>
         </article>
       </section>
     </main>
