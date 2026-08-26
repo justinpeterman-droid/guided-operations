@@ -89,6 +89,11 @@ environment settings, Supabase secrets, or protected GitHub environments.
 | `RAG_CORPUS_VERSION`                         |           yes |                   yes |                              yes | Non-secret immutable manifest/version identifier                   |
 | `APP_ENV`                                    |           yes |                   yes |                              yes | Non-secret guard against cross-environment writes                  |
 | `APP_ORIGIN`                                 |           yes |                   yes |                              yes | Non-secret exact allowed origin                                    |
+| `EMPLOYEE_LOOKUP_PEPPER`                     |  local server |           server only |                      server only | **Secret**; keys employee-number lookup without storing raw values |
+| `AUTH_DUMMY_ALIAS`                           |  local server |           server only |                      server only | **Secret**; fixed timing-defense identity, never browser-visible   |
+| `CSRF_HMAC_KEY`                              |  local server |           server only |                      server only | **Secret**; environment-specific session-bound CSRF signing key    |
+| `INCIDENT_IDEMPOTENCY_HMAC_KEY`              |  local server |           server only |                      server only | **Secret**; hashes retry keys without retaining their raw values   |
+| `AUTH_SIGN_IN_ENABLED`                       |           yes |                   yes |                              yes | Non-secret fail-closed feature gate; enabled only after auth proof |
 | backup destination credentials               |            no | protected operator/CI |            protected operator/CI | **Secret**, separate from runtime credentials                      |
 
 Prefer Supabase publishable and secret API keys for new work; legacy `anon` and
