@@ -28,7 +28,8 @@ type ListReportsRpcClient = Readonly<{
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
-export type ListReportsSessionClient = CurrentSessionClient & ListReportsRpcClient;
+export type ListReportsSessionClient = CurrentSessionClient &
+  ListReportsRpcClient;
 
 export type ReportSummary = Readonly<{
   reportId: string;

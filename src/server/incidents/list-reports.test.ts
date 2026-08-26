@@ -47,7 +47,9 @@ function client(options: { claims?: unknown; reports?: unknown } = {}) {
 describe("listReportsForCurrentSession", () => {
   it("maps only authorized report summary fields", async () => {
     const sessionClient = client();
-    await expect(listReportsForCurrentSession(sessionClient, 50)).resolves.toEqual({
+    await expect(
+      listReportsForCurrentSession(sessionClient, 50),
+    ).resolves.toEqual({
       kind: "listed",
       reports: [
         {
@@ -68,7 +70,9 @@ describe("listReportsForCurrentSession", () => {
 
   it("denies an untrusted session before the report-list RPC", async () => {
     const sessionClient = client({ claims: {} });
-    await expect(listReportsForCurrentSession(sessionClient, 50)).resolves.toEqual({
+    await expect(
+      listReportsForCurrentSession(sessionClient, 50),
+    ).resolves.toEqual({
       kind: "denied",
     });
     expect(sessionClient.rpc).not.toHaveBeenCalledWith(
@@ -79,7 +83,10 @@ describe("listReportsForCurrentSession", () => {
 
   it("fails closed on malformed report summary rows", async () => {
     await expect(
-      listReportsForCurrentSession(client({ reports: [{ report_id: "bad" }] }), 50),
+      listReportsForCurrentSession(
+        client({ reports: [{ report_id: "bad" }] }),
+        50,
+      ),
     ).resolves.toEqual({ kind: "unavailable" });
   });
 });

@@ -1,6 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
+
+import type { ReportSummary } from "@/server/incidents/list-reports";
 
 export type AuthorizedIncidentSummary = Readonly<{
   incidentId: string;
@@ -23,8 +26,10 @@ function formatTimestamp(timestamp: string): string {
 /** Filters only server-authorized summaries already delivered to this page. */
 export function ReportsList({
   incidents,
+  reports,
 }: {
   incidents: readonly AuthorizedIncidentSummary[];
+  reports: readonly ReportSummary[];
 }) {
   const [query, setQuery] = useState("");
   const visibleIncidents = useMemo(() => {
@@ -36,6 +41,15 @@ export function ReportsList({
       ),
     );
   }, [incidents, query]);
+  const visibleReports = useMemo(() => {
+    const normalized = query.trim().toLocaleLowerCase();
+    if (!normalized) return reports;
+    return reports.filter((report) =>
+      [report.incidentNumber, report.incidentName, report.reportType].some(
+        (value) => value.toLocaleLowerCase().includes(normalized),
+      ),
+    );
+  }, [query, reports]);
 
   return (
     <section className="reports-results" aria-labelledby="reports-title">
@@ -49,11 +63,48 @@ export function ReportsList({
           value={query}
         />
       </label>
-      {visibleIncidents.length === 0 ? (
+      {visibleIncidents.length === 0 && visibleReports.length === 0 ? (
         <p className="reports-no-results" role="status">
           No authorized reports match this search.
         </p>
-      ) : (
+      ) : null}
+      {visibleReports.length > 0 ? (
+        <div className="reports-table-wrap">
+          <table>
+            <caption>Authorized report summaries</caption>
+            <thead>
+              <tr>
+                <th scope="col">Report</th>
+                <th scope="col">Incident</th>
+                <th scope="col">Status</th>
+                <th scope="col">Revision</th>
+              </tr>
+            </thead>
+            <tbody>
+              {visibleReports.map((report) => (
+                <tr key={report.reportId}>
+                  <th scope="row">
+                    <Link href={`/reports/${report.reportId}`}>
+                      {report.reportType}
+                    </Link>
+                  </th>
+                  <td>
+                    <strong>{report.incidentNumber}</strong>
+                    <span>{report.incidentName}</span>
+                  </td>
+                  <td>
+                    <span className={`incident-status status-${report.status}`}>
+                      {report.status.replace("_", " ")}
+                    </span>
+                  </td>
+                  <td>{report.currentRevisionNumber}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+      {visibleIncidents.length > 0 ? (
         <div className="reports-table-wrap">
           <table>
             <caption>Authorized incident summaries</caption>
@@ -92,7 +143,7 @@ export function ReportsList({
             </tbody>
           </table>
         </div>
-      )}
+      ) : null}
     </section>
   );
 }

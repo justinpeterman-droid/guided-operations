@@ -31,15 +31,29 @@ describe("ReportsList", () => {
             currentRevisionNumber: 2,
           },
         ]}
+        reports={[
+          {
+            reportId: "report-one",
+            incidentNumber: "F-002",
+            incidentName: "Fictional training two",
+            reportType: "fictional-exercise-report",
+            status: "draft",
+            currentRevisionNumber: 1,
+            updatedAt: "2026-08-26T12:00:00Z",
+          },
+        ]}
       />,
     );
     await user.type(
       screen.getByLabelText("Search your authorized reports"),
       "exercise",
     );
-    expect(screen.getByText("Fictional training two")).toBeVisible();
+    expect(screen.getAllByText("Fictional training two")).toHaveLength(2);
     expect(
       screen.queryByText("Fictional training one"),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "fictional-exercise-report" }),
+    ).toHaveAttribute("href", "/reports/report-one");
   });
 });

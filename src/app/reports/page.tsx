@@ -2,15 +2,28 @@ import Link from "next/link";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
+import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
 
 import { ReportsList } from "./reports-list";
 
 export const dynamic = "force-dynamic";
 
-async function loadAuthorizedIncidents() {
+async function loadAuthorizedWork() {
   try {
     const client = await createSupabaseServerClient();
-    return await listIncidentsForCurrentSession(client, 50);
+    const [incidents, reports] = await Promise.all([
+      listIncidentsForCurrentSession(client, 50),
+      listReportsForCurrentSession(client, 50),
+    ]);
+    if (incidents.kind === "denied" || reports.kind === "denied")
+      return { kind: "denied" } as const;
+    if (incidents.kind === "unavailable" || reports.kind === "unavailable")
+      return { kind: "unavailable" } as const;
+    return {
+      kind: "listed" as const,
+      incidents: incidents.incidents,
+      reports: reports.reports,
+    };
   } catch {
     return { kind: "unavailable" } as const;
   }
@@ -18,7 +31,7 @@ async function loadAuthorizedIncidents() {
 
 /** Authorized server-rendered incident/report index; no demo data is used. */
 export default async function ReportsPage() {
-  const result = await loadAuthorizedIncidents();
+  const result = await loadAuthorizedWork();
 
   if (result.kind === "denied") return <SignInRequired />;
   if (result.kind === "unavailable") return <ReportsUnavailable />;
@@ -44,12 +57,12 @@ export default async function ReportsPage() {
         <p className="eyebrow">Your authorized work</p>
         <h1 id="reports-title">Reports and incidents</h1>
         <p>
-          This list contains only the incidents your current account is allowed
+          This workspace contains only records your current account is allowed
           to see. It never substitutes a training example for a missing record.
         </p>
       </section>
 
-      {result.incidents.length === 0 ? (
+      {result.incidents.length === 0 && result.reports.length === 0 ? (
         <section className="reports-empty-state" aria-labelledby="empty-title">
           <h2 id="empty-title">No incidents are available.</h2>
           <p>
@@ -59,7 +72,7 @@ export default async function ReportsPage() {
           </p>
         </section>
       ) : (
-        <ReportsList incidents={result.incidents} />
+        <ReportsList incidents={result.incidents} reports={result.reports} />
       )}
     </main>
   );
