@@ -114,6 +114,15 @@ metadata, or inactive accounts to ordinary users.
 Create/save/restore use idempotency. Save uses If-Match and
 base_revision_number. Unauthorized records are concealed as not found.
 
+The first persistence primitive is the private-to-the-server
+`api.create_incident` RPC. It receives the already validated create fields and
+opaque request/idempotency digests, derives the actor from the request JWT, and
+creates the incident plus immutable revision one in one transaction. It is not a
+browser wire contract: the future `POST /incidents` handler validates CSRF, the
+closed body, and current-account state before invoking it with a request-scoped
+JWT. Direct RPC calls still enforce active facility scope and payload
+provenance, and return only an opaque incident ID.
+
 ### Reports
 
 - GET /incidents/{incidentId}/reports

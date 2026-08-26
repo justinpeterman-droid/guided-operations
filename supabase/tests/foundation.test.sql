@@ -1,6 +1,6 @@
 begin;
 
-select plan(57);
+select plan(63);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -100,12 +100,11 @@ select is(
 
 select ok(
   not has_schema_privilege('anon', 'api', 'usage')
-    and not has_schema_privilege('authenticated', 'api', 'usage')
     and not has_schema_privilege('service_role', 'api', 'usage')
     and not has_schema_privilege('anon', 'app_private', 'usage')
     and not has_schema_privilege('authenticated', 'app_private', 'usage')
     and not has_schema_privilege('service_role', 'app_private', 'usage'),
-  'Data API roles cannot use locked application schemas'
+  'Only authenticated users may use the reviewed API schema; private schemas remain locked'
 );
 
 select is(
@@ -650,6 +649,110 @@ select throws_ok(
   'new row for relation "auth_attempt_events" violates check constraint "auth_attempt_events_subject_digest_check"',
   'raw identifiers cannot enter auth rate-limit metadata'
 );
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, text, text)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, text, text)',
+    'execute'
+  ),
+  'only authenticated users can execute the reviewed incident-create RPC'
+);
+
+select lives_ok(
+  $$
+    select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.create_incident(
+      current_setting('app.test.facility_id')::uuid,
+      'FICTIONAL-RPC-001',
+      'Fictional RPC scenario',
+      '2026-08-26T12:00:00Z'::timestamptz,
+      'training',
+      1,
+      '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
+      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      repeat('1', 64),
+      repeat('2', 64)
+    );
+  $$,
+  'an active authenticated account can create one fictional incident and revision'
+);
+
+reset role;
+
+select is(
+  (
+    select count(*)::integer
+    from app_private.incidents
+    where incident_number = 'FICTIONAL-RPC-001'
+  ),
+  1,
+  'the incident-create RPC created exactly one incident'
+);
+
+select lives_ok(
+  $$
+    select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.create_incident(
+      current_setting('app.test.facility_id')::uuid,
+      'FICTIONAL-RPC-001',
+      'Fictional RPC scenario',
+      '2026-08-26T12:00:00Z'::timestamptz,
+      'training',
+      1,
+      '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
+      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      repeat('1', 64),
+      repeat('2', 64)
+    );
+  $$,
+  'a retry with the same request returns the existing incident'
+);
+
+reset role;
+
+select is(
+  (
+    select count(*)::integer
+    from app_private.incidents
+    where incident_number = 'FICTIONAL-RPC-001'
+  ),
+  1,
+  'the retry did not create a second incident'
+);
+
+select throws_ok(
+  $$
+    select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
+    select api.create_incident(
+      current_setting('app.test.facility_id')::uuid,
+      'FICTIONAL-RPC-DENIED',
+      'Fictional denied scenario',
+      '2026-08-26T12:00:00Z'::timestamptz,
+      'training',
+      1,
+      '[{"id":"14141414-1414-4141-8141-141414141414","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
+      '[]'::jsonb,
+      repeat('3', 64),
+      repeat('4', 64)
+    );
+  $$,
+  'Not authorized to create an incident',
+  'a disabled account cannot create an incident through direct RPC access'
+);
+
+reset role;
 
 select * from finish();
 rollback;
