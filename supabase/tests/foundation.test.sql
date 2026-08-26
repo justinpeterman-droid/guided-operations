@@ -1,6 +1,6 @@
 begin;
 
-select plan(141);
+select plan(144);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -491,6 +491,41 @@ select throws_ok(
 select ok(
   not has_function_privilege('authenticated', 'app_private.disable_account(uuid,uuid)', 'execute'),
   'authenticated callers cannot invoke private account disablement directly'
+);
+
+select lives_ok(
+  $$
+    insert into auth.users (id, email)
+    values ('99999999-9999-4999-8999-999999999999', 'fixture-locked-officer@example.invalid');
+    insert into app_private.staff_members (
+      id, facility_id, employee_lookup_hash, employee_number_hint, display_name, status
+    )
+    select '12121212-1212-4121-8121-121212121212', facility.id, repeat('d', 64), '44', 'Fixture Locked Officer', 'active'
+    from app_private.facilities as facility limit 1;
+    insert into app_private.user_accounts (
+      auth_user_id, staff_member_id, sign_in_alias, role, status, locked_until, must_change_passcode
+    ) values (
+      '99999999-9999-4999-8999-999999999999',
+      '12121212-1212-4121-8121-121212121212',
+      'fixture-locked-officer-auth-alias@example.invalid', 'officer', 'locked', statement_timestamp() + interval '15 minutes', false
+    );
+    select app_private.unlock_account(
+      '33333333-3333-4333-8333-333333333333',
+      '99999999-9999-4999-8999-999999999999'
+    );
+  $$,
+  'a current administrator can unlock a same-facility fictional locked account through the private routine'
+);
+
+select is(
+  (select status::text from app_private.user_accounts where auth_user_id = '99999999-9999-4999-8999-999999999999'),
+  'active',
+  'private account unlock changes the target state to active'
+);
+
+select ok(
+  not has_function_privilege('authenticated', 'app_private.unlock_account(uuid,uuid)', 'execute'),
+  'authenticated callers cannot invoke private account unlock directly'
 );
 
 select is(
