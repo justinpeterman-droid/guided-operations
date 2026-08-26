@@ -52,12 +52,11 @@ export default async function AdminPage() {
           <span aria-hidden="true">1</span>
           <div>
             <h2>Roster and accounts</h2>
-            <p>
-              Coming next: invited accounts, safe role changes, and session
-              reset controls.
-            </p>
+            <p>View the protected account list and prepare safe changes.</p>
           </div>
-          <em>Being secured</em>
+          <Link className="reports-home-link" href="/admin/accounts">
+            View accounts
+          </Link>
         </article>
         <article>
           <span aria-hidden="true">2</span>
