@@ -15,17 +15,17 @@ is imported.
 
 As of 2026-08-26, this is an implementation candidate, not a production release.
 
-| Area                  | State                                                                                                                                |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
-| GitHub repository     | Private replacement repository created; earlier web/database CI passed, while the current local candidate awaits push and remote CI  |
-| Web foundation        | Next.js 16 App Router, React 19, protected report/paperwork routes, and local production build                                       |
-| Accepted appearance   | Guided Operations navy/gold design tokens established                                                                                |
-| Migrated product code | Count Sheet calculations, schema parser, types, and tests                                                                            |
-| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty                          |
-| Authentication        | Guarded employee-number/passcode and local sign-out routes built but fail closed by default; no hosted accounts or enabled login     |
-| RAG corpus            | Not copied; inventory and reconciliation are required first                                                                          |
-| Vercel                | Protected Preview and scoped environment inventory verified for an earlier commit; current local candidate is not pushed or deployed |
-| Supabase              | Project healthy; private schemas, forced RLS, private buckets, `pgcrypto`, and `pgvector` established                                |
+| Area                  | State                                                                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub repository     | Private replacement repository created; earlier web/database CI passed, while the current local candidate awaits push and remote CI                       |
+| Web foundation        | Next.js 16 App Router, React 19, protected report/paperwork routes, and local production build                                                            |
+| Accepted appearance   | Guided Operations navy/gold design tokens established                                                                                                     |
+| Migrated product code | Count Sheet calculations, schema parser, types, and tests                                                                                                 |
+| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty                                               |
+| Authentication        | Guarded employee-number/passcode, local sign-out, and account-wide sign-out routes built; sign-in remains fail-closed by default, with no hosted accounts |
+| RAG corpus            | Not copied; inventory and reconciliation are required first                                                                                               |
+| Vercel                | Protected Preview and scoped environment inventory verified for an earlier commit; current local candidate is not pushed or deployed                      |
+| Supabase              | Project healthy; private schemas, forced RLS, private buckets, `pgcrypto`, and `pgvector` established                                                     |
 
 The predecessor repository remains intact. Canonical source provenance and the
 deliberate copy/rewrite/omit decisions live in

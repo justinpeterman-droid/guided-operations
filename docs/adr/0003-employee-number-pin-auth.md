@@ -231,9 +231,12 @@ The protected Reports workspace now supplies a visible local sign-out control.
 It first obtains a fresh session-bound CSRF token, then calls the same-origin
 sign-out route. That route rechecks the current account, exact origin, and CSRF
 proof before ending only the current provider session and clearing the private
-device and CSRF cookies. Focused route and browser-component tests cover the
-success, failed, and denied cases. This is not logout-all, reset, or session
-revocation proof; those remain separate acceptance requirements.
+device and CSRF cookies. A separate same-origin, CSRF-protected sign-out-all
+route now revokes the authenticated account's provider sessions globally and
+clears those local safety cookies. Focused route and browser-component tests
+cover the local sign-out success, failed, and denied cases; focused route tests
+cover global revocation success and denied cases. Reset, disabled-account, and
+role-change revocation proof remain separate acceptance requirements.
 
 ## Threat model — 2026-08-25
 
