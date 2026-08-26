@@ -26,7 +26,7 @@ export type AccountGateResult =
         | "insufficient_role";
     }>;
 
-type AccountGateOptions = Readonly<{
+export type AccountGateOptions = Readonly<{
   requiredRole?: AccountRole;
   /** The passcode-change route is the only protected route allowed before it. */
   allowForcedPasscodeChange?: boolean;
