@@ -311,16 +311,16 @@ acceptance remain open**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **Count Sheet protected load/save/reopen is implemented; print/export
-qualification, history UI, other approved forms, and owner acceptance remain
-open**
+Status: **Count Sheet protected load/save/reopen/revision review/restore is
+implemented; print/export qualification, other approved forms, and owner
+acceptance remain open**
 
 ### Steps
 
 1. Complete qualification around the now-connected Count Sheet calculations,
-   assigned-shift persistence, review, and saved-sheet print control. Add
-   revision-history UI and supported export without changing the tested domain
-   formulas silently.
+   assigned-shift persistence, revision review/restore, and saved-sheet print
+   control. Add supported export without changing the tested domain formulas
+   silently.
 2. Import only reviewed form definitions from the pinned predecessor source.
    Validate source revision, rights, schema, and fictional-data safety before
    copying each template.

@@ -14,6 +14,10 @@ import {
 } from "./approved-structure";
 import { parseCountSheetStructure } from "./schema";
 import { PrintCountSheetButton } from "./print-count-sheet-button";
+import {
+  CountSheetHistory,
+  type ReviewedCountSheetRevision,
+} from "./count-sheet-history";
 import type { CountSheetPayload } from "./types";
 
 type ShiftCode = "A" | "B" | "C" | "D" | "U" | "F";
@@ -132,14 +136,18 @@ export function CountSheetWorkspace({
   const [revisionNumber, setRevisionNumber] = useState(0);
   const [loadVersion, setLoadVersion] = useState(0);
   const [dirty, setDirty] = useState(false);
+  const [reviewedRevision, setReviewedRevision] =
+    useState<ReviewedCountSheetRevision | null>(null);
   const [state, setState] = useState<"loading" | "ready" | "saving" | "error">(
     "loading",
   );
   const [message, setMessage] = useState("Loading your shift Count Sheet…");
   const [inputError, setInputError] = useState<string | null>(null);
+  const displayedPayload = reviewedRevision?.payload ?? payload;
   const totals = useMemo(
-    () => calculateCountTotals(APPROVED_COUNT_SHEET_STRUCTURE, payload),
-    [payload],
+    () =>
+      calculateCountTotals(APPROVED_COUNT_SHEET_STRUCTURE, displayedPayload),
+    [displayedPayload],
   );
 
   useEffect(() => {
@@ -162,6 +170,7 @@ export function CountSheetWorkspace({
         setPayload(loaded.payload);
         setRecordId(loaded.recordId);
         setRevisionNumber(loaded.revisionNumber);
+        setReviewedRevision(null);
         setDirty(false);
         setInputError(null);
         setState("ready");
@@ -263,11 +272,11 @@ export function CountSheetWorkspace({
   }
 
   function renderCountInput(target: CountCellTarget, label: string) {
-    const value = valueForTarget(payload, target);
+    const value = valueForTarget(displayedPayload, target);
     return (
       <input
         aria-label={label}
-        disabled={state !== "ready"}
+        disabled={state !== "ready" || reviewedRevision !== null}
         id={inputId(target)}
         inputMode="numeric"
         min="0"
@@ -289,8 +298,9 @@ export function CountSheetWorkspace({
           <p className="eyebrow">Protected shift record · Shift {shiftCode}</p>
           <h1 id="count-sheet-title">{APPROVED_COUNT_SHEET_STRUCTURE.title}</h1>
           <p>
-            Enter known values, review the difference, and save. Every save
-            creates a new revision.
+            {reviewedRevision
+              ? `Reviewing preserved revision ${reviewedRevision.revisionNumber}. Return to the current version before editing.`
+              : "Enter known values, review the difference, and save. Every save creates a new revision."}
           </p>
         </div>
         <div className="count-sheet-heading-actions">
@@ -299,20 +309,27 @@ export function CountSheetWorkspace({
               ? "Saving"
               : dirty
                 ? "Not saved"
-                : recordId
-                  ? `Saved r${revisionNumber}`
-                  : "Blank"}
+                : reviewedRevision
+                  ? `Reviewing r${reviewedRevision.revisionNumber}`
+                  : recordId
+                    ? `Saved r${revisionNumber}`
+                    : "Blank"}
           </span>
           <button
             className="count-sheet-print-button"
-            disabled={state !== "ready" || !dirty}
+            disabled={state !== "ready" || !dirty || reviewedRevision !== null}
             onClick={() => void save()}
             type="button"
           >
             Save new revision
           </button>
           <PrintCountSheetButton
-            disabled={dirty || !recordId || state !== "ready"}
+            disabled={
+              dirty ||
+              !recordId ||
+              state !== "ready" ||
+              reviewedRevision !== null
+            }
             label="Print saved sheet"
           />
           <button
@@ -329,6 +346,18 @@ export function CountSheetWorkspace({
               ? "Reload saved date (discard entries)"
               : "Reload saved date"}
           </button>
+          {reviewedRevision ? (
+            <button
+              className="count-sheet-print-button"
+              onClick={() => {
+                setReviewedRevision(null);
+                setMessage(`Saved revision ${revisionNumber} is shown.`);
+              }}
+              type="button"
+            >
+              Return to current version
+            </button>
+          ) : null}
         </div>
       </div>
 
@@ -433,7 +462,9 @@ export function CountSheetWorkspace({
               Work date
               <input
                 aria-label="Work date"
-                disabled={state === "saving" || dirty}
+                disabled={
+                  state === "saving" || dirty || reviewedRevision !== null
+                }
                 onChange={(event) => {
                   setState("loading");
                   setMessage("Loading your shift Count Sheet…");
@@ -447,24 +478,24 @@ export function CountSheetWorkspace({
               Count started
               <input
                 aria-label="Count started"
-                disabled={state !== "ready"}
+                disabled={state !== "ready" || reviewedRevision !== null}
                 onChange={(event) =>
                   changeTime("count_started", event.target.value)
                 }
                 type="time"
-                value={payload.count_started ?? ""}
+                value={displayedPayload.count_started ?? ""}
               />
             </label>
             <label>
               Count ended
               <input
                 aria-label="Count ended"
-                disabled={state !== "ready"}
+                disabled={state !== "ready" || reviewedRevision !== null}
                 onChange={(event) =>
                   changeTime("count_ended", event.target.value)
                 }
                 type="time"
-                value={payload.count_ended ?? ""}
+                value={displayedPayload.count_ended ?? ""}
               />
             </label>
             <h2>Operational total</h2>
@@ -484,6 +515,25 @@ export function CountSheetWorkspace({
         <p className="count-input-error" role="alert">
           {inputError}
         </p>
+      ) : null}
+      {recordId && revisionNumber > 0 ? (
+        <CountSheetHistory
+          currentRevisionNumber={revisionNumber}
+          key={recordId}
+          onRestored={() => {
+            setReviewedRevision(null);
+            setState("loading");
+            setMessage("Loading the restored Count Sheet…");
+            setLoadVersion((current) => current + 1);
+          }}
+          onReview={(revision) => {
+            setReviewedRevision(revision);
+            setMessage(
+              `Reviewing saved revision ${revision.revisionNumber}. Nothing has been changed.`,
+            );
+          }}
+          recordId={recordId}
+        />
       ) : null}
     </section>
   );

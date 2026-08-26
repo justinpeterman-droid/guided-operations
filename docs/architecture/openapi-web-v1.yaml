@@ -202,6 +202,92 @@ paths:
           $ref: "#/components/responses/InvalidRequest"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/revisions:
+    get:
+      summary: List or inspect authorized immutable Count Sheet revisions
+      operationId: getCountSheetRevisions
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: revision_number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description:
+            No more than the latest 100 authorized revision summaries, or one
+            exact authorized saved snapshot when revision_number is present.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CountSheetRevisionListResponse"
+                  - $ref: "#/components/schemas/CountSheetRevisionDetailResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/restore:
+    post:
+      summary: Restore a prior Count Sheet snapshot as a new revision
+      operationId: restoreCountSheetRevision
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetRestoreInput"
+      responses:
+        "201":
+          description: A new immutable revision copied the selected snapshot.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetRestoredResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   securitySchemes:
     cookieSession:
@@ -384,6 +470,130 @@ components:
             recordId:
               type: string
               format: uuid
+            revisionNumber:
+              type: integer
+              minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRevisionListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [revisions]
+          properties:
+            revisions:
+              type: array
+              maxItems: 100
+              items:
+                type: object
+                additionalProperties: false
+                required:
+                  - revisionNumber
+                  - reason
+                  - validation
+                  - createdAt
+                  - isCurrent
+                  - restoredFromRevisionNumber
+                properties:
+                  revisionNumber:
+                    type: integer
+                    minimum: 1
+                  reason:
+                    type: string
+                    minLength: 1
+                    maxLength: 500
+                  validation:
+                    type: object
+                  createdAt:
+                    type: string
+                    format: date-time
+                  isCurrent:
+                    type: boolean
+                  restoredFromRevisionNumber:
+                    type: [integer, "null"]
+                    minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRevisionDetailResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - recordId
+            - workDate
+            - shiftCode
+            - currentRevisionNumber
+            - revisionNumber
+            - reason
+            - payload
+            - validation
+            - restoredFromRevisionNumber
+            - createdAt
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            currentRevisionNumber:
+              type: integer
+              minimum: 1
+            revisionNumber:
+              type: integer
+              minimum: 1
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 500
+            payload:
+              type: object
+            validation:
+              type: object
+            restoredFromRevisionNumber:
+              type: [integer, "null"]
+              minimum: 1
+            createdAt:
+              type: string
+              format: date-time
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRestoreInput:
+      type: object
+      additionalProperties: false
+      required: [baseRevisionNumber, restoreRevisionNumber, reason]
+      properties:
+        baseRevisionNumber:
+          type: integer
+          minimum: 1
+        restoreRevisionNumber:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    CountSheetRestoredResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [revisionNumber]
+          properties:
             revisionNumber:
               type: integer
               minimum: 1

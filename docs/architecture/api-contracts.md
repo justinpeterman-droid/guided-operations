@@ -274,6 +274,19 @@ shift. A stale base revision returns `409 revision_conflict`; it never
 overwrites newer work. The route does not accept a facility, account, or shift
 from the browser.
 
+`GET /api/web/v1/count-sheets/{recordId}/revisions` returns no more than the
+latest 100 immutable revision summaries after current-session and database
+authorization. Adding `revision_number` returns one exact saved snapshot only.
+Both responses are private and `no-store`; stored structure, values, and totals
+are revalidated before a historical snapshot reaches the browser.
+
+`POST /api/web/v1/count-sheets/{recordId}/restore` requires same-origin CSRF, a
+bounded retry key, the current base revision, the selected prior revision, and a
+reason. Only an active account assigned to the record's facility and shift can
+restore it. The database copies the prior immutable snapshot into a new revision
+with source provenance. It never edits or replaces history, and a stale base
+revision returns `409 revision_conflict`.
+
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.
 

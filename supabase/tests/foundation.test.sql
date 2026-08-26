@@ -1,6 +1,6 @@
 begin;
 
-select plan(155);
+select plan(163);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1913,6 +1913,18 @@ select is(
   'the Count Sheet reconciliation is derived from entered values in the database'
 );
 
+select set_config(
+  'app.test.count_record_id',
+  (
+    select id::text
+    from app_private.paperwork_records
+    where work_date = date '2026-08-26'
+      and shift_code = 'B'
+      and archived_at is null
+  ),
+  true
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
 
@@ -1965,6 +1977,112 @@ select throws_ok(
   'Count Sheet structure is not the approved form',
   'direct RPC access cannot save a different Count Sheet structure'
 );
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_count_sheet_revisions(
+      current_setting('app.test.count_record_id')::uuid
+    )
+  ),
+  2,
+  'a same-shift officer can list immutable Count Sheet revision history'
+);
+
+select is(
+  (
+    select payload #>> array['cells', 'Chow Hall', '1']
+    from api.get_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      1
+    )
+  ),
+  '2',
+  'a same-shift officer can inspect an earlier Count Sheet snapshot'
+);
+
+select lives_ok(
+  $$
+    select api.restore_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      2,
+      1,
+      'Restore the first fictional reviewed count.',
+      repeat('5', 64),
+      repeat('6', 64)
+    );
+  $$,
+  'a same-shift officer can restore an earlier Count Sheet as a new revision'
+);
+
+select is(
+  (
+    select payload #>> array['cells', 'Chow Hall', '1']
+    from api.get_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      3
+    )
+  ),
+  '2',
+  'the restored Count Sheet copies the selected immutable snapshot'
+);
+
+select is(
+  (
+    select restored_from_revision_number
+    from api.get_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      3
+    )
+  ),
+  1,
+  'the restored Count Sheet records its source revision provenance'
+);
+
+select throws_ok(
+  $$
+    select api.restore_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      2,
+      1,
+      'Fictional stale restore.',
+      repeat('7', 64),
+      repeat('8', 64)
+    );
+  $$,
+  'Count Sheet revision conflict',
+  'a stale Count Sheet restore cannot overwrite the newer head'
+);
+
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_count_sheet_revisions(
+      current_setting('app.test.count_record_id')::uuid
+    )
+  ),
+  3,
+  'a same-facility administrator can inspect Count Sheet history for oversight'
+);
+
+select throws_ok(
+  $$
+    select api.restore_count_sheet_revision(
+      current_setting('app.test.count_record_id')::uuid,
+      3,
+      1,
+      'Cross-shift restore attempt.',
+      repeat('9', 64),
+      repeat('a', 64)
+    );
+  $$,
+  'Not authorized to restore this Count Sheet',
+  'an administrator cannot restore a Count Sheet outside their assigned shift'
+);
+
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
 
 select throws_ok(
   $$

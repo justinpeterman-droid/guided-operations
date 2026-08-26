@@ -245,8 +245,9 @@ Pause and report a blocker instead of guessing when work requires:
 
 ## Phase 4 — forms and operational paperwork
 
-- [ ] Connect Count Sheet calculations to authenticated persistence/history.
-- [ ] Implement Count Sheet review, print, and export.
+- [x] Connect Count Sheet calculations to authenticated persistence/history.
+- [x] Implement Count Sheet saved-revision review and append-only restore.
+- [ ] Complete Count Sheet print qualification and supported export.
 - [ ] Review every source definition for provenance, rights, revision, schema,
       and fictional-data safety before import.
 - [ ] Implement approved Daily Paperwork flows.
