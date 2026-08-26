@@ -1,16 +1,14 @@
 import Link from "next/link";
 
 import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AccountDisableControl } from "./account-disable-control";
 import { AccountInvitationForm } from "./account-invitation-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
 
 export const dynamic = "force-dynamic";
 
-/**
- * Read-only administrator roster. Account-changing controls deliberately wait
- * for the separate fresh-verification and one-time-action workflow.
- */
+/** Administrator roster with purpose-bound account lifecycle controls. */
 export default async function AdminAccountsPage() {
   const result = await loadAccounts();
   if (result.kind === "denied") return <AccessRequired />;
@@ -82,7 +80,14 @@ export default async function AdminAccountsPage() {
                       : ""}
                   </p>
                 </div>
-                <span className="report-status">Read only</span>
+                {account.status === "active" || account.status === "locked" ? (
+                  <AccountDisableControl
+                    accountId={account.accountId}
+                    displayName={account.displayName}
+                  />
+                ) : (
+                  <span className="report-status">Read only</span>
+                )}
               </article>
             ))}
           </div>

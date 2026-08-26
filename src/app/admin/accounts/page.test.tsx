@@ -27,7 +27,7 @@ vi.mock("@/server/auth/list-admin-accounts", () => ({
 import AdminAccountsPage from "./page";
 
 describe("AdminAccountsPage", () => {
-  it("renders the protected list as read-only", async () => {
+  it("renders the protected list with a fresh-confirmation disable control", async () => {
     render(await AdminAccountsPage());
 
     expect(
@@ -35,9 +35,8 @@ describe("AdminAccountsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Fictional Officer")).toBeInTheDocument();
     expect(screen.getByText("Employee ending 42")).toBeInTheDocument();
-    expect(screen.getByText("Read only")).toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: /reset|disable|change/i }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("button", { name: "Disable account" }),
+    ).toBeInTheDocument();
   });
 });

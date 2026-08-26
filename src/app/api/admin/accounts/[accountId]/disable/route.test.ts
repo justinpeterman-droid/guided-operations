@@ -1,0 +1,122 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
+vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(),
+}));
+vi.mock("@/server/auth/authorize-admin-action", () => ({
+  createAdminActionAuthorization: vi.fn(() => ({})),
+}));
+vi.mock("@/server/auth/current-session", () => ({
+  authorizeCurrentSession: vi.fn(),
+}));
+vi.mock("@/server/auth/disable-account", () => ({ disableAccount: vi.fn() }));
+vi.mock("@/server/auth/private-admin-step-up-store", () => ({
+  createAdminStepUpStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/auth/private-invited-account-store", () => ({
+  createAccountDisableStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/security/request-origin", () => ({
+  isTrustedMutationRequest: vi.fn(),
+}));
+vi.mock("@/server/security/session-csrf", () => ({
+  hasValidSessionCsrfRequest: vi.fn(),
+}));
+
+import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { disableAccount } from "@/server/auth/disable-account";
+import { isTrustedMutationRequest } from "@/server/security/request-origin";
+import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+
+import { POST } from "./route";
+
+const origin = "https://guided-operations.example.test";
+const client = { auth: {} };
+const accountId = "aaaaaaaa-0000-4000-8000-000000000001";
+
+function context(id = accountId) {
+  return { params: Promise.resolve({ accountId: id }) };
+}
+
+function environment() {
+  vi.mocked(getAuthServerEnvironment).mockReturnValue({
+    SUPABASE_SECRET_KEY: "unused",
+    SUPABASE_DB_URL: "https://db.example.test",
+    EMPLOYEE_LOOKUP_PEPPER: "p".repeat(32),
+    AUTH_DUMMY_ALIAS: "dummy@example.test",
+    CSRF_HMAC_KEY: "k".repeat(32),
+    AUTH_SIGN_IN_ENABLED: false,
+  });
+  vi.mocked(getRuntimeEnvironment).mockReturnValue({
+    APP_ENV: "preview",
+    APP_ORIGIN: origin,
+  });
+  vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+}
+
+describe("POST /api/admin/accounts/[accountId]/disable", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("requires an active administrator and same-site CSRF proof before consuming a disable approval", async () => {
+    environment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: true,
+      account: {
+        authUserId: "bbbbbbbb-0000-4000-8000-000000000001",
+        authVersion: 3,
+      },
+      sessionId: "cccccccc-0000-4000-8000-000000000001",
+    } as never);
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    vi.mocked(disableAccount).mockResolvedValue("disabled");
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts/${accountId}/disable`, {
+        method: "POST",
+        body: JSON.stringify({
+          requestId: "dddddddd-0000-4000-8000-000000000001",
+          token: "x".repeat(43),
+        }),
+      }),
+      context(),
+    );
+
+    expect(disableAccount).toHaveBeenCalledWith(
+      { targetAuthUserId: accountId },
+      expect.any(Object),
+    );
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toEqual({
+      data: { status: "disabled" },
+    });
+  });
+
+  it("does not consume an approval for an untrusted request", async () => {
+    environment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: true,
+      account: {
+        authUserId: "bbbbbbbb-0000-4000-8000-000000000001",
+        authVersion: 3,
+      },
+      sessionId: "cccccccc-0000-4000-8000-000000000001",
+    } as never);
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(false);
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts/${accountId}/disable`, {
+        method: "POST",
+      }),
+      context(),
+    );
+
+    expect(response.status).toBe(403);
+    expect(disableAccount).not.toHaveBeenCalled();
+  });
+});
