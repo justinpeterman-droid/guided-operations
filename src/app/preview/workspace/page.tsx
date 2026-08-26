@@ -26,8 +26,8 @@ const officerTools = [
     eyebrow: "Forms library",
     title: "Complete daily paperwork",
     copy: "Use approved forms, review each entry, and print only a clearly marked training copy until the records workflow is approved.",
-    href: "/preview/count-sheet",
-    action: "Open Count Sheet",
+    href: "/preview/forms-library",
+    action: "Open Forms Library",
   },
 ];
 

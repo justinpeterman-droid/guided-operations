@@ -513,6 +513,108 @@ a:focus-visible {
   margin-top: 30px;
 }
 
+.forms-library-page {
+  width: min(1040px, calc(100% - 40px));
+  margin-inline: auto;
+  padding-bottom: 70px;
+}
+
+.forms-library-intro {
+  max-width: 760px;
+  padding-block: clamp(50px, 8vw, 90px) 44px;
+}
+
+.forms-library-intro h1 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: clamp(2.55rem, 5.4vw, 4.7rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 0.98;
+}
+
+.forms-library-intro > p:last-child {
+  max-width: 650px;
+  margin: 20px 0 0;
+  color: var(--gow-muted);
+  font-size: 1.04rem;
+  line-height: 1.68;
+}
+
+.forms-library-group + .forms-library-group {
+  margin-top: 36px;
+}
+.forms-library-group h2 {
+  margin: 0 0 12px;
+  color: var(--gow-navy-900);
+  font-family: var(--gow-font-brand);
+  font-size: 1.55rem;
+}
+.forms-library-list {
+  display: grid;
+  gap: 10px;
+}
+.forms-library-list article {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 22px 24px;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid var(--gow-border);
+  border-radius: 14px;
+}
+.forms-library-list h3 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 1.32rem;
+}
+.forms-library-list p {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: var(--gow-muted);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.forms-library-list a {
+  flex: 0 0 auto;
+  color: var(--gow-blue);
+  font-size: 0.84rem;
+  font-weight: 800;
+  text-underline-offset: 4px;
+}
+.forms-not-ready {
+  flex: 0 0 auto;
+  padding: 7px 10px;
+  color: var(--gow-muted);
+  background: #edf2f5;
+  border: 1px solid #d2dce3;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+.forms-library-warning {
+  margin-top: 44px;
+  padding: 28px;
+  background: #fff8e6;
+  border: 1px solid #e8d49b;
+  border-radius: var(--gow-radius-card);
+}
+.forms-library-warning h2 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 1.65rem;
+}
+.forms-library-warning > p:last-child {
+  max-width: 720px;
+  margin: 10px 0 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
+
 .workspace-header {
   display: flex;
   align-items: center;
@@ -1975,6 +2077,16 @@ a:focus-visible {
 @media (max-width: 620px) {
   .workspace-preview-page {
     width: min(100% - 28px, 1180px);
+  }
+
+  .forms-library-page {
+    width: min(100% - 28px, 1040px);
+  }
+
+  .forms-library-list article {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
   }
 
   .workspace-preview-header,
