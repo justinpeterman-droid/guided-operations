@@ -213,9 +213,15 @@ An export always names an explicit immutable revision and template version.
 
 Until deterministic server-side export is qualified, the implemented protected
 report screen offers only an explicit browser print action for the current
-immutable revision. Print styling excludes navigation and all mutation controls;
-the server-side export endpoint remains unimplemented rather than pretending a
-browser printout is a durable export artifact.
+immutable revision. `POST /api/web/v1/reports/{reportId}/print` requires the
+current session, same-origin CSRF, a bounded retry key, and the exact current
+complete revision. The database rechecks facility/report access, rejects stale
+revisions, and records one idempotent `report.print.requested` event before the
+browser opens its dialog. The audit holds only opaque references, revision,
+action, request correlation, actor, and facility; it never holds narrative.
+Print styling excludes navigation and mutation controls. The event records a
+request, not completed physical/PDF output, and the server-side export endpoint
+remains unimplemented rather than pretending browser print is a durable export.
 
 ### AI jobs
 

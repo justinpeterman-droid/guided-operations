@@ -231,6 +231,8 @@ Pause and report a blocker instead of guessing when work requires:
       remains a per-commit review gate).
 - [ ] Implement append-only revisions, restore-as-new-revision, concurrency,
       idempotency, and truthful persistence/conflict states.
+- [x] Record redacted, idempotent audit metadata before protected current-report
+      print requests and reject stale or unauthorized revisions.
 - [ ] Implement deterministic DOCX and print output.
 - [ ] Pass domain, contract, PostgreSQL, RLS, concurrency, idempotency,
       report-safety, browser, accessibility, visual, print, and export checks.

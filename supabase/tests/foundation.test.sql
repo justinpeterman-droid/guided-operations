@@ -1,6 +1,6 @@
 begin;
 
-select plan(169);
+select plan(176);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1162,6 +1162,86 @@ select is(
   3,
   'a retry returns the exact restored revision rather than a later report head'
 );
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.record_report_print(uuid,integer,text,text,uuid)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.record_report_print(uuid,integer,text,text,uuid)',
+    'execute'
+  ),
+  'only authenticated users can record a report print request'
+);
+
+select lives_ok(
+  $$
+    select set_config(
+      'app.test.report_print_event_id',
+      api.record_report_print(
+        current_setting('app.test.report_id')::uuid,
+        3,
+        repeat('4', 64),
+        repeat('5', 64),
+        '44444444-4444-4444-8444-444444444444'
+      )::text,
+      true
+    );
+  $$,
+  'an authorized owner can record a redacted print request for the current report revision'
+);
+
+select is(
+  api.record_report_print(
+    current_setting('app.test.report_id')::uuid,
+    3,
+    repeat('4', 64),
+    repeat('5', 64),
+    '55555555-5555-4555-8555-555555555555'
+  )::text,
+  current_setting('app.test.report_print_event_id'),
+  'a retried report print request returns the original audit event without duplication'
+);
+
+select throws_ok(
+  $$
+    select api.record_report_print(
+      current_setting('app.test.report_id')::uuid,
+      2,
+      repeat('6', 64),
+      repeat('7', 64),
+      '66666666-6666-4666-8666-666666666666'
+    );
+  $$,
+  'Report revision conflict',
+  'a stale report revision cannot receive print authorization'
+);
+
+reset role;
+
+select is(
+  (
+    select event_type
+    from app_private.audit_events
+    where event_id = current_setting('app.test.report_print_event_id')::uuid
+  ),
+  'report.print.requested',
+  'the report output action is recorded as a request rather than claiming print completion'
+);
+
+select is(
+  (
+    select metadata::text
+    from app_private.audit_events
+    where event_id = current_setting('app.test.report_print_event_id')::uuid
+  ),
+  '{"action": "print", "revision_number": 3}',
+  'the report print audit contains only the action and immutable revision number'
+);
+
 reset role;
 
 select throws_ok(
@@ -1392,6 +1472,20 @@ select is(
   ),
   0,
   'an unrelated active officer cannot read another account’s report history through direct RPC access'
+);
+
+select throws_ok(
+  $$
+    select api.record_report_print(
+      current_setting('app.test.report_id')::uuid,
+      3,
+      repeat('8', 64),
+      repeat('9', 64),
+      '88888888-8888-4888-8888-888888888888'
+    );
+  $$,
+  'Not authorized to print this report',
+  'an unrelated active officer cannot record a print request for another account report'
 );
 
 reset role;

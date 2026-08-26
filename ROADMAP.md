@@ -269,8 +269,9 @@ production login**
 
 ## Phase 3 — incident and report vertical slice
 
-Status: **implementation in progress; protected browser/print/export and owner
-acceptance remain open**
+Status: **implementation in progress; current-report browser print requests now
+have a redacted stale-revision audit guard; deterministic export, full browser
+qualification, and owner acceptance remain open**
 
 ### Steps
 

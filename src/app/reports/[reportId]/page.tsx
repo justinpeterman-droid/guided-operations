@@ -40,7 +40,10 @@ export default async function ReportPage({
         <Link className="reports-home-link" href="/reports">
           Reports
         </Link>
-        <PrintReportButton />
+        <PrintReportButton
+          reportId={result.report.reportId}
+          revisionNumber={result.report.revisionNumber}
+        />
       </header>
       <section
         className="reports-intro report-print-heading"
