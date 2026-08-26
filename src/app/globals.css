@@ -896,6 +896,63 @@ a:focus-visible {
   margin-top: 24px;
 }
 
+.draft-review-card {
+  max-width: 900px;
+  padding: clamp(24px, 4vw, 44px);
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-feature);
+  box-shadow: var(--gow-shadow-card);
+}
+.draft-review-card h2 {
+  margin: 28px 0 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 2rem;
+}
+.draft-review-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+  color: var(--gow-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+.draft-review-copy {
+  display: grid;
+  gap: 14px;
+  margin-top: 22px;
+}
+.draft-review-copy article {
+  padding: 18px 20px;
+  background: #f6f9fb;
+  border: 1px solid #d8e4ec;
+  border-radius: var(--gow-radius-card);
+}
+.draft-review-copy p {
+  margin: 0;
+  color: var(--gow-ink);
+  line-height: 1.65;
+}
+.draft-review-copy .draft-fact-refs {
+  margin-top: 14px;
+  color: var(--gow-navy-800);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.draft-review-warning {
+  margin-top: 24px;
+  padding: 15px 17px;
+  color: var(--gow-navy-900);
+  background: #fff6dc;
+  border-left: 4px solid var(--gow-gold-500);
+  font-size: 0.86rem;
+  line-height: 1.55;
+}
+
 .login-page {
   width: min(1180px, calc(100% - 40px));
   min-height: 100vh;
