@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 
-import { groundedPolicyAnswerSchema } from "./grounding";
+import {
+  GroundedPolicyAnswerError,
+  groundedPolicyAnswerSchema,
+  validateGroundedPolicyAnswer,
+} from "./grounding";
 
 const citation = {
   documentId: "11111111-1111-4111-8111-111111111111",
@@ -59,5 +63,43 @@ describe("grounded policy answer contract", () => {
         limitations: [],
       }),
     ).toThrow(/cannot precede/i);
+  });
+
+  it("accepts an answer whose citation exactly matches retrieved evidence", () => {
+    const answer = {
+      status: "answered",
+      answer: "The fictional procedure requires a documented review.",
+      citations: [citation],
+      limitations: [],
+    };
+
+    expect(validateGroundedPolicyAnswer(answer, [citation])).toEqual(answer);
+  });
+
+  it("rejects invented citations and altered retrieved provenance", () => {
+    const answer = {
+      status: "answered",
+      answer: "The fictional procedure requires a documented review.",
+      citations: [citation],
+      limitations: [],
+    };
+
+    expect(() =>
+      validateGroundedPolicyAnswer(
+        {
+          ...answer,
+          citations: [
+            { ...citation, chunkId: "44444444-4444-4444-8444-444444444444" },
+          ],
+        },
+        [citation],
+      ),
+    ).toThrow(GroundedPolicyAnswerError);
+    expect(() =>
+      validateGroundedPolicyAnswer(
+        { ...answer, citations: [{ ...citation, pageEnd: 6 }] },
+        [citation],
+      ),
+    ).toThrow(/altered the provenance/i);
   });
 });

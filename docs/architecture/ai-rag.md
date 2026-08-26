@@ -121,6 +121,8 @@ sections. It directs the model to:
 Post-generation validation:
 
 - every citation ID exists in the supplied context;
+- every citation's document, version, checksum, page/section, and excerpt
+  exactly match the retrieved immutable passage;
 - cited source/version is active or explicitly historical;
 - quoted spans, if any, are bounded and actually present;
 - material claims meet the configured citation/support threshold;
