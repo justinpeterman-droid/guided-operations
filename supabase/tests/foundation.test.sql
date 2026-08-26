@@ -1,6 +1,6 @@
 begin;
 
-select plan(65);
+select plan(67);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -770,6 +770,40 @@ select lives_ok(
 );
 
 reset role;
+
+select ok(
+  has_function_privilege(
+    'supabase_auth_admin',
+    'app_private.custom_access_token_hook(jsonb)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'authenticated',
+    'app_private.custom_access_token_hook(jsonb)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'app_private.custom_access_token_hook(jsonb)',
+    'execute'
+  ),
+  'only the Supabase Auth administrator can execute the private token hook'
+);
+
+select is(
+  (
+    select app_private.custom_access_token_hook(
+      jsonb_build_object(
+        'user_id', '11111111-1111-4111-8111-111111111111',
+        'claims', jsonb_build_object(
+          'app_metadata', jsonb_build_object('auth_version', 999)
+        )
+      )
+    )->'claims'->'app_metadata'->>'auth_version'
+  ),
+  '2',
+  'the token hook overwrites a supplied auth version with the authoritative account version'
+);
 
 select * from finish();
 rollback;
