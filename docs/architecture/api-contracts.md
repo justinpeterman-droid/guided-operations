@@ -114,6 +114,13 @@ metadata, or inactive accounts to ordinary users.
 Create/save/restore use idempotency. Save uses If-Match and
 base_revision_number. Unauthorized records are concealed as not found.
 
+The implemented `GET /api/web/v1/incidents` returns only a bounded,
+authorization-filtered summary list: opaque incident ID, display identifiers,
+status, category, occurrence/update timestamps, and current revision number. It
+never returns field notes, reviewed facts, facility scope, or relationship
+metadata. The current `api.list_incidents` RPC permits officers only their own
+active incidents and permits active administrators facility-scoped summaries.
+
 The first persistence primitive is the private-to-the-server
 `api.create_incident` RPC. It receives the already validated create fields and
 opaque request/idempotency digests, derives the actor from the request JWT, and

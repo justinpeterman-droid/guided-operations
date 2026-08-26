@@ -1,6 +1,6 @@
 begin;
 
-select plan(67);
+select plan(71);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -803,6 +803,43 @@ select is(
   ),
   '2',
   'the token hook overwrites a supplied auth version with the authoritative account version'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'api.list_incidents(integer)', 'execute')
+  and not has_function_privilege('anon', 'api.list_incidents(integer)', 'execute'),
+  'only authenticated users can execute the incident-list RPC'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '', true);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_incidents(100)
+  ),
+  0,
+  'an authenticated request without a JWT subject receives no incident records'
+);
+
+reset role;
+
+select lives_ok(
+  $$
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select * from api.list_incidents(50);
+  $$,
+  'an active administrator can retrieve a summary-only authorized incident list'
+);
+
+reset role;
+
+select throws_ok(
+  $$ select * from api.list_incidents(0) $$,
+  'Invalid incident list limit',
+  'the incident-list RPC rejects unbounded or invalid page sizes'
 );
 
 select * from finish();

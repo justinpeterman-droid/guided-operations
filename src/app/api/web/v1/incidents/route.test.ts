@@ -19,6 +19,9 @@ vi.mock("@/server/incidents/create-incident-endpoint", () => ({
 vi.mock("@/server/incidents/create-incident", () => ({
   createIncidentForAuthorizedSession: vi.fn(),
 }));
+vi.mock("@/server/incidents/list-incidents", () => ({
+  listIncidentsForCurrentSession: vi.fn(),
+}));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
@@ -27,8 +30,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { validateCreateIncidentEndpointRequest } from "@/server/incidents/create-incident-endpoint";
 import { createIncidentForAuthorizedSession } from "@/server/incidents/create-incident";
+import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 const client = {};
 const session = {
@@ -123,5 +127,44 @@ describe("POST /api/web/v1/incidents", () => {
     });
     expect(validateCreateIncidentEndpointRequest).not.toHaveBeenCalled();
     expect(createIncidentForAuthorizedSession).not.toHaveBeenCalled();
+  });
+
+  it("returns a current-account incident list with no facility or narrative data", async () => {
+    vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+    vi.mocked(listIncidentsForCurrentSession).mockResolvedValue({
+      kind: "listed",
+      incidents: [
+        {
+          incidentId: "44444444-4444-4444-8444-444444444444",
+          incidentNumber: "F-LIST-001",
+          displayName: "Fictional training scenario",
+          status: "draft",
+          occurredAt: "2026-08-26T12:00:00Z",
+          category: "training",
+          currentRevisionNumber: 1,
+          updatedAt: "2026-08-26T12:00:00Z",
+        },
+      ],
+    });
+
+    const response = await GET(new Request("https://example.test?limit=25"));
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toMatchObject({
+      data: { incidents: [{ incidentNumber: "F-LIST-001" }] },
+      meta: { api_version: "web-v1", request_id: expect.any(String) },
+    });
+    expect(listIncidentsForCurrentSession).toHaveBeenCalledWith(client, 25);
+  });
+
+  it("rejects an unbounded list size before opening a database client", async () => {
+    const response = await GET(new Request("https://example.test?limit=101"));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "invalid_request" },
+    });
+    expect(createSupabaseServerClient).not.toHaveBeenCalled();
   });
 });
