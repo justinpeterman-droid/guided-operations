@@ -1,0 +1,159 @@
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
+vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
+vi.mock("@/lib/supabase/server", () => ({
+  createSupabaseServerClient: vi.fn(),
+}));
+vi.mock("@/server/auth/authorize-admin-invite", () => ({
+  createAdminInviteAuthorization: vi.fn(() => ({})),
+}));
+vi.mock("@/server/auth/current-session", () => ({
+  authorizeCurrentSession: vi.fn(),
+}));
+vi.mock("@/server/auth/invite-account", () => ({ inviteAccount: vi.fn() }));
+vi.mock("@/server/auth/private-admin-step-up-store", () => ({
+  createAdminStepUpStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/auth/private-invited-account-store", () => ({
+  createInvitedAccountStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/auth/supabase-auth-adapters", () => ({
+  createSupabaseAuthUserProvisioner: vi.fn(() => ({})),
+}));
+vi.mock("@/server/security/request-origin", () => ({
+  isTrustedMutationRequest: vi.fn(),
+}));
+vi.mock("@/server/security/session-csrf", () => ({
+  hasValidSessionCsrfRequest: vi.fn(),
+}));
+
+import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { inviteAccount } from "@/server/auth/invite-account";
+import { isTrustedMutationRequest } from "@/server/security/request-origin";
+import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+
+import { POST } from "./route";
+
+const origin = "https://guided-operations.example.test";
+const client = { auth: {} };
+const currentSession = {
+  allowed: true as const,
+  account: {
+    authUserId: "aaaaaaaa-0000-4000-8000-000000000001",
+    authVersion: 4,
+  },
+  sessionId: "bbbbbbbb-0000-4000-8000-000000000001",
+};
+const requestBody = {
+  employeeNumber: "FIXTURE-0002",
+  displayName: "Fictional Officer",
+  role: "officer",
+  requestId: "cccccccc-0000-4000-8000-000000000001",
+  token: "x".repeat(43),
+};
+
+function mockEnvironment() {
+  vi.mocked(getAuthServerEnvironment).mockReturnValue({
+    SUPABASE_SECRET_KEY: "unused",
+    SUPABASE_DB_URL: "https://db.example.test",
+    EMPLOYEE_LOOKUP_PEPPER: "p".repeat(32),
+    AUTH_DUMMY_ALIAS: "dummy@example.test",
+    CSRF_HMAC_KEY: "k".repeat(32),
+    AUTH_SIGN_IN_ENABLED: false,
+  });
+  vi.mocked(getRuntimeEnvironment).mockReturnValue({
+    APP_ENV: "preview",
+    APP_ORIGIN: origin,
+  });
+  vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
+}
+
+describe("POST /api/admin/accounts", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the temporary passcode once after the protected private invitation succeeds", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(
+      currentSession as never,
+    );
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    vi.mocked(inviteAccount).mockImplementation(
+      async (_input, dependencies) => {
+        await dependencies.delivery.deliver({
+          employeeNumberHint: "0002",
+          temporaryPasscode: "InMemoryPasscodeOnly",
+          expiresAt: new Date("2026-08-26T18:30:00.000Z"),
+        });
+        return { status: "activated" };
+      },
+    );
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts`, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+      }),
+    );
+
+    expect(inviteAccount).toHaveBeenCalledWith(
+      expect.objectContaining({
+        employeeNumber: "FIXTURE-0002",
+        employeeNumberHint: "0002",
+        displayName: "Fictional Officer",
+        role: "officer",
+      }),
+      expect.objectContaining({ authorization: expect.any(Object) }),
+    );
+    expect(response.headers.get("cache-control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toEqual({
+      data: {
+        employeeNumberHint: "0002",
+        temporaryPasscode: "InMemoryPasscodeOnly",
+        temporaryPasscodeExpiresAt: "2026-08-26T18:30:00.000Z",
+      },
+    });
+  });
+
+  it("does not parse or create an account before origin and CSRF checks", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(
+      currentSession as never,
+    );
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(false);
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts`, {
+        method: "POST",
+        body: JSON.stringify(requestBody),
+      }),
+    );
+
+    expect(response.status).toBe(403);
+    expect(inviteAccount).not.toHaveBeenCalled();
+  });
+
+  it("does not create an account with malformed invite input", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(
+      currentSession as never,
+    );
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts`, {
+        method: "POST",
+        body: JSON.stringify({ ...requestBody, role: "owner" }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(inviteAccount).not.toHaveBeenCalled();
+  });
+});
