@@ -48,6 +48,13 @@ application functions, is unavailable to browser bundles, and must work through
 the qualified serverless connection pool. Using the broad Supabase service role
 for this routine lookup is prohibited.
 
+Every access token used for an application mutation must carry a positive
+`app_metadata.auth_version` claim written by the reviewed Custom Access Token
+Hook. The server compares that claim to the current-account RPC result before
+authorizing. Missing/malformed hook output is a fail-closed session denial;
+`user_metadata` is never an authorization source. Enabling the hook in the
+hosted project and proving refresh/revocation remain required integration gates.
+
 The spike must prove that a non-deliverable/random alias is supported by the
 hosted Auth lifecycle, remains invisible, does not trigger outbound mail, and
 works with SSR refresh/revocation. If it cannot, use the custom opaque-session
