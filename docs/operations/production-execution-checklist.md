@@ -175,6 +175,9 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Pass direct database
       anonymous/authenticated/cross-user/cross-role/disabled and elevated-key
       negative tests.
+- [x] Add local anonymous and authenticated negative tests proving both private
+      Storage buckets deny listing, insertion, alteration, and direct deletion.
+      Elevated-key qualification and hosted Storage evidence remain pending.
 - [ ] Pass real-browser login/session/revocation/bootstrap tests with fictional
       qualification identities.
 
