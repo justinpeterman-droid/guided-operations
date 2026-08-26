@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
 import { AccountSessionControls } from "./account-session-controls";
+import { TemporaryPasscodeChangeForm } from "./temporary-passcode-change-form";
 
 export const dynamic = "force-dynamic";
 
@@ -11,10 +12,12 @@ async function loadCurrentAccount() {
   try {
     const session = await authorizeCurrentSession(
       await createSupabaseServerClient(),
+      { allowForcedPasscodeChange: true },
     );
-    return session.allowed
-      ? ({ kind: "authorized", role: session.account.role } as const)
-      : ({ kind: "denied" } as const);
+    if (!session.allowed) return { kind: "denied" } as const;
+    return session.account.mustChangePasscode
+      ? ({ kind: "change_required" } as const)
+      : ({ kind: "authorized", role: session.account.role } as const);
   } catch {
     return { kind: "unavailable" } as const;
   }
@@ -25,6 +28,7 @@ export default async function AccountPage() {
   const result = await loadCurrentAccount();
   if (result.kind === "denied") return <SignInRequired />;
   if (result.kind === "unavailable") return <AccountUnavailable />;
+  if (result.kind === "change_required") return <PasscodeChangeRequired />;
 
   return (
     <main className="reports-page account-page">
@@ -54,6 +58,25 @@ export default async function AccountPage() {
       </section>
 
       <AccountSessionControls />
+    </main>
+  );
+}
+
+function PasscodeChangeRequired() {
+  return (
+    <main className="reports-page account-page">
+      <section
+        className="reports-intro"
+        aria-labelledby="passcode-change-title"
+      >
+        <p className="eyebrow">Private workspace</p>
+        <h1 id="passcode-change-title">Change your temporary passcode</h1>
+        <p>
+          This is the only account action available until your temporary
+          passcode is replaced.
+        </p>
+      </section>
+      <TemporaryPasscodeChangeForm />
     </main>
   );
 }

@@ -155,6 +155,9 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Implement Secure/HttpOnly/SameSite session cookies and safe redirects.
 - [ ] Implement refresh rotation, expiry, logout, logout-all, forced temporary
       passcode change, reset revocation, and disabled-account behavior.
+      Local forced-change completion is implemented and passes a clean local
+      replay/lint/146-pgTAP test suite on the pending commit; hosted Preview
+      browser verification and the remaining lifecycle paths are still required.
 - [ ] Implement CSRF/origin checks and authenticated `no-store` behavior.
 - [ ] Implement server authorization plus operation-specific RLS/Storage rules.
 - [ ] Implement protected first-admin bootstrap with generated temporary secret,

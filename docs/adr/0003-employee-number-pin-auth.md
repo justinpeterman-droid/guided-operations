@@ -131,6 +131,13 @@ credential is not an acceptable simplification.
 - Unknown and known employee numbers have generic responses and bounded timing.
 - Public signup/recovery is unavailable.
 - System-generated temporary secret expires and forces change.
+- The forced-change screen accepts no other workspace action. It requires the
+  current session, exact same-origin request, session-bound CSRF proof, and a
+  second keyed employee-number match before replacing the provider credential.
+  Completion atomically clears the unexpired forced-change state, records only
+  an allowlisted audit outcome, advances `auth_version`, and attempts global
+  provider session revocation. A successful local implementation does not
+  prove hosted Auth behavior until protected-Preview browser evidence exists.
 - Login/account/device/network/global rate limits and bounded lockout work.
 - Secure HttpOnly SameSite cookies, refresh rotation, expiry, logout,
   logout-all, reset, deactivation, and role change pass real-browser tests.

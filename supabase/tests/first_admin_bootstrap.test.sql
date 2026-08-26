@@ -1,6 +1,6 @@
 begin;
 
-select plan(16);
+select plan(21);
 
 select lives_ok(
   $$
@@ -96,6 +96,56 @@ select is(
   ),
   'private_delivery_confirmed',
   'activation audit metadata does not store a credential or employee number'
+);
+
+select lives_ok(
+  $$
+    select app_private.complete_temporary_passcode_change(
+      'aaaaaaaa-0000-4000-8000-000000000001',
+      repeat('a', 64)
+    );
+  $$,
+  'an active first administrator can complete an unexpired temporary passcode change'
+);
+
+select ok(
+  (
+    select not must_change_passcode and temporary_passcode_expires_at is null
+    from app_private.user_accounts
+    where auth_user_id = 'aaaaaaaa-0000-4000-8000-000000000001'
+  ),
+  'completion clears the forced-change state and temporary expiry'
+);
+
+select is(
+  (
+    select metadata->>'outcome'
+    from app_private.audit_events
+    where event_type = 'account.passcode.changed'
+      and target_id = 'aaaaaaaa-0000-4000-8000-000000000001'
+  ),
+  'temporary_passcode_replaced',
+  'completion audit metadata includes no credential or employee number'
+);
+
+select throws_ok(
+  $$
+    select app_private.complete_temporary_passcode_change(
+      'aaaaaaaa-0000-4000-8000-000000000001',
+      repeat('a', 64)
+    );
+  $$,
+  'query returned no rows',
+  'completion cannot be replayed after the temporary state is cleared'
+);
+
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'app_private.complete_temporary_passcode_change(uuid, text)',
+    'execute'
+  ),
+  'Data API roles cannot call the private passcode completion function'
 );
 
 select lives_ok(
