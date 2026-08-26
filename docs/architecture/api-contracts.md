@@ -287,6 +287,16 @@ restore it. The database copies the prior immutable snapshot into a new revision
 with source provenance. It never edits or replaces history, and a stale base
 revision returns `409 revision_conflict`.
 
+`POST /api/web/v1/count-sheets/{recordId}/print` is the deliberate protected
+print-request boundary. It requires same-origin CSRF, a bounded retry key, and
+the exact current saved revision. The database verifies the active account's
+facility and assigned shift, rejects a stale revision, and writes one idempotent
+`count_sheet.print.requested` audit event before the browser opens its print
+dialog. The audit contains only the opaque record reference, revision number,
+action, request correlation, actor, and facility; it never stores Count Sheet
+values. The event records a request and does not falsely claim the user
+completed a physical or PDF print.
+
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.
 

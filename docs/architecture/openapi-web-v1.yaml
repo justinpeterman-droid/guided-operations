@@ -288,6 +288,53 @@ paths:
           $ref: "#/components/responses/InvalidRequest"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/print:
+    post:
+      summary: Record a protected request to print the current saved Count Sheet
+      operationId: recordCountSheetPrintRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetPrintInput"
+      responses:
+        "201":
+          description:
+            The redacted print request was recorded for the exact current saved
+            revision; this does not claim physical or PDF output completed.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetPrintRecordedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   securitySchemes:
     cookieSession:
@@ -597,6 +644,29 @@ components:
             revisionNumber:
               type: integer
               minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetPrintInput:
+      type: object
+      additionalProperties: false
+      required: [revisionNumber]
+      properties:
+        revisionNumber:
+          type: integer
+          minimum: 1
+    CountSheetPrintRecordedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recorded]
+          properties:
+            recorded:
+              type: boolean
+              const: true
         meta:
           $ref: "#/components/schemas/Meta"
     IncidentRevisionInput:

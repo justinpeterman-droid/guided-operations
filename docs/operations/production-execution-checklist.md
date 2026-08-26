@@ -247,6 +247,8 @@ Pause and report a blocker instead of guessing when work requires:
 
 - [x] Connect Count Sheet calculations to authenticated persistence/history.
 - [x] Implement Count Sheet saved-revision review and append-only restore.
+- [x] Record redacted, idempotent audit metadata before protected Count Sheet
+      print requests.
 - [ ] Complete Count Sheet print qualification and supported export.
 - [ ] Review every source definition for provenance, rights, revision, schema,
       and fictional-data safety before import.

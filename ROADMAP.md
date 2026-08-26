@@ -311,10 +311,10 @@ acceptance remain open**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **Count Sheet protected load/save/reopen/revision review/restore and a
-protected honest-availability Forms Library foundation are implemented;
-print/export qualification, other approved forms, and owner acceptance remain
-open**
+Status: **Count Sheet protected load/save/reopen/revision review/restore,
+redacted current-revision print-request audit, and a protected
+honest-availability Forms Library foundation are implemented; print/export
+fidelity qualification, other approved forms, and owner acceptance remain open**
 
 ### Steps
 

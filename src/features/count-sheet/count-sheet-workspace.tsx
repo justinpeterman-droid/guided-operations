@@ -138,9 +138,9 @@ export function CountSheetWorkspace({
   const [dirty, setDirty] = useState(false);
   const [reviewedRevision, setReviewedRevision] =
     useState<ReviewedCountSheetRevision | null>(null);
-  const [state, setState] = useState<"loading" | "ready" | "saving" | "error">(
-    "loading",
-  );
+  const [state, setState] = useState<
+    "loading" | "ready" | "saving" | "printing" | "error"
+  >("loading");
   const [message, setMessage] = useState("Loading your shift Count Sheet…");
   const [inputError, setInputError] = useState<string | null>(null);
   const displayedPayload = reviewedRevision?.payload ?? payload;
@@ -271,6 +271,58 @@ export function CountSheetWorkspace({
     }
   }
 
+  async function preparePrint(): Promise<boolean> {
+    if (!recordId || revisionNumber < 1 || dirty || state !== "ready")
+      return false;
+    setState("printing");
+    setMessage("Recording the print request…");
+    try {
+      const token = await csrfToken();
+      const response = await fetch(
+        `/api/web/v1/count-sheets/${recordId}/print`,
+        {
+          method: "POST",
+          cache: "no-store",
+          credentials: "same-origin",
+          headers: {
+            "content-type": "application/json",
+            "idempotency-key": crypto.randomUUID().replaceAll("-", ""),
+            "x-csrf-token": token,
+          },
+          body: JSON.stringify({ revisionNumber }),
+        },
+      );
+      const body: unknown = await response.json();
+      if (response.status === 409) {
+        setState("ready");
+        setMessage(
+          "A newer saved revision exists. Reload the date before printing.",
+        );
+        return false;
+      }
+      if (
+        !response.ok ||
+        typeof body !== "object" ||
+        body === null ||
+        !("data" in body) ||
+        typeof body.data !== "object" ||
+        body.data === null ||
+        !("recorded" in body.data) ||
+        body.data.recorded !== true
+      )
+        throw new Error("print");
+      setState("ready");
+      setMessage("Print request recorded. Opening the browser print dialog.");
+      return true;
+    } catch {
+      setState("ready");
+      setMessage(
+        "The print request could not be recorded, so no print dialog was opened.",
+      );
+      return false;
+    }
+  }
+
   function renderCountInput(target: CountCellTarget, label: string) {
     const value = valueForTarget(displayedPayload, target);
     return (
@@ -331,10 +383,11 @@ export function CountSheetWorkspace({
               reviewedRevision !== null
             }
             label="Print saved sheet"
+            onBeforePrint={preparePrint}
           />
           <button
             className="count-sheet-print-button"
-            disabled={state === "saving"}
+            disabled={state === "saving" || state === "printing"}
             onClick={() => {
               setState("loading");
               setMessage("Loading your shift Count Sheet…");
@@ -463,7 +516,7 @@ export function CountSheetWorkspace({
               <input
                 aria-label="Work date"
                 disabled={
-                  state === "saving" || dirty || reviewedRevision !== null
+                  state !== "ready" || dirty || reviewedRevision !== null
                 }
                 onChange={(event) => {
                   setState("loading");

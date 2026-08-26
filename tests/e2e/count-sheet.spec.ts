@@ -1,5 +1,26 @@
 import { expect, test } from "@playwright/test";
 
+test("rejects a guessed operational print request without a current account", async ({
+  request,
+}) => {
+  const response = await request.post(
+    "/api/web/v1/count-sheets/11111111-1111-4111-8111-111111111111/print",
+    {
+      data: { revisionNumber: 1 },
+      headers: {
+        "idempotency-key": "fictional-browser-print-key-1234",
+        origin: "http://127.0.0.1:3109",
+        "x-csrf-token": "fictional-browser-csrf",
+      },
+    },
+  );
+
+  expect(response.status()).toBe(401);
+  await expect(response.json()).resolves.toMatchObject({
+    error: { code: "authentication_required" },
+  });
+});
+
 test("keeps the operational Count Sheet behind current account and shift checks", async ({
   page,
 }) => {

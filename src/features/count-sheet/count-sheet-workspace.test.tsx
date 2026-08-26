@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -6,7 +6,10 @@ import { APPROVED_COUNT_SHEET_STRUCTURE } from "./approved-structure";
 import { calculateCountTotals, createBlankCountPayload } from "./calculations";
 import { CountSheetWorkspace } from "./count-sheet-workspace";
 
-afterEach(() => vi.restoreAllMocks());
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
 
 describe("CountSheetWorkspace", () => {
   it("loads a blank assigned-shift sheet and saves entered values as revision one", async () => {
@@ -97,4 +100,74 @@ describe("CountSheetWorkspace", () => {
       ).toBeEnabled(),
     );
   }, 15_000);
+
+  it("opens operational print only after the current saved revision audit succeeds", async () => {
+    const payload = createBlankCountPayload(APPROVED_COUNT_SHEET_STRUCTURE);
+    const recordId = "11111111-1111-4111-8111-111111111111";
+    let releasePrintAudit: () => void = () => undefined;
+    const printAudit = new Promise<Response>((resolve) => {
+      releasePrintAudit = () =>
+        resolve(Response.json({ data: { recorded: true } }, { status: 201 }));
+    });
+    const fetchMock = vi
+      .spyOn(globalThis, "fetch")
+      .mockImplementation(async (input, init) => {
+        const url = String(input);
+        if (url.startsWith("/api/web/v1/count-sheets?"))
+          return Response.json({
+            data: {
+              recordId,
+              workDate: "2026-08-26",
+              shiftCode: "A",
+              revisionNumber: 3,
+              structure: APPROVED_COUNT_SHEET_STRUCTURE,
+              payload,
+              validation: calculateCountTotals(
+                APPROVED_COUNT_SHEET_STRUCTURE,
+                payload,
+              ),
+              updatedAt: "2026-08-26T12:00:00Z",
+            },
+          });
+        if (url.endsWith("/revisions"))
+          return Response.json({ data: { revisions: [] } });
+        if (url === "/api/auth/csrf")
+          return Response.json({ csrfToken: "fictional-csrf-token" });
+        if (url.endsWith("/print") && init?.method === "POST")
+          return printAudit;
+        return Response.json({}, { status: 503 });
+      });
+    vi.spyOn(crypto, "randomUUID").mockReturnValue(
+      "22222222-2222-4222-8222-222222222222",
+    );
+    const print = vi.spyOn(window, "print").mockImplementation(() => undefined);
+    const user = userEvent.setup();
+
+    render(<CountSheetWorkspace initialWorkDate="2026-08-26" shiftCode="A" />);
+
+    expect(await screen.findByText(/Saved revision 3 loaded/)).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Print saved sheet" }));
+
+    expect(
+      await screen.findByText(/Recording the print request/),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("textbox", { name: "Chow Hall, 1" }),
+    ).toBeDisabled();
+    expect(print).not.toHaveBeenCalled();
+    releasePrintAudit();
+    expect(
+      await screen.findByText(/Print request recorded.*Opening the browser/),
+    ).toBeVisible();
+    expect(print).toHaveBeenCalledOnce();
+    const printRequest = fetchMock.mock.calls.find(([url]) =>
+      String(url).endsWith("/print"),
+    );
+    expect(printRequest?.[0]).toBe(
+      `/api/web/v1/count-sheets/${recordId}/print`,
+    );
+    expect(JSON.parse(String(printRequest?.[1]?.body))).toEqual({
+      revisionNumber: 3,
+    });
+  });
 });

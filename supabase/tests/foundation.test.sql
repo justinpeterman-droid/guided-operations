@@ -1,6 +1,6 @@
 begin;
 
-select plan(163);
+select plan(169);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -2082,6 +2082,90 @@ select throws_ok(
   'an administrator cannot restore a Count Sheet outside their assigned shift'
 );
 
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select lives_ok(
+  $$
+    select set_config(
+      'app.test.count_print_event_id',
+      api.record_count_sheet_print(
+        current_setting('app.test.count_record_id')::uuid,
+        3,
+        repeat('b', 64),
+        repeat('c', 64),
+        'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+      )::text,
+      true
+    );
+  $$,
+  'a same-shift officer can record a redacted print request for the current saved revision'
+);
+
+select is(
+  api.record_count_sheet_print(
+    current_setting('app.test.count_record_id')::uuid,
+    3,
+    repeat('b', 64),
+    repeat('c', 64),
+    'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb'
+  )::text,
+  current_setting('app.test.count_print_event_id'),
+  'a retried print request returns the original audit event without duplication'
+);
+
+select throws_ok(
+  $$
+    select api.record_count_sheet_print(
+      current_setting('app.test.count_record_id')::uuid,
+      2,
+      repeat('d', 64),
+      repeat('e', 64),
+      'dddddddd-dddd-4ddd-8ddd-dddddddddddd'
+    );
+  $$,
+  'Count Sheet revision conflict',
+  'a stale Count Sheet revision cannot receive print authorization'
+);
+
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select throws_ok(
+  $$
+    select api.record_count_sheet_print(
+      current_setting('app.test.count_record_id')::uuid,
+      3,
+      repeat('f', 64),
+      repeat('0', 64),
+      'ffffffff-ffff-4fff-8fff-ffffffffffff'
+    );
+  $$,
+  'Not authorized to print this Count Sheet',
+  'an administrator cannot print a Count Sheet outside their assigned shift'
+);
+
+reset role;
+
+select is(
+  (
+    select event_type
+    from app_private.audit_events
+    where event_id = current_setting('app.test.count_print_event_id')::uuid
+  ),
+  'count_sheet.print.requested',
+  'the deliberate print action is recorded as a request rather than claiming output completion'
+);
+
+select is(
+  (
+    select metadata::text
+    from app_private.audit_events
+    where event_id = current_setting('app.test.count_print_event_id')::uuid
+  ),
+  '{"action": "print", "revision_number": 3}',
+  'the Count Sheet print audit contains only the action and immutable revision number'
+);
+
+set local role authenticated;
 select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
 
 select throws_ok(
