@@ -194,6 +194,14 @@ Records hold kind/date/shift/current head. Revisions hold the immutable reviewed
 definition and editor provenance. A partial unique index enforces the approved
 daily uniqueness rule for active records.
 
+The initial implemented kind is `count_sheet`. Its active record is unique by
+facility, work date, and the approved shift code (`A`, `B`, `C`, `D`, `U`, or
+`F`). The record stores no mutable form values. Each revision snapshots the
+reviewed structure, user-entered payload, server-calculated reconciliation, and
+safe provenance; revision inserts advance the current head serially. Direct
+table access is denied, so later server APIs must enforce the shift-shared
+relationship before invoking a purpose-specific mutation.
+
 The former duplicate operational_paperwork tables are not a second target
 domain. Import reconciliation is described below and in
 [legacy-migration.md](legacy-migration.md).

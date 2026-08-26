@@ -1,6 +1,6 @@
 begin;
 
-select plan(108);
+select plan(115);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1323,6 +1323,107 @@ select throws_ok(
   $$,
   'new row for relation "staff_members" violates check constraint "staff_members_shift_code_check"',
   'an unapproved Count Sheet shift code is rejected'
+);
+
+select has_table(
+  'app_private',
+  'paperwork_records',
+  'canonical paperwork head records exist'
+);
+
+select has_table(
+  'app_private',
+  'paperwork_revisions',
+  'canonical immutable paperwork revisions exist'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.paperwork_records (
+      id, facility_id, kind, work_date, shift_code, created_by_account_id
+    )
+    select
+      '77777777-7777-4777-8777-777777777777',
+      facility.id,
+      'count_sheet',
+      date '2026-08-26',
+      'A',
+      '33333333-3333-4333-8333-333333333333'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.paperwork_revisions (
+      paperwork_record_id, revision_number, editor_account_id, reason,
+      structure, payload, validation
+    ) values (
+      '77777777-7777-4777-8777-777777777777',
+      1,
+      '33333333-3333-4333-8333-333333333333',
+      'Fictional initial Count Sheet.',
+      '{"schema_version": 1}',
+      '{"schema_version": 1}',
+      '{"reconciled": false}'
+    );
+  $$,
+  'a fictional Count Sheet creates its immutable first revision'
+);
+
+select is(
+  (
+    select current_revision_number
+    from app_private.paperwork_records
+    where id = '77777777-7777-4777-8777-777777777777'
+  ),
+  1,
+  'the Count Sheet head advances only after the first immutable revision exists'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.paperwork_revisions (
+      paperwork_record_id, revision_number, editor_account_id, reason,
+      structure, payload, validation
+    ) values (
+      '77777777-7777-4777-8777-777777777777',
+      3,
+      '33333333-3333-4333-8333-333333333333',
+      'Fictional skipped revision.',
+      '{"schema_version": 1}',
+      '{"schema_version": 1}',
+      '{"reconciled": false}'
+    );
+  $$,
+  'Paperwork revision must advance exactly one revision from the current head',
+  'a Count Sheet cannot skip immutable revision numbers'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.paperwork_records (
+      facility_id, kind, work_date, shift_code, created_by_account_id
+    )
+    select
+      facility.id,
+      'count_sheet',
+      date '2026-08-26',
+      'Z',
+      '33333333-3333-4333-8333-333333333333'
+    from app_private.facilities as facility
+    limit 1;
+  $$,
+  'new row for relation "paperwork_records" violates check constraint "paperwork_records_shift_code_check"',
+  'a Count Sheet cannot be created for an unapproved shift code'
+);
+
+select throws_ok(
+  $$
+    update app_private.paperwork_revisions
+    set reason = 'Fictional altered history.'
+    where paperwork_record_id = '77777777-7777-4777-8777-777777777777'
+      and revision_number = 1;
+  $$,
+  'Rows in app_private.paperwork_revisions are append-only',
+  'a Count Sheet revision cannot be altered after it is written'
 );
 
 select * from finish();
