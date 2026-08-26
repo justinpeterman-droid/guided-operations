@@ -6,6 +6,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
 import type { InvitedAccountStore } from "./invite-account";
 import type { AccountDisableStore } from "./disable-account";
+import type { AccountUnlockStore } from "./unlock-account";
 
 let sqlClient: ReturnType<typeof postgres> | undefined;
 
@@ -41,6 +42,16 @@ export function createAccountDisableStore(): AccountDisableStore {
   return {
     async disable(actorAuthUserId, targetAuthUserId) {
       await client`select app_private.disable_account(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid)`;
+    },
+  };
+}
+
+/** Server-only adapter for the separately audited account-unlock routine. */
+export function createAccountUnlockStore(): AccountUnlockStore {
+  const client = sql();
+  return {
+    async unlock(actorAuthUserId, targetAuthUserId) {
+      await client`select app_private.unlock_account(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid)`;
     },
   };
 }
