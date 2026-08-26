@@ -192,10 +192,12 @@ records only opaque subject digests and an `allowed`, `denied`, or `failed`
 outcome in `app_private.auth_attempt_events`. Focused unit tests cover all four
 dimensions, generic denials, and success/failure recording.
 
-This is implementation evidence only: there is no enabled browser sign-in route,
-account, public recovery path, or operational data. Hosted integration, timing
-measurement, trusted proxy/device-subject derivation, SSR cookie lifecycle,
-reset/bootstrap, and authorization/RLS negative tests remain open.
+This is implementation evidence only: the browser sign-in route exists but fails
+closed with a 404 unless the server-only `AUTH_SIGN_IN_ENABLED` setting is
+explicitly enabled. There is no hosted account, public recovery path, or
+operational data. Hosted integration, timing measurement, trusted
+proxy/device-subject derivation, SSR cookie lifecycle, reset/bootstrap, and
+authorization/RLS negative tests remain open.
 
 The pre-auth request helper also converts the Vercel-managed client-network
 header and a random HttpOnly device-cookie value into purpose-separated HMAC
@@ -207,7 +209,8 @@ in route and lifecycle checks are ready.
 The server composition factory joins the private alias lookup, private attempt
 store, SSR password authenticator, and server-only secrets. It requires a
 reviewed rate-limit policy argument instead of assigning a hidden production
-threshold. It does not create a public route or browser credential.
+threshold. It creates no public identity, browser-readable credential, or
+recovery channel.
 
 The password exchange now returns an Auth user ID only to the server, and the
 employee sign-in service rejects it unless it equals the ID bound to the private
@@ -223,6 +226,14 @@ provided environment example leaves it `false`. The preview rate-limit policy is
 5 account, 10 device, 25 network, and 200 global attempts per 15 minutes. These
 limits must be exercised with fictional Preview traffic and revisited before
 live promotion.
+
+The protected Reports workspace now supplies a visible local sign-out control.
+It first obtains a fresh session-bound CSRF token, then calls the same-origin
+sign-out route. That route rechecks the current account, exact origin, and CSRF
+proof before ending only the current provider session and clearing the private
+device and CSRF cookies. Focused route and browser-component tests cover the
+success, failed, and denied cases. This is not logout-all, reset, or session
+revocation proof; those remain separate acceptance requirements.
 
 ## Threat model — 2026-08-25
 
