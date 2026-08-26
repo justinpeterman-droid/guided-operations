@@ -1,6 +1,6 @@
 begin;
 
-select plan(123);
+select plan(125);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1537,6 +1537,22 @@ select throws_ok(
   $$,
   'Count Sheet revision conflict',
   'a stale Count Sheet save cannot overwrite a newer revision'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.paperwork_records;
+  $$,
+  'permission denied for schema app_private',
+  'an authenticated caller cannot bypass the Count Sheet API through head records'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.paperwork_revisions;
+  $$,
+  'permission denied for schema app_private',
+  'an authenticated caller cannot bypass the Count Sheet API through revisions'
 );
 
 reset role;
