@@ -162,8 +162,8 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add a local-only, zero-account database bootstrap ceremony: transaction
       lock, pending administrator, forced expiring temporary credential state,
       private-delivery activation, failed-delivery cleanup, and allowlisted
-      audit outcomes. The ceremony is not exposed to a browser route and has
-      not been run with a real identity.
+      audit outcomes. The ceremony is not exposed to a browser route and has not
+      been run with a real identity.
 - [ ] Implement account create, deactivate, role change, reset, and unlock with
       purpose-bound admin step-up.
 - [ ] Pass known/unknown employee timing and enumeration tests.
