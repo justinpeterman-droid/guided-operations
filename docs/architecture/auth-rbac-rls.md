@@ -100,6 +100,11 @@ The last active administrator cannot be demoted or disabled. First-admin
 bootstrap is allowed only when no application account exists, uses a
 transaction-level advisory lock, generates the temporary secret inside the
 protected operation, and delivers it through an authorized custodian channel.
+The bootstrap database ceremony creates a `pending` administrator first. It is
+not eligible for employee-number sign-in until the server-only delivery adapter
+confirms delivery and activates it. A failed delivery abandons the pending
+application identity before the Auth user is removed; audit entries retain only
+the lifecycle outcome and opaque target ID.
 
 ## Login abuse controls
 
