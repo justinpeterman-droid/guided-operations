@@ -23,7 +23,9 @@ jobs:
   database:
     name: Reset, lint, and pgTAP
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # A fresh fictional database replay is short; do not let an unavailable
+    # runner block the release evidence for most of an hour.
+    timeout-minutes: 12
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1

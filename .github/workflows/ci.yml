@@ -17,7 +17,8 @@ jobs:
   web:
     name: Lint, types, tests, and build
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    # Local evidence is well under a minute; fail a stuck hosted runner clearly.
+    timeout-minutes: 10
     env:
       NEXT_TELEMETRY_DISABLED: "1"
     steps:
