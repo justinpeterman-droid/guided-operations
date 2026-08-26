@@ -104,6 +104,24 @@ export default async function HomePage() {
           ))}
         </div>
       </section>
+      {access.role === "administrator" ? (
+        <section
+          className="workspace-preview-admin"
+          aria-labelledby="admin-title"
+        >
+          <div>
+            <p className="eyebrow">Administrator access</p>
+            <h2 id="admin-title">Same workspace. Extra responsibility.</h2>
+            <p>
+              Open the protected administrator area to prepare roster, account,
+              and health controls as they are safely completed.
+            </p>
+          </div>
+          <Link className="workspace-admin-link" href="/admin">
+            Open administrator area <span aria-hidden="true">→</span>
+          </Link>
+        </section>
+      ) : null}
     </main>
   );
 }
