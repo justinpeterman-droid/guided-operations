@@ -32,7 +32,7 @@ export function LoginForm() {
         body: JSON.stringify({ employeeNumber, passcode }),
       });
       if (response.ok) {
-        router.push("/reports");
+        router.push("/home");
         return;
       }
     } catch {

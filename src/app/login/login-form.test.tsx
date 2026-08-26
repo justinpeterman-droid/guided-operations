@@ -36,7 +36,7 @@ describe("LoginForm", () => {
         passcode: "not-a-real-passcode",
       }),
     });
-    expect(push).toHaveBeenCalledWith("/reports");
+    expect(push).toHaveBeenCalledWith("/home");
   });
 
   it("shows one generic failure message for a disabled or failed sign-in", async () => {
