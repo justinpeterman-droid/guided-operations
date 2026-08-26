@@ -426,9 +426,13 @@ remain open**
 6. Add redacted application telemetry, request correlation, health/readiness,
    error/latency/Auth/Storage/database/AI metrics, cost and quota signals, and
    alert routing with a named primary and alternate.
-7. Set provider budgets and circuit breakers. A provider limit must create an
+7. Keep a machine-checked production data inventory for every private table,
+   Storage bucket, Auth/AI/log/browser/non-production/support surface, and
+   backup copy. Treat hosted configuration, deletion, and reconciliation as
+   release evidence, not repository assumptions.
+8. Set provider budgets and circuit breakers. A provider limit must create an
    honest degraded state, not fabricated output or partial silent saves.
-8. Exercise credential rotation, dependency update, incident response,
+9. Exercise credential rotation, dependency update, incident response,
    application rollback, and feature-disable procedures.
 
 ### Exit evidence

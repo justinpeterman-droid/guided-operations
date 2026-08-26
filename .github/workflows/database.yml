@@ -6,7 +6,11 @@ on:
       - "supabase/**"
       - "src/lib/supabase/database.generated.ts"
       - "scripts/verify-database-types.mjs"
+      - "scripts/verify-production-data-inventory.mjs"
+      - "docs/operations/production-data-inventory.json"
+      - "docs/operations/production-data-inventory.md"
       - "package.json"
+      - "package-lock.json"
       - ".github/workflows/database.yml"
   push:
     branches: [main]
@@ -14,7 +18,11 @@ on:
       - "supabase/**"
       - "src/lib/supabase/database.generated.ts"
       - "scripts/verify-database-types.mjs"
+      - "scripts/verify-production-data-inventory.mjs"
+      - "docs/operations/production-data-inventory.json"
+      - "docs/operations/production-data-inventory.md"
       - "package.json"
+      - "package-lock.json"
       - ".github/workflows/database.yml"
   workflow_dispatch:
 
@@ -36,6 +44,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
+      - name: Use pinned Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install locked application dependencies
+        run: npm ci
+
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
         with:
@@ -55,6 +72,9 @@ jobs:
 
       - name: Verify generated database types
         run: npm run db:types:check
+
+      - name: Verify production data inventory coverage
+        run: npm run data:inventory:check
 
       - name: Stop local PostgreSQL
         if: always()

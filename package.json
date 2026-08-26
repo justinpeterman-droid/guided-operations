@@ -26,6 +26,7 @@
     "db:test": "supabase test db --local",
     "db:types:generate": "node scripts/verify-database-types.mjs --write",
     "db:types:check": "node scripts/verify-database-types.mjs",
+    "data:inventory:check": "node scripts/verify-production-data-inventory.mjs",
     "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations"
   },
   "dependencies": {

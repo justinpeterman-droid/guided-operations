@@ -23,6 +23,11 @@ agency compliance. Production use stays blocked until the release gates in
 Never copy a production database, Storage bucket, export, or browser capture to
 a non-production environment.
 
+The current repository-level inventory is maintained in
+[`production-data-inventory.json`](production-data-inventory.json) and is
+checked against every private application table and Storage bucket. Hosted
+provider settings and deletion execution remain separate release gates.
+
 ## Retention and deletion
 
 - Retain a production record and its controlled production copies for two years

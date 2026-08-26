@@ -54,6 +54,7 @@ current provider evidence and explicit limitations.
 | [`backup-and-restore.md`](backup-and-restore.md)                         | Database and Supabase Storage backups, corpus recovery, and restore exercises.                        |
 | [`incident-response.md`](incident-response.md)                           | Severity, containment, communications, recovery, and post-incident review.                            |
 | [`real-data-governance.md`](real-data-governance.md)                     | Production-only data boundary, two-year retention, deletion, and release conditions.                  |
+| [`production-data-inventory.md`](production-data-inventory.md)           | Machine-checked database, Storage, AI, log, browser, and backup data-surface inventory.               |
 | [`observability-and-costs.md`](observability-and-costs.md)               | Signals, redaction, alerting, free-plan limitations, and budget controls.                             |
 | [`dependency-maintenance.md`](dependency-maintenance.md)                 | Dependency, runtime, lockfile, and supply-chain maintenance.                                          |
 | [`gcp-retirement.md`](gcp-retirement.md)                                 | Evidence-gated migration away from all Google hosting and infrastructure.                             |

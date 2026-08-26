@@ -1,0 +1,410 @@
+{
+  "inventory_version": 1,
+  "last_reviewed_on": "2026-08-26",
+  "status": "repository-complete-hosted-verification-pending",
+  "authority": {
+    "decision_ids": ["OQ-011", "OQ-012"],
+    "production_real_data": "owner-authorized-after-release-gates",
+    "non_production_real_data": "prohibited",
+    "record_retention_days": 730,
+    "legal_hold_overrides_deletion": true
+  },
+  "retention_profiles": {
+    "record-final-revision-two-years": {
+      "duration_days": 730,
+      "trigger": "final_revision_at",
+      "legal_hold": true
+    },
+    "event-two-years": {
+      "duration_days": 730,
+      "trigger": "occurred_at",
+      "legal_hold": true
+    },
+    "lifecycle-two-years": {
+      "duration_days": 730,
+      "trigger": "deactivated_or_superseded_at",
+      "legal_hold": true
+    },
+    "source-supersession-two-years": {
+      "duration_days": 730,
+      "trigger": "source_superseded_at",
+      "legal_hold": true
+    },
+    "ephemeral-technical": {
+      "duration_days": 1,
+      "trigger": "expires_at",
+      "legal_hold": false
+    },
+    "no-real-data": {
+      "duration_days": 0,
+      "trigger": "not_applicable",
+      "legal_hold": false
+    },
+    "provider-release-gate": {
+      "duration_days": null,
+      "trigger": "provider_configuration",
+      "legal_hold": false
+    },
+    "backup-follows-source": {
+      "duration_days": 730,
+      "trigger": "included_record_deletion_eligibility",
+      "legal_hold": true
+    }
+  },
+  "stores": [
+    {
+      "id": "db:facilities",
+      "kind": "database_table",
+      "locator": "app_private.facilities",
+      "data_classes": ["facility_configuration"],
+      "purpose": "Facility boundary and configuration",
+      "retention_profile": "lifecycle-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:staff_members",
+      "kind": "database_table",
+      "locator": "app_private.staff_members",
+      "data_classes": ["personnel_identity", "shift_assignment"],
+      "purpose": "Authorized staff roster and account eligibility",
+      "retention_profile": "lifecycle-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:user_accounts",
+      "kind": "database_table",
+      "locator": "app_private.user_accounts",
+      "data_classes": ["account_identity", "role", "account_status"],
+      "purpose": "Application authorization and account lifecycle",
+      "retention_profile": "lifecycle-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:policy_documents",
+      "kind": "database_table",
+      "locator": "app_private.policy_documents",
+      "data_classes": ["policy_source_metadata"],
+      "purpose": "Approved policy corpus identity",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:policy_document_versions",
+      "kind": "database_table",
+      "locator": "app_private.policy_document_versions",
+      "data_classes": ["policy_source_metadata", "source_integrity"],
+      "purpose": "Versioned policy provenance and promotion state",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:policy_chunks",
+      "kind": "database_table",
+      "locator": "app_private.policy_chunks",
+      "data_classes": ["policy_text", "citation_metadata"],
+      "purpose": "Retrieval-ready policy passages",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:embedding_profiles",
+      "kind": "database_table",
+      "locator": "app_private.embedding_profiles",
+      "data_classes": ["ai_configuration"],
+      "purpose": "Pinned embedding model configuration",
+      "retention_profile": "lifecycle-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:policy_chunk_embeddings",
+      "kind": "database_table",
+      "locator": "app_private.policy_chunk_embeddings",
+      "data_classes": ["policy_embedding", "source_integrity"],
+      "purpose": "Semantic retrieval index",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:audit_events",
+      "kind": "database_table",
+      "locator": "app_private.audit_events",
+      "data_classes": ["security_audit_metadata"],
+      "purpose": "Allowlisted accountability and security evidence",
+      "retention_profile": "event-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:incidents",
+      "kind": "database_table",
+      "locator": "app_private.incidents",
+      "data_classes": ["operational_record", "personal_data"],
+      "purpose": "Current incident record state",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:incident_revisions",
+      "kind": "database_table",
+      "locator": "app_private.incident_revisions",
+      "data_classes": [
+        "operational_record",
+        "personal_data",
+        "revision_history"
+      ],
+      "purpose": "Immutable incident revision history",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:reports",
+      "kind": "database_table",
+      "locator": "app_private.reports",
+      "data_classes": ["operational_record", "personal_data"],
+      "purpose": "Current report state and ownership",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:report_access",
+      "kind": "database_table",
+      "locator": "app_private.report_access",
+      "data_classes": ["record_access_control"],
+      "purpose": "Explicit report sharing grants",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:report_revisions",
+      "kind": "database_table",
+      "locator": "app_private.report_revisions",
+      "data_classes": [
+        "operational_record",
+        "personal_data",
+        "revision_history"
+      ],
+      "purpose": "Immutable report revision history",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:idempotency_records",
+      "kind": "database_table",
+      "locator": "app_private.idempotency_records",
+      "data_classes": ["keyed_digests", "request_coordination"],
+      "purpose": "Short-lived duplicate-write protection without record bodies",
+      "retention_profile": "ephemeral-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "expiry-column-present"
+    },
+    {
+      "id": "db:auth_attempt_events",
+      "kind": "database_table",
+      "locator": "app_private.auth_attempt_events",
+      "data_classes": ["keyed_digests", "security_rate_limit"],
+      "purpose": "Short-lived abuse prevention without raw identifiers",
+      "retention_profile": "ephemeral-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "expiry-column-present"
+    },
+    {
+      "id": "db:report_draft_candidates",
+      "kind": "database_table",
+      "locator": "app_private.report_draft_candidates",
+      "data_classes": ["operational_record", "personal_data", "ai_draft"],
+      "purpose": "Review-first report drafts and provenance",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:paperwork_records",
+      "kind": "database_table",
+      "locator": "app_private.paperwork_records",
+      "data_classes": ["operational_record", "personal_data"],
+      "purpose": "Current routine paperwork state",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:paperwork_revisions",
+      "kind": "database_table",
+      "locator": "app_private.paperwork_revisions",
+      "data_classes": [
+        "operational_record",
+        "personal_data",
+        "revision_history"
+      ],
+      "purpose": "Immutable routine-paperwork revision history",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:admin_step_ups",
+      "kind": "database_table",
+      "locator": "app_private.admin_step_ups",
+      "data_classes": ["keyed_digests", "security_confirmation"],
+      "purpose": "Short-lived single-use proof for protected administrator actions",
+      "retention_profile": "ephemeral-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "expiry-column-present"
+    },
+    {
+      "id": "db:policy_ingestion_runs",
+      "kind": "database_table",
+      "locator": "app_private.policy_ingestion_runs",
+      "data_classes": ["policy_processing_metadata", "security_audit_metadata"],
+      "purpose": "Policy ingestion state and reconciliation evidence",
+      "retention_profile": "event-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:policy_pages",
+      "kind": "database_table",
+      "locator": "app_private.policy_pages",
+      "data_classes": ["policy_text", "citation_metadata"],
+      "purpose": "Page-level policy text and citation mapping",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "storage:generated-exports",
+      "kind": "storage_bucket",
+      "locator": "generated-exports",
+      "data_classes": [
+        "controlled_export",
+        "operational_record",
+        "personal_data"
+      ],
+      "purpose": "Private generated copies for authorized users",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "storage:policy-sources",
+      "kind": "storage_bucket",
+      "locator": "policy-sources",
+      "data_classes": ["authoritative_policy_source"],
+      "purpose": "Private approved source documents",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    }
+  ],
+  "surfaces": [
+    {
+      "id": "surface:supabase-auth",
+      "provider": "Supabase",
+      "purpose": "Invite-only authentication identities and sessions",
+      "real_data_boundary": "production_only",
+      "retention_profile": "lifecycle-two-years",
+      "release_status": "hosted-verification-pending"
+    },
+    {
+      "id": "surface:vercel-runtime-logs",
+      "provider": "Vercel",
+      "purpose": "Redacted operational health and failures",
+      "real_data_boundary": "content_prohibited",
+      "retention_profile": "provider-release-gate",
+      "release_status": "hosted-configuration-pending"
+    },
+    {
+      "id": "surface:supabase-platform-logs",
+      "provider": "Supabase",
+      "purpose": "Redacted database, Auth, and Storage operations",
+      "real_data_boundary": "content_prohibited",
+      "retention_profile": "provider-release-gate",
+      "release_status": "hosted-configuration-pending"
+    },
+    {
+      "id": "surface:openai-api",
+      "provider": "OpenAI",
+      "purpose": "Transient policy answers and report-draft assistance",
+      "real_data_boundary": "production_only_minimum_necessary",
+      "retention_profile": "provider-release-gate",
+      "release_status": "provider-controls-pending"
+    },
+    {
+      "id": "surface:browser-storage",
+      "provider": "User browser",
+      "purpose": "Authenticated display and in-progress interaction",
+      "real_data_boundary": "no_durable_record_storage",
+      "retention_profile": "no-real-data",
+      "release_status": "implementation-review-pending"
+    },
+    {
+      "id": "surface:git-and-github",
+      "provider": "GitHub",
+      "purpose": "Source, review, and issue tracking",
+      "real_data_boundary": "prohibited",
+      "retention_profile": "no-real-data",
+      "release_status": "automated-secret-check-active"
+    },
+    {
+      "id": "surface:ci",
+      "provider": "GitHub Actions",
+      "purpose": "Fictional-data qualification only",
+      "real_data_boundary": "prohibited",
+      "retention_profile": "no-real-data",
+      "release_status": "fictional-only"
+    },
+    {
+      "id": "surface:vercel-preview",
+      "provider": "Vercel",
+      "purpose": "Protected fictional-data review only",
+      "real_data_boundary": "prohibited",
+      "retention_profile": "no-real-data",
+      "release_status": "fictional-only"
+    },
+    {
+      "id": "surface:local-development",
+      "provider": "Local workstation",
+      "purpose": "Fictional development and recovery rehearsal only",
+      "real_data_boundary": "prohibited",
+      "retention_profile": "no-real-data",
+      "release_status": "fictional-only"
+    },
+    {
+      "id": "surface:support-and-captures",
+      "provider": "Operator-controlled",
+      "purpose": "Support, screenshots, recordings, demos, and exports outside Production",
+      "real_data_boundary": "prohibited",
+      "retention_profile": "no-real-data",
+      "release_status": "procedure-required"
+    },
+    {
+      "id": "surface:database-backup",
+      "provider": "Approved off-provider backup target",
+      "purpose": "Encrypted recoverable database copy",
+      "real_data_boundary": "production_only",
+      "retention_profile": "backup-follows-source",
+      "release_status": "provider-and-rehearsal-pending"
+    },
+    {
+      "id": "surface:storage-backup",
+      "provider": "Approved off-provider backup target",
+      "purpose": "Encrypted recoverable private-object copy",
+      "real_data_boundary": "production_only",
+      "retention_profile": "backup-follows-source",
+      "release_status": "provider-and-rehearsal-pending"
+    }
+  ]
+}

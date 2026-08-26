@@ -323,6 +323,10 @@ Pause and report a blocker instead of guessing when work requires:
       the core policy-answer and report-draft routes, with content-leakage tests
       and a fail-closed Production readiness gate. Hosted sinks, the remaining
       route signals, retention/access, alerts, and delivery tests remain open.
+- [x] Maintain a machine-checked production data inventory covering every
+      private application table and Storage bucket plus Auth, AI, logs, browser,
+      non-production, support, and backup surfaces. Hosted settings, deletion
+      automation, and evidence reconciliation remain open.
 - [ ] Add cost/quota dashboards, alerts, budgets, and circuit breakers.
 - [ ] Name incident/alert primary and alternate.
 - [ ] Exercise credential rotation, dependency update, incident response,
