@@ -1,6 +1,6 @@
 # ADR-0003: Employee Number Plus PIN-Like Authentication
 
-- **Status:** Proposed
+- **Status:** Accepted for implementation; security verification in progress
 - **Date:** 2026-08-25
 - **Deciders:** Product owner, security owner, and technical lead
 
@@ -35,9 +35,10 @@ security approval:
 - Use protected Auth admin operations for account creation/reset only after
   active-admin, CSRF, idempotency, and purpose-bound step-up checks.
 
-This is not Accepted until every action item passes. If the alias lifecycle
-cannot be made safe, choose Option B rather than reducing credential strength or
-exposing aliases.
+The owner approved Option A on 2026-08-25. Implementation and verification
+remain mandatory before any account or sign-in route is enabled. If the alias
+lifecycle cannot be made safe, choose Option B rather than reducing credential
+strength or exposing aliases.
 
 ## Options considered
 
@@ -150,6 +151,9 @@ credential is not an acceptable simplification.
 - Administrator MFA is deferred for the no-data hobby foundation. This decision
   does not permit official adoption or real operational/personnel data, and MFA
   must be reconsidered before either boundary changes.
+- The owner approved Option A, the private server-only Supabase alias bridge, on
+  2026-08-25. This authorizes implementation only; it does not waive the
+  security acceptance criteria or authorize real operational data.
 
 ## Hosted alias-spike evidence — 2026-08-25
 
