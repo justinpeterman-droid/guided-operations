@@ -6,7 +6,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
 import type { AuthAliasLookup } from "./employee-sign-in";
 
-type AliasRow = Readonly<{ sign_in_alias: string }>;
+type AliasRow = Readonly<{ sign_in_alias: string; auth_user_id: string }>;
 
 let privateAuthSql: ReturnType<typeof postgres> | undefined;
 
@@ -33,7 +33,7 @@ export function createPrivateAuthAliasLookup(): AuthAliasLookup {
   return {
     async findActiveAlias(employeeLookupDigest) {
       const rows = await sql<AliasRow[]>`
-        select account.sign_in_alias
+        select account.sign_in_alias, account.auth_user_id
         from app_private.staff_members as staff
         join app_private.user_accounts as account
           on account.staff_member_id = staff.id
@@ -44,7 +44,8 @@ export function createPrivateAuthAliasLookup(): AuthAliasLookup {
       `;
 
       const alias = rows.at(0)?.sign_in_alias;
-      return alias ? { alias } : null;
+      const authUserId = rows.at(0)?.auth_user_id;
+      return alias && authUserId ? { alias, authUserId } : null;
     },
   };
 }

@@ -209,6 +209,11 @@ store, SSR password authenticator, and server-only secrets. It requires a
 reviewed rate-limit policy argument instead of assigning a hidden production
 threshold. It does not create a public route or browser credential.
 
+The password exchange now returns an Auth user ID only to the server, and the
+employee sign-in service rejects it unless it equals the ID bound to the private
+alias lookup. A mismatched identity receives the same generic failure as any
+other unsuccessful credential attempt.
+
 ## Threat model — 2026-08-25
 
 This model covers the no-data hobby foundation. It does not authorize real

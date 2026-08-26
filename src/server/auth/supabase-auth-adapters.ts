@@ -35,7 +35,9 @@ export async function createSupabasePasswordAuthenticator(): Promise<PasswordAut
         email: alias,
         password: passcode,
       });
-      return !error && Boolean(data.session);
+      return !error && data.session && data.user?.id
+        ? { authUserId: data.user.id }
+        : null;
     },
   };
 }

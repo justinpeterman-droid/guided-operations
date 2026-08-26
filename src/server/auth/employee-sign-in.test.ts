@@ -18,12 +18,23 @@ function dependencies(
     employeeLookupHmacKey: hmacKey,
     dummyAlias: "dummy-auth-alias@example.invalid",
     aliasLookup: {
-      findActiveAlias: vi
-        .fn()
-        .mockResolvedValue(activeAlias ? { alias: activeAlias } : null),
+      findActiveAlias: vi.fn().mockResolvedValue(
+        activeAlias
+          ? {
+              alias: activeAlias,
+              authUserId: "11111111-1111-4111-8111-111111111111",
+            }
+          : null,
+      ),
     },
     passwordAuthenticator: {
-      signInWithPassword: vi.fn().mockResolvedValue(passwordAccepted),
+      signInWithPassword: vi
+        .fn()
+        .mockResolvedValue(
+          passwordAccepted
+            ? { authUserId: "11111111-1111-4111-8111-111111111111" }
+            : null,
+        ),
     },
   };
 }
@@ -75,6 +86,20 @@ describe("signInWithEmployeeNumber", () => {
 
     await expect(
       signInWithEmployeeNumber("emp-42", "wrong-secret", setup),
+    ).resolves.toEqual({
+      status: "failed",
+      message: "Unable to sign in with those credentials.",
+    });
+  });
+
+  it("rejects a successful Auth response for a different private account", async () => {
+    const setup = dependencies("private-alias@example.invalid", true);
+    setup.passwordAuthenticator.signInWithPassword = vi.fn().mockResolvedValue({
+      authUserId: "22222222-2222-4222-8222-222222222222",
+    });
+
+    await expect(
+      signInWithEmployeeNumber("emp-42", "Cedar7!9", setup),
     ).resolves.toEqual({
       status: "failed",
       message: "Unable to sign in with those credentials.",

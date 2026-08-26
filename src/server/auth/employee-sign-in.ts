@@ -10,11 +10,14 @@ import {
 export type AuthAliasLookup = {
   findActiveAlias(
     employeeLookupDigest: string,
-  ): Promise<{ alias: string } | null>;
+  ): Promise<{ alias: string; authUserId: string } | null>;
 };
 
 export type PasswordAuthenticator = {
-  signInWithPassword(alias: string, passcode: string): Promise<boolean>;
+  signInWithPassword(
+    alias: string,
+    passcode: string,
+  ): Promise<{ authUserId: string } | null>;
 };
 
 export type EmployeeSignInDependencies = {
@@ -68,7 +71,11 @@ export async function signInWithEmployeeNumber(
       passcode,
     );
 
-  if (!account || !authenticated) {
+  if (
+    !account ||
+    !authenticated ||
+    authenticated.authUserId !== account.authUserId
+  ) {
     return { status: "failed", message: GENERIC_SIGN_IN_FAILURE };
   }
 
