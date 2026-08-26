@@ -22,7 +22,7 @@ const accountRowsSchema = z
 export type CurrentAccountRpcClient = Readonly<{
   rpc(
     functionName: "current_account",
-  ): Promise<Readonly<{ data: unknown; error: unknown | null }>>;
+  ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
 /**
