@@ -214,6 +214,16 @@ employee sign-in service rejects it unless it equals the ID bound to the private
 alias lookup. A mismatched identity receives the same generic failure as any
 other unsuccessful credential attempt.
 
+The initial route boundary now accepts only exact same-origin JSON POSTs and
+validated bounded employee-number/passcode fields. It sets no-cache responses
+and an opaque HttpOnly device cookie only after a valid same-origin request,
+including a generic credential failure. The route is fail-closed: it returns 404
+unless the server-only `AUTH_SIGN_IN_ENABLED` setting is explicitly `true`; the
+provided environment example leaves it `false`. The preview rate-limit policy is
+5 account, 10 device, 25 network, and 200 global attempts per 15 minutes. These
+limits must be exercised with fictional Preview traffic and revisited before
+live promotion.
+
 ## Threat model — 2026-08-25
 
 This model covers the no-data hobby foundation. It does not authorize real
