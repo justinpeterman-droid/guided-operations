@@ -3,15 +3,9 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
 
-export const dynamic = "force-dynamic";
+import { ReportsList } from "./reports-list";
 
-function formatTimestamp(timestamp: string): string {
-  return `${new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
-    timeStyle: "short",
-    timeZone: "UTC",
-  }).format(new Date(timestamp))} UTC`;
-}
+export const dynamic = "force-dynamic";
 
 async function loadAuthorizedIncidents() {
   try {
@@ -65,44 +59,7 @@ export default async function ReportsPage() {
           </p>
         </section>
       ) : (
-        <section className="reports-table-wrap" aria-labelledby="reports-title">
-          <table>
-            <caption>Authorized incident summaries</caption>
-            <thead>
-              <tr>
-                <th scope="col">Incident</th>
-                <th scope="col">Status</th>
-                <th scope="col">Category</th>
-                <th scope="col">Occurred</th>
-                <th scope="col">Revision</th>
-              </tr>
-            </thead>
-            <tbody>
-              {result.incidents.map((incident) => (
-                <tr key={incident.incidentId}>
-                  <th scope="row">
-                    <span>{incident.incidentNumber}</span>
-                    <strong>{incident.displayName}</strong>
-                  </th>
-                  <td>
-                    <span
-                      className={`incident-status status-${incident.status}`}
-                    >
-                      {incident.status.replace("_", " ")}
-                    </span>
-                  </td>
-                  <td>{incident.category}</td>
-                  <td>
-                    <time dateTime={incident.occurredAt}>
-                      {formatTimestamp(incident.occurredAt)}
-                    </time>
-                  </td>
-                  <td>{incident.currentRevisionNumber}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+        <ReportsList incidents={result.incidents} />
       )}
     </main>
   );
