@@ -1,9 +1,6 @@
 import "server-only";
 
-import type {
-  GroundedPolicyAnswer,
-  SourceCitation,
-} from "@/features/policy/grounding";
+import type { SourceCitation } from "@/features/policy/grounding";
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
 
@@ -32,7 +29,8 @@ export interface GroundedGenerationRequest {
 
 export interface GroundedGenerationProvider {
   readonly providerKey: string;
-  generate(request: GroundedGenerationRequest): Promise<GroundedPolicyAnswer>;
+  /** Untrusted provider output; the caller must validate schema and provenance. */
+  generate(request: GroundedGenerationRequest): Promise<unknown>;
 }
 
 /**

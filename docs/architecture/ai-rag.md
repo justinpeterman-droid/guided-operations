@@ -36,6 +36,12 @@ domain models or API contracts. Adding or changing a provider requires contract,
 evaluation, privacy, cost, and failure-mode qualification rather than a search
 and replace.
 
+The initial Responses adapter is server-only, requires an explicit
+`OPENAI_POLICY_MODEL` pin and a non-public `OPENAI_API_KEY`, sets
+`store: false`, supplies no tools, and requests strict structured output. Its
+parsed output is still untrusted until the domain citation validator accepts the
+exact retrieved provenance.
+
 The domain `PolicyAnswerService` now composes those two interfaces without a
 provider SDK. It validates the question and facility scope, never invokes
 generation when retrieval yields no authorized passages, and validates every
