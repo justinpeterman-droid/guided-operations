@@ -4,6 +4,9 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn().mockResolvedValue({}),
 }));
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({ refresh: vi.fn() })),
+}));
 vi.mock("@/server/auth/list-admin-accounts", () => ({
   listAdminAccountsForCurrentSession: vi.fn().mockResolvedValue({
     kind: "listed",

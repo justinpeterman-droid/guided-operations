@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AccountInvitationForm } from "./account-invitation-form";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
 
@@ -39,10 +40,12 @@ export default async function AdminAccountsPage() {
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="accounts-title">Accounts and roster</h1>
         <p>
-          This is a read-only list. Account changes will require a fresh
-          administrator confirmation for each important action.
+          Add an account only after a fresh administrator confirmation. Each
+          important account action requires its own confirmation.
         </p>
       </section>
+
+      <AccountInvitationForm />
 
       {result.accounts.length === 0 ? (
         <section className="reports-empty-state" aria-labelledby="empty-title">
