@@ -36,6 +36,13 @@ domain models or API contracts. Adding or changing a provider requires contract,
 evaluation, privacy, cost, and failure-mode qualification rather than a search
 and replace.
 
+The domain `PolicyAnswerService` now composes those two interfaces without a
+provider SDK. It validates the question and facility scope, never invokes
+generation when retrieval yields no authorized passages, and validates every
+returned citation against the retrieved immutable passage before returning it.
+It retains no question, answer, or excerpt; any future route is responsible for
+authorization, transient rendering, and safe operational metrics.
+
 ## Corpus object model
 
 One logical policy_document has immutable policy_document_versions. Each version

@@ -109,6 +109,8 @@ export function validateGroundedPolicyAnswer(
       citation.documentId !== retrieved.documentId ||
       citation.documentVersionId !== retrieved.documentVersionId ||
       citation.stableKey !== retrieved.stableKey ||
+      citation.title !== retrieved.title ||
+      citation.versionLabel !== retrieved.versionLabel ||
       citation.sourceSha256 !== retrieved.sourceSha256 ||
       citation.pageStart !== retrieved.pageStart ||
       citation.pageEnd !== retrieved.pageEnd ||
