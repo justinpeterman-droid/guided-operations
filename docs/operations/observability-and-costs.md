@@ -32,12 +32,14 @@ before activation.
 
 ## Implemented application boundary
 
-The policy-answer and report-draft endpoints now emit a strict JSON event only
-when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only a fixed
-operation, bounded outcome/reason code, random request ID, status, duration,
-environment, deployment/build identifiers, and the policy route's bounded
-citation count and corpus version. It has no arbitrary metadata or error-text
-field and tests reject extra prompt, response, report, or personnel fields.
+The sign-in, policy-answer, and report-draft endpoints now emit a strict JSON
+event only when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only
+a fixed operation, bounded outcome/reason code, random request ID, status,
+duration, environment, deployment/build identifiers, and the policy route's
+bounded citation count and corpus version. Sign-in intentionally records no
+account-existence reason. The event has no arbitrary metadata or error-text
+field, and tests reject extra prompt, response, report, credential, or personnel
+fields.
 
 Production readiness fails while this gate is off. Telemetry delivery failure
 does not change the user's application response. This implements the

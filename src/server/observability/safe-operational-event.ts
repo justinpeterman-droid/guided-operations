@@ -11,7 +11,11 @@ const safeIdentifierSchema = z
 
 const safeOperationalEventInputSchema = z
   .object({
-    event_name: z.enum(["policy_answer.request", "report_draft.request"]),
+    event_name: z.enum([
+      "auth.sign_in",
+      "policy_answer.request",
+      "report_draft.request",
+    ]),
     outcome: z.enum([
       "answered",
       "authentication_required",
@@ -20,6 +24,8 @@ const safeOperationalEventInputSchema = z
       "provider_unavailable",
       "request_not_allowed",
       "service_unavailable",
+      "sign_in_failed",
+      "signed_in",
       "stored",
       "validation_rejected",
     ]),

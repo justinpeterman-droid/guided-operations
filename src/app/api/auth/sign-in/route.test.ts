@@ -17,6 +17,9 @@ vi.mock("@/server/auth/sign-in-endpoint", () => ({
 vi.mock("@/server/auth/server-employee-sign-in", () => ({
   createServerEmployeeSignInDependencies: vi.fn(),
 }));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
+}));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
@@ -27,6 +30,7 @@ import {
   validateSignInEndpointRequest,
 } from "@/server/auth/sign-in-endpoint";
 import { createServerEmployeeSignInDependencies } from "@/server/auth/server-employee-sign-in";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 
 import { POST } from "./route";
 
@@ -66,6 +70,7 @@ describe("POST /api/auth/sign-in", () => {
 
     expect(response).toBe(disabled);
     expect(validateSignInEndpointRequest).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).not.toHaveBeenCalled();
   });
 
   it("sets only the opaque, scoped device cookie after endpoint success", async () => {
@@ -98,5 +103,49 @@ describe("POST /api/auth/sign-in", () => {
       subjects,
       expect.any(Function),
     );
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_in",
+        outcome: "signed_in",
+        status_code: 200,
+      }),
+    );
+    const eventCalls = JSON.stringify(
+      vi.mocked(writeSafeOperationalEvent).mock.calls,
+    );
+    expect(eventCalls).not.toContain(input.employeeNumber);
+    expect(eventCalls).not.toContain(input.passcode);
+  });
+
+  it("records a generic failure without logging credentials or account existence", async () => {
+    mockEnvironment(true);
+    vi.mocked(validateSignInEndpointRequest).mockResolvedValue({
+      ok: true,
+      input,
+    });
+    vi.mocked(createAuthRequestRateLimitSubjects).mockReturnValue(subjects);
+    vi.mocked(createServerEmployeeSignInDependencies).mockResolvedValue(
+      {} as never,
+    );
+    vi.mocked(authenticateValidatedSignInRequest).mockResolvedValue({
+      response: Response.json({ message: "Sign-in failed" }, { status: 401 }),
+      deviceCookieValue: subjects.deviceCookieValue,
+    });
+
+    const response = await POST(new NextRequest(`${origin}/api/auth/sign-in`));
+
+    expect(response.status).toBe(401);
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_in",
+        outcome: "sign_in_failed",
+        status_code: 401,
+      }),
+    );
+    const eventCalls = JSON.stringify(
+      vi.mocked(writeSafeOperationalEvent).mock.calls,
+    );
+    expect(eventCalls).not.toContain(input.employeeNumber);
+    expect(eventCalls).not.toContain(input.passcode);
   });
 });
