@@ -580,6 +580,33 @@ a:focus-visible {
   line-height: 1.6;
 }
 
+.count-sheet-heading-actions {
+  display: grid;
+  justify-items: end;
+  gap: 10px;
+}
+
+.count-sheet-print-button {
+  min-height: 38px;
+  padding: 0 13px;
+  color: var(--gow-navy-950);
+  background: #fff;
+  border: 1px solid var(--gow-navy-800);
+  border-radius: var(--gow-radius-control);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.count-sheet-print-button:hover {
+  background: #edf4f8;
+}
+
+.count-sheet-print-watermark {
+  display: none;
+}
+
 .count-sheet-preview > .fictional-notice {
   max-width: 860px;
 }
@@ -1108,6 +1135,7 @@ a:focus-visible {
 
   .workspace-header,
   .report-print-button,
+  .count-sheet-heading-actions,
   .draft-finalization-form {
     display: none !important;
   }
@@ -1126,6 +1154,37 @@ a:focus-visible {
   .draft-review-copy p {
     color: #000;
     white-space: pre-wrap;
+  }
+
+  .count-sheet-preview {
+    padding: 0;
+  }
+
+  .count-sheet-print-watermark {
+    display: block;
+    margin: 0 0 14px;
+    color: #000;
+    font-size: 0.8rem;
+    font-weight: 800;
+    text-transform: uppercase;
+  }
+
+  .count-sheet-table-wrap,
+  .count-sheet-summary {
+    border: 1px solid #000;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .count-sheet-grid {
+    grid-template-columns: minmax(0, 1fr) 0.35fr;
+    gap: 14px;
+  }
+
+  .count-sheet-table-wrap input,
+  .operational-inputs input {
+    color: #000;
+    border-color: transparent;
   }
 }
 .draft-finalization-attestation {

@@ -7,6 +7,7 @@ import {
   createBlankCountPayload,
   parseCountValue,
 } from "./calculations";
+import { PrintCountSheetButton } from "./print-count-sheet-button";
 import type { CountSheetPayload, CountSheetStructure } from "./types";
 
 type CountSheetPreviewProps = {
@@ -105,17 +106,24 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
           <p className="eyebrow">Local calculation preview</p>
           <h1 id="count-sheet-title">{structure.title}</h1>
           <p>
-            Fictional practice values stay in this browser tab. They are not
-            saved, printed, or sent anywhere.
+            Fictional practice values stay in this browser tab. They are never
+            saved or sent anywhere; any printout is marked as training only.
           </p>
         </div>
-        <span className="not-saved-label">Not saved</span>
+        <div className="count-sheet-heading-actions">
+          <span className="not-saved-label">Not saved</span>
+          <PrintCountSheetButton />
+        </div>
       </div>
 
       <div className="fictional-notice" role="note">
         <strong>Training preview only.</strong> Blank fields remain blank; the
         sheet never invents a count to make totals reconcile.
       </div>
+
+      <p className="count-sheet-print-watermark" aria-hidden="true">
+        Fictional training preview — not an approved operational form
+      </p>
 
       <div className="count-sheet-grid">
         <div className="count-sheet-table-wrap">

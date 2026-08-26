@@ -29,6 +29,9 @@ describe("CountSheetPreview", () => {
       screen.getByText("Reconciled — review before any future save."),
     ).toBeVisible();
     expect(screen.getByText("Not saved")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Print training preview" }),
+    ).toBeVisible();
   });
 
   it("keeps an unresolved difference visible instead of changing input values", async () => {
