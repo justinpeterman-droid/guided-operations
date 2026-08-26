@@ -91,6 +91,9 @@ export default function Home() {
           <Link className="preview-link" href="/preview/report-assistant">
             View the fictional report workspace
           </Link>
+          <Link className="preview-link" href="/preview/workspace">
+            View the officer workspace layout
+          </Link>
           <Link className="preview-link" href="/preview/count-sheet">
             Try the fictional Count Sheet
           </Link>
