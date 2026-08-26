@@ -116,6 +116,28 @@ test a restore over production.
     securely remove the disposable project only after evidence is retained and
     owner authorizes deletion.
 
+## Local fictional recovery rehearsal
+
+Run `npm run recovery:local` only against the repository's loopback Supabase
+stack. The command refuses non-loopback API/database targets, creates one
+obviously fictional private Storage object, takes a full local PostgreSQL
+archive, and inventories both private buckets through the Storage API. It then:
+
+1. restores the database into a uniquely named temporary database;
+2. compares the migration head and counts for every `app_private` table, Auth
+   users, Storage buckets, and Storage metadata;
+3. restores every inventoried object to a temporary private bucket and verifies
+   byte counts and SHA-256 checksums;
+4. writes value-free aggregate evidence to
+   `test-results/recovery-rehearsal.json`; and
+5. removes the temporary database, bucket, object, dump, and detailed manifest.
+
+The evidence file contains no object keys, database rows, source text, secrets,
+or backup bytes. A passing local rehearsal proves the repository can create and
+read a database archive and independently copy/reconcile Storage bytes. It does
+not prove encryption, an off-provider copy, a separate hosted recovery project,
+Production credentials, or the final RPO/RTO. Those hosted gates remain open.
+
 ## Production restoration
 
 Production restoration is an incident operation:

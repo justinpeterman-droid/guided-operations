@@ -23,7 +23,8 @@
     "db:stop": "supabase stop",
     "db:reset": "supabase db reset",
     "db:lint": "supabase db lint --local --level warning --fail-on warning",
-    "db:test": "supabase test db --local"
+    "db:test": "supabase test db --local",
+    "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations"
   },
   "dependencies": {
     "@supabase/ssr": "0.12.5",

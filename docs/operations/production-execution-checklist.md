@@ -333,6 +333,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Implement protected production migration dry-run/apply job.
 - [ ] Implement encrypted off-provider logical database backup.
 - [ ] Implement separate private-Storage inventory/object backup.
+- [x] Implement and locally pass a fictional database archive restore plus
+      private-Storage API copy/checksum rehearsal with bounded value-free
+      evidence and verified cleanup.
+- [ ] Promote the passing local fictional database-plus-Storage recovery
+      rehearsal to protected hosted backup jobs and an isolated replacement
+      Supabase project. Local proof alone does not close this gate.
 - [ ] Restore database and Storage into an isolated recovery project.
 - [ ] Verify Auth-linked state, migration history, constraints, RLS, object
       checksums, corpus rebuild, and achieved RPO/RTO.

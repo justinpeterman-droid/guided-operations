@@ -11,7 +11,9 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
   users or operational data**
 - CI/release automation configured: **GitHub web and database quality workflows
   pass**
-- Backups and restore exercise: **not established**
+- Backups and restore exercise: **local fictional database-plus-Storage
+  rehearsal implemented; encrypted off-provider and isolated hosted restore not
+  established**
 - Monitoring and alerts: **not established**
 - Production domain or traffic: **not established**
 - Intended use: **personal, non-commercial hobby app for selected invited
