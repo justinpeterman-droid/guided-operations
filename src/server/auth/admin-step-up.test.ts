@@ -48,6 +48,7 @@ describe("issueAdminStepUp", () => {
       "account.reset_passcode",
       "account.unlock",
       "account.change_role",
+      "account.change_shift",
       "account.disable",
       "policy.promote",
       "system.destructive_cleanup",

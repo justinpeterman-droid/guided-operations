@@ -177,9 +177,9 @@ not an acceptable control.
   does not grant unrelated report or administrative access.
 - The initial Count Sheet shift codes are: `A` and `B` for day shift; `C` and
   `D` for night shift; `U` for five-day week; and `F` for five-day-week field.
-- Protected administrator account creation requires one of those shift codes,
-  and the administrator roster shows the assignment. Changing an existing
-  assignment remains a separate protected lifecycle action to implement and
-  qualify; it must not be done through direct table access.
+- Protected administrator account creation requires one of those shift codes.
+  The administrator roster shows and changes the assignment only after a fresh,
+  purpose-bound administrator passcode check. A change revokes the target's
+  existing sessions and records only bounded prior/new shift codes in audit.
 - Retention and legal-hold requirements for account, audit, incident, report,
   and generated-artifact data if real operational use is later approved.

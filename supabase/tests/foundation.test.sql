@@ -1,6 +1,6 @@
 begin;
 
-select plan(150);
+select plan(155);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -97,6 +97,10 @@ select ok(
 select ok(
   not has_function_privilege('anon','app_private.activate_invited_account(uuid,uuid)','execute'),
   'anonymous callers cannot invoke private invitation activation'
+);
+select ok(
+  not has_function_privilege('authenticated','app_private.change_account_shift(uuid,uuid,text)','execute'),
+  'authenticated callers cannot invoke private shift changes directly'
 );
 
 select ok(
@@ -1737,6 +1741,54 @@ select is(
 );
 
 reset role;
+
+select lives_ok(
+  $$
+    select app_private.change_account_shift(
+      '33333333-3333-4333-8333-333333333333',
+      '55555555-5555-4555-8555-555555555555',
+      'U'
+    );
+  $$,
+  'an active administrator can change a same-facility account shift'
+);
+
+select is(
+  (
+    select shift_code
+    from app_private.staff_members
+    where id = '66666666-6666-4666-8666-666666666666'
+  ),
+  'U',
+  'the protected shift change updates the assigned staff shift'
+);
+
+select is(
+  (
+    select auth_version
+    from app_private.user_accounts
+    where auth_user_id = '55555555-5555-4555-8555-555555555555'
+  ),
+  2,
+  'a shift authorization change revokes existing target sessions'
+);
+
+select is(
+  (
+    select (metadata->>'prior_shift_code') || ':' || (metadata->>'new_shift_code')
+    from app_private.audit_events
+    where event_type = 'account.shift.changed'
+      and target_id = '55555555-5555-4555-8555-555555555555'
+    order by occurred_at desc
+    limit 1
+  ),
+  'B:U',
+  'the shift-change audit contains only bounded prior and new shift codes'
+);
+
+update app_private.staff_members
+set shift_code = 'B'
+where id = '66666666-6666-4666-8666-666666666666';
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);

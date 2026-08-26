@@ -5,6 +5,7 @@ import { AccountDisableControl } from "./account-disable-control";
 import { AccountInvitationForm } from "./account-invitation-form";
 import { AccountPasscodeResetControl } from "./account-passcode-reset-control";
 import { AccountRoleChangeControl } from "./account-role-change-control";
+import { AccountShiftChangeControl } from "./account-shift-change-control";
 import { AccountUnlockControl } from "./account-unlock-control";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
@@ -91,6 +92,11 @@ export default async function AdminAccountsPage() {
                     <AccountRoleChangeControl
                       accountId={account.accountId}
                       currentRole={account.role}
+                      displayName={account.displayName}
+                    />
+                    <AccountShiftChangeControl
+                      accountId={account.accountId}
+                      currentShiftCode={account.shiftCode}
                       displayName={account.displayName}
                     />
                     <AccountPasscodeResetControl

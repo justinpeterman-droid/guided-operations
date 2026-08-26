@@ -12,6 +12,7 @@ export const ADMIN_STEP_UP_PURPOSES = [
   "account.reset_passcode",
   "account.unlock",
   "account.change_role",
+  "account.change_shift",
   "account.disable",
   "policy.promote",
   "system.destructive_cleanup",

@@ -9,6 +9,7 @@ import type { AccountDisableStore } from "./disable-account";
 import type { AccountUnlockStore } from "./unlock-account";
 import type { AccountPasscodeResetStore } from "./reset-account-passcode";
 import type { AccountRoleChangeStore } from "./change-account-role";
+import type { AccountShiftChangeStore } from "./change-account-shift";
 
 let sqlClient: ReturnType<typeof postgres> | undefined;
 
@@ -78,6 +79,16 @@ export function createAccountRoleChangeStore(): AccountRoleChangeStore {
   return {
     async changeRole(actorAuthUserId, targetAuthUserId, newRole) {
       await client`select app_private.change_account_role(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid, ${newRole}::app_private.account_role)`;
+    },
+  };
+}
+
+/** Server-only adapter for the separately audited account shift change. */
+export function createAccountShiftChangeStore(): AccountShiftChangeStore {
+  const client = sql();
+  return {
+    async changeShift(actorAuthUserId, targetAuthUserId, newShiftCode) {
+      await client`select app_private.change_account_shift(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid, ${newShiftCode})`;
     },
   };
 }

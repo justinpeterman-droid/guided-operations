@@ -46,5 +46,8 @@ describe("AdminAccountsPage", () => {
     expect(
       screen.getByRole("button", { name: "Make administrator" }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Change shift" }),
+    ).toBeInTheDocument();
   });
 });
