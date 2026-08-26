@@ -152,3 +152,21 @@ configuration for the authoritative project.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.
 - Keep the RAG corpus out of the hosted project until the corpus migration gate
   is approved and reconciled.
+
+## Preview refresh — 2026-08-26
+
+Read-only Vercel CLI verification confirmed the authoritative linked account is
+`justinpeterman-3079` and the project remains `guided-operations`. The newest
+observed protected Preview was ready at
+`https://guided-operations-2hwat2jq2-justinpeterman-3079.vercel.app` and built
+Git commit `dd1bce3` in Vercel region `iad1`.
+
+The Preview variable inventory showed the expected browser-safe Supabase URL
+and publishable key plus server-only credential, CSRF, lookup, and idempotency
+values. Values were not read or recorded. `APP_ORIGIN` was not separately set;
+this is valid for Preview because `getRuntimeEnvironment` derives the exact
+HTTPS origin from Vercel's `VERCEL_URL` only when `APP_ENV=preview`.
+
+This verifies build linkage and configuration inventory only. It does not prove
+that local commits after `dd1bce3`, hosted database migrations, authenticated
+routes, or the application UI are deployed or remotely browser-verified.
