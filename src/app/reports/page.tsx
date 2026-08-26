@@ -5,6 +5,7 @@ import { listIncidentsForCurrentSession } from "@/server/incidents/list-incident
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
 
 import { ReportsList } from "./reports-list";
+import { SignOutButton } from "./sign-out-button";
 
 export const dynamic = "force-dynamic";
 
@@ -48,9 +49,12 @@ export default async function ReportsPage() {
             <strong>Reports</strong>
           </span>
         </Link>
-        <Link className="reports-home-link" href="/">
-          Home
-        </Link>
+        <div className="reports-header-actions">
+          <Link className="reports-home-link" href="/">
+            Home
+          </Link>
+          <SignOutButton />
+        </div>
       </header>
 
       <section className="reports-intro" aria-labelledby="reports-title">
