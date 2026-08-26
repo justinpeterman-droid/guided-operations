@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
 
+import { ReportRevisionForm } from "./report-revision-form";
+
 export const dynamic = "force-dynamic";
 
 export default async function ReportPage({
@@ -62,6 +64,11 @@ export default async function ReportPage({
         <div className="draft-review-copy">
           <p>{result.report.narrative}</p>
         </div>
+        <ReportRevisionForm
+          initialNarrative={result.report.narrative}
+          reportId={reportId}
+          revisionNumber={result.report.revisionNumber}
+        />
       </article>
     </main>
   );
