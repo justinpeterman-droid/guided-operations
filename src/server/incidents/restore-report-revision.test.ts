@@ -22,18 +22,16 @@ function client(error: unknown | null = null) {
   };
   return {
     auth: {
-      getClaims: vi
-        .fn()
-        .mockResolvedValue({
-          data: {
-            claims: {
-              sub: account.auth_user_id,
-              session_id: "33333333-3333-4333-8333-333333333333",
-              app_metadata: { auth_version: 1 },
-            },
+      getClaims: vi.fn().mockResolvedValue({
+        data: {
+          claims: {
+            sub: account.auth_user_id,
+            session_id: "33333333-3333-4333-8333-333333333333",
+            app_metadata: { auth_version: 1 },
           },
-          error: null,
-        }),
+        },
+        error: null,
+      }),
     },
     rpc: vi.fn(async (name: string) =>
       name === "current_account"

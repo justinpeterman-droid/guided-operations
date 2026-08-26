@@ -161,8 +161,8 @@ observed protected Preview was ready at
 `https://guided-operations-2hwat2jq2-justinpeterman-3079.vercel.app` and built
 Git commit `dd1bce3` in Vercel region `iad1`.
 
-The Preview variable inventory showed the expected browser-safe Supabase URL
-and publishable key plus server-only credential, CSRF, lookup, and idempotency
+The Preview variable inventory showed the expected browser-safe Supabase URL and
+publishable key plus server-only credential, CSRF, lookup, and idempotency
 values. Values were not read or recorded. `APP_ORIGIN` was not separately set;
 this is valid for Preview because `getRuntimeEnvironment` derives the exact
 HTTPS origin from Vercel's `VERCEL_URL` only when `APP_ENV=preview`.

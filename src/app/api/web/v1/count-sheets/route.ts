@@ -54,11 +54,7 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     return error(
-      saved.kind === "denied"
-        ? 403
-        : saved.kind === "conflict"
-          ? 409
-          : 503,
+      saved.kind === "denied" ? 403 : saved.kind === "conflict" ? 409 : 503,
       saved.kind === "denied"
         ? "request_not_allowed"
         : saved.kind === "conflict"

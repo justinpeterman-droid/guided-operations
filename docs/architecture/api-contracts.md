@@ -266,8 +266,8 @@ closed JSON body, a bounded idempotency key, and base revision number. The
 server validates the structure and values; the database revalidates the closed
 shape and derives totals. It creates revision one or appends exactly the next
 immutable revision for the current officer's assigned shift. A stale base
-revision returns `409 revision_conflict`; it never overwrites newer work.
-The route does not accept a facility, account, or shift from the browser.
+revision returns `409 revision_conflict`; it never overwrites newer work. The
+route does not accept a facility, account, or shift from the browser.
 
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.
