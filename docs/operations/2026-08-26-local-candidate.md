@@ -44,3 +44,25 @@ a protected Preview for it.
 The full non-production and live promotion gates remain in
 [release-gates.md](release-gates.md) and
 [definition of done](../quality/definition-of-done.md).
+
+## Local verification refresh — 2026-08-26
+
+The expanded local candidate at `d603c61f52c005a7b698f66a9242ce523f1dd2f0` was
+rechecked after the protected sign-in/sign-out, Reports sign-out control, and
+isolated-browser-target changes. This is a local evidence record only; the
+documentation commit that contains this paragraph is not itself a deployed
+candidate.
+
+| Check              | Result                                                                              |
+| ------------------ | ----------------------------------------------------------------------------------- |
+| `npm run check`    | Passed: formatting, lint, TypeScript, 203 web tests, and a Next.js production build |
+| `npm run db:reset` | Passed: clean local replay through every current migration                          |
+| `npm run db:lint`  | Passed: no schema warnings/errors                                                   |
+| `npm run db:test`  | Passed: 141 pgTAP/database authorization tests                                      |
+
+The browser foundation test did not yield current-candidate evidence in this
+desktop session: an older local dev server owned the normal workspace and the
+desktop environment ended a temporary production server before Chromium could
+reach it. The test configuration now accepts an explicit `PLAYWRIGHT_BASE_URL`
+for a clean Preview or isolated current-build target. A browser pass remains a
+required gate, not an inferred result.
