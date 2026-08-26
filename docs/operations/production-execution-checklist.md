@@ -167,8 +167,10 @@ Pause and report a blocker instead of guessing when work requires:
       private-delivery activation, failed-delivery cleanup, and allowlisted
       audit outcomes. The ceremony is not exposed to a browser route and has not
       been run with a real identity.
-- [ ] Implement account create, deactivate, role change, reset, and unlock with
-      purpose-bound admin step-up.
+- [x] Implement account create, deactivate, role change, reset, and unlock with
+      purpose-bound admin step-up, plus personal passcode and session controls.
+      Local service, route, UI, and database tests exist; hosted migration and
+      real-browser qualification remain separate release gates below.
 - [ ] Pass known/unknown employee timing and enumeration tests.
 - [ ] Pass direct database
       anonymous/authenticated/cross-user/cross-role/disabled and elevated-key

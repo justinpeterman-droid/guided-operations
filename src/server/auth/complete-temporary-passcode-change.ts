@@ -64,6 +64,7 @@ export async function completeTemporaryPasscodeChange(
   });
   if (passwordResult.error) return { status: "unavailable" };
 
+  let privateStateCompleted = true;
   try {
     await dependencies.store.complete({
       authUserId,
@@ -75,11 +76,13 @@ export async function completeTemporaryPasscodeChange(
   } catch {
     // The temporary state remains set, so a retry still needs the same
     // employee proof. Never disclose which private check rejected it.
-    return { status: "unavailable" };
+    privateStateCompleted = false;
   }
 
   // A changed auth_version denies stale JWTs even if provider-wide revocation
   // is unavailable. Make the provider call as additional defense in depth.
   await client.auth.signOut({ scope: "global" });
-  return { status: "completed" };
+  return privateStateCompleted
+    ? { status: "completed" }
+    : { status: "unavailable" };
 }

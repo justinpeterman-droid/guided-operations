@@ -79,4 +79,21 @@ describe("completeTemporaryPasscodeChange", () => {
     expect(deps.store.complete).not.toHaveBeenCalled();
     expect(auth.auth.signOut).not.toHaveBeenCalled();
   });
+
+  it("revokes provider sessions when the password changed but private completion fails", async () => {
+    const deps = dependencies();
+    const auth = client();
+    deps.store.complete.mockRejectedValue(new Error("unavailable"));
+
+    await expect(
+      completeTemporaryPasscodeChange(
+        { employeeNumber: "EMP-42", passcode: "Cedar7!9" },
+        authUserId,
+        auth,
+        deps,
+      ),
+    ).resolves.toEqual({ status: "unavailable" });
+
+    expect(auth.auth.signOut).toHaveBeenCalledWith({ scope: "global" });
+  });
 });

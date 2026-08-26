@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
 import { AccountSessionControls } from "./account-session-controls";
+import { PersonalPasscodeChangeForm } from "./personal-passcode-change-form";
 import { TemporaryPasscodeChangeForm } from "./temporary-passcode-change-form";
 
 export const dynamic = "force-dynamic";
@@ -58,6 +59,7 @@ export default async function AccountPage() {
       </section>
 
       <AccountSessionControls />
+      <PersonalPasscodeChangeForm />
     </main>
   );
 }

@@ -11,6 +11,7 @@ import type { PasswordAuthenticator } from "./employee-sign-in";
 import type { AuthUserProvisioner } from "./first-admin-bootstrap";
 import type { AdministratorPasscodeVerifier } from "./request-admin-step-up";
 import type { AuthPasswordResetter } from "./reset-account-passcode";
+import type { AccountPasscodeVerifier } from "./change-personal-passcode";
 
 type ActiveAliasLookup = Readonly<{
   findActiveAlias(authUserId: string): Promise<string | null>;
@@ -125,6 +126,13 @@ export function createSupabaseAuthPasswordResetter(): AuthPasswordResetter {
 export function createSupabaseAdministratorPasscodeVerifier(
   aliasLookup: ActiveAliasLookup = createActiveAliasLookup(),
 ): AdministratorPasscodeVerifier {
+  return createSupabaseAccountPasscodeVerifier(aliasLookup);
+}
+
+/** Rechecks any active account's current passcode without changing its session. */
+export function createSupabaseAccountPasscodeVerifier(
+  aliasLookup: ActiveAliasLookup = createActiveAliasLookup(),
+): AccountPasscodeVerifier {
   const environment = getPublicSupabaseEnvironment();
   const client = createClient(
     environment.NEXT_PUBLIC_SUPABASE_URL,
