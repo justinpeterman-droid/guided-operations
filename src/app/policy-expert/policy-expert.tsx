@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import type { GroundedPolicyAnswer } from "@/features/policy/grounding";
+import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 
 type SubmissionState = "idle" | "submitting" | "failed";
 
@@ -92,9 +93,7 @@ export function PolicyExpert() {
             <strong>Policy Expert</strong>
           </span>
         </Link>
-        <Link className="reports-home-link" href="/reports">
-          Reports
-        </Link>
+        <WorkspaceNavigation current="Policy" />
       </header>
 
       <div className="policy-layout">

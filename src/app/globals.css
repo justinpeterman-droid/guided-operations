@@ -624,6 +624,28 @@ a:focus-visible {
   border-bottom: 1px solid rgba(158, 176, 191, 0.6);
 }
 
+.workspace-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+}
+
+.workspace-navigation a {
+  padding: 7px 9px;
+  color: var(--gow-muted);
+  border-radius: 8px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.workspace-navigation a:hover,
+.workspace-navigation a[aria-current="page"] {
+  color: var(--gow-navy-900);
+  background: #e4eef5;
+}
+
 .workspace-brand {
   display: inline-flex;
   align-items: center;
@@ -2158,6 +2180,10 @@ a:focus-visible {
   .workspace-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .reports-header-actions {
+    width: 100%;
   }
 
   .policy-main {

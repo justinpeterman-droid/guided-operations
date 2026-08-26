@@ -3,6 +3,7 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
+import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 
 import { ReportsList } from "./reports-list";
 import { SignOutButton } from "./sign-out-button";
@@ -50,12 +51,7 @@ export default async function ReportsPage() {
           </span>
         </Link>
         <div className="reports-header-actions">
-          <Link className="reports-home-link" href="/">
-            Home
-          </Link>
-          <Link className="reports-home-link" href="/account">
-            Account
-          </Link>
+          <WorkspaceNavigation current="Reports" />
           <SignOutButton />
         </div>
       </header>
