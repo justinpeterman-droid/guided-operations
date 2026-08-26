@@ -197,6 +197,13 @@ account, public recovery path, or operational data. Hosted integration, timing
 measurement, trusted proxy/device-subject derivation, SSR cookie lifecycle,
 reset/bootstrap, and authorization/RLS negative tests remain open.
 
+The pre-auth request helper also converts the Vercel-managed client-network
+header and a random HttpOnly device-cookie value into purpose-separated HMAC
+digests before rate-limit storage. It has no raw-IP persistence path. A missing
+provider header falls back to a shared opaque network subject while the device
+and global limits remain active. This too remains unenabled until the full sign-
+in route and lifecycle checks are ready.
+
 ## Threat model — 2026-08-25
 
 This model covers the no-data hobby foundation. It does not authorize real
