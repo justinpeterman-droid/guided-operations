@@ -204,6 +204,11 @@ provider header falls back to a shared opaque network subject while the device
 and global limits remain active. This too remains unenabled until the full sign-
 in route and lifecycle checks are ready.
 
+The server composition factory joins the private alias lookup, private attempt
+store, SSR password authenticator, and server-only secrets. It requires a
+reviewed rate-limit policy argument instead of assigning a hidden production
+threshold. It does not create a public route or browser credential.
+
 ## Threat model — 2026-08-25
 
 This model covers the no-data hobby foundation. It does not authorize real
