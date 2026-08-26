@@ -1,6 +1,6 @@
 begin;
 
-select plan(75);
+select plan(84);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -773,6 +773,94 @@ reset role;
 
 select ok(
   has_function_privilege(
+    'authenticated',
+    'api.store_report_draft_candidate(uuid, uuid, text, uuid[], jsonb, text, text, text)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.store_report_draft_candidate(uuid, uuid, text, uuid[], jsonb, text, text, text)',
+    'execute'
+  ),
+  'only authenticated users can store a reviewed report draft candidate'
+);
+
+select lives_ok(
+  $$
+    select set_config(
+      'app.test.incident_id',
+      (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      true
+    );
+    select set_config(
+      'app.test.revision_id',
+      (
+        select revision.id::text
+        from app_private.incident_revisions as revision
+        join app_private.incidents as incident on incident.id = revision.incident_id
+        where incident.incident_number = 'FICTIONAL-RPC-001' and revision.revision_number = 1
+      ),
+      true
+    );
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.store_report_draft_candidate(
+      current_setting('app.test.incident_id')::uuid,
+      current_setting('app.test.revision_id')::uuid,
+      'fictional-training-report',
+      array['13131313-1313-4131-8131-131313131313']::uuid[],
+      '[{"text":"Fictional candidate paragraph.","sourceFactIds":["13131313-1313-4131-8131-131313131313"]}]'::jsonb,
+      'fictional-provider-v1',
+      repeat('7', 64), repeat('8', 64)
+    );
+  $$,
+  'an authorized owner can store one immutable provenance-validated fictional report draft candidate'
+);
+
+reset role;
+
+select is(
+  (select count(*)::integer from app_private.report_draft_candidates),
+  1,
+  'the report draft candidate is stored once as review-only history'
+);
+
+select throws_ok(
+  $$
+    select set_config(
+      'app.test.incident_id',
+      (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      true
+    );
+    select set_config(
+      'app.test.revision_id',
+      (
+        select revision.id::text
+        from app_private.incident_revisions as revision
+        join app_private.incidents as incident on incident.id = revision.incident_id
+        where incident.incident_number = 'FICTIONAL-RPC-001' and revision.revision_number = 1
+      ),
+      true
+    );
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.store_report_draft_candidate(
+      current_setting('app.test.incident_id')::uuid,
+      current_setting('app.test.revision_id')::uuid,
+      'fictional-training-report',
+      array['77777777-7777-4777-8777-777777777777']::uuid[],
+      '[{"text":"Fictional invalid paragraph.","sourceFactIds":["77777777-7777-4777-8777-777777777777"]}]'::jsonb,
+      'fictional-provider-v1', repeat('9', 64), repeat('a', 64)
+    );
+  $$,
+  'Report draft source contains an unconfirmed fact',
+  'a draft candidate cannot cite an unknown fact even through direct RPC access'
+);
+
+reset role;
+
+select ok(
+  has_function_privilege(
     'supabase_auth_admin',
     'app_private.custom_access_token_hook(jsonb)',
     'execute'
@@ -811,8 +899,14 @@ select ok(
   'only authenticated users can execute the incident-list RPC'
 );
 
+select set_config(
+  'app.test.incident_id',
+  (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+  true
+);
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '', true);
+reset role;
 
 select is(
   (
@@ -856,11 +950,14 @@ select ok(
   'only authenticated users can execute the incident-revision read RPC'
 );
 
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '', true);
+
 select is(
   (
     select count(*)::integer
     from api.get_incident_revision(
-      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      current_setting('app.test.incident_id')::uuid,
       1
     )
   ),
@@ -868,12 +965,19 @@ select is(
   'a request without a JWT subject cannot read an incident revision'
 );
 
+reset role;
+
 select lives_ok(
   $$
+    select set_config(
+      'app.test.incident_id',
+      (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      true
+    );
     set local role authenticated;
     select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
     select * from api.get_incident_revision(
-      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      current_setting('app.test.incident_id')::uuid,
       1
     );
   $$,
@@ -907,6 +1011,11 @@ select lives_ok(
   'a fictional unrelated active officer exists for direct revision-access denial testing'
 );
 
+select set_config(
+  'app.test.incident_id',
+  (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+  true
+);
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
 
@@ -914,7 +1023,7 @@ select is(
   (
     select count(*)::integer
     from api.get_incident_revision(
-      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      current_setting('app.test.incident_id')::uuid,
       1
     )
   ),
