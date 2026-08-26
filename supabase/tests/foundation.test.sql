@@ -1,6 +1,6 @@
 begin;
 
-select plan(149);
+select plan(150);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -91,7 +91,7 @@ select is(
   'private invitation lifecycle routines are security-definer only'
 );
 select ok(
-  not has_function_privilege('authenticated','app_private.stage_invited_account(uuid,uuid,text,text,text,app_private.account_role,text,timestamp with time zone)','execute'),
+  not has_function_privilege('authenticated','app_private.stage_invited_account(uuid,uuid,text,text,text,app_private.account_role,text,text,timestamp with time zone)','execute'),
   'authenticated callers cannot invoke private invitation staging directly'
 );
 select ok(
@@ -1734,6 +1734,21 @@ select is(
   (select shift_code from api.current_account()),
   'B',
   'the current-account RPC returns the authenticated staff member assigned shift'
+);
+
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select is(
+  (
+    select shift_code
+    from api.list_admin_accounts(50)
+    where account_id = '55555555-5555-4555-8555-555555555555'
+  ),
+  'B',
+  'the administrator roster includes the assigned shift without exposing private credentials'
 );
 
 reset role;

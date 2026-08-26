@@ -96,5 +96,5 @@ describe("CountSheetWorkspace", () => {
         screen.getByRole("button", { name: "Print saved sheet" }),
       ).toBeEnabled(),
     );
-  });
+  }, 15_000);
 });

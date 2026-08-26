@@ -80,11 +80,13 @@ export function AccountInvitationForm() {
     const employeeNumber = values.get("employeeNumber");
     const displayName = values.get("displayName");
     const role = values.get("role");
+    const shiftCode = values.get("shiftCode");
     const administratorPasscode = values.get("administratorPasscode");
     if (
       typeof employeeNumber !== "string" ||
       typeof displayName !== "string" ||
       (role !== "officer" && role !== "administrator") ||
+      !["A", "B", "C", "D", "U", "F"].includes(String(shiftCode)) ||
       typeof administratorPasscode !== "string"
     ) {
       setState("failed");
@@ -121,6 +123,7 @@ export function AccountInvitationForm() {
           employeeNumber,
           displayName,
           role,
+          shiftCode,
           ...proof,
         }),
       });
@@ -195,6 +198,15 @@ export function AccountInvitationForm() {
         <select defaultValue="officer" id="new-role" name="role">
           <option value="officer">Officer</option>
           <option value="administrator">Administrator</option>
+        </select>
+        <label htmlFor="new-shift">Assigned shift</label>
+        <select defaultValue="A" id="new-shift" name="shiftCode">
+          <option value="A">A — day shift</option>
+          <option value="B">B — day shift</option>
+          <option value="C">C — night shift</option>
+          <option value="D">D — night shift</option>
+          <option value="U">U — five-day week</option>
+          <option value="F">F — five-day field</option>
         </select>
         <label htmlFor="administrator-passcode">
           Your administrator passcode

@@ -13,6 +13,7 @@ const rowsSchema = z.array(
       account_id: z.uuid(),
       employee_number_hint: z.string().min(2).max(8),
       display_name: z.string().min(1).max(160),
+      shift_code: z.enum(["A", "B", "C", "D", "U", "F"]).nullable(),
       role: z.enum(["officer", "administrator"]),
       status: z.enum(["pending", "active", "locked", "disabled"]),
       must_change_passcode: z.boolean(),
@@ -35,6 +36,7 @@ export type AdminAccountSummary = Readonly<{
   accountId: string;
   employeeNumberHint: string;
   displayName: string;
+  shiftCode: "A" | "B" | "C" | "D" | "U" | "F" | null;
   role: "officer" | "administrator";
   status: "pending" | "active" | "locked" | "disabled";
   mustChangePasscode: boolean;
@@ -69,6 +71,7 @@ export async function listAdminAccountsForCurrentSession(
         accountId: row.account_id,
         employeeNumberHint: row.employee_number_hint,
         displayName: row.display_name,
+        shiftCode: row.shift_code,
         role: row.role,
         status: row.status,
         mustChangePasscode: row.must_change_passcode,

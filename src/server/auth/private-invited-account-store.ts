@@ -27,7 +27,7 @@ export function createInvitedAccountStore(): InvitedAccountStore {
   const client = sql();
   return {
     async stage(input) {
-      await client`select app_private.stage_invited_account(${input.actorAuthUserId}::uuid,${input.authUserId}::uuid,${input.employeeLookupDigest},${input.employeeNumberHint},${input.displayName},${input.role}::app_private.account_role,${input.signInAlias},${input.temporaryPasscodeExpiresAt})`;
+      await client`select app_private.stage_invited_account(${input.actorAuthUserId}::uuid,${input.authUserId}::uuid,${input.employeeLookupDigest},${input.employeeNumberHint},${input.displayName},${input.role}::app_private.account_role,${input.shiftCode},${input.signInAlias},${input.temporaryPasscodeExpiresAt})`;
     },
     async activate(authUserId, actorAuthUserId) {
       await client`select app_private.activate_invited_account(${actorAuthUserId}::uuid,${authUserId}::uuid)`;

@@ -45,6 +45,7 @@ describe("AccountInvitationForm", () => {
 
     await user.type(screen.getByLabelText("Employee number"), "FIXTURE-0002");
     await user.type(screen.getByLabelText("Name"), "Fictional Officer");
+    await user.selectOptions(screen.getByLabelText("Assigned shift"), "U");
     await user.type(
       screen.getByLabelText("Your administrator passcode"),
       "FreshPasscode9!",
@@ -75,6 +76,7 @@ describe("AccountInvitationForm", () => {
           employeeNumber: "FIXTURE-0002",
           displayName: "Fictional Officer",
           role: "officer",
+          shiftCode: "U",
           requestId: "request-id",
           token: "proof-token",
         }),

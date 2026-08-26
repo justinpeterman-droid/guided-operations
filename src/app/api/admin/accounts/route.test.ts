@@ -52,6 +52,7 @@ const requestBody = {
   employeeNumber: "FIXTURE-0002",
   displayName: "Fictional Officer",
   role: "officer",
+  shiftCode: "A",
   requestId: "cccccccc-0000-4000-8000-000000000001",
   token: "x".repeat(43),
 };
@@ -106,6 +107,7 @@ describe("POST /api/admin/accounts", () => {
         employeeNumberHint: "0002",
         displayName: "Fictional Officer",
         role: "officer",
+        shiftCode: "A",
       }),
       expect.objectContaining({ authorization: expect.any(Object) }),
     );
@@ -150,6 +152,25 @@ describe("POST /api/admin/accounts", () => {
       new Request(`${origin}/api/admin/accounts`, {
         method: "POST",
         body: JSON.stringify({ ...requestBody, role: "owner" }),
+      }),
+    );
+
+    expect(response.status).toBe(400);
+    expect(inviteAccount).not.toHaveBeenCalled();
+  });
+
+  it("does not create an account with an unapproved shift code", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(
+      currentSession as never,
+    );
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+
+    const response = await POST(
+      new Request(`${origin}/api/admin/accounts`, {
+        method: "POST",
+        body: JSON.stringify({ ...requestBody, shiftCode: "Z" }),
       }),
     );
 

@@ -78,6 +78,9 @@ export default async function AdminAccountsPage() {
                       ? "Administrator"
                       : "Officer"}{" "}
                     · {account.status}
+                    {account.shiftCode
+                      ? ` · shift ${account.shiftCode}`
+                      : " · no shift"}
                     {account.mustChangePasscode
                       ? " · passcode change required"
                       : ""}

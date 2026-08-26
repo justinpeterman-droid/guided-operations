@@ -21,6 +21,7 @@ const requestSchema = z
     employeeNumber: z.string().min(1).max(64),
     displayName: z.string().min(1).max(120),
     role: z.enum(["officer", "administrator"]),
+    shiftCode: z.enum(["A", "B", "C", "D", "U", "F"]),
     requestId: z.string().uuid(),
     token: z.string().min(32).max(256),
   })
@@ -70,6 +71,7 @@ export async function POST(request: Request): Promise<Response> {
         employeeNumberHint: employeeNumberHint(input.employeeNumber),
         displayName: input.displayName.normalize("NFKC").trim(),
         role: input.role,
+        shiftCode: input.shiftCode,
       },
       {
         authorization: createAdminInviteAuthorization(

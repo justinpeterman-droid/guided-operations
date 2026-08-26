@@ -17,6 +17,7 @@ export type InviteAccountInput = Readonly<{
   employeeNumberHint: string;
   displayName: string;
   role: "officer" | "administrator";
+  shiftCode: "A" | "B" | "C" | "D" | "U" | "F";
 }>;
 
 export type InvitedAccountStore = Readonly<{
@@ -28,6 +29,7 @@ export type InvitedAccountStore = Readonly<{
       employeeNumberHint: string;
       displayName: string;
       role: "officer" | "administrator";
+      shiftCode: "A" | "B" | "C" | "D" | "U" | "F";
       signInAlias: string;
       temporaryPasscodeExpiresAt: Date;
     }>,
@@ -120,6 +122,7 @@ export async function inviteAccount(
       employeeNumberHint: input.employeeNumberHint,
       displayName: input.displayName,
       role: input.role,
+      shiftCode: input.shiftCode,
       signInAlias: alias,
       temporaryPasscodeExpiresAt,
     });

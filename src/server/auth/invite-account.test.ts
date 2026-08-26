@@ -35,6 +35,7 @@ const input = {
   employeeNumberHint: "02",
   displayName: "Fictional Officer",
   role: "officer" as const,
+  shiftCode: "A" as const,
 };
 
 describe("inviteAccount", () => {
@@ -61,7 +62,11 @@ describe("inviteAccount", () => {
     expect(delivery).toMatchObject({ employeeNumberHint: "02" });
     expect(delivery?.temporaryPasscode).toHaveLength(20);
     expect(dependencies.store.stage).toHaveBeenCalledWith(
-      expect.objectContaining({ role: "officer", employeeNumberHint: "02" }),
+      expect.objectContaining({
+        role: "officer",
+        shiftCode: "A",
+        employeeNumberHint: "02",
+      }),
     );
     expect(
       dependencies.store.activate.mock.invocationCallOrder[0],

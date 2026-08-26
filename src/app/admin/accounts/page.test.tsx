@@ -15,6 +15,7 @@ vi.mock("@/server/auth/list-admin-accounts", () => ({
         accountId: "11111111-1111-4111-8111-111111111111",
         employeeNumberHint: "42",
         displayName: "Fictional Officer",
+        shiftCode: "B",
         role: "officer",
         status: "active",
         mustChangePasscode: false,
@@ -35,6 +36,7 @@ describe("AdminAccountsPage", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("Fictional Officer")).toBeInTheDocument();
     expect(screen.getByText("Employee ending 42")).toBeInTheDocument();
+    expect(screen.getByText(/shift B/)).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Disable account" }),
     ).toBeInTheDocument();
