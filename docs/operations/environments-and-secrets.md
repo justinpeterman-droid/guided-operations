@@ -77,24 +77,24 @@ protection before launch.
 Names are a contract; actual values belong in local ignored files, Vercel
 environment settings, Supabase secrets, or protected GitHub environments.
 
-| Variable                                         |         Local |       Preview/staging |                       Production | Classification                                                     |
-| ------------------------------------------------ | ------------: | --------------------: | -------------------------------: | ------------------------------------------------------------------ |
-| `NEXT_PUBLIC_SUPABASE_URL`                       |           yes |                   yes |                              yes | Public endpoint, environment-specific                              |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`           |           yes |                   yes |                              yes | Public low-privilege key; RLS remains mandatory                    |
-| `SUPABASE_SECRET_KEY`                            |      optional |           server only |                      server only | **Secret**, elevated and RLS-bypassing                             |
-| `SUPABASE_DB_URL` or migration credentials       | local/CI only |          protected CI | protected production environment | **Secret**, migration tooling only; not browser/runtime by default |
-| `AI_PROVIDER`                                    |           yes |                   yes |                              yes | Non-secret provider selector                                       |
-| `OPENAI_POLICY_MODEL` / `OPENAI_EMBEDDING_MODEL` |           yes |                   yes |                              yes | Non-secret configuration; pin and record in releases               |
-| `AI_API_KEY` or provider-specific server key     |  local server |           server only |                      server only | **Secret**; never `NEXT_PUBLIC_*`                                  |
-| `RAG_CORPUS_VERSION`                             |           yes |                   yes |                              yes | Non-secret immutable manifest/version identifier                   |
-| `APP_ENV`                                        |           yes |                   yes |                              yes | Non-secret guard against cross-environment writes                  |
-| `APP_ORIGIN`                                     |           yes |                   yes |                              yes | Non-secret exact allowed origin                                    |
-| `EMPLOYEE_LOOKUP_PEPPER`                         |  local server |           server only |                      server only | **Secret**; keys employee-number lookup without storing raw values |
-| `AUTH_DUMMY_ALIAS`                               |  local server |           server only |                      server only | **Secret**; fixed timing-defense identity, never browser-visible   |
-| `CSRF_HMAC_KEY`                                  |  local server |           server only |                      server only | **Secret**; environment-specific session-bound CSRF signing key    |
-| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                  |  local server |           server only |                      server only | **Secret**; hashes retry keys without retaining their raw values   |
-| `AUTH_SIGN_IN_ENABLED`                           |           yes |                   yes |                              yes | Non-secret fail-closed feature gate; enabled only after auth proof |
-| backup destination credentials                   |            no | protected operator/CI |            protected operator/CI | **Secret**, separate from runtime credentials                      |
+| Variable                                                                       |        Local |       Preview/staging |            Production | Classification                                                     |
+| ------------------------------------------------------------------------------ | -----------: | --------------------: | --------------------: | ------------------------------------------------------------------ |
+| `NEXT_PUBLIC_SUPABASE_URL`                                                     |          yes |                   yes |                   yes | Public endpoint, environment-specific                              |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                         |          yes |                   yes |                   yes | Public low-privilege key; RLS remains mandatory                    |
+| `SUPABASE_SECRET_KEY`                                                          |     optional |           server only |           server only | **Secret**, elevated and RLS-bypassing                             |
+| `SUPABASE_DB_URL`                                                              | local server |           server only |           server only | **Secret**; current private RPC/auth adapter connection            |
+| `AI_PROVIDER`                                                                  |          yes |                   yes |                   yes | Non-secret provider selector                                       |
+| `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL` |          yes |                   yes |                   yes | Non-secret configuration; pin and record in releases               |
+| `OPENAI_API_KEY`                                                               | local server |           server only |           server only | **Secret**; never `NEXT_PUBLIC_*`                                  |
+| `RAG_CORPUS_VERSION`                                                           |          yes |                   yes |                   yes | Non-secret immutable manifest/version identifier                   |
+| `APP_ENV`                                                                      |          yes |                   yes |                   yes | Non-secret guard against cross-environment writes                  |
+| `APP_ORIGIN`                                                                   |          yes |                   yes |                   yes | Non-secret exact allowed origin                                    |
+| `EMPLOYEE_LOOKUP_PEPPER`                                                       | local server |           server only |           server only | **Secret**; keys employee-number lookup without storing raw values |
+| `AUTH_DUMMY_ALIAS`                                                             | local server |           server only |           server only | **Secret**; fixed timing-defense identity, never browser-visible   |
+| `CSRF_HMAC_KEY`                                                                | local server |           server only |           server only | **Secret**; environment-specific session-bound CSRF signing key    |
+| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                | local server |           server only |           server only | **Secret**; hashes retry keys without retaining their raw values   |
+| `AUTH_SIGN_IN_ENABLED`                                                         |          yes |                   yes |                   yes | Non-secret fail-closed feature gate; enabled only after auth proof |
+| backup destination credentials                                                 |           no | protected operator/CI | protected operator/CI | **Secret**, separate from runtime credentials                      |
 
 Prefer Supabase publishable and secret API keys for new work; legacy `anon` and
 `service_role` JWT keys are not the target. A Supabase secret key bypasses RLS
@@ -123,6 +123,12 @@ JWT so RLS evaluates the user directly.
    pilot.
 9. Validate old-key revocation after rotation. Creating a replacement does not
    necessarily revoke a legacy key.
+
+The public readiness endpoint validates this complete runtime contract and the
+Supabase public API probe but returns only `ready` or `not_ready`. It never
+returns a missing variable name or value. Production readiness also requires
+`AUTH_SIGN_IN_ENABLED=true`, while Preview may keep sign-in disabled until its
+authentication qualification gate.
 
 ## Cross-environment safety checks
 

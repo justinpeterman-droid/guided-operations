@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
-vi.mock("@/lib/env/runtime", () => ({
-  getRuntimeEnvironment: vi.fn().mockReturnValue({ appEnvironment: "preview" }),
-}));
-vi.mock("@/lib/env/supabase-public", () => ({
-  getPublicSupabaseEnvironment: vi.fn().mockReturnValue({
-    NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
-    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
+vi.mock("./application-environment-readiness", () => ({
+  assertApplicationEnvironmentReadiness: vi.fn().mockReturnValue({
+    publicSupabase: {
+      NEXT_PUBLIC_SUPABASE_URL: "https://example.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
+    },
   }),
 }));
 

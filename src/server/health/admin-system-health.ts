@@ -1,12 +1,11 @@
 import "server-only";
 
-import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
-import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import {
   authorizeCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
 
+import { assertApplicationEnvironmentReadiness } from "./application-environment-readiness";
 import { hasSupabaseReadiness } from "./supabase-readiness";
 
 export type AdminSystemHealthResult =
@@ -32,11 +31,10 @@ export async function getAdminSystemHealth(
   if (!session.allowed) return { kind: "denied" };
 
   try {
-    getRuntimeEnvironment();
-    const supabase = getPublicSupabaseEnvironment();
+    const { publicSupabase } = assertApplicationEnvironmentReadiness();
     const ready = await checkSupabase(
-      supabase.NEXT_PUBLIC_SUPABASE_URL,
-      supabase.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      publicSupabase.NEXT_PUBLIC_SUPABASE_URL,
+      publicSupabase.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     );
     return {
       kind: "ready",

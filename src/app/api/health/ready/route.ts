@@ -1,5 +1,4 @@
-import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
-import { getRuntimeEnvironment } from "@/lib/env/runtime";
+import { assertApplicationEnvironmentReadiness } from "@/server/health/application-environment-readiness";
 import { hasSupabaseReadiness } from "@/server/health/supabase-readiness";
 
 export const dynamic = "force-dynamic";
@@ -7,11 +6,10 @@ export const runtime = "nodejs";
 
 export async function GET() {
   try {
-    getRuntimeEnvironment();
-    const supabase = getPublicSupabaseEnvironment();
+    const { publicSupabase } = assertApplicationEnvironmentReadiness();
     const ready = await hasSupabaseReadiness(
-      supabase.NEXT_PUBLIC_SUPABASE_URL,
-      supabase.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+      publicSupabase.NEXT_PUBLIC_SUPABASE_URL,
+      publicSupabase.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
     );
 
     if (!ready) return notReady();

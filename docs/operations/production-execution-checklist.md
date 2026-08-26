@@ -115,6 +115,9 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add `/api/health/ready` without exposing provider details; it returns only
       service readiness and maps invalid/unavailable configuration to `503`
       (`291cc5d`).
+- [x] Extend readiness to validate the complete runtime variable contract,
+      pinned AI/corpus identifiers, purpose-separated security keys, and
+      explicit Production sign-in without exposing missing names or values.
 - [x] Verify readiness locally and in a protected Preview (`94dfd61`,
       `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`).
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,

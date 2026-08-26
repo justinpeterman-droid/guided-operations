@@ -20,13 +20,15 @@ export type AuthServerEnvironment = z.infer<typeof authServerEnvironment>;
  * Secrets used only by server-side auth adapters. No fallback is allowed:
  * accepting an empty value would weaken keyed lookup or CSRF binding.
  */
-export function getAuthServerEnvironment(): AuthServerEnvironment {
+export function getAuthServerEnvironment(
+  environment: Record<string, string | undefined> = process.env,
+): AuthServerEnvironment {
   return authServerEnvironment.parse({
-    SUPABASE_SECRET_KEY: process.env.SUPABASE_SECRET_KEY,
-    SUPABASE_DB_URL: process.env.SUPABASE_DB_URL,
-    EMPLOYEE_LOOKUP_PEPPER: process.env.EMPLOYEE_LOOKUP_PEPPER,
-    AUTH_DUMMY_ALIAS: process.env.AUTH_DUMMY_ALIAS,
-    CSRF_HMAC_KEY: process.env.CSRF_HMAC_KEY,
-    AUTH_SIGN_IN_ENABLED: process.env.AUTH_SIGN_IN_ENABLED,
+    SUPABASE_SECRET_KEY: environment.SUPABASE_SECRET_KEY,
+    SUPABASE_DB_URL: environment.SUPABASE_DB_URL,
+    EMPLOYEE_LOOKUP_PEPPER: environment.EMPLOYEE_LOOKUP_PEPPER,
+    AUTH_DUMMY_ALIAS: environment.AUTH_DUMMY_ALIAS,
+    CSRF_HMAC_KEY: environment.CSRF_HMAC_KEY,
+    AUTH_SIGN_IN_ENABLED: environment.AUTH_SIGN_IN_ENABLED,
   });
 }
