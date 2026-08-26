@@ -6,7 +6,7 @@ import type { CountSheetStructure } from "@/features/count-sheet/types";
 const FICTIONAL_COUNT_SHEET: CountSheetStructure = {
   schema_version: 1,
   title: "Fictional training count sheet",
-  columns: ["A", "B", "C", "D", "U", "F"],
+  columns: ["1", "2", "Iso", "Inf"],
   areas: ["Administration", "Dining"],
   operational_fields: ["on_site", "court", "hospital", "other"],
   attachment_reminders: ["court", "hospital"],
