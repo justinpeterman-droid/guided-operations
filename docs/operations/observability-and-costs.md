@@ -30,6 +30,21 @@ Errors must use stable codes and sanitized context. Debug logging is
 time-bounded, environment-scoped, owner-approved in production, and reviewed
 before activation.
 
+## Implemented application boundary
+
+The policy-answer and report-draft endpoints now emit a strict JSON event only
+when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only a fixed
+operation, bounded outcome/reason code, random request ID, status, duration,
+environment, deployment/build identifiers, and the policy route's bounded
+citation count and corpus version. It has no arbitrary metadata or error-text
+field and tests reject extra prompt, response, report, or personnel fields.
+
+Production readiness fails while this gate is off. Telemetry delivery failure
+does not change the user's application response. This implements the
+application-side redaction boundary; it does **not** prove that hosted log
+retention, access, dashboards, alerts, destinations, or test notifications are
+configured. Those remain live-environment qualification gates.
+
 ## Signals and checks
 
 | Area     | Minimum signal                                                                                       | Qualification                                                                  |

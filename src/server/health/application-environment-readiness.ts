@@ -6,6 +6,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
 import { getOpenAiReportDraftEnvironment } from "@/lib/env/openai-report-draft";
+import { getObservabilityEnvironment } from "@/lib/env/observability";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
 
@@ -29,6 +30,7 @@ export function assertApplicationEnvironmentReadiness(
   const publicSupabase = getPublicSupabaseEnvironment(environment);
   const auth = getAuthServerEnvironment(environment);
   const incident = getIncidentServerEnvironment(environment);
+  const observability = getObservabilityEnvironment(environment);
   getOpenAiPolicyEnvironment(environment);
   getOpenAiReportDraftEnvironment(environment);
   aiEnvironmentSchema.parse({
@@ -39,6 +41,12 @@ export function assertApplicationEnvironmentReadiness(
 
   if (runtime.APP_ENV === "production" && !auth.AUTH_SIGN_IN_ENABLED) {
     throw new Error("Production sign-in must be explicitly enabled.");
+  }
+  if (
+    runtime.APP_ENV === "production" &&
+    !observability.SAFE_OPERATIONAL_LOGGING_ENABLED
+  ) {
+    throw new Error("Production safe operational logging must be enabled.");
   }
 
   const dedicatedSecrets = new Set([

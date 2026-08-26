@@ -1,6 +1,9 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
+vi.mock("@/lib/env/incident-server", () => ({
+  getIncidentServerEnvironment: vi.fn(),
+}));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
@@ -8,27 +11,25 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/server/auth/current-session", () => ({
   authorizeCurrentSession: vi.fn(),
 }));
-vi.mock("@/server/ai/policy-answer-endpoint", () => ({
-  validatePolicyAnswerEndpointRequest: vi.fn(),
+vi.mock("@/server/ai/report-draft-endpoint", () => ({
+  validateReportDraftEndpointRequest: vi.fn(),
 }));
-vi.mock("@/server/ai/policy-answer-service", () => ({
-  createPolicyAnswerService: vi.fn(),
+vi.mock("@/server/ai/persisted-report-draft-workflow", () => ({
+  createPersistedReportDraftWorkflow: vi.fn(),
 }));
-vi.mock("@/server/ai/supabase-policy-retrieval", () => ({
-  createSupabasePolicyRetrievalProvider: vi.fn(),
-}));
-vi.mock("@/server/ai/providers/openai-grounded-generation", () => ({
-  createOpenAiGroundedGenerationProvider: vi.fn(),
+vi.mock("@/server/ai/providers/openai-report-draft-generation", () => ({
+  createOpenAiReportDraftGenerationProvider: vi.fn(),
 }));
 vi.mock("@/server/observability/safe-operational-event", () => ({
   writeSafeOperationalEvent: vi.fn(),
 }));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createPolicyAnswerService } from "@/server/ai/policy-answer-service";
-import { validatePolicyAnswerEndpointRequest } from "@/server/ai/policy-answer-endpoint";
+import { createPersistedReportDraftWorkflow } from "@/server/ai/persisted-report-draft-workflow";
+import { validateReportDraftEndpointRequest } from "@/server/ai/report-draft-endpoint";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 
@@ -50,8 +51,11 @@ const session = {
 
 function mockEnvironment() {
   vi.mocked(getAuthServerEnvironment).mockReturnValue({
-    CSRF_HMAC_KEY: "k".repeat(32),
+    CSRF_HMAC_KEY: "c".repeat(32),
   } as never);
+  vi.mocked(getIncidentServerEnvironment).mockReturnValue({
+    INCIDENT_IDEMPOTENCY_HMAC_KEY: "i".repeat(32),
+  });
   vi.mocked(getRuntimeEnvironment).mockReturnValue({
     APP_ENV: "preview",
     APP_ORIGIN: "https://app.example.test",
@@ -59,65 +63,66 @@ function mockEnvironment() {
   vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
 }
 
-describe("POST /api/web/v1/policy-answer", () => {
+describe("POST /api/web/v1/report-drafts", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("returns a validated cited answer with private no-store headers", async () => {
+  it("stores a review-only candidate without logging request content", async () => {
     mockEnvironment();
     vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
-    vi.mocked(validatePolicyAnswerEndpointRequest).mockResolvedValue({
+    vi.mocked(validateReportDraftEndpointRequest).mockResolvedValue({
       ok: true,
-      question: "Fictional question",
+      request: {
+        schemaVersion: 1,
+        incidentId: "44444444-4444-4444-8444-444444444444",
+        sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
+        reportType: "Fictional protected report type",
+        confirmedFactIds: ["66666666-6666-4666-8666-666666666666"],
+      },
+      sourceRevisionNumber: 1,
+      idempotencyKey: "fictional-key-1234",
     });
-    const answer = {
-      status: "answered" as const,
-      answer: "Fictional cited answer.",
-      citations: [],
-      limitations: [],
-    };
-    vi.mocked(createPolicyAnswerService).mockReturnValue({
-      answer: vi.fn().mockResolvedValue({ kind: "answer", answer }),
+    vi.mocked(createPersistedReportDraftWorkflow).mockReturnValue({
+      draftAndStore: vi.fn().mockResolvedValue({
+        kind: "stored",
+        candidateId: "77777777-7777-4777-8777-777777777777",
+      }),
     });
 
     const response = await POST(new Request("https://app.example.test/api"));
 
-    expect(response.status).toBe(200);
+    expect(response.status).toBe(201);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toMatchObject({
-      data: { outcome: { kind: "answer", answer } },
+      data: { candidateId: "77777777-7777-4777-8777-777777777777" },
       meta: { api_version: "web-v1", request_id: expect.any(String) },
     });
     expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        event_name: "policy_answer.request",
-        outcome: "answered",
-        status_code: 200,
-        citation_count: 0,
+        event_name: "report_draft.request",
+        outcome: "stored",
+        status_code: 201,
       }),
     );
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
-    ).not.toContain("Fictional question");
-    expect(
-      JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
-    ).not.toContain("Fictional cited answer");
+    ).not.toContain("Fictional protected report type");
   });
 
-  it("rejects before parsing or provider setup when the current session is denied", async () => {
+  it("records only a bounded outcome when authentication is denied", async () => {
     mockEnvironment();
     vi.mocked(authorizeCurrentSession).mockResolvedValue({
       allowed: false,
-      reason: "missing_account",
+      reason: "session_revoked",
     });
 
     const response = await POST(new Request("https://app.example.test/api"));
 
     expect(response.status).toBe(401);
-    expect(validatePolicyAnswerEndpointRequest).not.toHaveBeenCalled();
-    expect(createPolicyAnswerService).not.toHaveBeenCalled();
+    expect(validateReportDraftEndpointRequest).not.toHaveBeenCalled();
+    expect(createPersistedReportDraftWorkflow).not.toHaveBeenCalled();
     expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
       expect.objectContaining({
-        event_name: "policy_answer.request",
+        event_name: "report_draft.request",
         outcome: "authentication_required",
         status_code: 401,
       }),

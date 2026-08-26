@@ -314,6 +314,10 @@ Pause and report a blocker instead of guessing when work requires:
       dead letters, idempotency, and stale-result rejection.
 - [ ] Add redacted request correlation and error/latency/Auth/Storage/DB/AI
       signals.
+- [x] Implement a strict allowlisted operational-event boundary for the core
+      policy-answer and report-draft routes, with content-leakage tests and a
+      fail-closed Production readiness gate. Hosted sinks, the remaining route
+      signals, retention/access, alerts, and delivery tests remain open.
 - [ ] Add cost/quota dashboards, alerts, budgets, and circuit breakers.
 - [ ] Name incident/alert primary and alternate.
 - [ ] Exercise credential rotation, dependency update, incident response,

@@ -87,6 +87,7 @@ environment settings, Supabase secrets, or protected GitHub environments.
 | `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL` |          yes |                   yes |                   yes | Non-secret configuration; pin and record in releases               |
 | `OPENAI_API_KEY`                                                               | local server |           server only |           server only | **Secret**; never `NEXT_PUBLIC_*`                                  |
 | `RAG_CORPUS_VERSION`                                                           |          yes |                   yes |                   yes | Non-secret immutable manifest/version identifier                   |
+| `SAFE_OPERATIONAL_LOGGING_ENABLED`                                             |          yes |                   yes |                   yes | Non-secret fail-closed gate; required `true` in Production         |
 | `APP_ENV`                                                                      |          yes |                   yes |                   yes | Non-secret guard against cross-environment writes                  |
 | `APP_ORIGIN`                                                                   |          yes |                   yes |                   yes | Non-secret exact allowed origin                                    |
 | `EMPLOYEE_LOOKUP_PEPPER`                                                       | local server |           server only |           server only | **Secret**; keys employee-number lookup without storing raw values |
@@ -127,8 +128,9 @@ JWT so RLS evaluates the user directly.
 The public readiness endpoint validates this complete runtime contract and the
 Supabase public API probe but returns only `ready` or `not_ready`. It never
 returns a missing variable name or value. Production readiness also requires
-`AUTH_SIGN_IN_ENABLED=true`, while Preview may keep sign-in disabled until its
-authentication qualification gate.
+`AUTH_SIGN_IN_ENABLED=true` and `SAFE_OPERATIONAL_LOGGING_ENABLED=true`, while
+Preview may keep both gates disabled until their qualification evidence is
+ready.
 
 ## Cross-environment safety checks
 

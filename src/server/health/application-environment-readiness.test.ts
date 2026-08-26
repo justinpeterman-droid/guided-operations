@@ -17,6 +17,7 @@ function validEnvironment(overrides: Record<string, string | undefined> = {}) {
     AUTH_DUMMY_ALIAS: "timing-defense@fictional.invalid",
     CSRF_HMAC_KEY: "c".repeat(32),
     AUTH_SIGN_IN_ENABLED: "false",
+    SAFE_OPERATIONAL_LOGGING_ENABLED: "false",
     INCIDENT_IDEMPOTENCY_HMAC_KEY: "i".repeat(32),
     AI_PROVIDER: "openai",
     OPENAI_API_KEY: "o".repeat(20),
@@ -55,6 +56,31 @@ describe("application environment readiness", () => {
         validEnvironment({ OPENAI_REPORT_DRAFT_MODEL: undefined }),
       ),
     ).toThrow();
+  });
+
+  it("rejects Production when allowlisted operational logging is disabled", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({
+          APP_ENV: "production",
+          APP_ORIGIN: "https://guided-operations.example.test",
+          AUTH_SIGN_IN_ENABLED: "true",
+        }),
+      ),
+    ).toThrow("Production safe operational logging must be enabled.");
+  });
+
+  it("accepts Production only when sign-in and safe logging are explicit", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({
+          APP_ENV: "production",
+          APP_ORIGIN: "https://guided-operations.example.test",
+          AUTH_SIGN_IN_ENABLED: "true",
+          SAFE_OPERATIONAL_LOGGING_ENABLED: "true",
+        }),
+      ),
+    ).not.toThrow();
   });
 
   it("rejects reuse of security keys across purposes", () => {
