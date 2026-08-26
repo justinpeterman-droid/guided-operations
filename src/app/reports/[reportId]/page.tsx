@@ -5,6 +5,7 @@ import { getReportForCurrentSession } from "@/server/incidents/get-report";
 import { listReportRevisionsForCurrentSession } from "@/server/incidents/list-report-revisions";
 
 import { ReportHistory } from "./report-history";
+import { PrintReportButton } from "./print-report-button";
 import { ReportRevisionForm } from "./report-revision-form";
 
 export const dynamic = "force-dynamic";
@@ -39,8 +40,12 @@ export default async function ReportPage({
         <Link className="reports-home-link" href="/reports">
           Reports
         </Link>
+        <PrintReportButton />
       </header>
-      <section className="reports-intro" aria-labelledby="report-title">
+      <section
+        className="reports-intro report-print-heading"
+        aria-labelledby="report-title"
+      >
         <p className="eyebrow">Human-reviewed record</p>
         <h1 id="report-title">Final report</h1>
         <p>

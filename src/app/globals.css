@@ -970,6 +970,44 @@ a:focus-visible {
   margin-top: 8px;
   resize: vertical;
 }
+
+@media print {
+  @page {
+    margin: 0.65in;
+  }
+
+  body {
+    background: #fff;
+    color: #000;
+  }
+
+  .reports-page {
+    width: 100%;
+    min-height: 0;
+  }
+
+  .workspace-header,
+  .report-print-button,
+  .draft-finalization-form {
+    display: none !important;
+  }
+
+  .reports-intro {
+    margin: 0 0 18px;
+  }
+
+  .draft-review-card {
+    max-width: none;
+    padding: 0;
+    border: 0;
+    box-shadow: none;
+  }
+
+  .draft-review-copy p {
+    color: #000;
+    white-space: pre-wrap;
+  }
+}
 .draft-finalization-attestation {
   display: flex;
   gap: 10px;

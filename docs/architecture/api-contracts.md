@@ -210,6 +210,12 @@ remains unavailable until the required step-up workflow is implemented.
 
 An export always names an explicit immutable revision and template version.
 
+Until deterministic server-side export is qualified, the implemented protected
+report screen offers only an explicit browser print action for the current
+immutable revision. Print styling excludes navigation and all mutation controls;
+the server-side export endpoint remains unimplemented rather than pretending a
+browser printout is a durable export artifact.
+
 ### AI jobs
 
 - POST /incidents/{incidentId}/jobs/{jobType}
