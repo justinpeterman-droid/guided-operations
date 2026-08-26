@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
@@ -18,11 +19,13 @@ export async function POST(request: Request): Promise<Response> {
   const requestId = randomUUID();
 
   try {
-    const [authEnvironment, runtimeEnvironment, client] = await Promise.all([
-      getAuthServerEnvironment(),
-      getRuntimeEnvironment(),
-      createSupabaseServerClient(),
-    ]);
+    const [authEnvironment, incidentEnvironment, runtimeEnvironment, client] =
+      await Promise.all([
+        getAuthServerEnvironment(),
+        getIncidentServerEnvironment(),
+        getRuntimeEnvironment(),
+        createSupabaseServerClient(),
+      ]);
     const session = await authorizeCurrentSession(client);
     if (!session.allowed) {
       return errorResponse(401, "authentication_required", requestId);
@@ -42,7 +45,7 @@ export async function POST(request: Request): Promise<Response> {
       validation.command,
       session,
       client,
-      authEnvironment.CSRF_HMAC_KEY,
+      incidentEnvironment.INCIDENT_IDEMPOTENCY_HMAC_KEY,
     );
     if (result.kind === "created") {
       return Response.json(

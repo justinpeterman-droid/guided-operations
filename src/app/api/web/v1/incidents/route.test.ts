@@ -3,6 +3,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/env/auth-server", () => ({
   getAuthServerEnvironment: vi.fn(),
 }));
+vi.mock("@/lib/env/incident-server", () => ({
+  getIncidentServerEnvironment: vi.fn(),
+}));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
@@ -18,6 +21,7 @@ vi.mock("@/server/incidents/create-incident", () => ({
 }));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
@@ -65,6 +69,9 @@ function mockEnvironment() {
     APP_ENV: "preview",
     APP_ORIGIN: "https://guided-operations.example.test",
   });
+  vi.mocked(getIncidentServerEnvironment).mockReturnValue({
+    INCIDENT_IDEMPOTENCY_HMAC_KEY: "i".repeat(32),
+  });
   vi.mocked(createSupabaseServerClient).mockResolvedValue(client as never);
 }
 
@@ -97,7 +104,7 @@ describe("POST /api/web/v1/incidents", () => {
       command,
       session,
       client,
-      "k".repeat(32),
+      "i".repeat(32),
     );
   });
 
