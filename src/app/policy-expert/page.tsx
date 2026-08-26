@@ -8,15 +8,24 @@ import { PolicyExpert } from "./policy-expert";
 export const dynamic = "force-dynamic";
 
 export default async function PolicyExpertPage() {
+  const access = await loadPolicyExpertAccess();
+
+  if (access === "unavailable") return <Unavailable />;
+  if (access === "denied") return <SignInRequired />;
+
+  return <PolicyExpert />;
+}
+
+async function loadPolicyExpertAccess(): Promise<
+  "authorized" | "denied" | "unavailable"
+> {
   try {
     const client = await createSupabaseServerClient();
     const session = await authorizeCurrentSession(client);
-    if (!session.allowed) return <SignInRequired />;
+    return session.allowed ? "authorized" : "denied";
   } catch {
-    return <Unavailable />;
+    return "unavailable";
   }
-
-  return <PolicyExpert />;
 }
 
 function SignInRequired() {

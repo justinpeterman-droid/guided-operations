@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
 import type { GroundedPolicyAnswer } from "@/features/policy/grounding";
@@ -82,7 +83,7 @@ export function PolicyExpert() {
   return (
     <main className="policy-page">
       <header className="workspace-header policy-header">
-        <a className="workspace-brand" href="/">
+        <Link className="workspace-brand" href="/">
           <span className="brand-mark" aria-hidden="true">
             GO
           </span>
@@ -90,10 +91,10 @@ export function PolicyExpert() {
             <span className="eyebrow">Guided Operations</span>
             <strong>Policy Expert</strong>
           </span>
-        </a>
-        <a className="reports-home-link" href="/reports">
+        </Link>
+        <Link className="reports-home-link" href="/reports">
           Reports
-        </a>
+        </Link>
       </header>
 
       <div className="policy-layout">
