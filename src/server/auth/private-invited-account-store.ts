@@ -8,6 +8,7 @@ import type { InvitedAccountStore } from "./invite-account";
 import type { AccountDisableStore } from "./disable-account";
 import type { AccountUnlockStore } from "./unlock-account";
 import type { AccountPasscodeResetStore } from "./reset-account-passcode";
+import type { AccountRoleChangeStore } from "./change-account-role";
 
 let sqlClient: ReturnType<typeof postgres> | undefined;
 
@@ -67,6 +68,16 @@ export function createAccountPasscodeResetStore(): AccountPasscodeResetStore {
       temporaryPasscodeExpiresAt,
     ) {
       await client`select app_private.prepare_account_passcode_reset(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid, ${temporaryPasscodeExpiresAt})`;
+    },
+  };
+}
+
+/** Server-only adapter for the separately audited account role-change routine. */
+export function createAccountRoleChangeStore(): AccountRoleChangeStore {
+  const client = sql();
+  return {
+    async changeRole(actorAuthUserId, targetAuthUserId, newRole) {
+      await client`select app_private.change_account_role(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid, ${newRole}::app_private.account_role)`;
     },
   };
 }

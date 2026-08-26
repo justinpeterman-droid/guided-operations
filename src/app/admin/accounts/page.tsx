@@ -4,6 +4,7 @@ import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 import { AccountDisableControl } from "./account-disable-control";
 import { AccountInvitationForm } from "./account-invitation-form";
 import { AccountPasscodeResetControl } from "./account-passcode-reset-control";
+import { AccountRoleChangeControl } from "./account-role-change-control";
 import { AccountUnlockControl } from "./account-unlock-control";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
@@ -84,6 +85,11 @@ export default async function AdminAccountsPage() {
                 </div>
                 {account.status === "active" ? (
                   <div className="account-session-actions">
+                    <AccountRoleChangeControl
+                      accountId={account.accountId}
+                      currentRole={account.role}
+                      displayName={account.displayName}
+                    />
                     <AccountPasscodeResetControl
                       accountId={account.accountId}
                       displayName={account.displayName}
