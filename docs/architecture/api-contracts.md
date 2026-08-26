@@ -81,10 +81,10 @@ prompts, answers, or record content.
 
 | Method/path                     | Purpose                              | Special controls                                                          |
 | ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| POST /auth/login                | Employee number plus PIN-like login  | Pre-auth rate limits, generic failure, no CSRF requirement before session |
+| POST /auth/sign-in              | Employee number plus PIN-like login  | Pre-auth rate limits, generic failure, no CSRF requirement before session |
 | GET /auth/session               | Current session/account summary      | No-store; current DB account check                                        |
 | POST /auth/renew                | Server session refresh               | Rotation/revocation tests; no token body                                  |
-| POST /auth/logout               | End current session                  | CSRF                                                                      |
+| POST /auth/sign-out             | End current browser session          | Current-account, same-origin, and session-CSRF proof                      |
 | POST /account/change-credential | Replace temporary/current credential | CSRF, current secret or approved forced-change flow                       |
 | GET /account/sessions           | List safe session/device metadata    | No tokens                                                                 |
 | DELETE /account/sessions/{id}   | Revoke one session                   | CSRF, ownership                                                           |
