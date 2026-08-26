@@ -195,6 +195,12 @@ Pause and report a blocker instead of guessing when work requires:
       replay/lint/30 pgTAP and GitHub Database quality passed).
 - [ ] Add constraints, indexes, grants, forced RLS, and append-only protections.
 - [ ] Implement server-only reads and authorized transactional mutations.
+- [x] Add a narrow server-only immutable incident-revision read: current session
+      authority is checked before the authenticated RPC; a missing or
+      unauthorized revision is concealed; returned data omits field notes and
+      identity/facility metadata; pgTAP verifies active-admin access and
+      unrelated-officer denial (local replay/lint/pgTAP passed on the pending
+      review commit).
 - [ ] Port the accepted officer shell and design primitives from pinned source.
 - [ ] Implement Home, New Report, Reports, one incident workflow, Document
       Studio, history, and Account.

@@ -28,24 +28,22 @@ const request = {
 
 describe("OpenAI report draft generation provider", () => {
   it("uses a non-stored, tool-free strict structured request with a dedicated model", async () => {
-    const fetch = vi
-      .fn()
-      .mockResolvedValue(
-        new Response(
-          JSON.stringify({
-            status: "completed",
-            output_text: JSON.stringify({
-              paragraphs: [
-                {
-                  text: "Fictional draft.",
-                  sourceFactIds: [request.source.confirmedFacts[0].id],
-                },
-              ],
-            }),
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "completed",
+          output_text: JSON.stringify({
+            paragraphs: [
+              {
+                text: "Fictional draft.",
+                sourceFactIds: [request.source.confirmedFacts[0].id],
+              },
+            ],
           }),
-          { status: 200 },
-        ),
-      );
+        }),
+        { status: 200 },
+      ),
+    );
     const provider = createOpenAiReportDraftGenerationProvider({
       fetch: fetch as typeof globalThis.fetch,
       environment,

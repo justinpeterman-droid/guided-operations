@@ -135,6 +135,16 @@ incident ID. Direct RPC calls still enforce active facility scope and payload
 provenance. Hosted-session and browser-workflow integration remain separate
 release gates.
 
+The server-only `api.get_incident_revision` RPC is the corresponding narrow read
+primitive for an immutable revision. It returns the incident identifiers,
+revision identity/version, and reviewed facts—but never field notes, facility
+scope, account identities, or relationship metadata. It returns no row for a
+missing, archived, cross-facility, inactive, or unrelated-officer request;
+active same-facility administrators may read a revision, as may its active
+creator. It is not exposed as a browser endpoint yet. Its intended caller is a
+server-side workflow that constructs a report-draft source from explicitly
+selected confirmed facts only.
+
 ### Reports
 
 - GET /incidents/{incidentId}/reports

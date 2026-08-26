@@ -845,6 +845,88 @@ select throws_ok(
 select ok(
   has_function_privilege(
     'authenticated',
+    'api.get_incident_revision(uuid, integer)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.get_incident_revision(uuid, integer)',
+    'execute'
+  ),
+  'only authenticated users can execute the incident-revision read RPC'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.get_incident_revision(
+      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      1
+    )
+  ),
+  0,
+  'a request without a JWT subject cannot read an incident revision'
+);
+
+select lives_ok(
+  $$
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select * from api.get_incident_revision(
+      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      1
+    );
+  $$,
+  'an active administrator can read one immutable same-facility incident revision'
+);
+
+reset role;
+
+select lives_ok(
+  $$
+    insert into auth.users (id, email)
+    values ('55555555-5555-4555-8555-555555555555', 'fixture-three@example.invalid');
+
+    insert into app_private.staff_members (
+      id, facility_id, employee_lookup_hash, employee_number_hint, display_name, status
+    )
+    select
+      '66666666-6666-4666-8666-666666666666', facility.id, repeat('e', 64),
+      '33', 'Fixture Three', 'active'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.user_accounts (
+      auth_user_id, staff_member_id, sign_in_alias, role, status, must_change_passcode
+    ) values (
+      '55555555-5555-4555-8555-555555555555',
+      '66666666-6666-4666-8666-666666666666',
+      'fixture-three-auth-alias@example.invalid', 'officer', 'active', false
+    );
+  $$,
+  'a fictional unrelated active officer exists for direct revision-access denial testing'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select is(
+  (
+    select count(*)::integer
+    from api.get_incident_revision(
+      (select id from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      1
+    )
+  ),
+  0,
+  'an unrelated active officer cannot read another account’s incident revision through direct RPC access'
+);
+
+reset role;
+
+select ok(
+  has_function_privilege(
+    'authenticated',
     'api.retrieve_policy_passages(text, integer)',
     'execute'
   )
