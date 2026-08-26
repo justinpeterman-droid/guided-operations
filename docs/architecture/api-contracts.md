@@ -15,7 +15,9 @@ authorization services.
 
 ## Contract source of truth
 
-- Maintain an OpenAPI document for /api/web/v1.
+- The implemented `/api/web/v1` surface is specified in
+  [openapi-web-v1.yaml](openapi-web-v1.yaml). Expand it in the same change as
+  every implemented browser API endpoint.
 - Generate or validate shared TypeScript request/response types from the
   reviewed schema; do not let implementation types silently define the wire
   contract.

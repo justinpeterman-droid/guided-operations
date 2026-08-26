@@ -1,0 +1,282 @@
+openapi: 3.1.0
+info:
+  title: Guided Operations browser API
+  version: web-v1
+  description: |
+    Same-origin browser API for the private hobby application. This contract
+    documents only implemented endpoints. All operational content is fictional.
+servers:
+  - url: /
+paths:
+  /api/web/v1/incidents:
+    get:
+      summary: List authorized incident summaries
+      operationId: listIncidents
+      security:
+        - cookieSession: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Bounded incident summaries for the current account.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncidentListResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      summary: Create the first immutable incident revision
+      operationId: createIncident
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revision]
+              properties:
+                revision:
+                  $ref: "#/components/schemas/IncidentRevisionInput"
+      responses:
+        "201":
+          description:
+            Incident created once for the authenticated actor and idempotency
+            key.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncidentCreatedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  securitySchemes:
+    cookieSession:
+      type: apiKey
+      in: cookie
+      name: sb-<project-ref>-auth-token
+      description:
+        Managed HttpOnly session cookies; clients never read or send a bearer
+        token.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9_-]{16,128}$"
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+  responses:
+    InvalidRequest:
+      description: The request failed closed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    AuthenticationRequired:
+      description: The current session is missing or not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RequestNotAllowed:
+      description: The authenticated actor cannot perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: A dependency could not safely complete the request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    IncidentRevisionInput:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - incidentName
+        - incidentNumber
+        - occurredAt
+        - category
+        - fieldNotes
+        - reviewedFacts
+      properties:
+        schemaVersion:
+          type: integer
+          const: 1
+        incidentName:
+          type: string
+          minLength: 1
+          maxLength: 160
+        incidentNumber:
+          type: string
+          minLength: 1
+          maxLength: 80
+        occurredAt:
+          type: string
+          format: date-time
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        fieldNotes:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, text, recordedAt]
+            properties:
+              id:
+                type: string
+                format: uuid
+              text:
+                type: string
+                minLength: 1
+                maxLength: 20000
+              recordedAt:
+                type: string
+                format: date-time
+        reviewedFacts:
+          type: array
+          maxItems: 300
+          description:
+            Must conform to the discriminated revision schema; confirmed facts
+            cite field-note IDs.
+          items:
+            type: object
+    IncidentSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - incidentId
+        - incidentNumber
+        - displayName
+        - status
+        - occurredAt
+        - category
+        - currentRevisionNumber
+        - updatedAt
+      properties:
+        incidentId:
+          type: string
+          format: uuid
+        incidentNumber:
+          type: string
+        displayName:
+          type: string
+        status:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+        category:
+          type: string
+        currentRevisionNumber:
+          type: integer
+          minimum: 1
+        updatedAt:
+          type: string
+          format: date-time
+    Meta:
+      type: object
+      additionalProperties: false
+      required: [request_id, api_version]
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        api_version:
+          type: string
+          const: web-v1
+    IncidentListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [incidents]
+          properties:
+            incidents:
+              type: array
+              items:
+                $ref: "#/components/schemas/IncidentSummary"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    IncidentCreatedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [incidentId]
+          properties:
+            incidentId:
+              type: string
+              format: uuid
+        meta:
+          $ref: "#/components/schemas/Meta"
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error, meta]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        meta:
+          $ref: "#/components/schemas/Meta"
