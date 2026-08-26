@@ -207,6 +207,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Implement incident number/name, preparer selection, field notes, explicit
       unknowns, and deterministic missing-information review.
 - [ ] Implement fact confirmation before generated narrative.
+- [x] Add the guarded report-draft candidate boundary: it reads one authorized
+      immutable revision, limits generation to selected confirmed facts,
+      validates paragraph provenance, requires same-origin/session-CSRF/retry
+      controls, and stores the review-only candidate before returning success
+      (local unit and PostgreSQL checks pass; hosted CI remains a per-commit
+      review gate).
 - [ ] Implement append-only revisions, restore-as-new-revision, concurrency,
       idempotency, and truthful persistence/conflict states.
 - [ ] Implement deterministic DOCX and print output.

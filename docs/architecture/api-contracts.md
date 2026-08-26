@@ -151,6 +151,17 @@ selected confirmed facts only.
 - GET /reports/{reportId}
 - PATCH /reports/{reportId}
 - GET /reports/{reportId}/revisions
+
+The implemented `POST /api/web/v1/report-drafts` is a versioned, private,
+no-store boundary for generating a review-only candidate. It requires a current
+account, same-origin request, session-bound CSRF proof, a closed JSON body, and
+a bounded idempotency key. The body identifies an incident, immutable source
+revision, report type, and explicit confirmed-fact IDs; it cannot choose an
+actor, facility, or source text. The server authorizes the revision, validates
+the provider output against those facts, and stores an immutable candidate
+before returning only an opaque candidate ID. It is not a final-report endpoint
+and it never returns generated narrative or source facts in the response.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export
