@@ -13,18 +13,23 @@ use real operational/personnel data to demonstrate a finding.
 
 ## Current state versus target
 
-The repository now has a static foundation page, health route, Supabase client
-factories, an initial locked `app_private` migration with fictional seed and
-pgTAP checks, Count Sheet domain tests, and a grounded-policy schema. The empty
-foundation migration is applied to a Supabase Free project in `us-east-1`. A
-protected Vercel Preview is connected only to that Development project through
-browser-safe configuration, and its page, liveness, and readiness endpoints have
-been remotely verified. This does not enable sign-in or operational data: the
-migration deliberately grants no runtime role access, and authentication,
-authorized RPC/DAL paths, complete RLS policies, queues, corpus
-ingest/retrieval, exports, and most controls below remain implementation work. A
-missing target control is a gap; code that claims to establish a boundary but
-fails to do so is a security finding.
+The repository now has guarded employee-number/passcode authentication,
+current-session authorization, forced/personal passcode changes, logout and
+revocation paths, protected account lifecycle with purpose-bound administrator
+step-up, narrow private RPCs, append-only product records, private Storage
+negative tests, citation-validated AI routes, complete runtime readiness, secret
+scanning, and strict allowlisted core operational events. Local fictional
+database-plus-Storage recovery is automated and tested.
+
+These controls are not hosted security acceptance. The shared Development
+Supabase project remains empty and behind the repository migration head; no
+hosted account exists. The current candidate still needs alias/recovery
+non-exposure proof, cookie refresh/rotation/expiry and revocation tests,
+complete direct RLS/API/Storage negatives, signed-in browser qualification,
+real-corpus security evaluation, hosted recovery, monitoring/alerts,
+retention/deletion proof, and an isolated Production environment. A missing
+target control is a gap; code that claims to establish a boundary but fails to
+do so is a security finding.
 
 The target is a private, internet-reachable web application:
 
@@ -214,7 +219,8 @@ infrastructure configuration, prompts, or test utilities.
 
 These conditions are not vulnerabilities by themselves:
 
-- the documented local foundation lacks later target features;
+- the documented implementation candidate lacks later target features or live
+  qualification;
 - a free development project may pause or have small quotas;
 - fictional preview data is visible to authorized preview reviewers;
 - an optional worker provider has not yet been selected.

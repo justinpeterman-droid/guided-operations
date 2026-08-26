@@ -1,8 +1,8 @@
 # Guided Operations Target Architecture
 
-- **Status:** Target design with hosted Supabase foundation and protected Vercel
-  preview
-- **Last updated:** 2026-08-25
+- **Status:** Target design with partial implementation; live qualification is
+  incomplete
+- **Last updated:** 2026-08-26
 - **Scope:** Private, web-only, single-facility application
 
 **Use classification:** Private single-facility application. Real operational
@@ -11,17 +11,21 @@ pass; local, CI, Preview, staging, and fixtures remain fictional.
 
 ## Read this first
 
-The repository now contains a Next.js 16/React 19 scaffold with an honest static
-preview, a health route, server/browser Supabase client factories, an initial
-`app_private` database migration with seed and pgTAP checks, Count Sheet domain
-tests, and the first grounded-policy schema. The migration is applied to a new
-Supabase project in `us-east-1`, with empty application tables and deny-all
-foundation access. A protected Vercel preview exists, but Git linkage,
-environment variables, and authenticated application-content verification are
-not complete. Authentication, usable database access policies/RPCs, queues,
-corpus ingest/retrieval, exports, observability, and the full domain remain
-target work. Everything labelled **target** is a constraint, not a claim that
-the current foundation proves the behavior.
+The repository now implements protected officer/account/report/policy and
+administrator routes, individual Auth-alias sign-in and account lifecycle,
+current-session authorization, narrow private RPCs, append-only incident/report
+and Count Sheet persistence, provider-neutral policy/report AI adapters,
+immutable corpus-ingestion provenance, strict runtime readiness and redacted
+core telemetry. Local fictional database-plus-Storage recovery is automated.
+
+The shared Development Supabase project remains empty and behind the repository
+migration head. No hosted user, real record, or corpus object exists. Protected
+Vercel Previews build the Git branch, but the current candidate has not passed
+signed-in browser qualification. Complete forms/exports, real-corpus import and
+evaluation, hosted backup/restore, monitoring/alerts/budgets, retention/deletion
+execution, live infrastructure, and promotion remain target work. Everything
+labelled **target** is a constraint, not a claim that current code proves the
+behavior in Production.
 
 The replacement is intentionally a new system, but it preserves the useful
 domain rules and contract tests from the former prison-policy-ai project. It

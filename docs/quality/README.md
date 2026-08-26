@@ -7,10 +7,14 @@ accessibility, recoverability, and explicit owner control.
 
 ## Current status
 
-These documents define required controls and target automation. They do not
-claim that the tests, CI jobs, provider projects, environments, backups,
-monitoring, or production deployment already exist. The current package scripts
-must be inspected before citing a command as available.
+Web, database, and fictional recovery CI now exist and repeatedly pass on the
+production-readiness branch. Unit/component, pgTAP, secret/dependency, build,
+private-Storage negative, runtime-readiness, and local recovery controls cover
+important implementation slices. They do not prove a signed-in hosted browser
+flow, full accessibility/print parity, approved-corpus quality, off-provider
+hosted restore, monitoring/alerts, exact release qualification, or Production
+approval. Inspect the exact commit and retained evidence before citing a gate as
+passed.
 
 ## Documents
 

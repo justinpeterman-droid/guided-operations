@@ -7,22 +7,43 @@ The source snapshot is `justinpeterman-droid/prison-policy-ai` `origin/main` at
 `ebe52c4b977ab742975974732beec42fff1bbce5`; branch-only exceptions are named
 explicitly.
 
-At the 2026-08-25 documentation baseline, the new repository has a
+At the 2026-08-25 documentation baseline, the new repository had a
 Next.js/Supabase foundation, a tested pure Count Sheet calculation/schema slice,
 and a tested policy-answer grounding schema, but no accepted complete migrated
-product feature. Every target feature below remains **MIGRATION-BACKLOG** unless
-a later evidence record changes its status.
+product feature. The original baseline state remains in the parity matrix for
+traceability. The current implementation snapshot below supersedes only that
+state column; it does not claim end-to-end parity or production readiness.
 
 “Source-implemented” means the old source is a behavior/design reference. It
 does not mean that old code is safe to copy unchanged, that its backend contract
 is complete, or that the new product has parity.
+
+## Current implementation snapshot — 2026-08-26
+
+| Surface                         | Current replacement state                                                                                                                                                       | Still required for parity                                                                                                   |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Sign in and sessions            | Guarded employee-number/passcode route, generic failures, layered rate limits, current-session checks, forced/personal passcode changes, logout and logout-all are implemented. | Hosted fictional cookie rotation/expiry, timing, recovery absence, revoked-session, direct-access, and browser proof.       |
+| Officer shell and Home          | Protected `/home` and shared navigation exist with honest denied/unavailable states and officer/admin entry points.                                                             | Data-driven work summary, complete responsive/accessibility/browser qualification, and owner acceptance.                    |
+| Incident and report workflow    | Protected `/incidents/new`, `/reports`, report draft review/finalization, append-only revisions, history, restore, search, and browser print controls exist.                    | Full six-step parity, officer/preparer relationships, confirmed-fact/gap flow, supported export, concurrency/browser proof. |
+| Forms and packets               | Fictional visual Previews exist only. No protected Forms Library or approved packet/export implementation exists.                                                               | Approved sources, protected catalog/workflows, persistence, fidelity, print/export, records disposition, and browser proof. |
+| NCU Days Count                  | Calculation/schema plus shift-shared, append-only authenticated persistence and negative database tests exist; the editable screen remains a fictional Preview.                 | Protected UI/history, conflict handling, one-page print/export, accessibility/browser proof, and owner acceptance.          |
+| Policy Expert                   | Protected `/policy-expert`, server-only OpenAI/retrieval adapters, citation validation, refusal behavior, strict endpoint boundaries, and immutable ingestion provenance exist. | Authoritative corpus migration, rights/hash/page reconciliation, reader route, golden evaluation, hosted proof, acceptance. |
+| Account                         | Protected `/account` supports temporary/personal passcode changes and current/all-session sign-out controls.                                                                    | Hosted real-cookie lifecycle, session inventory if required, reauthentication/browser proof, and acceptance.                |
+| Administrator entry             | Protected `/admin` enforces current administrator role on the server and links bounded administrator sections.                                                                  | Complete facility command center, incident/paperwork administration, responsive/browser proof, and acceptance.              |
+| Accounts and staff              | Protected `/admin/accounts` supports invitation, reset, unlock, disablement, and role change with purpose-bound step-up, lifecycle guards, and redacted audit metadata.         | Hosted Auth ceremony and revocation proof, fictional administrator browser flow, credential-delivery procedure, acceptance. |
+| Audit and system health         | Protected `/admin/audit` and `/admin/health`, strict runtime readiness, and allowlisted sign-in/policy/report operational events exist.                                         | Hosted sinks/access/retention, remaining signals, dashboards, alerts, test delivery, budgets, and observation.              |
+| Backup and recovery             | Automated local fictional PostgreSQL archive restore plus private Storage copy/checksum reconciliation passes with bounded evidence and verified cleanup.                       | Encrypted off-provider hosted jobs and isolated replacement-project restore with RPO/RTO, Auth/corpus, and checksum proof.  |
+| Help, full policy reader, forms | No protected parity implementation exists.                                                                                                                                      | Implement only from approved contracts and source material; keep physical-only and unsupported actions honest.              |
+
+Passing tests or having a route does not make a row complete. Each row still
+needs the applicable cross-cutting gates at the end of this document.
 
 ## Route and surface parity
 
 The old React SPA was mounted below `/workspace`. The target URLs remove that
 Flask/Vite basename and use Next.js routes directly.
 
-| Product surface          | Canonical old route/source state                                                                           | Proposed target URL               | New-repo state                                | Required parity and known source gaps                                                                                                                                                                                                                                                                                                                                                  |
+| Product surface          | Canonical old route/source state                                                                           | Proposed target URL               | 2026-08-25 baseline state                     | Required parity and known source gaps                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------ | ---------------------------------------------------------------------------------------------------------- | --------------------------------- | --------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Sign in                  | `/workspace` login; **SOURCE-IMPLEMENTED**                                                                 | `/login`                          | **MIGRATION-BACKLOG**                         | Employee number + PIN-like secret, generic failures, throttling/lockout, session rotation, temporary-credential flow, fictional accounts only. Rebuild the backend/session contract for Supabase; do not port cookie/CSRF assumptions blindly.                                                                                                                                         |
 | Shared shell/navigation  | `frontend/web/src/App.tsx`; **SOURCE-IMPLEMENTED**                                                         | authenticated layout              | **MIGRATION-BACKLOG**                         | Preserve small officer navigation, separate admin entry, responsive drawer/rail, focus restoration, truthful connection/save state, and no `/workspace` base.                                                                                                                                                                                                                          |

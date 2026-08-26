@@ -170,3 +170,20 @@ HTTPS origin from Vercel's `VERCEL_URL` only when `APP_ENV=preview`.
 This verifies build linkage and configuration inventory only. It does not prove
 that local commits after `dd1bce3`, hosted database migrations, authenticated
 routes, or the application UI are deployed or remotely browser-verified.
+
+## Implementation supersession note — 2026-08-26
+
+Later repository work accepted ADR-0003 for implementation and added the guarded
+authentication/account lifecycle, protected product/admin slices, private RPCs,
+policy provenance, strict readiness, redacted core telemetry, and local
+fictional database-plus-Storage recovery described in `README.md` and
+`ROADMAP.md`. This dated record remains authoritative for what was actually
+observed in the hosted Development foundation; later local/CI implementation
+does not rewrite that evidence.
+
+Sign-in therefore remains disabled on the hosted application until the newer
+forward migrations are explicitly approved for Development, fictional accounts
+are provisioned through the protected ceremony, and the signed-in Auth/RLS/API/
+Storage/browser qualification passes. No statement in this note authorizes a
+hosted migration, identity creation, corpus import, Production promotion, real
+data entry, or traffic change.

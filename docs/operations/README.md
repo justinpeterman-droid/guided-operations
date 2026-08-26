@@ -5,16 +5,19 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 
 ## Current status
 
-- Application hosting configured: **protected Vercel preview created; linkage
-  and application verification incomplete**
+- Application hosting configured: **authoritative Git-connected Vercel project
+  and protected Previews verified; current signed-in candidate qualification
+  incomplete**
 - Supabase projects configured: **new `us-east-1` foundation project healthy; no
   users or operational data**
-- CI/release automation configured: **GitHub web and database quality workflows
-  pass**
+- CI/release automation configured: **GitHub web, database, and fictional
+  recovery workflows pass; production promotion remains manual and gated**
 - Backups and restore exercise: **local fictional database-plus-Storage
   rehearsal implemented; encrypted off-provider and isolated hosted restore not
   established**
-- Monitoring and alerts: **not established**
+- Monitoring and alerts: **strict redacted core application events implemented;
+  hosted sinks, dashboards, alerts, budgets, access, and retention not
+  established**
 - Production domain or traffic: **not established**
 - Intended use: **personal, non-commercial hobby app for selected invited
   officers; not an official agency/facility system**

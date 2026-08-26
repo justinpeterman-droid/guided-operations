@@ -32,29 +32,72 @@ changing an environment variable or checking off a plan item.
 The hosted details and limitations are recorded in
 [Hosted foundation record](docs/operations/2026-08-25-hosted-foundation.md).
 
+## Verified progress since the baseline — 2026-08-26
+
+- The authoritative Vercel project is Git-connected, protected Previews build
+  the branch, and an earlier exact deployment passed Vercel-protected access
+  plus liveness/readiness checks. The current candidate still needs a fresh
+  application sign-in browser qualification after its database migrations are
+  promoted to Development.
+- ADR-0003 is accepted for implementation. Guarded employee-number/passcode
+  sign-in, current-session checks, forced temporary-passcode change, personal
+  passcode change, logout/logout-all, first-admin bootstrap, account invitation,
+  reset, unlock, disablement, role change, last-admin protection, and
+  purpose-bound administrator step-up are implemented and tested locally. No
+  hosted account has been provisioned.
+- Protected Home, Account, Reports, incident creation, report draft/review,
+  append-only revision/history/restore, Policy Expert, administrator account,
+  audit, and health routes exist. They are implementation slices, not accepted
+  end-to-end parity or production proof.
+- Count Sheet domain rules and authenticated append-only persistence exist; its
+  user-facing experience remains a fictional Preview pending protected browser,
+  print, and export work. Other approved forms remain open.
+- Policy retrieval/generation adapters, strict citation validation, private
+  retrieval RPCs, and immutable ingestion/page/chunk provenance are built. The
+  real corpus is still absent and may not be imported until custody, rights,
+  hashing, page reconciliation, and evaluation gates pass.
+- Local fictional recovery now rehearses both a PostgreSQL archive restore and
+  private Storage object copy/checksum reconciliation with cleanup. This does
+  not replace encrypted off-provider hosted backups or a restore into an
+  isolated replacement project.
+- Complete runtime readiness, secret/dependency scanning, strict allowlisted
+  sign-in/policy/report telemetry, and repeated web/database/recovery CI exist.
+  Hosted monitoring, alert delivery, budgets, backup jobs, and a live restore
+  still remain open.
+
 ## Current launch blockers
 
-1. The Vercel project is not linked to the private GitHub repository and its
-   application content has not been remotely inspected.
-2. The current Supabase project must be designated non-production; a separate
-   live project is required before release.
-3. ADR-0003 authentication is Proposed. There are no connected accounts,
-   sessions, account lifecycle, runtime grants, or usable RLS policies.
-4. The product core is not implemented. The current page is an honest foundation
-   screen, not the officer workspace.
-5. The policy corpus lacks authoritative bytes, rights classification, current
+1. The Development Supabase project does not have the newest forward migrations
+   or any hosted fictional officer/admin account. A separate isolated live
+   Supabase project is still required before release.
+2. Authentication and authorization need hosted fictional end-to-end proof:
+   alias non-exposure, real cookie refresh/rotation/expiry, timing bounds,
+   revoked-session behavior, direct RLS/API/Storage negatives, and full
+   officer/admin browser flows.
+3. The officer product slice needs protected-browser completion and owner
+   acceptance, including the full report workflow, conflict/retry behavior,
+   supported print/export, Forms Library, and Count Sheet user experience.
+4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
-6. Database and Storage backup automation and a successful isolated restore
-   drill do not exist.
-7. Production monitoring, alert routing, cost caps, and release/rollback proof
-   do not exist.
-8. GitHub branch protection and private-repository rulesets are unavailable on
+5. The approved corpus has not passed retrieval, citation, refusal,
+   supersession/conflict, prompt-injection, latency, and cost evaluation on the
+   pinned production configuration.
+6. Encrypted off-provider hosted database and Storage backup jobs plus a restore
+   into an isolated replacement project do not exist. Local same-stack recovery
+   proof does not close this gate.
+7. Production monitoring sinks, alert delivery, access/retention, cost caps,
+   provider budgets, incident ownership, and release/rollback exercises do not
+   exist.
+8. Two-year retention has been approved in documentation, but production data
+   inventory, legal-hold operation, deletion execution/verification, and backup
+   expiry evidence remain open.
+9. GitHub branch protection and private-repository rulesets are unavailable on
    the current account plan. The owner must upgrade or formally accept and
    document compensating release controls.
-9. Vercel Hobby Standard Protection does not protect the Production domain.
-   Application authentication remains mandatory; provider-level Production
-   protection requires a plan decision.
-10. Supabase Free projects can pause for low activity and require operator-run
+10. Vercel Hobby Standard Protection does not protect the Production domain.
+    Application authentication remains mandatory; provider-level Production
+    protection requires a plan decision.
+11. Supabase Free projects can pause for low activity and require operator-run
     off-provider database and Storage backups. The owner must accept or remove
     those limitations before release.
 
@@ -62,13 +105,13 @@ The hosted details and limitations are recorded in
 
 | Order | Phase                                            | Current status                   |              Working estimate | Primary exit gate                                                 |
 | ----: | ------------------------------------------------ | -------------------------------- | ----------------------------: | ----------------------------------------------------------------- |
-|     0 | Foundation closure and repository controls       | In progress                      |          1–2 engineering days | Truthful baseline, reproducible gates, reviewed decisions         |
-|     1 | Connected non-production environment             | Partially complete               |                      1–2 days | Remotely verified protected preview using non-production services |
-|     2 | Identity, sessions, authorization, and bootstrap | Blocked on owner/auth decisions  |                      5–8 days | Accepted ADR-0003 and negative security tests                     |
-|     3 | Incident and report vertical slice               | Planned                          |                    10–15 days | Accepted end-to-end fictional incident/report workflow            |
-|     4 | Forms and operational paperwork                  | Planned                          |                     8–12 days | Accepted persistence, print, export, and records behavior         |
-|     5 | Policy corpus and grounded assistance            | Blocked on corpus custody/rights |       10–20 days after access | Reconciled corpus and passing citation/refusal evaluation         |
-|     6 | Administration and operational controls          | Planned                          |                      5–8 days | Step-up admin, audit, monitoring, and recovery exercises pass     |
+|     0 | Foundation closure and repository controls       | Mostly built; decisions open     |          1–2 engineering days | Truthful baseline, reproducible gates, reviewed decisions         |
+|     1 | Connected non-production environment             | Connected; requalification open  |                      1–2 days | Remotely verified protected preview using non-production services |
+|     2 | Identity, sessions, authorization, and bootstrap | Built locally; hosted proof open |                      5–8 days | Accepted ADR-0003 and negative security tests                     |
+|     3 | Incident and report vertical slice               | Implementation in progress       |                    10–15 days | Accepted end-to-end fictional incident/report workflow            |
+|     4 | Forms and operational paperwork                  | Count Sheet slice in progress    |                     8–12 days | Accepted persistence, print, export, and records behavior         |
+|     5 | Policy corpus and grounded assistance            | Code built; corpus gate blocked  |       10–20 days after access | Reconciled corpus and passing citation/refusal evaluation         |
+|     6 | Administration and operational controls          | Implementation in progress       |                      5–8 days | Step-up admin, audit, monitoring, and recovery exercises pass     |
 |     7 | Live-environment qualification                   | Planned                          |                      3–5 days | Named release candidate passes every applicable release gate      |
 |     8 | Owner-authorized promotion and observation       | Planned                          | 1–2 days plus rollback window | Production evidence accepted; rollback retained                   |
 
@@ -128,7 +171,8 @@ Status: **in progress**
 
 ## Phase 1 — connected non-production environment
 
-Status: **partially complete; provider projects exist but linkage is open**
+Status: **connected; latest authenticated fictional requalification remains
+open**
 
 ### Steps
 
@@ -223,7 +267,8 @@ production login**
 
 ## Phase 3 — incident and report vertical slice
 
-Status: **planned**
+Status: **implementation in progress; protected browser/print/export and owner
+acceptance remain open**
 
 ### Steps
 
@@ -264,7 +309,8 @@ Status: **planned**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **planned**
+Status: **Count Sheet persistence is implemented; protected UI, print/export,
+other approved forms, and owner acceptance remain open**
 
 ### Steps
 
@@ -299,7 +345,8 @@ Status: **planned**
 
 ## Phase 5 — policy corpus and grounded assistance
 
-Status: **blocked on OQ-008, OQ-009, and OQ-010**
+Status: **retrieval and provenance code are implemented; real corpus migration
+and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 
 ### Steps
 
@@ -348,7 +395,9 @@ Status: **blocked on OQ-008, OQ-009, and OQ-010**
 
 ## Phase 6 — administration and operational controls
 
-Status: **planned**
+Status: **account/audit/health controls, redacted core telemetry, and local
+recovery are implemented; hosted monitoring, alerts, budgets, and exercises
+remain open**
 
 ### Steps
 

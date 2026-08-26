@@ -17,14 +17,21 @@ the detailed product and migration contracts live.
 
 ## Status truth
 
-The new repository currently contains a Next.js foundation, Supabase
-connection/migration scaffolding, a liveness route, shared visual tokens, a
-tested pure Count Sheet calculation/schema slice, and a tested policy-answer
-grounding schema. These are useful technical and contract foundations; they are
-not accepted end-user feature parity. The hosted Supabase foundation now exists,
-but there is still no complete migrated product route, production
-authentication, application-to-Supabase environment linkage, migrated RAG
-corpus, verified Vercel production deployment, or Google Cloud retirement.
+The new repository now contains protected officer, account, incident/report,
+Policy Expert, and administrator implementation slices; guarded individual
+authentication/account lifecycle; private versioned database/RPC boundaries;
+Count Sheet persistence; strict AI adapters and corpus provenance; redacted core
+telemetry; and automated local fictional database-plus-Storage recovery. These
+are substantial implementation evidence, but no end-user feature has passed all
+parity, hosted fictional qualification, accessibility/print, corpus, recovery,
+and owner-acceptance gates.
+
+The Vercel project is Git-connected and protected Previews build the branch. The
+Development Supabase project remains empty and does not have the newest forward
+migrations or hosted accounts. There is still no isolated Production Supabase
+project, approved real corpus, complete protected Forms/Count Sheet experience,
+hosted backup/restore and monitoring proof, production promotion, or Google
+Cloud retirement.
 
 Use these labels in plans, issues, pull requests, and documentation:
 
