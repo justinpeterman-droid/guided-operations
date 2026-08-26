@@ -1,6 +1,6 @@
 begin;
 
-select plan(137);
+select plan(141);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -432,6 +432,65 @@ select lives_ok(
     where auth_user_id = '11111111-1111-4111-8111-111111111111';
   $$,
   'an administrator can be disabled when another active administrator remains'
+);
+
+select lives_ok(
+  $$
+    insert into auth.users (id, email)
+    values ('77777777-7777-4777-8777-777777777777', 'fixture-disabled-officer@example.invalid');
+
+    insert into app_private.staff_members (
+      id, facility_id, employee_lookup_hash, employee_number_hint, display_name, status
+    )
+    select
+      '88888888-8888-4888-8888-888888888888',
+      facility.id,
+      repeat('c', 64),
+      '33',
+      'Fixture Officer',
+      'active'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.user_accounts (
+      auth_user_id, staff_member_id, sign_in_alias, role, status, must_change_passcode
+    ) values (
+      '77777777-7777-4777-8777-777777777777',
+      '88888888-8888-4888-8888-888888888888',
+      'fixture-officer-auth-alias@example.invalid',
+      'officer',
+      'active',
+      false
+    );
+
+    select app_private.disable_account(
+      '33333333-3333-4333-8333-333333333333',
+      '77777777-7777-4777-8777-777777777777'
+    );
+  $$,
+  'a current administrator can disable a same-facility fictional account through the private routine'
+);
+
+select is(
+  (select status::text from app_private.user_accounts where auth_user_id = '77777777-7777-4777-8777-777777777777'),
+  'disabled',
+  'private account disablement changes the target state'
+);
+
+select throws_ok(
+  $$
+    select app_private.disable_account(
+      '33333333-3333-4333-8333-333333333333',
+      '33333333-3333-4333-8333-333333333333'
+    );
+  $$,
+  'An administrator cannot disable their own account',
+  'private account disablement rejects self-disablement'
+);
+
+select ok(
+  not has_function_privilege('authenticated', 'app_private.disable_account(uuid,uuid)', 'execute'),
+  'authenticated callers cannot invoke private account disablement directly'
 );
 
 select is(
