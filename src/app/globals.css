@@ -988,6 +988,196 @@ a:focus-visible {
   padding-bottom: 64px;
 }
 
+.incident-page {
+  width: min(1440px, calc(100% - 40px));
+  min-height: 100vh;
+  margin-inline: auto;
+  padding-bottom: 52px;
+}
+
+.incident-header {
+  justify-content: space-between;
+}
+
+.incident-workspace {
+  display: grid;
+  grid-template-columns: 245px minmax(0, 1fr) 290px;
+  min-height: 720px;
+  margin-top: 28px;
+  overflow: hidden;
+  background: #fff;
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-feature);
+  box-shadow: var(--gow-shadow-card);
+}
+
+.incident-steps {
+  padding: 30px 22px;
+  background: #edf4f9;
+}
+.incident-steps ol {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.incident-steps button {
+  display: grid;
+  width: 100%;
+  grid-template-columns: 32px 1fr;
+  gap: 11px;
+  align-items: center;
+  padding: 15px 10px;
+  color: var(--gow-navy-900);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.incident-steps button span {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border: 1px solid #a7b8c6;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.incident-steps li.is-current button {
+  background: #dcecf8;
+  border-color: #caddeb;
+}
+.incident-steps li.is-current button span {
+  color: #fff;
+  background: var(--gow-navy-900);
+  border-color: var(--gow-navy-900);
+}
+.incident-stage {
+  padding: clamp(28px, 5vw, 64px);
+}
+.incident-stage h1,
+.incident-rail h2,
+.incident-review h2 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  letter-spacing: -0.025em;
+}
+.incident-stage h1 {
+  font-size: clamp(2.25rem, 4.5vw, 3.8rem);
+  line-height: 1;
+}
+.incident-guidance {
+  max-width: 610px;
+  margin: 16px 0 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
+.incident-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  margin-top: 34px;
+}
+.incident-fields label,
+.incident-fact {
+  display: grid;
+  gap: 8px;
+  color: var(--gow-navy-900);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+.incident-fields input,
+.incident-fields textarea,
+.incident-fact textarea {
+  width: 100%;
+  padding: 12px;
+  color: var(--gow-ink);
+  background: #fff;
+  border: 1px solid #b9c9d5;
+  border-radius: var(--gow-radius-control);
+  font: inherit;
+}
+.incident-fields input {
+  min-height: 46px;
+}
+.incident-fields textarea,
+.incident-fact textarea {
+  min-height: 155px;
+  resize: vertical;
+  line-height: 1.55;
+}
+.incident-full {
+  grid-column: 1 / -1;
+}
+.incident-primary {
+  min-height: 48px;
+  margin-top: 28px;
+  padding: 0 20px;
+  color: #fff;
+  background: #176f72;
+  border: 1px solid #176f72;
+  border-radius: var(--gow-radius-control);
+  font: inherit;
+  font-weight: 800;
+}
+.incident-primary:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+.incident-fact {
+  margin-top: 26px;
+}
+.incident-review {
+  margin-top: 32px;
+  padding: 22px;
+  background: #f5f9fc;
+  border: 1px solid #d5e3ed;
+  border-radius: var(--gow-radius-card);
+}
+.incident-review h2 {
+  font-size: 1.45rem;
+}
+.incident-review p {
+  color: var(--gow-muted);
+  line-height: 1.55;
+}
+.incident-status {
+  min-height: 1.5em;
+  color: #9e2f25;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+.incident-rail {
+  padding: 40px 28px;
+  background: #f7fbfd;
+  border-left: 1px solid #d5e0e8;
+}
+.incident-rail h2 {
+  font-size: 1.55rem;
+}
+.incident-rail p,
+.incident-rail li {
+  color: var(--gow-muted);
+  font-size: 0.87rem;
+  line-height: 1.55;
+}
+.incident-rail ul {
+  display: grid;
+  gap: 12px;
+  margin: 24px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.incident-rail li {
+  padding-top: 12px;
+  border-top: 1px solid #d9e4eb;
+}
+
 .policy-header {
   justify-content: space-between;
 }
@@ -1206,6 +1396,17 @@ a:focus-visible {
     width: min(100% - 28px, 1180px);
   }
 
+  .incident-page {
+    width: min(100% - 28px, 1440px);
+  }
+  .incident-workspace {
+    grid-template-columns: 1fr;
+  }
+  .incident-rail {
+    border-top: 1px solid #d5e0e8;
+    border-left: 0;
+  }
+
   .policy-layout {
     grid-template-columns: 1fr;
   }
@@ -1280,6 +1481,10 @@ a:focus-visible {
 
   .policy-main {
     padding: 26px;
+  }
+
+  .incident-fields {
+    grid-template-columns: 1fr;
   }
 
   .policy-question-form,
