@@ -22,7 +22,7 @@ describe("WorkspaceNavigation", () => {
     );
     expect(screen.getByRole("link", { name: "Forms" })).toHaveAttribute(
       "href",
-      "/preview/forms-library",
+      "/forms",
     );
     expect(screen.getByRole("link", { name: "Count Sheet" })).toHaveAttribute(
       "href",

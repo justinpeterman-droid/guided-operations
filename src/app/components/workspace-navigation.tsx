@@ -5,7 +5,7 @@ const items = [
   ["Reports", "/reports"],
   ["Policy", "/policy-expert"],
   ["Count Sheet", "/count-sheet"],
-  ["Forms", "/preview/forms-library"],
+  ["Forms", "/forms"],
   ["Account", "/account"],
 ] as const;
 

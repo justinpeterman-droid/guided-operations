@@ -311,9 +311,10 @@ acceptance remain open**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **Count Sheet protected load/save/reopen/revision review/restore is
-implemented; print/export qualification, other approved forms, and owner
-acceptance remain open**
+Status: **Count Sheet protected load/save/reopen/revision review/restore and a
+protected honest-availability Forms Library foundation are implemented;
+print/export qualification, other approved forms, and owner acceptance remain
+open**
 
 ### Steps
 
@@ -326,9 +327,10 @@ acceptance remain open**
    copying each template.
 3. Implement Daily Paperwork storage/UI/print flows, then the approved Monthly
    packet catalog.
-4. Implement Forms Library search/selection, capability labels, paper-accurate
-   preview, eligible download, controlled editable fields, N/A behavior, and
-   packet actions.
+4. Extend the protected Forms Library foundation with search/selection,
+   capability labels, paper-accurate preview, eligible download, controlled
+   editable fields, N/A behavior, and packet actions as approved definitions
+   become available.
 5. Keep Chain of Custody and every other physical-only workflow physical-only
    unless a new product/records decision explicitly changes it.
 6. Apply the same append-only revision, concurrency, idempotency, ownership,

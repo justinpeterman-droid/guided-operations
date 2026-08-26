@@ -36,7 +36,7 @@ const officerTools = [
     eyebrow: "Forms library",
     title: "Find approved paperwork",
     copy: "See what forms are available, what is still being reviewed, and what must remain paper-only.",
-    href: "/preview/forms-library",
+    href: "/forms",
     action: "Open Forms Library",
   },
 ] as const;
