@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
+import type { Json } from "@/lib/supabase/database.generated";
 import {
   authorizeCurrentSession,
   type CurrentSessionClient,
@@ -43,8 +44,8 @@ type StoreReportDraftCandidateRpcClient = Readonly<{
       p_incident_id: string;
       p_source_incident_revision_id: string;
       p_report_type: string;
-      p_source_fact_ids: readonly string[];
-      p_paragraphs: GeneratedReportDraft["paragraphs"];
+      p_source_fact_ids: string[];
+      p_paragraphs: Json;
       p_provider_key: string;
       p_idempotency_key_digest: string;
       p_request_digest: string;

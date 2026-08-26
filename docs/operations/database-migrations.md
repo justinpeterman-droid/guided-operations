@@ -44,7 +44,7 @@ Once the Supabase CLI foundation exists:
    supabase db reset --local
    ```
 
-4. Run database lint, pgTAP/schema/RLS tests, generated-type drift checks,
+4. Run database lint, pgTAP/schema/RLS tests, `npm run db:types:check`,
    application integration tests, and concurrency tests.
 5. Regenerate TypeScript database types from the local schema and commit the
    reviewed result.

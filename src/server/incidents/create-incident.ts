@@ -11,6 +11,7 @@ import {
   type AuthorizedCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
+import type { Json } from "@/lib/supabase/database.generated";
 
 const INCIDENT_CREATE_ACTION = "incident.create";
 
@@ -21,8 +22,8 @@ type IncidentCreateRpcArguments = Readonly<{
   p_occurred_at: string;
   p_category: string;
   p_schema_version: number;
-  p_field_notes: unknown;
-  p_reviewed_facts: unknown;
+  p_field_notes: Json;
+  p_reviewed_facts: Json;
   p_idempotency_key_digest: string;
   p_request_digest: string;
 }>;

@@ -10,6 +10,7 @@ import {
 import { isApprovedCountSheetStructure } from "@/features/count-sheet/approved-structure";
 import { parseCountSheetStructure } from "@/features/count-sheet/schema";
 import type { CountSheetPayload } from "@/features/count-sheet/types";
+import type { Json } from "@/lib/supabase/database.generated";
 import {
   authorizeCurrentSession,
   type CurrentSessionClient,
@@ -33,8 +34,8 @@ type SaveCountSheetClient = CurrentSessionClient &
       args: Readonly<{
         p_work_date: string;
         p_base_revision_number: number;
-        p_structure: unknown;
-        p_payload: unknown;
+        p_structure: Json;
+        p_payload: Json;
         p_reason: string;
         p_idempotency_key_digest: string;
         p_request_digest: string;
@@ -110,8 +111,8 @@ export async function saveCountSheetForCurrentSession(
     const result = await client.rpc("save_count_sheet", {
       p_work_date: request.workDate,
       p_base_revision_number: request.baseRevisionNumber,
-      p_structure: request.structure,
-      p_payload: request.payload,
+      p_structure: request.structure as unknown as Json,
+      p_payload: request.payload as unknown as Json,
       p_reason: request.reason,
       p_idempotency_key_digest: digest(
         command.data.idempotencyKey,

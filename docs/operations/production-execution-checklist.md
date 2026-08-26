@@ -152,7 +152,7 @@ Pause and report a blocker instead of guessing when work requires:
       last-admin safety.
 - [ ] Accept ADR-0003 or replace it without weakening the credential boundary.
 - [ ] Add forward identity/account/rate-limit/audit migrations.
-- [ ] Add generated database types and drift check.
+- [x] Add generated Data API types and an exact local migration drift check.
 - [ ] Add least-privilege routine and administrative server clients.
 - [ ] Implement sign-in with generic failures and layered throttling/lockout.
 - [ ] Implement Secure/HttpOnly/SameSite session cookies and safe redirects.

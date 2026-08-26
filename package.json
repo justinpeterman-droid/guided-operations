@@ -24,6 +24,8 @@
     "db:reset": "supabase db reset",
     "db:lint": "supabase db lint --local --level warning --fail-on warning",
     "db:test": "supabase test db --local",
+    "db:types:generate": "node scripts/verify-database-types.mjs --write",
+    "db:types:check": "node scripts/verify-database-types.mjs",
     "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations"
   },
   "dependencies": {

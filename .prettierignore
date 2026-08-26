@@ -5,3 +5,4 @@ playwright-report
 test-results
 supabase/.branches
 supabase/.temp
+src/lib/supabase/database.generated.ts
