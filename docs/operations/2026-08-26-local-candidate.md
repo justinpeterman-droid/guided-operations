@@ -12,22 +12,22 @@
 
 The following checks were run against the current worktree before this record:
 
-| Check | Result |
-| --- | --- |
-| `npm run check` | Passed: formatting, lint, TypeScript, 196 web tests, production build |
-| `npm run db:reset` | Passed: fresh replay through `20260826105451_add_count_sheet_save_rpc.sql` |
-| `npm run db:lint` | Passed: no schema warnings/errors |
-| `npm run db:test` | Passed: 141 pgTAP tests |
+| Check                    | Result                                                                                       |
+| ------------------------ | -------------------------------------------------------------------------------------------- |
+| `npm run check`          | Passed: formatting, lint, TypeScript, 196 web tests, production build                        |
+| `npm run db:reset`       | Passed: fresh replay through `20260826105451_add_count_sheet_save_rpc.sql`                   |
+| `npm run db:lint`        | Passed: no schema warnings/errors                                                            |
+| `npm run db:test`        | Passed: 141 pgTAP tests                                                                      |
 | `npm run security:check` | Passed: no tracked secret patterns; zero high-severity production dependency vulnerabilities |
 
 ## Included local changes after the last Preview commit
 
 The current Vercel Preview was verified as building `dd1bce3`. This candidate
 also contains local-only protected report revision/history/restore/print work
-and the fictional Count Sheet persistence/access/save/contract tests added
-after that deployed commit. It is not a release candidate and must not be
-treated as Preview evidence until the exact commit is pushed, CI passes, and
-Vercel creates a protected Preview for it.
+and the fictional Count Sheet persistence/access/save/contract tests added after
+that deployed commit. It is not a release candidate and must not be treated as
+Preview evidence until the exact commit is pushed, CI passes, and Vercel creates
+a protected Preview for it.
 
 ## Still required before qualification
 
