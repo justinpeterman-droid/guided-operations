@@ -251,27 +251,42 @@ source type, active version ID, created_at, archived_at.
 
 ### app_private.policy_document_versions
 
-- document_id and monotonic version
-- effective/published/received dates where known
-- original object ID, media type, byte size, SHA-256
-- extraction/OCR state and tool version
-- source/provenance metadata
-- activation state and timestamps
+- document ID, version label, effective date, exact source SHA-256, private
+  Storage path, media type, byte size, page count, and restricted original
+  filename metadata;
+- rights status/evidence/reviewer/review window, allowed processing regions, and
+  explicit external-AI permission;
+- lifecycle and reviewed-current state, with at most one current version per
+  logical document.
+
+### app_private.policy_ingestion_runs
+
+The immutable run identity records the source hash, environment, extraction/OCR
+tool and configuration hashes, normalization/chunking versions, optional
+embedding profile, code/lock hashes, counts, failures, status, and QA reviewer.
+A run cannot become `ready` unless its approved page/chunk counts match the
+stored evidence and it has no recorded failures.
 
 ### app_private.policy_pages
 
-Version ID, page number, normalized text object/reference or bounded text,
-extraction confidence, text checksum, and structural headings.
+Version and ingestion-run IDs, 1-based source page index, printed label,
+normalized bounded text and checksum, extraction mode/confidence, dimensions,
+rotation, structured-layout reference, warnings, and QA state. Page evidence for
+a ready run cannot be silently changed or deleted.
 
 ### app_private.policy_chunks
 
-- version/page range/section path
+- version/ingestion-run/page range/printed labels/section path
 - deterministic chunk ordinal and text checksum
 - bounded chunk text
 - tsvector generated/search column
-- embedding vector
-- embedding provider/model/dimension/version
-- active state
+- bounded character/token/overlap metadata
+- lifecycle and QA state
+
+Every new chunk must map to a contiguous stored page range of at most ten pages.
+Embeddings remain in `policy_chunk_embeddings`, separate from canonical chunk
+text, and identify their provider/model/dimension through an immutable embedding
+profile.
 
 Indexes:
 

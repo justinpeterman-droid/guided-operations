@@ -262,6 +262,10 @@ Pause and report a blocker instead of guessing when work requires:
 
 ## Phase 5 — policy corpus and grounded assistance
 
+- [x] Implement the local private registry foundation for rights/current
+      version, ingestion-run provenance, page QA, bounded chunk mappings, and
+      retrieval exclusion of unapproved evidence. This is fictional local/CI
+      proof only and does not satisfy the hosted R2 or corpus gates.
 - [ ] Identify authoritative source-object and legacy-index locations.
 - [ ] Name the authorized corpus custodian.
 - [ ] Approve rights for storage, processing, embedding, quoting, display,

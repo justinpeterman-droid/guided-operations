@@ -1,6 +1,6 @@
 begin;
 
-select plan(144);
+select plan(147);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1422,7 +1422,11 @@ select lives_ok(
 
     insert into app_private.policy_document_versions (
       id, document_id, version_label, source_sha256, storage_path, media_type,
-      page_count, approved_at, indexed_at
+      page_count, approved_at, indexed_at, source_filename, byte_size,
+      rights_status, rights_evidence_ref, rights_reviewed_at,
+      rights_reviewed_by,
+      allowed_processing_regions, external_ai_allowed, lifecycle_status,
+      is_current
     ) values (
       'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
       'abababab-abab-4bab-8bab-abababababab',
@@ -1432,22 +1436,84 @@ select lives_ok(
       'application/pdf',
       1,
       statement_timestamp(),
-      statement_timestamp()
+      statement_timestamp(),
+      'fictional-training-policy.pdf',
+      1024,
+      'approved_internal_search',
+      'fictional-rights-review-001',
+      statement_timestamp(),
+      (select staff.id from app_private.staff_members as staff limit 1),
+      array['us-east-1'],
+      true,
+      'active',
+      true
+    );
+
+    insert into app_private.policy_ingestion_runs (
+      id, document_version_id, environment, source_sha256,
+      extraction_tool, extraction_version, extraction_config_sha256,
+      normalization_version, chunking_version, code_commit_sha,
+      dependency_lock_sha256
+    ) values (
+      'dededede-dede-4ede-8ede-dededededede',
+      'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      'ci',
+      repeat('a', 64),
+      'fictional-parser',
+      'fictional-v1',
+      repeat('c', 64),
+      'fictional-normalization-v1',
+      'fictional-chunking-v1',
+      repeat('d', 40),
+      repeat('e', 64)
+    );
+
+    insert into app_private.policy_pages (
+      document_version_id, ingestion_run_id, source_page_index,
+      printed_page_label, normalized_text, normalized_text_sha256,
+      extraction_mode, review_status
+    ) values (
+      'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      'dededede-dede-4ede-8ede-dededededede',
+      1,
+      'Fictional 1',
+      'Fictional procedure requires a documented review.',
+      repeat('f', 64),
+      'native',
+      'approved'
     );
 
     insert into app_private.policy_chunks (
-      id, document_version_id, ordinal, page_start, page_end, section_path,
-      content, content_sha256
+      id, document_version_id, ingestion_run_id, ordinal, page_start, page_end,
+      printed_page_start, printed_page_end, section_path, content,
+      content_sha256, lifecycle_status, qa_approved
     ) values (
       'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
       'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      'dededede-dede-4ede-8ede-dededededede',
       0,
       1,
       1,
+      'Fictional 1',
+      'Fictional 1',
       'Fictional procedure',
       'Fictional procedure requires a documented review.',
-      repeat('b', 64)
+      repeat('b', 64),
+      'active',
+      true
     );
+
+    update app_private.policy_ingestion_runs
+    set status = 'ready',
+        qa_status = 'approved',
+        qa_reviewed_by = (
+          select staff.id from app_private.staff_members as staff limit 1
+        ),
+        qa_reviewed_at = statement_timestamp(),
+        completed_at = statement_timestamp(),
+        page_count = 1,
+        chunk_count = 1
+    where id = 'dededede-dede-4ede-8ede-dededededede';
   $$,
   'a fictional approved and indexed policy chunk can be staged for retrieval tests'
 );
@@ -1470,6 +1536,50 @@ select is(
 );
 
 reset role;
+
+update app_private.policy_document_versions
+set external_ai_allowed = false,
+    rights_status = 'expired_review'
+where id = 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'retrieval excludes a policy version whose rights review expired'
+);
+reset role;
+
+update app_private.policy_document_versions
+set rights_status = 'approved_internal_search',
+    external_ai_allowed = true
+where id = 'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc';
+update app_private.policy_ingestion_runs
+set status = 'awaiting_review'
+where id = 'dededede-dede-4ede-8ede-dededededede';
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'retrieval excludes a policy ingestion run that is no longer ready'
+);
+reset role;
+
+update app_private.policy_ingestion_runs
+set status = 'ready'
+where id = 'dededede-dede-4ede-8ede-dededededede';
+select throws_ok(
+  $$
+    update app_private.policy_pages
+    set review_status = 'pending'
+    where ingestion_run_id = 'dededede-dede-4ede-8ede-dededededede'
+  $$,
+  'Move the policy ingestion run out of ready before changing its page or chunk evidence',
+  'ready policy page evidence cannot be silently downgraded or changed'
+);
 
 select has_column(
   'app_private',

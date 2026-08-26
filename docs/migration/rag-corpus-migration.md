@@ -541,6 +541,15 @@ system.
 
 ## Migration stages and gates
 
+The repository now contains the local-only R2 registry foundation in forward
+migration `20260826222000_add_policy_ingestion_provenance.sql`. It records
+rights/current-version decisions, immutable ingestion identity, page evidence,
+bounded chunk-to-page mappings, and ready-run QA/count checks. Retrieval now
+excludes non-current, rights-expired, provider-disallowed, non-ready, or
+non-approved page/chunk evidence. This is schema and fictional-test evidence
+only: no hosted migration, real source upload, rights decision, extraction,
+corpus acceptance, or production cutover has occurred.
+
 | Stage                      | Work                                                                                        | Exit gate                                                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | R0 — Discovery             | Export legacy provider inventory; reconcile 292 names; identify source bytes and owners     | Every entry is matched, missing, extra, or explicitly unresolved; export SHA-256 and custodian sign-off recorded |
