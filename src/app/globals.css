@@ -981,6 +981,204 @@ a:focus-visible {
   line-height: 1.5;
 }
 
+.policy-page {
+  width: min(1180px, calc(100% - 40px));
+  min-height: 100vh;
+  margin-inline: auto;
+  padding-bottom: 64px;
+}
+
+.policy-header {
+  justify-content: space-between;
+}
+
+.policy-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 0.34fr);
+  min-height: 720px;
+  margin-top: 34px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-feature);
+  box-shadow: var(--gow-shadow-card);
+}
+
+.policy-main {
+  padding: clamp(30px, 5vw, 60px);
+}
+
+.policy-intro {
+  max-width: 690px;
+}
+
+.policy-intro h1,
+.policy-answer h2,
+.policy-rail h2 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  letter-spacing: -0.03em;
+}
+
+.policy-intro h1 {
+  font-size: clamp(2.55rem, 5vw, 4.25rem);
+  line-height: 1;
+}
+
+.policy-intro p {
+  max-width: 630px;
+  margin: 18px 0 0;
+  color: var(--gow-muted);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.policy-question-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 38px;
+  padding: 26px;
+  background: var(--gow-surface-raised);
+  border: 1px solid #d4e0e9;
+  border-radius: var(--gow-radius-card);
+}
+
+.policy-question-form label {
+  color: var(--gow-navy-900);
+  font-family: var(--gow-font-brand);
+  font-size: 1.08rem;
+  font-weight: 700;
+}
+
+.policy-question-form textarea {
+  width: 100%;
+  min-height: 130px;
+  padding: 15px;
+  color: var(--gow-ink);
+  background: #fff;
+  border: 1px solid #9cb1c3;
+  border-radius: var(--gow-radius-control);
+  resize: vertical;
+  line-height: 1.5;
+}
+
+.policy-question-form button {
+  justify-self: end;
+  min-height: 48px;
+  padding: 0 20px;
+  color: #fff;
+  background: var(--gow-navy-800);
+  border: 1px solid var(--gow-navy-800);
+  border-radius: var(--gow-radius-control);
+  font-weight: 800;
+}
+
+.policy-question-form button:disabled,
+.policy-question-form textarea:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.policy-form-status {
+  min-height: 1.5em;
+  margin: 0;
+  color: #9e2f25;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.policy-answer {
+  margin-top: 20px;
+  padding: 28px;
+  background: #fff;
+  border: 1px solid #d4e0e9;
+  border-radius: var(--gow-radius-card);
+}
+
+.policy-answer h2 {
+  font-size: 1.85rem;
+}
+
+.policy-answer-copy {
+  margin: 16px 0 0;
+  color: var(--gow-ink);
+  font-size: 1rem;
+  line-height: 1.65;
+}
+
+.policy-limitation {
+  margin: 18px 0 0;
+  padding: 12px 14px;
+  color: var(--gow-muted);
+  background: #edf4f8;
+  border-left: 4px solid var(--gow-blue);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.policy-citations {
+  display: grid;
+  gap: 8px;
+  margin: 22px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.policy-citations li {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 16px;
+  align-items: center;
+  padding: 13px 15px;
+  color: var(--gow-muted);
+  border: 1px solid #d5e0e8;
+  border-radius: 10px;
+  font-size: 0.8rem;
+}
+
+.policy-citations strong {
+  color: var(--gow-navy-900);
+}
+
+.policy-rail {
+  display: grid;
+  align-content: center;
+  justify-items: center;
+  padding: clamp(30px, 4vw, 52px);
+  color: var(--gow-muted);
+  background: linear-gradient(180deg, #eff6fa, #e5f0f7);
+  border-left: 1px solid #d4e0e9;
+  text-align: center;
+}
+
+.policy-rail-icon {
+  display: grid;
+  width: 74px;
+  height: 74px;
+  place-items: center;
+  color: var(--gow-gold-500);
+  background: #fff7df;
+  border: 1px solid #edd89c;
+  border-radius: 999px;
+  font-family: var(--gow-font-brand);
+  font-size: 2.5rem;
+}
+
+.policy-rail h2 {
+  max-width: 245px;
+  margin-top: 28px;
+  font-size: 2rem;
+  line-height: 1.12;
+}
+
+.policy-rail p {
+  max-width: 255px;
+  margin: 20px 0 0;
+  font-size: 0.92rem;
+  line-height: 1.6;
+}
+
 @media (max-width: 860px) {
   .foundation-grid {
     grid-template-columns: 1fr;
@@ -1002,6 +1200,20 @@ a:focus-visible {
 
   .login-page {
     width: min(100% - 28px, 1180px);
+  }
+
+  .policy-page {
+    width: min(100% - 28px, 1180px);
+  }
+
+  .policy-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .policy-rail {
+    min-height: 280px;
+    border-top: 1px solid #d4e0e9;
+    border-left: 0;
   }
 
   .workflow-steps ol {
@@ -1064,6 +1276,24 @@ a:focus-visible {
   .workspace-header {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .policy-main {
+    padding: 26px;
+  }
+
+  .policy-question-form,
+  .policy-answer {
+    padding: 20px;
+  }
+
+  .policy-question-form button {
+    width: 100%;
+  }
+
+  .policy-citations li {
+    grid-template-columns: 1fr;
+    gap: 5px;
   }
 }
 

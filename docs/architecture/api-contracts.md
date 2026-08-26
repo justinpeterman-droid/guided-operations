@@ -159,12 +159,17 @@ progress, result references, and error codes rather than provider payloads.
 
 ### Policy Expert
 
-- POST /policy/questions
+- POST /api/web/v1/policy-answer
 - GET /policy/sources/{sourceId}/citation?version=...&page=...
 
-Question input is bounded and idempotent. Answers use a structured citation
-schema. The citation endpoint returns only the authorized excerpt needed to
-verify the answer.
+The implemented answer endpoint is same-origin and session-CSRF protected even
+though it has no durable mutation: this prevents cross-site use of the private
+model/corpus allowance. It accepts a 3–2,000-character question, verifies the
+current account, retrieves only approved indexed passages for that account, and
+returns either a citation-validated answer or explicit insufficient evidence. It
+never retains the question, answer, passage, provider body, or storage key.
+Provider/retrieval failures are a generic `503`. The reader/citation-excerpt
+endpoint remains a later implementation item.
 
 ### Forms, packets, and paperwork
 

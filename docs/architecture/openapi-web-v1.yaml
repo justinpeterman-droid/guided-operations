@@ -82,6 +82,50 @@ paths:
           $ref: "#/components/responses/RequestNotAllowed"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/policy-answer:
+    post:
+      summary: Answer a policy question from verified cited evidence
+      operationId: answerPolicyQuestion
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  minLength: 3
+                  maxLength: 2000
+      responses:
+        "200":
+          description:
+            Citation-validated answer or an evidence insufficiency result.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyAnswerResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   securitySchemes:
     cookieSession:
@@ -262,6 +306,104 @@ components:
             incidentId:
               type: string
               format: uuid
+        meta:
+          $ref: "#/components/schemas/Meta"
+    SourceCitation:
+      type: object
+      additionalProperties: false
+      required:
+        - documentId
+        - documentVersionId
+        - chunkId
+        - stableKey
+        - title
+        - versionLabel
+        - sourceSha256
+        - pageStart
+        - pageEnd
+        - sectionPath
+        - excerpt
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        documentVersionId:
+          type: string
+          format: uuid
+        chunkId:
+          type: string
+          format: uuid
+        stableKey:
+          type: string
+        title:
+          type: string
+        versionLabel:
+          type: string
+        sourceSha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        pageStart:
+          type: [integer, "null"]
+        pageEnd:
+          type: [integer, "null"]
+        sectionPath:
+          type: [string, "null"]
+        excerpt:
+          type: string
+          maxLength: 1200
+    GroundedPolicyAnswer:
+      type: object
+      additionalProperties: false
+      required: [status, answer, citations, limitations]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence, conflicting_sources]
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 8000
+        citations:
+          type: array
+          maxItems: 12
+          items:
+            $ref: "#/components/schemas/SourceCitation"
+        limitations:
+          type: array
+          maxItems: 12
+          items:
+            type: string
+            maxLength: 500
+    PolicyAnswerResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [outcome]
+          properties:
+            outcome:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required: [kind, answer]
+                  properties:
+                    kind:
+                      type: string
+                      const: answer
+                    answer:
+                      $ref: "#/components/schemas/GroundedPolicyAnswer"
+                - type: object
+                  additionalProperties: false
+                  required: [kind, answer]
+                  properties:
+                    kind:
+                      type: string
+                      const: insufficient_evidence
+                    answer:
+                      $ref: "#/components/schemas/GroundedPolicyAnswer"
         meta:
           $ref: "#/components/schemas/Meta"
     ErrorResponse:
