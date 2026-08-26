@@ -7,6 +7,7 @@ export type AccountStatus = "pending" | "active" | "locked" | "disabled";
  */
 export type CurrentAccount = Readonly<{
   authUserId: string;
+  facilityId: string;
   role: AccountRole;
   status: AccountStatus;
   authVersion: number;

@@ -1,6 +1,6 @@
 begin;
 
-select plan(63);
+select plan(65);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -750,6 +750,23 @@ select throws_ok(
   $$,
   'Not authorized to create an incident',
   'a disabled account cannot create an incident through direct RPC access'
+);
+
+reset role;
+
+select ok(
+  has_function_privilege('authenticated', 'api.current_account()', 'execute')
+  and not has_function_privilege('anon', 'api.current_account()', 'execute'),
+  'only authenticated users can execute the current-account RPC'
+);
+
+select lives_ok(
+  $$
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select * from api.current_account();
+  $$,
+  'an authenticated account can retrieve only its own minimal account row'
 );
 
 reset role;
