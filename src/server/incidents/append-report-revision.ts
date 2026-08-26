@@ -33,6 +33,11 @@ type Client = Readonly<{
 export type AppendReportRevisionClient = CurrentSessionClient & Client;
 const digest = (v: string, k: string, p: string) =>
   createHmac("sha256", k).update(`${p}\u0000${v}`, "utf8").digest("hex");
+const isRevisionConflict = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "40001";
 export async function appendReportRevisionForCurrentSession(
   commandCandidate: unknown,
   client: AppendReportRevisionClient,
@@ -65,8 +70,10 @@ export async function appendReportRevisionForCurrentSession(
         "report.revise.request",
       ),
     });
-    return !r.error && typeof r.data === "number"
-      ? { kind: "revised" as const, revisionNumber: r.data }
+    if (!r.error && typeof r.data === "number")
+      return { kind: "revised" as const, revisionNumber: r.data };
+    return isRevisionConflict(r.error)
+      ? { kind: "conflict" as const }
       : { kind: "unavailable" as const };
   } catch {
     return { kind: "unavailable" as const };

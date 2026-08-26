@@ -68,4 +68,30 @@ describe("appendReportRevisionForCurrentSession", () => {
       expect.anything(),
     );
   });
+  it("reports a stale base revision as a conflict", async () => {
+    const c = client();
+    c.rpc.mockImplementation((async (n: string) =>
+      n === "current_account"
+        ? {
+            data: [
+              {
+                auth_user_id: "22222222-2222-4222-8222-222222222222",
+                facility_id: "44444444-4444-4444-8444-444444444444",
+                role: "officer",
+                status: "active",
+                auth_version: 1,
+                must_change_passcode: false,
+              },
+            ],
+            error: null,
+          }
+        : { data: null, error: { code: "40001" } }) as never);
+    await expect(
+      appendReportRevisionForCurrentSession(
+        command,
+        c,
+        "a-32-byte-fixture-idempotency-hmac-key",
+      ),
+    ).resolves.toEqual({ kind: "conflict" });
+  });
 });

@@ -185,6 +185,15 @@ and update timestamp—only to an active report collaborator or active
 same-facility administrator. It never returns report narrative, facts, facility
 scope, or account relationship metadata.
 
+The implemented `POST /api/web/v1/reports/{reportId}/revisions` is a private,
+no-store correction boundary. It requires a current authorized account,
+same-origin and session-CSRF validation, a closed bounded JSON body, and an
+idempotency key. The caller must provide the revision number they reviewed; the
+database locks the report and rejects a stale base revision with
+`409 revision_conflict`. A successful request appends a new immutable revision
+and returns only its revision number. It never updates, removes, or exposes an
+earlier report revision.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export
