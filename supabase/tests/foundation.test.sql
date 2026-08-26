@@ -1,6 +1,6 @@
 begin;
 
-select plan(71);
+select plan(75);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -841,6 +841,85 @@ select throws_ok(
   'Invalid incident list limit',
   'the incident-list RPC rejects unbounded or invalid page sizes'
 );
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.retrieve_policy_passages(text, integer)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.retrieve_policy_passages(text, integer)',
+    'execute'
+  ),
+  'only authenticated users can execute the policy-retrieval RPC'
+);
+
+select lives_ok(
+  $$
+    insert into app_private.policy_documents (
+      id, facility_id, stable_key, title, status
+    )
+    select
+      'abababab-abab-4bab-8bab-abababababab',
+      facility.id,
+      'fictional-policy-101',
+      'Fictional Training Policy 101',
+      'approved'
+    from app_private.facilities as facility
+    limit 1;
+
+    insert into app_private.policy_document_versions (
+      id, document_id, version_label, source_sha256, storage_path, media_type,
+      page_count, approved_at, indexed_at
+    ) values (
+      'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      'abababab-abab-4bab-8bab-abababababab',
+      'fictional-v1',
+      repeat('a', 64),
+      'opaque-fixture/' || repeat('a', 64) || '.pdf',
+      'application/pdf',
+      1,
+      statement_timestamp(),
+      statement_timestamp()
+    );
+
+    insert into app_private.policy_chunks (
+      id, document_version_id, ordinal, page_start, page_end, section_path,
+      content, content_sha256
+    ) values (
+      'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
+      'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      0,
+      1,
+      1,
+      'Fictional procedure',
+      'Fictional procedure requires a documented review.',
+      repeat('b', 64)
+    );
+  $$,
+  'a fictional approved and indexed policy chunk can be staged for retrieval tests'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '', true);
+
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'an authenticated request without a JWT subject receives no policy passages'
+);
+
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  1,
+  'an active current account receives only its approved indexed policy passage'
+);
+
+reset role;
 
 select * from finish();
 rollback;
