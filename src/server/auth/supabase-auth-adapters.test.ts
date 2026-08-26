@@ -4,9 +4,12 @@ vi.mock("server-only", () => ({}));
 
 const createUser = vi.fn();
 const deleteUser = vi.fn();
+const signInWithPassword = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: vi.fn(() => ({ auth: { admin: { createUser, deleteUser } } })),
+  createClient: vi.fn(() => ({
+    auth: { admin: { createUser, deleteUser }, signInWithPassword },
+  })),
 }));
 vi.mock("@/lib/env/auth-server", () => ({
   getAuthServerEnvironment: vi.fn(() => ({ SUPABASE_SECRET_KEY: "secret" })),
@@ -14,13 +17,17 @@ vi.mock("@/lib/env/auth-server", () => ({
 vi.mock("@/lib/env/supabase-public", () => ({
   getPublicSupabaseEnvironment: vi.fn(() => ({
     NEXT_PUBLIC_SUPABASE_URL: "https://example.invalid",
+    NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable-key",
   })),
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn(),
 }));
 
-import { createSupabaseAuthUserProvisioner } from "./supabase-auth-adapters";
+import {
+  createSupabaseAdministratorPasscodeVerifier,
+  createSupabaseAuthUserProvisioner,
+} from "./supabase-auth-adapters";
 
 describe("createSupabaseAuthUserProvisioner", () => {
   it("uses the isolated Auth admin API to create a confirmed synthetic alias", async () => {
@@ -61,5 +68,45 @@ describe("createSupabaseAuthUserProvisioner", () => {
     await expect(provisioner.deleteUser("fixture-user")).rejects.toThrow(
       "Unable to remove pending Auth user.",
     );
+  });
+});
+
+describe("createSupabaseAdministratorPasscodeVerifier", () => {
+  it("uses an isolated provider client and accepts only the matching administrator", async () => {
+    signInWithPassword.mockResolvedValue({
+      data: { user: { id: "fixture-user" } },
+      error: null,
+    });
+    const verifier = createSupabaseAdministratorPasscodeVerifier({
+      findActiveAlias: vi.fn().mockResolvedValue("private@example.invalid"),
+    });
+
+    await expect(
+      verifier.verify("fixture-user", "FreshPasscode9!"),
+    ).resolves.toBe(true);
+    expect(signInWithPassword).toHaveBeenCalledWith({
+      email: "private@example.invalid",
+      password: "FreshPasscode9!",
+    });
+  });
+
+  it("fails closed for a missing alias, provider error, or mismatched account", async () => {
+    const missing = createSupabaseAdministratorPasscodeVerifier({
+      findActiveAlias: vi.fn().mockResolvedValue(null),
+    });
+    await expect(
+      missing.verify("fixture-user", "FreshPasscode9!"),
+    ).resolves.toBe(false);
+
+    signInWithPassword.mockResolvedValue({
+      data: { user: { id: "other-user" } },
+      error: null,
+    });
+    const mismatched = createSupabaseAdministratorPasscodeVerifier({
+      findActiveAlias: vi.fn().mockResolvedValue("private@example.invalid"),
+    });
+    await expect(
+      mismatched.verify("fixture-user", "FreshPasscode9!"),
+    ).resolves.toBe(false);
   });
 });

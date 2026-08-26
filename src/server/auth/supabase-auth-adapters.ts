@@ -1,6 +1,7 @@
 import "server-only";
 
 import { createClient } from "@supabase/supabase-js";
+import postgres from "postgres";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
@@ -8,6 +9,40 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 import type { PasswordAuthenticator } from "./employee-sign-in";
 import type { AuthUserProvisioner } from "./first-admin-bootstrap";
+import type { AdministratorPasscodeVerifier } from "./request-admin-step-up";
+
+type ActiveAliasLookup = Readonly<{
+  findActiveAlias(authUserId: string): Promise<string | null>;
+}>;
+
+let privateAliasLookupSql: ReturnType<typeof postgres> | undefined;
+
+function createActiveAliasLookup(): ActiveAliasLookup {
+  if (!privateAliasLookupSql) {
+    privateAliasLookupSql = postgres(
+      getAuthServerEnvironment().SUPABASE_DB_URL,
+      {
+        max: 1,
+        prepare: false,
+        idle_timeout: 5,
+      },
+    );
+  }
+  const sql = privateAliasLookupSql;
+
+  return {
+    async findActiveAlias(authUserId) {
+      const rows = await sql<ReadonlyArray<{ sign_in_alias: string }>>`
+        select sign_in_alias
+        from app_private.user_accounts
+        where auth_user_id = ${authUserId}::uuid
+          and status = 'active'
+        limit 1
+      `;
+      return rows.at(0)?.sign_in_alias ?? null;
+    },
+  };
+}
 
 /** Server-only administrative client. Do not use for routine user requests. */
 export function createSupabaseAuthAdminClient() {
@@ -64,6 +99,39 @@ export function createSupabaseAuthUserProvisioner(): AuthUserProvisioner {
     async deleteUser(authUserId) {
       const { error } = await client.auth.admin.deleteUser(authUserId);
       if (error) throw new Error("Unable to remove pending Auth user.");
+    },
+  };
+}
+
+/**
+ * Rechecks an administrator's own passcode through an isolated, non-persistent
+ * provider client. It never changes the browser's existing session and never
+ * exposes the synthetic sign-in alias outside this server-only adapter.
+ */
+export function createSupabaseAdministratorPasscodeVerifier(
+  aliasLookup: ActiveAliasLookup = createActiveAliasLookup(),
+): AdministratorPasscodeVerifier {
+  const environment = getPublicSupabaseEnvironment();
+  const client = createClient(
+    environment.NEXT_PUBLIC_SUPABASE_URL,
+    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    { auth: { autoRefreshToken: false, persistSession: false } },
+  );
+
+  return {
+    async verify(authUserId, passcode) {
+      try {
+        const alias = await aliasLookup.findActiveAlias(authUserId);
+        if (!alias) return false;
+
+        const { data, error } = await client.auth.signInWithPassword({
+          email: alias,
+          password: passcode,
+        });
+        return !error && data.user?.id === authUserId;
+      } catch {
+        return false;
+      }
     },
   };
 }
