@@ -5,6 +5,7 @@ import postgres from "postgres";
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
 import type { InvitedAccountStore } from "./invite-account";
+import type { AccountDisableStore } from "./disable-account";
 
 let sqlClient: ReturnType<typeof postgres> | undefined;
 
@@ -30,6 +31,16 @@ export function createInvitedAccountStore(): InvitedAccountStore {
     },
     async abandon(authUserId, actorAuthUserId) {
       await client`select app_private.abandon_invited_account(${actorAuthUserId}::uuid,${authUserId}::uuid)`;
+    },
+  };
+}
+
+/** Server-only adapter for the separately audited account-disablement routine. */
+export function createAccountDisableStore(): AccountDisableStore {
+  const client = sql();
+  return {
+    async disable(actorAuthUserId, targetAuthUserId) {
+      await client`select app_private.disable_account(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid)`;
     },
   };
 }
