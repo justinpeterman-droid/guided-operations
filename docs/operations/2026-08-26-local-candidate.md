@@ -66,3 +66,16 @@ desktop environment ended a temporary production server before Chromium could
 reach it. The test configuration now accepts an explicit `PLAYWRIGHT_BASE_URL`
 for a clean Preview or isolated current-build target. A browser pass remains a
 required gate, not an inferred result.
+
+## Browser-check configuration follow-up — 2026-08-26
+
+A fresh isolated Chromium run was attempted after replacing the stale local
+development server. Both `/` and the new anonymous `/account` boundary stopped
+at the session proxy because the ignored local `.env.local` lacks the required
+public `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`
+values. The Vercel Preview has its scoped values and builds successfully, but
+that does not make a local browser pass. The public-value inventory in
+[environments-and-secrets.md](environments-and-secrets.md) is the required local
+setup contract; values must be added through the approved local secret workflow
+and never committed. The anonymous Account browser assertion remains in
+`tests/e2e/foundation.spec.ts` and is pending that setup.
