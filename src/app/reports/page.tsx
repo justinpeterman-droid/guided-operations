@@ -53,6 +53,9 @@ export default async function ReportsPage() {
           <Link className="reports-home-link" href="/">
             Home
           </Link>
+          <Link className="reports-home-link" href="/account">
+            Account
+          </Link>
           <SignOutButton />
         </div>
       </header>

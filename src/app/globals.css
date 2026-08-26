@@ -805,6 +805,84 @@ a:focus-visible {
   line-height: 1.4;
 }
 
+.account-session-controls {
+  max-width: 700px;
+  padding: 28px;
+  color: var(--gow-navy-900);
+  background: #fff;
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-card);
+  box-shadow: var(--gow-shadow-soft);
+}
+
+.account-session-controls h2 {
+  margin: 5px 0 10px;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 1.35rem;
+}
+
+.account-session-controls > p:not(.eyebrow):not(.account-session-message) {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.account-session-actions,
+.account-session-confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.account-session-actions {
+  margin-top: 20px;
+}
+
+.account-session-actions button {
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--gow-navy-950);
+  background: #fff;
+  border: 1px solid var(--gow-navy-800);
+  border-radius: var(--gow-radius-control);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.83rem;
+  font-weight: 800;
+}
+
+.account-session-actions button:hover:not(:disabled) {
+  background: #edf4f8;
+}
+
+.account-session-actions button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.account-session-confirm {
+  width: 100%;
+  padding: 14px;
+  background: #fff6dc;
+  border-left: 4px solid var(--gow-gold-400);
+}
+
+.account-session-confirm p,
+.account-session-message {
+  width: 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.account-session-message {
+  min-height: 1.2em;
+  margin-top: 12px;
+  color: #9e2f25;
+  font-weight: 700;
+}
+
 .reports-intro {
   max-width: 700px;
   padding-block: 64px 36px;
