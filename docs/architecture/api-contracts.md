@@ -162,6 +162,15 @@ the provider output against those facts, and stores an immutable candidate
 before returning only an opaque candidate ID. It is not a final-report endpoint
 and it never returns generated narrative or source facts in the response.
 
+The implemented `POST /api/web/v1/report-drafts/{candidateId}/finalize` is a
+separate versioned, private, no-store boundary. It requires the same current
+account, same-origin, session-CSRF, closed-JSON, and bounded-retry protections,
+plus an explicit `reviewedByOfficer: true` attestation and a replacement
+narrative supplied by the officer. It creates the first immutable report
+revision with candidate provenance and returns only an opaque report ID. It does
+not accept AI output as a final report and it does not let a client choose the
+report actor, facility, or source revision.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export

@@ -213,6 +213,11 @@ Pause and report a blocker instead of guessing when work requires:
       controls, and stores the review-only candidate before returning success
       (local unit and PostgreSQL checks pass; hosted CI remains a per-commit
       review gate).
+- [x] Add the separate human-only report-finalization boundary: it requires an
+      explicit officer review attestation and replacement narrative, creates an
+      immutable first report revision with candidate provenance, and returns
+      only an opaque report ID (local unit and PostgreSQL checks pass; hosted CI
+      remains a per-commit review gate).
 - [ ] Implement append-only revisions, restore-as-new-revision, concurrency,
       idempotency, and truthful persistence/conflict states.
 - [ ] Implement deterministic DOCX and print output.
