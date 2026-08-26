@@ -8,18 +8,27 @@ import type { AuthAliasLookup } from "./employee-sign-in";
 
 type AliasRow = Readonly<{ sign_in_alias: string }>;
 
+let privateAuthSql: ReturnType<typeof postgres> | undefined;
+
+function getPrivateAuthSql(): ReturnType<typeof postgres> {
+  if (privateAuthSql) return privateAuthSql;
+
+  const environment = getAuthServerEnvironment();
+  privateAuthSql = postgres(environment.SUPABASE_DB_URL, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 5,
+  });
+  return privateAuthSql;
+}
+
 /**
  * Direct server-only database lookup. The private schema remains unavailable
  * through the Data API, and this adapter returns only the synthetic alias
  * required for the following Auth password exchange.
  */
 export function createPrivateAuthAliasLookup(): AuthAliasLookup {
-  const environment = getAuthServerEnvironment();
-  const sql = postgres(environment.SUPABASE_DB_URL, {
-    max: 1,
-    prepare: false,
-    idle_timeout: 5,
-  });
+  const sql = getPrivateAuthSql();
 
   return {
     async findActiveAlias(employeeLookupDigest) {

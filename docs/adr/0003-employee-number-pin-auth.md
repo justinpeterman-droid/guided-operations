@@ -183,6 +183,20 @@ the required SSR cookie lifecycle, recovery/email absence, rate limits,
 enumeration timing bounds, Auth-admin isolation, bootstrap ceremony, or RLS
 authorization matrix.
 
+## Implementation evidence — 2026-08-26
+
+The repository now contains a server-only guarded sign-in service and private
+PostgreSQL attempt-store adapter. Before an alias lookup, it evaluates account,
+device, network, and global windows using purpose-separated HMAC digests. It
+records only opaque subject digests and an `allowed`, `denied`, or `failed`
+outcome in `app_private.auth_attempt_events`. Focused unit tests cover all four
+dimensions, generic denials, and success/failure recording.
+
+This is implementation evidence only: there is no enabled browser sign-in route,
+account, public recovery path, or operational data. Hosted integration, timing
+measurement, trusted proxy/device-subject derivation, SSR cookie lifecycle,
+reset/bootstrap, and authorization/RLS negative tests remain open.
+
 ## Threat model — 2026-08-25
 
 This model covers the no-data hobby foundation. It does not authorize real
