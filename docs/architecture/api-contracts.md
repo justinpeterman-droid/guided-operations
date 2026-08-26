@@ -258,8 +258,16 @@ and `api.get_count_sheet(record_id)`. They are not browser routes yet. An active
 officer can receive only the sheet for their administrator-assigned shift;
 active same-facility administrators can oversee all facility shifts. Both
 functions return no rows for a missing, inactive, cross-facility, or
-unauthorized request. Count Sheet creation and revision-save endpoints remain
-unimplemented until the server-side closed structure/payload validator is added.
+unauthorized request.
+
+`POST /api/web/v1/count-sheets` is the protected fictional Count Sheet save
+boundary. It requires a current session, same-origin request, session CSRF,
+closed JSON body, a bounded idempotency key, and base revision number. The
+server validates the structure and values; the database revalidates the closed
+shape and derives totals. It creates revision one or appends exactly the next
+immutable revision for the current officer's assigned shift. A stale base
+revision returns `409 revision_conflict`; it never overwrites newer work.
+The route does not accept a facility, account, or shift from the browser.
 
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.

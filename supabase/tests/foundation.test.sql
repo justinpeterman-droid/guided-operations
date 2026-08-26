@@ -1,6 +1,6 @@
 begin;
 
-select plan(119);
+select plan(123);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1465,6 +1465,78 @@ select is(
   ),
   0,
   'an active officer cannot read another shift Count Sheet values'
+);
+
+reset role;
+
+select lives_ok(
+  $$
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+    select *
+    from api.save_count_sheet(
+      date '2026-08-26',
+      0,
+      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
+      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 2}}, "in_housing": {"1": 8}, "operational": {"on_site": 10}}',
+      'Fictional initial shared shift count.',
+      repeat('c', 64),
+      repeat('d', 64)
+    );
+  $$,
+  'an active officer can create the first Count Sheet for their own shift'
+);
+
+reset role;
+
+select is(
+  (
+    select revision.validation->>'reconciled'
+    from app_private.paperwork_records as record
+    join app_private.paperwork_revisions as revision
+      on revision.paperwork_record_id = record.id
+      and revision.revision_number = record.current_revision_number
+    where record.work_date = date '2026-08-26'
+      and record.shift_code = 'B'
+  ),
+  'true',
+  'the Count Sheet reconciliation is derived from entered values in the database'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select lives_ok(
+  $$
+    select *
+    from api.save_count_sheet(
+      date '2026-08-26',
+      1,
+      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
+      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 1}}, "in_housing": {"1": 9}, "operational": {"on_site": 10}}',
+      'Fictional shift correction.',
+      repeat('e', 64),
+      repeat('f', 64)
+    );
+  $$,
+  'an active officer can append the next revision for their own shift'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.save_count_sheet(
+      date '2026-08-26',
+      1,
+      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
+      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 1}}, "in_housing": {"1": 9}, "operational": {"on_site": 10}}',
+      'Fictional stale correction.',
+      repeat('1', 64),
+      repeat('2', 64)
+    );
+  $$,
+  'Count Sheet revision conflict',
+  'a stale Count Sheet save cannot overwrite a newer revision'
 );
 
 reset role;
