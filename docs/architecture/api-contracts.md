@@ -179,6 +179,12 @@ a fresh session CSRF token, requires an officer-reviewed attestation and
 editable replacement narrative, then redirects only to the opaque report ID
 returned by finalization.
 
+The server-only `api.list_reports` RPC returns a bounded summary list—opaque
+report ID, incident display identifiers, report type/status, current revision,
+and update timestamp—only to an active report collaborator or active
+same-facility administrator. It never returns report narrative, facts, facility
+scope, or account relationship metadata.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export

@@ -1,6 +1,6 @@
 begin;
 
-select plan(91);
+select plan(94);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -899,6 +899,24 @@ select lives_ok(
 );
 reset role;
 
+select ok(
+  has_function_privilege('authenticated', 'api.list_reports(integer)', 'execute')
+  and not has_function_privilege('anon', 'api.list_reports(integer)', 'execute'),
+  'only authenticated users can execute the report-list RPC'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select ok(
+  exists (
+    select 1
+    from api.list_reports(50)
+    where report_id = current_setting('app.test.report_id')::uuid
+  ),
+  'an active report owner can list the authorized finalized report summary'
+);
+reset role;
+
 select throws_ok(
   $$
     select set_config(
@@ -1112,6 +1130,12 @@ select is(
   ),
   0,
   'an unrelated active officer cannot read another account’s report through direct RPC access'
+);
+
+select is(
+  (select count(*)::integer from api.list_reports(50)),
+  0,
+  'an unrelated active officer cannot list another account’s reports through direct RPC access'
 );
 
 reset role;
