@@ -1,6 +1,6 @@
 begin;
 
-select plan(86);
+select plan(88);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -852,6 +852,31 @@ select lives_ok(
   'an authorized owner can read one immutable review-only report draft candidate'
 );
 
+reset role;
+
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.finalize_report_draft_candidate(uuid, text, text, text)',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.finalize_report_draft_candidate(uuid, text, text, text)',
+    'execute'
+  ),
+  'only authenticated users can explicitly finalize a reviewed report draft'
+);
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select lives_ok(
+  $$ select api.finalize_report_draft_candidate(
+    current_setting('app.test.candidate_id')::uuid,
+    'Fictional human-reviewed final narrative.', repeat('b', 64), repeat('c', 64)
+  ) $$,
+  'an authorized human can create the first immutable report revision from a review-only candidate'
+);
 reset role;
 
 select throws_ok(
