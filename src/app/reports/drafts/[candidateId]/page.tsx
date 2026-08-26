@@ -3,6 +3,8 @@ import Link from "next/link";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportDraftCandidateForCurrentSession } from "@/server/ai/get-report-draft-candidate";
 
+import { ReportFinalizationForm } from "./report-finalization-form";
+
 export const dynamic = "force-dynamic";
 
 export default async function ReportDraftReviewPage({
@@ -39,8 +41,8 @@ export default async function ReportDraftReviewPage({
         <h1 id="draft-title">Review every drafted statement.</h1>
         <p>
           This is not a submitted report. Each paragraph names the confirmed
-          fact IDs it used. Edit and final-report actions remain a later,
-          separately reviewed workflow.
+          fact IDs it used. You may edit the narrative and explicitly create a
+          final report only after your review.
         </p>
       </section>
 
@@ -72,8 +74,14 @@ export default async function ReportDraftReviewPage({
         <aside className="draft-review-warning" role="note">
           <strong>Before anything becomes final:</strong> compare each sentence
           to the confirmed facts, keep missing information visible, and make
-          your own corrections. This page cannot submit a report.
+          your own corrections.
         </aside>
+        <ReportFinalizationForm
+          candidateId={result.candidate.candidateId}
+          initialNarrative={result.candidate.paragraphs
+            .map((paragraph) => paragraph.text)
+            .join("\n\n")}
+        />
       </section>
     </main>
   );

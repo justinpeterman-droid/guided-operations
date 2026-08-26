@@ -174,7 +174,10 @@ report actor, facility, or source revision.
 The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
 RPC rather than a browser table query. It returns only the current immutable
 revision to an active report collaborator or active same-facility administrator;
-absent and unauthorized reports are concealed.
+absent and unauthorized reports are concealed. The draft review screen retrieves
+a fresh session CSRF token, requires an officer-reviewed attestation and
+editable replacement narrative, then redirects only to the opaque report ID
+returned by finalization.
 
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
