@@ -3,6 +3,7 @@ import Link from "next/link";
 import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 import { AccountDisableControl } from "./account-disable-control";
 import { AccountInvitationForm } from "./account-invitation-form";
+import { AccountPasscodeResetControl } from "./account-passcode-reset-control";
 import { AccountUnlockControl } from "./account-unlock-control";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
@@ -82,10 +83,16 @@ export default async function AdminAccountsPage() {
                   </p>
                 </div>
                 {account.status === "active" ? (
-                  <AccountDisableControl
-                    accountId={account.accountId}
-                    displayName={account.displayName}
-                  />
+                  <div className="account-session-actions">
+                    <AccountPasscodeResetControl
+                      accountId={account.accountId}
+                      displayName={account.displayName}
+                    />
+                    <AccountDisableControl
+                      accountId={account.accountId}
+                      displayName={account.displayName}
+                    />
+                  </div>
                 ) : account.status === "locked" ? (
                   <AccountUnlockControl
                     accountId={account.accountId}

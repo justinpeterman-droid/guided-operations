@@ -7,6 +7,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import type { InvitedAccountStore } from "./invite-account";
 import type { AccountDisableStore } from "./disable-account";
 import type { AccountUnlockStore } from "./unlock-account";
+import type { AccountPasscodeResetStore } from "./reset-account-passcode";
 
 let sqlClient: ReturnType<typeof postgres> | undefined;
 
@@ -52,6 +53,20 @@ export function createAccountUnlockStore(): AccountUnlockStore {
   return {
     async unlock(actorAuthUserId, targetAuthUserId) {
       await client`select app_private.unlock_account(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid)`;
+    },
+  };
+}
+
+/** Server-only adapter for the separately audited passcode-reset preparation. */
+export function createAccountPasscodeResetStore(): AccountPasscodeResetStore {
+  const client = sql();
+  return {
+    async prepare(
+      actorAuthUserId,
+      targetAuthUserId,
+      temporaryPasscodeExpiresAt,
+    ) {
+      await client`select app_private.prepare_account_passcode_reset(${actorAuthUserId}::uuid, ${targetAuthUserId}::uuid, ${temporaryPasscodeExpiresAt})`;
     },
   };
 }

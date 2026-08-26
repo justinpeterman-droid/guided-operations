@@ -10,6 +10,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { PasswordAuthenticator } from "./employee-sign-in";
 import type { AuthUserProvisioner } from "./first-admin-bootstrap";
 import type { AdministratorPasscodeVerifier } from "./request-admin-step-up";
+import type { AuthPasswordResetter } from "./reset-account-passcode";
 
 type ActiveAliasLookup = Readonly<{
   findActiveAlias(authUserId: string): Promise<string | null>;
@@ -99,6 +100,19 @@ export function createSupabaseAuthUserProvisioner(): AuthUserProvisioner {
     async deleteUser(authUserId) {
       const { error } = await client.auth.admin.deleteUser(authUserId);
       if (error) throw new Error("Unable to remove pending Auth user.");
+    },
+  };
+}
+
+/** Isolated Auth-admin adapter for a private administrator-issued reset only. */
+export function createSupabaseAuthPasswordResetter(): AuthPasswordResetter {
+  const client = createSupabaseAuthAdminClient();
+  return {
+    async updatePassword(authUserId, passcode) {
+      const { error } = await client.auth.admin.updateUserById(authUserId, {
+        password: passcode,
+      });
+      return !error;
     },
   };
 }

@@ -27,7 +27,7 @@ vi.mock("@/server/auth/list-admin-accounts", () => ({
 import AdminAccountsPage from "./page";
 
 describe("AdminAccountsPage", () => {
-  it("renders the protected list with a fresh-confirmation disable control", async () => {
+  it("renders the protected list with fresh-confirmation account controls", async () => {
     render(await AdminAccountsPage());
 
     expect(
@@ -37,6 +37,9 @@ describe("AdminAccountsPage", () => {
     expect(screen.getByText("Employee ending 42")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Disable account" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Reset passcode" }),
     ).toBeInTheDocument();
   });
 });
