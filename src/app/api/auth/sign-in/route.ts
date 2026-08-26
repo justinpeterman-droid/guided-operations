@@ -6,8 +6,9 @@ import { AUTH_RATE_LIMIT_POLICY } from "@/server/auth/auth-rate-limit-policy";
 import { signInWithEmployeeNumberGuarded } from "@/server/auth/guarded-employee-sign-in";
 import { createAuthRequestRateLimitSubjects } from "@/server/auth/request-rate-limit-subjects";
 import {
+  authenticateValidatedSignInRequest,
   disabledSignInEndpoint,
-  handleSignInEndpoint,
+  validateSignInEndpointRequest,
 } from "@/server/auth/sign-in-endpoint";
 import { createServerEmployeeSignInDependencies } from "@/server/auth/server-employee-sign-in";
 
@@ -20,6 +21,12 @@ export async function POST(request: NextRequest): Promise<Response> {
   }
 
   const runtimeEnvironment = getRuntimeEnvironment();
+  const validation = await validateSignInEndpointRequest(
+    request,
+    runtimeEnvironment.APP_ORIGIN,
+  );
+  if (!validation.ok) return validation.response;
+
   const subjects = createAuthRequestRateLimitSubjects(
     request.headers,
     authEnvironment.EMPLOYEE_LOOKUP_PEPPER,
@@ -27,9 +34,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   const dependencies = await createServerEmployeeSignInDependencies(
     AUTH_RATE_LIMIT_POLICY,
   );
-  const result = await handleSignInEndpoint(
-    request,
-    runtimeEnvironment.APP_ORIGIN,
+  const result = await authenticateValidatedSignInRequest(
+    validation.input,
     subjects,
     (signInRequest) =>
       signInWithEmployeeNumberGuarded(signInRequest, dependencies),

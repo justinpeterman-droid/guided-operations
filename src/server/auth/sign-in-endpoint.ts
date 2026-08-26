@@ -26,6 +26,12 @@ export type SignInEndpointResult = Readonly<{
   deviceCookieValue?: string;
 }>;
 
+export type ValidatedSignInInput = z.infer<typeof signInBodySchema>;
+
+export type SignInRequestValidation =
+  | Readonly<{ ok: true; input: ValidatedSignInInput }>
+  | Readonly<{ ok: false; response: Response }>;
+
 function genericFailure(status: number): Response {
   return Response.json(
     { message: GENERIC_SIGN_IN_FAILURE },
@@ -40,33 +46,41 @@ export function disabledSignInEndpoint(): SignInEndpointResult {
 }
 
 /**
- * Validates the untrusted HTTP request. It intentionally exposes the same
- * failure text for invalid bodies, cross-site requests, and bad credentials.
+ * Validates the untrusted HTTP request before any database or provider
+ * dependency is opened. It intentionally exposes the same failure text for
+ * invalid bodies, cross-site requests, and bad credentials.
  */
-export async function handleSignInEndpoint(
+export async function validateSignInEndpointRequest(
   request: Request,
   applicationOrigin: string,
-  subjects: RequestSubjects,
-  authenticate: SignInEndpointAuthenticator,
-): Promise<SignInEndpointResult> {
+): Promise<SignInRequestValidation> {
   if (!isTrustedMutationRequest(request, applicationOrigin)) {
-    return { response: genericFailure(403) };
+    return { ok: false, response: genericFailure(403) };
   }
 
   if (!request.headers.get("content-type")?.startsWith("application/json")) {
-    return { response: genericFailure(400) };
+    return { ok: false, response: genericFailure(400) };
   }
 
   let body: unknown;
   try {
     body = await request.json();
   } catch {
-    return { response: genericFailure(400) };
+    return { ok: false, response: genericFailure(400) };
   }
   const parsed = signInBodySchema.safeParse(body);
-  if (!parsed.success) return { response: genericFailure(400) };
+  if (!parsed.success) return { ok: false, response: genericFailure(400) };
 
-  const result = await authenticate({ ...parsed.data, ...subjects });
+  return { ok: true, input: parsed.data };
+}
+
+export async function authenticateValidatedSignInRequest(
+  input: ValidatedSignInInput,
+  subjects: RequestSubjects,
+  authenticate: SignInEndpointAuthenticator,
+): Promise<SignInEndpointResult> {
+  const result = await authenticate({ ...input, ...subjects });
+
   if (result.status !== "signed_in") {
     return {
       response: genericFailure(401),
@@ -85,4 +99,23 @@ export async function handleSignInEndpoint(
       ? { deviceCookieValue: subjects.deviceCookieValue }
       : {}),
   };
+}
+
+export async function handleSignInEndpoint(
+  request: Request,
+  applicationOrigin: string,
+  subjects: RequestSubjects,
+  authenticate: SignInEndpointAuthenticator,
+): Promise<SignInEndpointResult> {
+  const validation = await validateSignInEndpointRequest(
+    request,
+    applicationOrigin,
+  );
+  if (!validation.ok) return { response: validation.response };
+
+  return authenticateValidatedSignInRequest(
+    validation.input,
+    subjects,
+    authenticate,
+  );
 }
