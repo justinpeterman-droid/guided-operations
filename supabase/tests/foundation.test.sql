@@ -1,6 +1,6 @@
 begin;
 
-select plan(125);
+select plan(128);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -39,6 +39,35 @@ select has_table(
   'app_private',
   'auth_attempt_events',
   'private authentication attempt events table exists'
+);
+select has_table(
+  'app_private',
+  'admin_step_ups',
+  'private administrator step-up proofs table exists'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_proc as procedure
+    join pg_namespace as namespace on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'app_private'
+      and procedure.proname = 'issue_admin_step_up'
+      and procedure.prosecdef
+  ),
+  'administrator step-up issuance stays in a private security-definer routine'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_proc as procedure
+    join pg_namespace as namespace on namespace.oid = procedure.pronamespace
+    where namespace.nspname = 'app_private'
+      and procedure.proname = 'consume_admin_step_up'
+      and procedure.prosecdef
+  ),
+  'administrator step-up consumption is an atomic private routine'
 );
 
 select is(
