@@ -167,9 +167,9 @@ separate versioned, private, no-store boundary. It requires the same current
 account, same-origin, session-CSRF, closed-JSON, and bounded-retry protections,
 plus an explicit `reviewedByOfficer: true` attestation and a replacement
 narrative supplied by the officer. It creates the first immutable report
-revision with candidate provenance and returns only an opaque report ID. It does
-not accept AI output as a final report and it does not let a client choose the
-report actor, facility, or source revision.
+revision with candidate provenance, marks the report `complete`, and returns
+only an opaque report ID. It does not accept AI output as a final report and it
+does not let a client choose the report actor, facility, or source revision.
 
 The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
 RPC rather than a browser table query. It returns only the current immutable

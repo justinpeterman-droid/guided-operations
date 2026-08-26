@@ -1,6 +1,6 @@
 begin;
 
-select plan(94);
+select plan(95);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -881,8 +881,14 @@ reset role;
 
 select set_config(
   'app.test.report_id',
-  (select id::text from app_private.reports limit 1),
+  (select id::text from app_private.reports order by created_at desc, id desc limit 1),
   true
+);
+
+select is(
+  (select status::text from app_private.reports where id = current_setting('app.test.report_id')::uuid),
+  'complete',
+  'explicit human finalization creates a complete report rather than leaving generated material in draft state'
 );
 
 select ok(
