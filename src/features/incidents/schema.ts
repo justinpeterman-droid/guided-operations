@@ -54,6 +54,15 @@ export const incidentRevisionInputSchema = z
   })
   .strict()
   .superRefine((revision, context) => {
+    const fieldNoteIds = new Set(revision.fieldNotes.map((note) => note.id));
+    if (fieldNoteIds.size !== revision.fieldNotes.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Field note identifiers must be unique.",
+        path: ["fieldNotes"],
+      });
+    }
+
     const factIds = revision.reviewedFacts.map((fact) => fact.id);
     if (new Set(factIds).size !== factIds.length) {
       context.addIssue({
@@ -62,6 +71,25 @@ export const incidentRevisionInputSchema = z
         path: ["reviewedFacts"],
       });
     }
+
+    revision.reviewedFacts.forEach((fact, factIndex) => {
+      if (fact.state !== "confirmed") return;
+      fact.sourceNoteIds.forEach((sourceNoteId, sourceNoteIndex) => {
+        if (!fieldNoteIds.has(sourceNoteId)) {
+          context.addIssue({
+            code: "custom",
+            message:
+              "A confirmed fact must reference a field note in this revision.",
+            path: [
+              "reviewedFacts",
+              factIndex,
+              "sourceNoteIds",
+              sourceNoteIndex,
+            ],
+          });
+        }
+      });
+    });
   });
 
 /**

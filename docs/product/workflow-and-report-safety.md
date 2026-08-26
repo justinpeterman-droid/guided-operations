@@ -57,6 +57,10 @@ base incident revision, confirmed values, explicit unknown/not-applicable
 values, and extraction/rule version. A bulk “accept” action must still make the
 reviewed scope clear.
 
+**SAFE-012a — Revision-local provenance.** Each confirmed fact references one or
+more field notes in the same immutable incident revision. A note from a
+different revision cannot provide silent provenance.
+
 **SAFE-013 — Unknown remains unknown.** Missing values remain blank or
 explicitly Unknown/Not applicable according to the target form. The system
 cannot infer a person, time, location, quantity, charge, injury, evidence

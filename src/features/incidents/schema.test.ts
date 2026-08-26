@@ -87,6 +87,29 @@ describe("incident revision contract", () => {
       false,
     );
   });
+
+  it("rejects duplicate notes and fact provenance from another revision", () => {
+    expect(
+      incidentRevisionInputSchema.safeParse({
+        ...incidentRevision,
+        fieldNotes: [
+          ...incidentRevision.fieldNotes,
+          incidentRevision.fieldNotes[0],
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      incidentRevisionInputSchema.safeParse({
+        ...incidentRevision,
+        reviewedFacts: [
+          {
+            ...incidentRevision.reviewedFacts[0],
+            sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
+          },
+        ],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe("report draft contract", () => {
