@@ -5,6 +5,7 @@ import { z } from "zod";
 const sessionClaimsSchema = z
   .object({
     sub: z.uuid(),
+    session_id: z.uuid(),
     app_metadata: z
       .object({ auth_version: z.number().int().positive() })
       .passthrough(),
@@ -13,6 +14,7 @@ const sessionClaimsSchema = z
 
 export type SessionAuthority = Readonly<{
   authUserId: string;
+  sessionId: string;
   authVersion: number;
 }>;
 
@@ -29,6 +31,7 @@ export function parseSessionAuthority(
 
   return {
     authUserId: parsed.data.sub,
+    sessionId: parsed.data.session_id,
     authVersion: parsed.data.app_metadata.auth_version,
   };
 }

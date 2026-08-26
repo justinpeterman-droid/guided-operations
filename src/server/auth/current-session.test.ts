@@ -28,6 +28,7 @@ describe("authorizeCurrentSession", () => {
       authorizeCurrentSession(
         client({
           sub: accountRow.auth_user_id,
+          session_id: "33333333-3333-4333-8333-333333333333",
           app_metadata: { auth_version: 3 },
         }),
       ),
@@ -38,14 +39,27 @@ describe("authorizeCurrentSession", () => {
   });
 
   it.each([
-    client({ sub: accountRow.auth_user_id, app_metadata: { auth_version: 2 } }),
+    client({
+      sub: accountRow.auth_user_id,
+      session_id: "33333333-3333-4333-8333-333333333333",
+      app_metadata: { auth_version: 2 },
+    }),
     client({
       sub: "33333333-3333-4333-8333-333333333333",
+      session_id: "44444444-4444-4444-8444-444444444444",
       app_metadata: { auth_version: 3 },
     }),
-    client({ sub: accountRow.auth_user_id, app_metadata: {} }),
+    client({
+      sub: accountRow.auth_user_id,
+      session_id: "33333333-3333-4333-8333-333333333333",
+      app_metadata: {},
+    }),
     client(
-      { sub: accountRow.auth_user_id, app_metadata: { auth_version: 3 } },
+      {
+        sub: accountRow.auth_user_id,
+        session_id: "33333333-3333-4333-8333-333333333333",
+        app_metadata: { auth_version: 3 },
+      },
       [],
     ),
   ])(

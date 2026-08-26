@@ -44,6 +44,7 @@ function client(
         data: {
           claims: options.claims ?? {
             sub: accountRow.auth_user_id,
+            session_id: "55555555-5555-4555-8555-555555555555",
             app_metadata: { auth_version: 2 },
           },
         },
@@ -91,7 +92,11 @@ describe("createIncidentForCurrentSession", () => {
     expect(malformedClient.rpc).not.toHaveBeenCalled();
 
     const deniedClient = client({
-      claims: { sub: accountRow.auth_user_id, app_metadata: {} },
+      claims: {
+        sub: accountRow.auth_user_id,
+        session_id: "55555555-5555-4555-8555-555555555555",
+        app_metadata: {},
+      },
     });
     await expect(
       createIncidentForCurrentSession(command, deniedClient, "k".repeat(32)),
