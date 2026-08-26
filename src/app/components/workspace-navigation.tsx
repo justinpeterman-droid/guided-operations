@@ -4,6 +4,7 @@ const items = [
   ["Home", "/home"],
   ["Reports", "/reports"],
   ["Policy", "/policy-expert"],
+  ["Count Sheet", "/count-sheet"],
   ["Forms", "/preview/forms-library"],
   ["Account", "/account"],
 ] as const;

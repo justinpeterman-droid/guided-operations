@@ -49,9 +49,11 @@ The hosted details and limitations are recorded in
   append-only revision/history/restore, Policy Expert, administrator account,
   audit, and health routes exist. They are implementation slices, not accepted
   end-to-end parity or production proof.
-- Count Sheet domain rules and authenticated append-only persistence exist; its
-  user-facing experience remains a fictional Preview pending protected browser,
-  print, and export work. Other approved forms remain open.
+- The exact reviewed Count Sheet structure, protected assigned-shift load/save/
+  reopen screen, append-only persistence, conflict response, database-side form
+  enforcement, and fictional Chromium calculation check exist. Saved-sheet print
+  fidelity, revision-history UI, export, accessibility breadth, hosted
+  qualification, and other approved forms remain open.
 - Policy retrieval/generation adapters, strict citation validation, private
   retrieval RPCs, and immutable ingestion/page/chunk provenance are built. The
   real corpus is still absent and may not be imported until custody, rights,
@@ -309,14 +311,16 @@ acceptance remain open**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **Count Sheet persistence is implemented; protected UI, print/export,
-other approved forms, and owner acceptance remain open**
+Status: **Count Sheet protected load/save/reopen is implemented; print/export
+qualification, history UI, other approved forms, and owner acceptance remain
+open**
 
 ### Steps
 
-1. Connect the already-ported Count Sheet calculations to authenticated
-   persistence, history, review, print, and export without changing the tested
-   domain formulas silently.
+1. Complete qualification around the now-connected Count Sheet calculations,
+   assigned-shift persistence, review, and saved-sheet print control. Add
+   revision-history UI and supported export without changing the tested domain
+   formulas silently.
 2. Import only reviewed form definitions from the pinned predecessor source.
    Validate source revision, rights, schema, and fictional-data safety before
    copying each template.

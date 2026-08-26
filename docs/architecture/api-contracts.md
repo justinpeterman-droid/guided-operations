@@ -254,21 +254,25 @@ endpoint remains a later implementation item.
 - GET/POST/PATCH revisioned paperwork routes
 - GET/POST print-template preview/action routes
 
-The first private Count Sheet read primitives are `api.list_count_sheets(date)`
-and `api.get_count_sheet(record_id)`. They are not browser routes yet. An active
-officer can receive only the sheet for their administrator-assigned shift;
-active same-facility administrators can oversee all facility shifts. Both
-functions return no rows for a missing, inactive, cross-facility, or
-unauthorized request.
+The private Count Sheet read primitives are `api.list_count_sheets(date)` and
+`api.get_count_sheet(record_id)`. `GET /api/web/v1/count-sheets?work_date=...`
+uses them to return only the current account's assigned-shift sheet, or a blank
+copy of the exact approved structure when no revision exists. An active officer
+can receive only the sheet for their administrator-assigned shift; active
+same-facility administrators can oversee all facility shifts through the private
+primitives but the officer workspace still requires their own assigned shift.
+Missing, inactive, cross-facility, unassigned, and malformed results fail
+closed. Read responses are private and `no-store`.
 
-`POST /api/web/v1/count-sheets` is the protected fictional Count Sheet save
-boundary. It requires a current session, same-origin request, session CSRF,
-closed JSON body, a bounded idempotency key, and base revision number. The
-server validates the structure and values; the database revalidates the closed
-shape and derives totals. It creates revision one or appends exactly the next
-immutable revision for the current officer's assigned shift. A stale base
-revision returns `409 revision_conflict`; it never overwrites newer work. The
-route does not accept a facility, account, or shift from the browser.
+`POST /api/web/v1/count-sheets` is the protected Count Sheet save boundary. It
+requires a current session, same-origin request, session CSRF, closed JSON body,
+a bounded idempotency key, and base revision number. The server validates the
+exact reviewed structure and values; the database rejects any different form,
+revalidates the closed shape, and derives totals. It creates revision one or
+appends exactly the next immutable revision for the current officer's assigned
+shift. A stale base revision returns `409 revision_conflict`; it never
+overwrites newer work. The route does not accept a facility, account, or shift
+from the browser.
 
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.

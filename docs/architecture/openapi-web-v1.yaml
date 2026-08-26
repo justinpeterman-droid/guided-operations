@@ -3,8 +3,9 @@ info:
   title: Guided Operations browser API
   version: web-v1
   description: |
-    Same-origin browser API for the private hobby application. This contract
-    documents only implemented endpoints. All operational content is fictional.
+    Same-origin browser API for the private application. This contract documents
+    only implemented endpoints. Non-production content is fictional; Production
+    may hold owner-authorized operational records only after every release gate.
 servers:
   - url: /
 paths:
@@ -127,8 +128,41 @@ paths:
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
   /api/web/v1/count-sheets:
+    get:
+      summary:
+        Load the current account's assigned-shift Count Sheet for one date
+      operationId: getCurrentShiftCountSheet
+      security:
+        - cookieSession: []
+      parameters:
+        - in: query
+          name: work_date
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description:
+            The current immutable revision, or a blank exact approved form when
+            the assigned shift has no revision for that date.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetLoadedResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
     post:
-      summary: Create or append the current shift's fictional Count Sheet
+      summary: Create or append the current assigned shift's Count Sheet
       operationId: saveCountSheet
       security:
         - cookieSession: []
@@ -225,6 +259,47 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    CountSheetLoadedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - recordId
+            - workDate
+            - shiftCode
+            - revisionNumber
+            - structure
+            - payload
+            - validation
+            - updatedAt
+          properties:
+            recordId:
+              type: [string, "null"]
+              format: uuid
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            revisionNumber:
+              type: integer
+              minimum: 0
+            structure:
+              type: object
+            payload:
+              type: object
+            validation:
+              type: object
+            updatedAt:
+              type: [string, "null"]
+              format: date-time
+        meta:
+          $ref: "#/components/schemas/Meta"
     CountSheetSaveInput:
       type: object
       additionalProperties: false

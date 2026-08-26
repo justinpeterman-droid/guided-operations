@@ -10,6 +10,10 @@ const accountRowsSchema = z
       .object({
         auth_user_id: z.uuid(),
         facility_id: z.uuid(),
+        shift_code: z
+          .enum(["A", "B", "C", "D", "U", "F"])
+          .nullable()
+          .optional(),
         role: z.enum(["officer", "administrator"]),
         status: z.enum(["pending", "active", "locked", "disabled"]),
         auth_version: z.number().int().positive(),
@@ -44,6 +48,7 @@ export async function loadCurrentAccountFromRpc(
     return {
       authUserId: row.auth_user_id,
       facilityId: row.facility_id,
+      shiftCode: row.shift_code ?? null,
       role: row.role,
       status: row.status,
       authVersion: row.auth_version,

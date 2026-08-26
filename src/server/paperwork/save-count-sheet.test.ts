@@ -3,26 +3,19 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { saveCountSheetForCurrentSession } from "./save-count-sheet";
+import { APPROVED_COUNT_SHEET_STRUCTURE } from "@/features/count-sheet/approved-structure";
+import { createBlankCountPayload } from "@/features/count-sheet/calculations";
+
+const payload = createBlankCountPayload(APPROVED_COUNT_SHEET_STRUCTURE);
+payload.cells["Chow Hall"]["1"] = 2;
+payload.in_housing["1"] = 8;
+payload.operational.on_site = 10;
 
 const command = {
   workDate: "2026-08-26",
   baseRevisionNumber: 0,
-  structure: {
-    schema_version: 1,
-    title: "Fictional training count sheet",
-    columns: ["1"],
-    areas: ["Dining"],
-    operational_fields: ["on_site"],
-    attachment_reminders: ["on_site"],
-  },
-  payload: {
-    schema_version: 1,
-    count_started: null,
-    count_ended: null,
-    cells: { Dining: { "1": 2 } },
-    in_housing: { "1": 8 },
-    operational: { on_site: 10 },
-  },
+  structure: APPROVED_COUNT_SHEET_STRUCTURE,
+  payload,
   reason: "Fictional initial shift count.",
   idempotencyKey: "fictional-count-sheet-retry-key-1234",
 };
@@ -37,6 +30,7 @@ function client(
   const account = {
     auth_user_id: "22222222-2222-4222-8222-222222222222",
     facility_id: "44444444-4444-4444-8444-444444444444",
+    shift_code: "A",
     role: "officer",
     status: "active",
     auth_version: 1,
@@ -122,6 +116,7 @@ describe("saveCountSheetForCurrentSession", () => {
               {
                 auth_user_id: "22222222-2222-4222-8222-222222222222",
                 facility_id: "44444444-4444-4444-8444-444444444444",
+                shift_code: "A",
                 role: "officer",
                 status: "active",
                 auth_version: 1,

@@ -5,6 +5,7 @@ import { checkCurrentAccount, type CurrentAccount } from "./current-account";
 const activeOfficer: CurrentAccount = {
   authUserId: "8d2e1bbd-9f5b-4a2f-8f31-df48b5160420",
   facilityId: "7d2e1bbd-9f5b-4a2f-8f31-df48b5160420",
+  shiftCode: null,
   role: "officer",
   status: "active",
   authVersion: 3,

@@ -26,6 +26,13 @@ const officerTools = [
     action: "Open Policy Expert",
   },
   {
+    eyebrow: "Shared shift paperwork",
+    title: "Complete the Count Sheet",
+    copy: "Open your assigned shift sheet, check the difference, and save each correction as a new revision.",
+    href: "/count-sheet",
+    action: "Open Count Sheet",
+  },
+  {
     eyebrow: "Forms library",
     title: "Find approved paperwork",
     copy: "See what forms are available, what is still being reviewed, and what must remain paper-only.",

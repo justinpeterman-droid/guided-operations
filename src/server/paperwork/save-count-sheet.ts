@@ -7,6 +7,7 @@ import {
   calculateCountTotals,
   validateCountPayload,
 } from "@/features/count-sheet/calculations";
+import { isApprovedCountSheetStructure } from "@/features/count-sheet/approved-structure";
 import { parseCountSheetStructure } from "@/features/count-sheet/schema";
 import type { CountSheetPayload } from "@/features/count-sheet/types";
 import {
@@ -83,6 +84,8 @@ export async function saveCountSheetForCurrentSession(
   let payload: CountSheetPayload;
   try {
     structure = parseCountSheetStructure(command.data.structure);
+    if (!isApprovedCountSheetStructure(structure))
+      return { kind: "denied" as const };
     payload = validateCountPayload(
       structure,
       command.data.payload as CountSheetPayload,

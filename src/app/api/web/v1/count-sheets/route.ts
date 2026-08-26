@@ -5,6 +5,7 @@ import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { getCurrentShiftCountSheet } from "@/server/paperwork/get-count-sheet";
 import { validateCountSheetSaveRequest } from "@/server/paperwork/save-count-sheet-endpoint";
 import { saveCountSheetForCurrentSession } from "@/server/paperwork/save-count-sheet";
 
@@ -12,6 +13,36 @@ export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
 const headers = { "Cache-Control": "private, no-store" };
+
+export async function GET(request: Request): Promise<Response> {
+  const requestId = randomUUID();
+  try {
+    const client = await createSupabaseServerClient();
+    const workDate = new URL(request.url).searchParams.get("work_date");
+    const result = await getCurrentShiftCountSheet(workDate, client);
+
+    if (result.kind === "found" || result.kind === "empty") {
+      return Response.json(
+        {
+          data: result.countSheet,
+          meta: { request_id: requestId, api_version: "web-v1" },
+        },
+        { status: 200, headers },
+      );
+    }
+    return error(
+      result.kind === "denied" ? 401 : result.kind === "unassigned" ? 403 : 503,
+      result.kind === "denied"
+        ? "authentication_required"
+        : result.kind === "unassigned"
+          ? "shift_assignment_required"
+          : "service_unavailable",
+      requestId,
+    );
+  } catch {
+    return error(503, "service_unavailable", requestId);
+  }
+}
 
 export async function POST(request: Request): Promise<Response> {
   const requestId = randomUUID();

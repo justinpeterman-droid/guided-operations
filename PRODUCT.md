@@ -29,9 +29,9 @@ and owner-acceptance gates.
 The Vercel project is Git-connected and protected Previews build the branch. The
 Development Supabase project remains empty and does not have the newest forward
 migrations or hosted accounts. There is still no isolated Production Supabase
-project, approved real corpus, complete protected Forms/Count Sheet experience,
-hosted backup/restore and monitoring proof, production promotion, or Google
-Cloud retirement.
+project, approved real corpus, complete protected Forms/Count Sheet
+qualification, hosted backup/restore and monitoring proof, production promotion,
+or Google Cloud retirement.
 
 Use these labels in plans, issues, pull requests, and documentation:
 

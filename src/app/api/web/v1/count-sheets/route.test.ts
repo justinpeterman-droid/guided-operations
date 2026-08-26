@@ -17,6 +17,9 @@ vi.mock("@/server/paperwork/save-count-sheet-endpoint", () => ({
 vi.mock("@/server/paperwork/save-count-sheet", () => ({
   saveCountSheetForCurrentSession: vi.fn(),
 }));
+vi.mock("@/server/paperwork/get-count-sheet", () => ({
+  getCurrentShiftCountSheet: vi.fn(),
+}));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
@@ -24,9 +27,10 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { saveCountSheetForCurrentSession } from "@/server/paperwork/save-count-sheet";
+import { getCurrentShiftCountSheet } from "@/server/paperwork/get-count-sheet";
 import { validateCountSheetSaveRequest } from "@/server/paperwork/save-count-sheet-endpoint";
 
-import { POST } from "./route";
+import { GET, POST } from "./route";
 
 const client = {};
 const session = {
@@ -121,6 +125,62 @@ describe("POST /api/web/v1/count-sheets", () => {
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toMatchObject({
       error: { code: "revision_conflict" },
+    });
+  });
+});
+
+describe("GET /api/web/v1/count-sheets", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("returns the assigned-shift sheet without caching it", async () => {
+    mockEnvironment();
+    const countSheet = {
+      recordId: null,
+      workDate: "2026-08-26",
+      shiftCode: "A" as const,
+      revisionNumber: 0,
+      structure: {},
+      payload: {},
+      validation: {},
+      updatedAt: null,
+    };
+    vi.mocked(getCurrentShiftCountSheet).mockResolvedValue({
+      kind: "empty",
+      countSheet: countSheet as never,
+    });
+
+    const response = await GET(
+      new Request(
+        "https://guided-operations.example.test/api/web/v1/count-sheets?work_date=2026-08-26",
+      ),
+    );
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(getCurrentShiftCountSheet).toHaveBeenCalledWith(
+      "2026-08-26",
+      client,
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      data: { workDate: "2026-08-26", shiftCode: "A", revisionNumber: 0 },
+    });
+  });
+
+  it("does not expose a sheet when the account has no assigned shift", async () => {
+    mockEnvironment();
+    vi.mocked(getCurrentShiftCountSheet).mockResolvedValue({
+      kind: "unassigned",
+    });
+
+    const response = await GET(
+      new Request(
+        "https://guided-operations.example.test/api/web/v1/count-sheets?work_date=2026-08-26",
+      ),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "shift_assignment_required" },
     });
   });
 });

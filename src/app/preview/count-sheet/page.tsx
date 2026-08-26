@@ -1,16 +1,7 @@
 import Link from "next/link";
 
+import { APPROVED_COUNT_SHEET_STRUCTURE } from "@/features/count-sheet/approved-structure";
 import { CountSheetPreview } from "@/features/count-sheet/count-sheet-preview";
-import type { CountSheetStructure } from "@/features/count-sheet/types";
-
-const FICTIONAL_COUNT_SHEET: CountSheetStructure = {
-  schema_version: 1,
-  title: "Fictional training count sheet",
-  columns: ["1", "2", "Iso", "Inf"],
-  areas: ["Administration", "Dining"],
-  operational_fields: ["on_site", "court", "hospital", "other"],
-  attachment_reminders: ["court", "hospital"],
-};
 
 export default function CountSheetPreviewPage() {
   return (
@@ -30,7 +21,7 @@ export default function CountSheetPreviewPage() {
         </Link>
       </header>
 
-      <CountSheetPreview structure={FICTIONAL_COUNT_SHEET} />
+      <CountSheetPreview structure={APPROVED_COUNT_SHEET_STRUCTURE} />
     </main>
   );
 }

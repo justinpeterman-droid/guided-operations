@@ -1,6 +1,6 @@
 begin;
 
-select plan(147);
+select plan(149);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1646,9 +1646,12 @@ select lives_ok(
       1,
       '33333333-3333-4333-8333-333333333333',
       'Fictional initial Count Sheet.',
-      '{"schema_version": 1}',
-      '{"schema_version": 1}',
-      '{"reconciled": false}'
+      app_private.approved_count_sheet_structure(),
+      app_private.blank_approved_count_sheet_payload(),
+      app_private.calculate_count_sheet_validation(
+        app_private.approved_count_sheet_structure(),
+        app_private.blank_approved_count_sheet_payload()
+      )
     );
   $$,
   'a fictional Count Sheet creates its immutable first revision'
@@ -1674,9 +1677,12 @@ select throws_ok(
       3,
       '33333333-3333-4333-8333-333333333333',
       'Fictional skipped revision.',
-      '{"schema_version": 1}',
-      '{"schema_version": 1}',
-      '{"reconciled": false}'
+      app_private.approved_count_sheet_structure(),
+      app_private.blank_approved_count_sheet_payload(),
+      app_private.calculate_count_sheet_validation(
+        app_private.approved_count_sheet_structure(),
+        app_private.blank_approved_count_sheet_payload()
+      )
     );
   $$,
   'Paperwork revision must advance exactly one revision from the current head',
@@ -1722,6 +1728,57 @@ select lives_ok(
 );
 
 set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select is(
+  (select shift_code from api.current_account()),
+  'B',
+  'the current-account RPC returns the authenticated staff member assigned shift'
+);
+
+reset role;
+
+select set_config(
+  'app.test.count_structure',
+  app_private.approved_count_sheet_structure()::text,
+  true
+);
+select set_config(
+  'app.test.count_payload_initial',
+  jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        app_private.blank_approved_count_sheet_payload(),
+        array['cells', 'Chow Hall', '1'],
+        '2'::jsonb
+      ),
+      array['in_housing', '1'],
+      '8'::jsonb
+    ),
+    array['operational', 'on_site'],
+    '10'::jsonb
+  )::text,
+  true
+);
+select set_config(
+  'app.test.count_payload_correction',
+  jsonb_set(
+    jsonb_set(
+      jsonb_set(
+        app_private.blank_approved_count_sheet_payload(),
+        array['cells', 'Chow Hall', '1'],
+        '1'::jsonb
+      ),
+      array['in_housing', '1'],
+      '9'::jsonb
+    ),
+    array['operational', 'on_site'],
+    '10'::jsonb
+  )::text,
+  true
+);
+
+set local role authenticated;
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
 
 select is(
@@ -1763,8 +1820,8 @@ select lives_ok(
     from api.save_count_sheet(
       date '2026-08-26',
       0,
-      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
-      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 2}}, "in_housing": {"1": 8}, "operational": {"on_site": 10}}',
+      current_setting('app.test.count_structure')::jsonb,
+      current_setting('app.test.count_payload_initial')::jsonb,
       'Fictional initial shared shift count.',
       repeat('c', 64),
       repeat('d', 64)
@@ -1798,8 +1855,8 @@ select lives_ok(
     from api.save_count_sheet(
       date '2026-08-26',
       1,
-      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
-      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 1}}, "in_housing": {"1": 9}, "operational": {"on_site": 10}}',
+      current_setting('app.test.count_structure')::jsonb,
+      current_setting('app.test.count_payload_correction')::jsonb,
       'Fictional shift correction.',
       repeat('e', 64),
       repeat('f', 64)
@@ -1814,8 +1871,8 @@ select throws_ok(
     from api.save_count_sheet(
       date '2026-08-26',
       1,
-      '{"schema_version": 1, "title": "Fictional training count sheet", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
-      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 1}}, "in_housing": {"1": 9}, "operational": {"on_site": 10}}',
+      current_setting('app.test.count_structure')::jsonb,
+      current_setting('app.test.count_payload_correction')::jsonb,
       'Fictional stale correction.',
       repeat('1', 64),
       repeat('2', 64)
@@ -1823,6 +1880,23 @@ select throws_ok(
   $$,
   'Count Sheet revision conflict',
   'a stale Count Sheet save cannot overwrite a newer revision'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.save_count_sheet(
+      date '2026-08-26',
+      2,
+      '{"schema_version": 1, "title": "Unapproved", "columns": ["1"], "areas": ["Dining"], "operational_fields": ["on_site"], "attachment_reminders": []}',
+      '{"schema_version": 1, "count_started": null, "count_ended": null, "cells": {"Dining": {"1": 1}}, "in_housing": {"1": 9}, "operational": {"on_site": 10}}',
+      'Fictional unapproved structure attempt.',
+      repeat('3', 64),
+      repeat('4', 64)
+    );
+  $$,
+  'Count Sheet structure is not the approved form',
+  'direct RPC access cannot save a different Count Sheet structure'
 );
 
 select throws_ok(

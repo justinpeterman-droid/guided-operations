@@ -8,6 +8,7 @@ export type AccountStatus = "pending" | "active" | "locked" | "disabled";
 export type CurrentAccount = Readonly<{
   authUserId: string;
   facilityId: string;
+  shiftCode: "A" | "B" | "C" | "D" | "U" | "F" | null;
   role: AccountRole;
   status: AccountStatus;
   authVersion: number;

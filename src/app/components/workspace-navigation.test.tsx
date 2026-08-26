@@ -24,6 +24,10 @@ describe("WorkspaceNavigation", () => {
       "href",
       "/preview/forms-library",
     );
+    expect(screen.getByRole("link", { name: "Count Sheet" })).toHaveAttribute(
+      "href",
+      "/count-sheet",
+    );
     expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
       "href",
       "/account",
