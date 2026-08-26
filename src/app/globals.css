@@ -745,6 +745,157 @@ a:focus-visible {
   font-weight: 700;
 }
 
+.reports-page {
+  width: min(1180px, calc(100% - 40px));
+  min-height: 100vh;
+  margin-inline: auto;
+  padding-bottom: 64px;
+}
+
+.reports-header {
+  justify-content: space-between;
+}
+
+.reports-home-link {
+  color: var(--gow-navy-800);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
+.reports-intro {
+  max-width: 700px;
+  padding-block: 64px 36px;
+}
+
+.reports-intro h1,
+.reports-empty-state h1,
+.reports-empty-state h2 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  letter-spacing: -0.025em;
+}
+
+.reports-intro h1,
+.reports-empty-state h1 {
+  font-size: clamp(2.35rem, 5vw, 4.1rem);
+  line-height: 1;
+}
+
+.reports-intro > p:last-child,
+.reports-empty-state p {
+  max-width: 660px;
+  margin: 18px 0 0;
+  color: var(--gow-muted);
+  line-height: 1.65;
+}
+
+.reports-table-wrap,
+.reports-empty-state {
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-feature);
+  box-shadow: var(--gow-shadow-card);
+}
+
+.reports-table-wrap {
+  overflow-x: auto;
+}
+
+.reports-table-wrap table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+}
+
+.reports-table-wrap caption {
+  padding: 22px 28px 14px;
+  color: var(--gow-muted);
+  caption-side: top;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: left;
+}
+
+.reports-table-wrap th,
+.reports-table-wrap td {
+  padding: 17px 18px;
+  border-top: 1px solid #dce5ec;
+  color: var(--gow-muted);
+  font-size: 0.83rem;
+  text-align: left;
+}
+
+.reports-table-wrap thead th {
+  color: var(--gow-navy-900);
+  background: #edf4f8;
+  font-size: 0.74rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.reports-table-wrap tbody th span,
+.reports-table-wrap tbody th strong {
+  display: block;
+}
+
+.reports-table-wrap tbody th span {
+  color: var(--gow-navy-800);
+  font-size: 0.73rem;
+}
+
+.reports-table-wrap tbody th strong {
+  margin-top: 4px;
+  color: var(--gow-navy-950);
+  font-size: 0.9rem;
+}
+
+.incident-status {
+  display: inline-block;
+  padding: 4px 8px;
+  color: var(--gow-navy-800);
+  background: #edf4f8;
+  border: 1px solid #c8d9e5;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.status-in_review {
+  color: #765214;
+  background: #fff6dc;
+  border-color: #e5c672;
+}
+
+.status-complete {
+  color: #155c41;
+  background: #e6f4ed;
+  border-color: #aad6be;
+}
+
+.reports-empty-state {
+  max-width: 690px;
+  padding: clamp(28px, 5vw, 52px);
+}
+
+.reports-empty-state h2 {
+  font-size: clamp(1.75rem, 3vw, 2.35rem);
+}
+
+.reports-message-page {
+  display: grid;
+  place-items: center;
+  padding-block: 48px;
+}
+
+.reports-message-page .reports-home-link {
+  display: inline-flex;
+  margin-top: 24px;
+}
+
 @media (max-width: 860px) {
   .foundation-grid {
     grid-template-columns: 1fr;
@@ -758,6 +909,10 @@ a:focus-visible {
 
   .count-sheet-grid {
     grid-template-columns: 1fr;
+  }
+
+  .reports-page {
+    width: min(100% - 28px, 1180px);
   }
 
   .workflow-steps ol {
