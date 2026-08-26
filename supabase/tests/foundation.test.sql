@@ -1,6 +1,6 @@
 begin;
 
-select plan(134);
+select plan(137);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -84,6 +84,19 @@ select ok(
 select ok(
   not has_table_privilege('authenticated', 'app_private.audit_events', 'select'),
   'an authenticated caller cannot read private audit records directly'
+);
+select is(
+  (select count(*)::integer from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='app_private' and p.proname in ('stage_invited_account','activate_invited_account','abandon_invited_account') and p.prosecdef),
+  3,
+  'private invitation lifecycle routines are security-definer only'
+);
+select ok(
+  not has_function_privilege('authenticated','app_private.stage_invited_account(uuid,uuid,text,text,text,app_private.account_role,text,timestamp with time zone)','execute'),
+  'authenticated callers cannot invoke private invitation staging directly'
+);
+select ok(
+  not has_function_privilege('anon','app_private.activate_invited_account(uuid,uuid)','execute'),
+  'anonymous callers cannot invoke private invitation activation'
 );
 
 select ok(
