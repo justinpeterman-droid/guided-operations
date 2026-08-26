@@ -171,6 +171,11 @@ revision with candidate provenance and returns only an opaque report ID. It does
 not accept AI output as a final report and it does not let a client choose the
 report actor, facility, or source revision.
 
+The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
+RPC rather than a browser table query. It returns only the current immutable
+revision to an active report collaborator or active same-facility administrator;
+absent and unauthorized reports are concealed.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
 - POST /reports/{reportId}/export
