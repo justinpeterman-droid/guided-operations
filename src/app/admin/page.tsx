@@ -62,11 +62,16 @@ export default async function AdminPage() {
           <span aria-hidden="true">2</span>
           <div>
             <h2>Audit and health</h2>
-            <p>Review safe, redacted activity while monitoring is added.</p>
+            <p>Review safe activity and live service readiness.</p>
           </div>
-          <Link className="reports-home-link" href="/admin/audit">
-            View activity
-          </Link>
+          <div className="admin-section-links">
+            <Link className="reports-home-link" href="/admin/audit">
+              View activity
+            </Link>
+            <Link className="reports-home-link" href="/admin/health">
+              View health
+            </Link>
+          </div>
         </article>
       </section>
     </main>

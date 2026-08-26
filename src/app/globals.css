@@ -508,6 +508,12 @@ a:focus-visible {
   font-style: normal;
   font-weight: 700;
 }
+.admin-section-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
 .workspace-return-link {
   display: inline-block;
   margin-top: 30px;
@@ -2128,6 +2134,11 @@ a:focus-visible {
 
   .admin-action-list em {
     grid-column: 2;
+  }
+
+  .admin-section-links {
+    grid-column: 2;
+    justify-content: flex-start;
   }
 
   .brand-bar,
