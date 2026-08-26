@@ -118,10 +118,13 @@ The first persistence primitive is the private-to-the-server
 `api.create_incident` RPC. It receives the already validated create fields and
 opaque request/idempotency digests, derives the actor from the request JWT, and
 creates the incident plus immutable revision one in one transaction. It is not a
-browser wire contract: the future `POST /incidents` handler validates CSRF, the
-closed body, and current-account state before invoking it with a request-scoped
-JWT. Direct RPC calls still enforce active facility scope and payload
-provenance, and return only an opaque incident ID.
+browser wire contract: the implemented `POST /api/web/v1/incidents` handler
+first establishes current session authority, validates same-origin and
+session-bound CSRF, accepts a closed body plus bounded `Idempotency-Key`, and
+then invokes the RPC with the request-scoped JWT. It returns only an opaque
+incident ID. Direct RPC calls still enforce active facility scope and payload
+provenance. Hosted-session and browser-workflow integration remain separate
+release gates.
 
 ### Reports
 

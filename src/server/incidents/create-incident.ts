@@ -8,6 +8,7 @@ import {
 } from "@/features/incidents/commands";
 import {
   authorizeCurrentSession,
+  type AuthorizedCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
 
@@ -30,7 +31,7 @@ type IncidentCreateRpcClient = Readonly<{
   rpc(
     functionName: "create_incident",
     arguments_: IncidentCreateRpcArguments,
-  ): Promise<Readonly<{ data: unknown; error: unknown | null }>>;
+  ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
 export type CreateIncidentSessionClient = CurrentSessionClient &
@@ -75,7 +76,26 @@ export async function createIncidentForCurrentSession(
   const session = await authorizeCurrentSession(client);
   if (!session.allowed) return { kind: "denied" };
 
-  const revision = command.data.revision;
+  return createIncidentForAuthorizedSession(
+    command.data,
+    session,
+    client,
+    idempotencyHmacKey,
+  );
+}
+
+/**
+ * Persists an already-authenticated command using only the facility scope
+ * established by the current-session gate. Route handlers use this after
+ * validating the same session-bound CSRF token.
+ */
+export async function createIncidentForAuthorizedSession(
+  command: CreateIncidentCommand,
+  session: AuthorizedCurrentSession,
+  client: IncidentCreateRpcClient,
+  idempotencyHmacKey: string,
+): Promise<CreateIncidentResult> {
+  const revision = command.revision;
   try {
     const result = await client.rpc("create_incident", {
       p_facility_id: session.account.facilityId,
@@ -87,12 +107,12 @@ export async function createIncidentForCurrentSession(
       p_field_notes: revision.fieldNotes,
       p_reviewed_facts: revision.reviewedFacts,
       p_idempotency_key_digest: digest(
-        command.data.idempotencyKey,
+        command.idempotencyKey,
         idempotencyHmacKey,
         `${INCIDENT_CREATE_ACTION}.key`,
       ),
       p_request_digest: digest(
-        canonicalRequest(command.data),
+        canonicalRequest(command),
         idempotencyHmacKey,
         `${INCIDENT_CREATE_ACTION}.request`,
       ),

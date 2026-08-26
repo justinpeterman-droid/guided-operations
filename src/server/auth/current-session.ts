@@ -25,12 +25,14 @@ type ClaimsClient = Readonly<{
 
 export type CurrentSessionClient = ClaimsClient & CurrentAccountRpcClient;
 
+export type AuthorizedCurrentSession = Readonly<{
+  allowed: true;
+  account: CurrentAccount;
+  sessionId: string;
+}>;
+
 export type CurrentSessionGateResult =
-  | Readonly<{
-      allowed: true;
-      account: CurrentAccount;
-      sessionId: string;
-    }>
+  | AuthorizedCurrentSession
   | Exclude<AccountGateResult, Readonly<{ allowed: true }>>;
 
 /**
