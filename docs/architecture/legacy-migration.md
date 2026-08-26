@@ -78,16 +78,16 @@ logic only behind ADR-0005 when doing so reduces fidelity risk.
 
 ## Data migration rule
 
-Current authorization allows no real operational data. Therefore:
+Real operational/personal data is authorized only in isolated Production after
+the release gates pass. Therefore:
 
 - do not copy legacy staff, account, session, incident, report, form instance,
-  audit, job, export, or paperwork rows into any target environment;
+  audit, job, export, or paperwork rows into any non-production environment;
 - use fictional seed builders and data-classification tests;
-- migrate only approved policy/reference corpus objects and their necessary
-  source/version/provenance metadata;
-- treat any future operational-data migration as a new owner/security/records
-  decision with its own mapping, validation, retention, rollback, and cutover
-  plan.
+- migrate legacy operational data only through a separately approved Production
+  mapping, validation, retention, backup/restore, rollback, and cutover plan;
+- continue to migrate approved policy/reference corpus objects only with their
+  necessary source/version/provenance metadata.
 
 Auth identities for actual users are security metadata created through the new
 bootstrap/account workflow, never copied from a legacy JSON roster or chat.

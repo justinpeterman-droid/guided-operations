@@ -38,8 +38,9 @@ a later evidence record explicitly says otherwise.
 
 1. Read legacy files from the pinned Git commit, not the dirty local working
    tree.
-2. Use fictional operational/personnel data everywhere. Only rights-approved
-   policy/RAG sources may be real.
+2. Use fictional operational/personnel data in every non-production environment.
+   Production real-data migration requires the separate approved mapping,
+   retention, recovery, and cutover controls.
 3. Keep source PDFs, extracted corpus, embeddings, dumps, provider exports, and
    rights evidence out of Git by default.
 4. Rebuild Flask, `/workspace`, Access handoff, and Google provider boundaries

@@ -56,12 +56,13 @@ Target services:
 ### Cost reality
 
 The current goal is a personal, non-commercial hobby app for a small invited
-group of officers—not an agency or facility system. Vercel Hobby and Supabase
-Free are therefore the starting candidates, provided the exact use remains
-within their current terms and quotas. This does not authorize real operational
-data. Any later official adoption requires a fresh plan, vendor, security,
-records, and recovery review. OpenAI API calls are usage-priced and still need a
-small budget and circuit breaker.
+group of officers. Vercel Hobby and Supabase Free are starting candidates only
+if their current terms, protection, recovery, and retention controls support the
+authorized production use. Real operational and personal data are permitted only
+in Production after the release gates pass; see
+[`docs/operations/real-data-governance.md`](docs/operations/real-data-governance.md).
+OpenAI API calls are usage-priced and still need a small budget and circuit
+breaker.
 
 Current plan terms must be rechecked at provisioning time:
 [Vercel Hobby plan](https://vercel.com/docs/plans/hobby),
@@ -148,6 +149,8 @@ changes follow
 - Browser code never receives Supabase secret/service credentials or direct
   unrestricted application-table access.
 - Preview and automated-test environments use fictional operational data only.
+- Production records use the owner-approved two-year retention rule, subject to
+  legal hold and verified deletion.
 - A green build is not a deployment, pilot approval, or production
   authorization.
 

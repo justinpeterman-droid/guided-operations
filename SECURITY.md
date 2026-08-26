@@ -35,23 +35,25 @@ The target is a private, internet-reachable web application:
 - one facility and no public user registration;
 - no Google hosting or Google Cloud runtime dependency.
 
-Its present use classification is a personal, non-commercial hobby app for a
-small invited group of officers. It is not an agency/facility system, and real
-operational data remains prohibited. Any later official adoption reopens plan,
-vendor, records, privacy, recovery, and security approval.
+Its present target is an isolated private Production deployment for the owner's
+authorized real operational and personal data. This is not a claim of agency,
+legal, regulatory, or vendor compliance. Real-data entry remains blocked until
+the documented release gates pass; see
+[docs/operations/real-data-governance.md](docs/operations/real-data-governance.md).
 
 ## Data classification
 
-| Class                        | Examples                                                                                    | Allowed environments                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Restricted reference content | Real policy manuals, forms, directives, source PDFs, derived text, embeddings               | Approved Supabase projects and authorized local ingest only                         |
-| Security metadata            | Auth user IDs, employee-number lookup values, roles, account status, session/audit metadata | Environment-specific Supabase Auth/PostgreSQL; never fixtures or logs               |
-| Operational product data     | Incidents, inmate details, reports, field notes, rosters, paperwork                         | Fictional only until a separate owner/security/records approval changes this policy |
-| Public                       | Deliberately public marketing copy, if later added                                          | Public web assets only after review                                                 |
+| Class                        | Examples                                                                                    | Allowed environments                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Restricted reference content | Real policy manuals, forms, directives, source PDFs, derived text, embeddings               | Approved Supabase projects and authorized local ingest only                                  |
+| Security metadata            | Auth user IDs, employee-number lookup values, roles, account status, session/audit metadata | Environment-specific Supabase Auth/PostgreSQL; never fixtures or logs                        |
+| Operational product data     | Incidents, resident details, reports, field notes, rosters, paperwork                       | Production only after real-data release gates; prohibited in all non-production environments |
+| Public                       | Deliberately public marketing copy, if later added                                          | Public web assets only after review                                                          |
 
-The current product authorization permits real policy/reference content only. It
-does not permit real incident, inmate, report, roster, or operational paperwork
-data.
+The owner authorizes real operational and personal data in Production only.
+Local, CI, Preview, staging, Git, logs, screenshots, and test fixtures remain
+fictional/synthetic. The two-year retention and deletion rules are in
+[docs/operations/real-data-governance.md](docs/operations/real-data-governance.md).
 
 ## Trust boundaries
 
@@ -135,8 +137,10 @@ payload, signed URL, nor AI answer is an authority.
 
 - The browser never calls an AI provider directly and never receives provider
   credentials.
-- Only the approved policy/reference corpus may contain real content.
-  Operational prompts and evaluation fixtures remain fictional.
+- Production AI requests may contain the minimum necessary authorized record or
+  policy content only after the provider data-control and retention gate passes.
+  Operational prompts and evaluation fixtures remain fictional outside the
+  isolated Production workflow.
 - Retrieved documents are untrusted data. Instructions inside a source document
   cannot change system policy, tool permissions, or output rules.
 - Policy answers require verifiable source/version/page or section citations.

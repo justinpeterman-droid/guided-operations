@@ -1,23 +1,20 @@
 # Guided Operations production roadmap
 
 This roadmap turns the replacement foundation created on 2026-08-25 into an
-owner-authorized private hobby release. It is ordered by risk and dependency,
-not by visual prominence. A phase is complete only when its exit evidence is
-recorded. A merge, green CI run, provider project, or successful deployment is
-not production approval by itself.
+owner-authorized private production release. It is ordered by risk and
+dependency, not by visual prominence. A phase is complete only when its exit
+evidence is recorded. A merge, green CI run, provider project, or successful
+deployment is not production approval by itself.
 
 ## What "production" means here
 
-The target in this roadmap is a private internet-reachable hobby application for
-a small invited group of officers. It may use real approved policy/reference
-content, but operational records, rosters, reports, incidents, and paperwork
-remain fictional.
-
-This target is not an official agency or facility system. Official adoption or
-the use of real operational/personnel data requires a new written security,
-privacy, records, recovery, vendor, support, and owner-approval phase. It cannot
-be enabled by quietly changing an environment variable or checking off this
-roadmap.
+The target is a private internet-reachable production application for a small
+invited group of officers. The owner authorized real operational and personal
+data in the isolated Production environment on 2026-08-26, with two-year
+retention. It remains forbidden in Git and every non-production environment.
+Real-data entry still requires all release evidence in
+`docs/operations/real-data-governance.md`; this cannot be enabled by quietly
+changing an environment variable or checking off a plan item.
 
 ## Verified starting point — 2026-08-25
 

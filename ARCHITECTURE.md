@@ -5,9 +5,9 @@
 - **Last updated:** 2026-08-25
 - **Scope:** Private, web-only, single-facility application
 
-**Use classification:** Personal, non-commercial hobby app for a small invited
-group of officers; not an official agency/facility system and not authorized for
-real operational data.
+**Use classification:** Private single-facility application. Real operational
+and personal data are permitted in isolated Production only after release gates
+pass; local, CI, Preview, staging, and fixtures remain fictional.
 
 ## Read this first
 
@@ -68,11 +68,12 @@ privileges, and Row-Level Security provide defense in depth.
 - The GitHub repository is private and the product is web-only.
 - The deployment serves one facility. Multi-facility tenancy is not being built
   speculatively.
-- The current live target is a private hobby deployment for selected invited
-  officers. Official organizational adoption is a separate future decision.
-- No real incident, inmate, report, roster, or operational paperwork data may be
-  used in development, preview, staging, demos, fixtures, screenshots, or AI
-  evaluation. The only approved real content is the policy/reference corpus.
+- The Production target may hold owner-authorized real data after the exact
+  release candidate is approved. This does not itself establish legal or agency
+  compliance.
+- No real incident, resident, report, roster, or paperwork data may be used in
+  development, Preview, staging, demos, fixtures, screenshots, or AI evaluation.
+  Production data follows `docs/operations/real-data-governance.md`.
 - Login remains employee number plus a PIN-like secret. No shared access code is
   allowed. The exact Supabase Auth implementation is still an explicit security
   decision and spike; see ADR-0003.

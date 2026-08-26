@@ -17,9 +17,8 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 - Intended use: **personal, non-commercial hobby app for selected invited
   officers; not an official agency/facility system**
 - GCP retirement: **not authorized or performed**
-- Real operational-data use: **prohibited**
-- Approved real content: policy/reference corpus only, subject to the corpus
-  handling standard
+- Real operational/personal data: **Production-only after release gates**
+- Production retention: **two years from final revision**, subject to legal hold
 
 No checklist item may be marked complete without dated evidence identifying the
 environment, commit/deployment, actor, command or dashboard observation, result,
@@ -49,6 +48,7 @@ current provider evidence and explicit limitations.
 | [`deployment-and-rollback.md`](deployment-and-rollback.md)               | Vercel/Supabase release order, smoke checks, and application/data rollback.                           |
 | [`backup-and-restore.md`](backup-and-restore.md)                         | Database and Supabase Storage backups, corpus recovery, and restore exercises.                        |
 | [`incident-response.md`](incident-response.md)                           | Severity, containment, communications, recovery, and post-incident review.                            |
+| [`real-data-governance.md`](real-data-governance.md)                     | Production-only data boundary, two-year retention, deletion, and release conditions.                  |
 | [`observability-and-costs.md`](observability-and-costs.md)               | Signals, redaction, alerting, free-plan limitations, and budget controls.                             |
 | [`dependency-maintenance.md`](dependency-maintenance.md)                 | Dependency, runtime, lockfile, and supply-chain maintenance.                                          |
 | [`gcp-retirement.md`](gcp-retirement.md)                                 | Evidence-gated migration away from all Google hosting and infrastructure.                             |
@@ -59,11 +59,11 @@ current provider evidence and explicit limitations.
   database-enforced authorization.
 - One facility; the schema should still carry an explicit facility boundary so
   accidental global queries are testable.
-- The initial hosted target is a private hobby release for selected invited
-  officers. Any official organizational adoption is a new scope and approval.
-- No real operational data during development, preview, staging, or initial
-  production qualification.
-- The approved policy/reference corpus is the only real content.
+- Real operational/personal data is permitted only in isolated Production after
+  release gates; development, Preview, staging, and qualification remain
+  fictional.
+- The approved policy/reference corpus and minimum-necessary authorized
+  operational records are the only allowed real content in Production.
 - United States hosting; initial latency-aligned assumption is Supabase
   `us-east-1` and Vercel Functions `iad1`, pending owner confirmation and
   recorded provider availability.
@@ -72,9 +72,8 @@ current provider evidence and explicit limitations.
   out of scope for the replacement.
 - AI integration is provider-neutral. OpenAI may be the first provider, but
   domain code must not depend directly on provider response objects.
-- Free plans are preferred while the product contains no operational data, but
-  plan limitations are explicit release gates rather than hidden risk
-  acceptance.
+- Plan limitations are explicit release gates rather than hidden risk acceptance
+  before the product can hold real data.
 
 ## Source references
 

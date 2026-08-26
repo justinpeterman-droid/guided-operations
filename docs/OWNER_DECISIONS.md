@@ -23,6 +23,8 @@ resource.
 | O-012 | Officers and administrators use individual passcodes of at least eight characters. This is not a shared PIN or facility code.                                                                                                      | 2026-08-25    |
 | O-013 | Administrators use passcode-only access for the hobby foundation. MFA is deferred and must be reconsidered before any official or real-data use.                                                                                   | 2026-08-25    |
 | O-014 | The owner is the first/main administrator and is the only initial authority for additional-account creation, credential resets, unlocks, and temporary-secret delivery. Temporary passcodes are handed to the recipient in person. | 2026-08-26    |
+| O-015 | The owner authorizes production use of real operational and personal data and is accountable for product, security, records, privacy, retention, incident response, backup, billing, and production approval.                      | 2026-08-26    |
+| O-016 | Production records and controlled production copies are retained for two years from final revision, unless a legal hold, incident investigation, or later written records decision requires longer retention.                      | 2026-08-26    |
 
 ## Required before hosted development linkage
 
@@ -49,6 +51,12 @@ resource.
   and sole initial authority for account lifecycle actions. The app must never
   print, log, or retain a temporary passcode after its protected delivery. The
   owner gives each temporary passcode to its recipient in person.
+- **O-015/O-016 real-data boundary:** real operational and personal data may
+  enter only the isolated Production environment after all release gates pass.
+  It remains prohibited in Git, local development, CI, Preview, shared
+  non-production, screenshots, logs, support tools, and test fixtures. The
+  production retention target is two years, subject to legal hold and verified
+  deletion across database, Storage, exports, and backups.
 
 ## Required before RAG migration
 
@@ -75,18 +83,20 @@ resource.
 
 ## Required before any future official adoption or real-data use
 
-- [ ] **OQ-011 — Operational data authorization:** complete a separate written
-      security, privacy, records, retention, incident-response, backup, and
-      vendor review before permitting any real staff/incident/resident data.
-- [ ] **OQ-012 — Recovery objectives:** approve RPO, RTO, retention/legal-hold,
-      database backup, Storage backup, and restore-drill requirements.
+- [x] **OQ-011 — Operational data authorization:** the owner authorized real
+      operational and personal data in production on 2026-08-26. This does not
+      authorize real data in Git, local, CI, Preview, or staging environments.
+- [x] **OQ-012 — Retention:** the owner set a two-year production-record
+      retention period on 2026-08-26. Recovery objectives, legal-hold handling,
+      deletion verification, and provider controls remain release gates.
 - [ ] **OQ-013 — AI budget and quality:** approve model/evaluation thresholds,
       monthly budget, request caps, and circuit-breaker behavior.
 - [ ] **OQ-014 — Document worker:** decide whether a non-Google durable worker
       is allowed if measured DOCX/PDF/OCR work cannot be safely split into
       Vercel-sized jobs.
-- [ ] **OQ-015 — External owners:** name security, records/policy, facility
-      pilot, production approval, incident-response, and billing owners.
+- [x] **OQ-015 — Accountable owner:** the owner holds security, records/policy,
+      facility pilot, production approval, incident-response, and billing
+      decisions for the initial release (2026-08-26).
 
 ## Change rule
 

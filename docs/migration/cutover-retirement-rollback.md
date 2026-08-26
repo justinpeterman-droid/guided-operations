@@ -407,5 +407,5 @@ Cutover and retirement are complete only when the final record contains:
   approved;
 - final cost review;
 - known non-blocking limitations and owners;
-- explicit statement that real operational-data use remains unauthorized unless
-  separately approved.
+- explicit statement that real operational/personal data is Production-only,
+  subject to release gates and the two-year retention rule.

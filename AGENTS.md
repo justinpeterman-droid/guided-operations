@@ -48,8 +48,9 @@ source of truth.
 
 ## Product invariants
 
-- The current scope is a personal, non-commercial hobby app for a small invited
-  group of officers. It is not an official agency or facility system.
+- The current scope is a private, single-facility Production application. Real
+  operational and personal data are authorized only in isolated Production after
+  release gates pass; they remain prohibited in all non-production work.
 - The initial product is one private web app for one facility.
 - The UI is calm, practical, readable, keyboard accessible, and review-first.
 - AI may classify, retrieve, summarize, extract, or draft. It may not fabricate
@@ -61,8 +62,8 @@ source of truth.
 - Revisions are append-only. A restore creates a new revision with provenance.
 - Physical-only workflows remain physical-only unless an approved product and
   records decision explicitly changes them.
-- The current repository has no operational production data. Fixtures,
-  screenshots, demos, previews, and seeds must be unmistakably fictional.
+- The repository contains no operational production data. Fixtures, screenshots,
+  demos, previews, CI, and seeds must be unmistakably fictional.
 - The real RAG policy/reference corpus is controlled content. Do not commit
   source files, extracted text, embeddings, questions, answers, or citations
   until the corpus migration protocol expressly permits that artifact.

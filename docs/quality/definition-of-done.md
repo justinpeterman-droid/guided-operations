@@ -150,13 +150,13 @@ is still not official facility-use approval.
       conflicts/errors.
 - [ ] **OWNER:** Pilot scope, success/stop criteria, rollback, support window,
       and named participants are approved.
-- [ ] **OWNER:** The prohibition on real operational data remains visible and
+- [ ] **OWNER:** The Production-only real-data boundary, two-year retention,
+      legal-hold procedure, and non-production prohibition are visible and
       enforced.
 
-Any future proposal to use real operational/personal data must satisfy the
-separate scope-change gates in
-[fictional-data-and-rag-content.md](fictional-data-and-rag-content.md). It
-cannot be approved merely by checking this list.
+Production real-data entry must satisfy the release gates in
+[../operations/real-data-governance.md](../operations/real-data-governance.md).
+Owner authorization alone does not replace those checks.
 
 ## Evidence record
 

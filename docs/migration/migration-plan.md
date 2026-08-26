@@ -63,12 +63,12 @@ dependencies.
 
 ## Target environment model
 
-| Environment  | Vercel                               | Supabase                                                                                                                                                | Data rule                                                                         | Purpose                                                                     |
-| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Local        | Local Next.js runtime                | Local Supabase CLI stack when practical                                                                                                                 | Fictional data; synthetic/non-sensitive RAG fixture only                          | Fast development, schema/RLS tests, offline-safe UI work                    |
-| Preview      | Per-pull-request Vercel preview      | Isolated preview database/project/branch if available, otherwise a tightly scoped shared non-production project with per-preview namespaces and cleanup | Fictional data only; no real corpus by default                                    | Review, browser tests, accessibility, visual approval                       |
-| Test/staging | Stable Vercel environment            | Separate non-production Supabase project                                                                                                                | Fictional operations; authorized test subset of corpus only after rights approval | Migration rehearsal, restore, integration, load, print, provider validation |
-| Live hobby   | Vercel Production environment/domain | Separate live Supabase project in an approved US region                                                                                                 | Fictional operations plus authorized corpus; real operations remain unauthorized  | Private invited-officer evaluation                                          |
+| Environment  | Vercel                               | Supabase                                                                                                                                                | Data rule                                                                           | Purpose                                                                     |
+| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Local        | Local Next.js runtime                | Local Supabase CLI stack when practical                                                                                                                 | Fictional data; synthetic/non-sensitive RAG fixture only                            | Fast development, schema/RLS tests, offline-safe UI work                    |
+| Preview      | Per-pull-request Vercel preview      | Isolated preview database/project/branch if available, otherwise a tightly scoped shared non-production project with per-preview namespaces and cleanup | Fictional data only; no real corpus by default                                      | Review, browser tests, accessibility, visual approval                       |
+| Test/staging | Stable Vercel environment            | Separate non-production Supabase project                                                                                                                | Fictional operations; authorized test subset of corpus only after rights approval   | Migration rehearsal, restore, integration, load, print, provider validation |
+| Production   | Vercel Production environment/domain | Separate live Supabase project in an approved US region                                                                                                 | Owner-authorized real operations and corpus after release gates; two-year retention | Private invited-officer production release                                  |
 
 Never connect a pull-request preview to the production database or production
 storage bucket. Environment secrets, webhook targets, auth redirect URLs, cookie
@@ -417,10 +417,10 @@ successful, and pilot approved remain separate fields.
 
 Follow [Cutover, Retirement, and Rollback](cutover-retirement-rollback.md).
 
-Current authorization allows only fictional operational use. A limited private
-hobby evaluation may exercise authentication and workflows with fictional
-records plus the authorized corpus. It is not an official pilot and does not
-authorize real incident/personnel data.
+Current authorization permits real operational/personal data only in isolated
+Production after release gates. Qualification exercises authentication and
+workflows with fictional records plus the authorized corpus. It is not an
+official pilot and does not authorize real incident/personnel data.
 
 After target traffic and corpus behavior are accepted, close the defined
 rollback window and retire Google resources in dependency order. Data-bearing
@@ -495,7 +495,7 @@ Completed acceptance gates:
 Evidence links/artifacts:
 Known gaps:
 Blocker owner and next decision date:
-Real-data authorization: fictional-only (unless separately approved)
+Real-data authorization: Production-only after exact release approval
 Deployment state:
 Migration state:
 Pilot state:

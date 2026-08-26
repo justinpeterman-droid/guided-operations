@@ -17,8 +17,8 @@ must be inspected before citing a command as available.
 - [testing-strategy.md](testing-strategy.md) — test layers, contracts,
   PostgreSQL/RLS/Auth/Storage, concurrency, idempotency, AI evaluation, browser,
   print, and accessibility.
-- [fictional-data-and-rag-content.md](fictional-data-and-rag-content.md) — the
-  strict data boundary and controlled corpus lifecycle.
+- [fictional-data-and-rag-content.md](fictional-data-and-rag-content.md) — data
+  classification, non-production fictional-fixture rule, and corpus lifecycle.
 - [definition-of-done.md](definition-of-done.md) — change, release, deployment,
   and operational-readiness gates.
 
@@ -32,5 +32,5 @@ must be inspected before citing a command as available.
   rights holder, or other third party supplied evidence or approval.
 
 No label substitutes for another. In particular, green automation does not
-authorize a production release, deployment, facility pilot, or the use of real
-operational data.
+authorize a production release, deployment, facility pilot, or Production
+real-data entry.
