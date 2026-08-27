@@ -281,6 +281,11 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Export original bytes; do not substitute filenames or embeddings.
 - [ ] Inventory source/version/effective date/class/path/size/MIME/SHA-256/page
       count/rights/current-state/approval.
+- [x] Add a strict offline private-corpus manifest verifier that reconciles
+      reviewed metadata, source bytes, scan binding, version chains, duplicate
+      approvals, and content-addressed object keys while emitting only
+      value-free aggregate evidence. The real private manifest has not been
+      supplied or accepted, so the inventory and custodian gates remain open.
 - [ ] Quarantine missing, duplicate, unreadable, unauthorized, or ambiguous
       sources.
 - [ ] Import approved originals into private Storage.

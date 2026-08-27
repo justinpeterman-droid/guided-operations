@@ -11,6 +11,9 @@ a later evidence record explicitly says otherwise.
 - [RAG Corpus Migration](rag-corpus-migration.md) — source acquisition, rights,
   SHA-256, private storage, page mapping, chunks, retrieval, citations, full
   reader, and corpus gates.
+- [Private Corpus Manifest Verification](private-corpus-manifest-verification.md)
+  — strict offline source-byte reconciliation that emits only value-free
+  evidence and never moves corpus content into Git or CI.
 - [Replacement Migration Plan](migration-plan.md) — phased workstreams,
   environment model, acceptance gates, ordering, and risk register.
 - [Cutover, Google Cloud Retirement, and Rollback](cutover-retirement-rollback.md)

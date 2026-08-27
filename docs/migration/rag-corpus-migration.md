@@ -246,6 +246,14 @@ Rules:
 
 ## Acquisition and inventory protocol
 
+Use the fail-closed
+[private corpus manifest verifier](private-corpus-manifest-verification.md) to
+bind the custodian-reviewed inventory to the exact original PDF bytes while
+keeping all source metadata and content outside Git and non-Production systems.
+Its value-free evidence is one input to R1 acceptance, not a substitute for
+custodian approval, hosted Storage qualification, retrieval evaluation, or
+restore proof.
+
 ### 1. Freeze a legacy export manifest
 
 From the currently authorized Google-side source/index location, export a
