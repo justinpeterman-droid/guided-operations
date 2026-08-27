@@ -53,8 +53,8 @@ export function buildProductionBackupEvidence(input) {
   };
 }
 
-export function opaqueObjectFileName(bucket, objectName) {
-  return `${sha256(Buffer.from(`${bucket}\0${objectName}`, "utf8"))}.age`;
+export function opaqueObjectFileName() {
+  return `${randomBytes(32).toString("hex")}.age`;
 }
 
 export async function inventoryPrivateStorage(storage) {
@@ -288,6 +288,9 @@ async function main() {
       agePath: input.agePath,
       signal,
     });
+    await freeze.assertActive();
+    await freeze.release();
+    freeze = undefined;
     const evidence = buildProductionBackupEvidence({
       backupId,
       projectRef: input.projectRef,
@@ -303,14 +306,14 @@ async function main() {
       completedAt: new Date().toISOString(),
       expiresOn: input.expiresOn,
     });
+    const evidencePath = resolve(backupRoot, "backup-evidence.json");
+    const partialEvidencePath = `${evidencePath}.partial`;
     writeFileSync(
-      resolve(backupRoot, "backup-evidence.json"),
+      partialEvidencePath,
       `${JSON.stringify(evidence, null, 2)}\n`,
       { encoding: "utf8", mode: 0o600 },
     );
-    await freeze.assertActive();
-    await freeze.release();
-    freeze = undefined;
+    renameSync(partialEvidencePath, evidencePath);
     console.log(`Encrypted Production backup completed: ${backupId}`);
   } catch (error) {
     if (freeze) await freeze.release().catch(() => {});
@@ -522,6 +525,7 @@ async function backupStorage({ input, backupRoot, inventory, signal }) {
   let plaintextBytes = 0;
   let ciphertextBytes = 0;
   const ciphertextDigests = [];
+  const ciphertextFiles = new Set();
 
   for (const object of inventory.objects) {
     throwIfBackupAborted(signal);
@@ -539,7 +543,10 @@ async function backupStorage({ input, backupRoot, inventory, signal }) {
     if (!response.ok || !response.body)
       throw new Error("Production backup could not read a private object.");
 
-    const ciphertextFile = opaqueObjectFileName(object.bucket, object.name);
+    let ciphertextFile;
+    do ciphertextFile = opaqueObjectFileName();
+    while (ciphertextFiles.has(ciphertextFile));
+    ciphertextFiles.add(ciphertextFile);
     const encrypted = await encryptReadable({
       readable: Readable.fromWeb(response.body),
       outputPath: resolve(backupRoot, "objects", ciphertextFile),

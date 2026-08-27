@@ -20,6 +20,7 @@ type Reservation = Readonly<{
     | "account_rate_limited"
     | "account_concurrency_limited";
   lease_id: string | null;
+  lease_expires_at: string | null;
 }>;
 
 export type AiBudgetPersistence = Readonly<{
@@ -73,7 +74,7 @@ function createPostgresPersistence(databaseUrl: string): AiBudgetPersistence {
       leaseSeconds,
     ) {
       const rows = await sql<Reservation[]>`
-        select allowed, reason_code, lease_id
+        select allowed, reason_code, lease_id, lease_expires_at::text
         from app_private.reserve_ai_request_budget(
           ${accountId}::uuid,
           ${operation},
@@ -146,9 +147,18 @@ export function createAiRequestBudgetGuard(
       }
 
       const leaseId = reservation.lease_id;
+      const remainingLeaseMs =
+        Date.parse(reservation.lease_expires_at ?? "") - Date.now() - 5_000;
+      if (!Number.isFinite(remainingLeaseMs) || remainingLeaseMs <= 0) {
+        await persistence.release(accountId, leaseId).catch(() => false);
+        throw new AiBudgetCircuitOpenError("budget_check_failed");
+      }
       let released = false;
       return {
-        providerTimeoutMs: environment.AI_REQUEST_LEASE_SECONDS * 1_000 - 5_000,
+        providerTimeoutMs: Math.min(
+          environment.AI_REQUEST_LEASE_SECONDS * 1_000 - 5_000,
+          Math.floor(remainingLeaseMs),
+        ),
         async release() {
           if (released) return;
           try {

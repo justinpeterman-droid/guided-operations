@@ -59,6 +59,7 @@ returns table (
   allowed boolean,
   reason_code text,
   lease_id uuid,
+  lease_expires_at timestamptz,
   request_count integer,
   effective_limit integer
 )
@@ -67,10 +68,8 @@ security definer
 set search_path = ''
 as $$
 declare
-  reservation_time timestamptz := statement_timestamp();
-  current_period date := date_trunc(
-    'month', reservation_time at time zone 'UTC'
-  )::date;
+  reservation_time timestamptz;
+  current_period date;
   stop_at integer;
   account_stop_at integer;
   global_count integer;
@@ -79,6 +78,7 @@ declare
   window_start timestamptz;
   window_count integer;
   reserved_lease_id uuid;
+  reserved_lease_expires_at timestamptz;
 begin
   if p_account_id is null or not exists (
     select 1 from app_private.user_accounts as account
@@ -125,6 +125,10 @@ begin
   );
 
   perform pg_advisory_xact_lock(hashtextextended(p_account_id::text, 0));
+  reservation_time := clock_timestamp();
+  current_period := date_trunc(
+    'month', reservation_time at time zone 'UTC'
+  )::date;
   delete from app_private.ai_request_budget_leases
   where account_id = p_account_id and expires_at <= reservation_time;
 
@@ -133,7 +137,7 @@ begin
   where account_id = p_account_id and expires_at > reservation_time;
   if active_lease_count >= p_account_concurrency_max then
     return query select false, 'account_concurrency_limited'::text, null::uuid,
-      active_lease_count, p_account_concurrency_max;
+      null::timestamptz, active_lease_count, p_account_concurrency_max;
     return;
   end if;
 
@@ -143,7 +147,7 @@ begin
   account_count := coalesce(account_count, 0);
   if account_count >= account_stop_at then
     return query select false, 'account_monthly_limited'::text, null::uuid,
-      account_count, account_stop_at;
+      null::timestamptz, account_count, account_stop_at;
     return;
   end if;
 
@@ -155,7 +159,7 @@ begin
   if window_start > reservation_time - interval '1 minute'
     and window_count >= p_account_short_window_max then
     return query select false, 'account_rate_limited'::text, null::uuid,
-      window_count, p_account_short_window_max;
+      null::timestamptz, window_count, p_account_short_window_max;
     return;
   end if;
 
@@ -182,7 +186,7 @@ begin
     from app_private.ai_request_budget_months as budget
     where budget.period_start = current_period;
     return query select false, 'budget_exhausted'::text, null::uuid,
-      global_count, stop_at;
+      null::timestamptz, global_count, stop_at;
     return;
   end if;
 
@@ -214,15 +218,16 @@ begin
         when account_window.window_started_at <= reservation_time - interval '1 minute'
           then 1 else account_window.request_count + 1 end;
 
+  reserved_lease_expires_at := clock_timestamp()
+    + make_interval(secs => p_lease_seconds);
   insert into app_private.ai_request_budget_leases (
     account_id, operation, expires_at
   ) values (
-    p_account_id, p_operation,
-    reservation_time + make_interval(secs => p_lease_seconds)
+    p_account_id, p_operation, reserved_lease_expires_at
   ) returning id into reserved_lease_id;
 
   return query select true, 'reserved'::text, reserved_lease_id,
-    global_count, stop_at;
+    reserved_lease_expires_at, global_count, stop_at;
 end;
 $$;
 

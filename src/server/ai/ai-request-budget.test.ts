@@ -21,6 +21,7 @@ describe("AI request budget guard", () => {
       allowed: true,
       reason_code: "reserved",
       lease_id: "22222222-2222-4222-8222-222222222222",
+      lease_expires_at: new Date(Date.now() + 90_000).toISOString(),
     });
     const release = vi.fn().mockResolvedValue(true);
     const guard = createAiRequestBudgetGuard(accountId, {
@@ -29,7 +30,8 @@ describe("AI request budget guard", () => {
     });
 
     const lease = await guard.reserve("policy_answer");
-    expect(lease.providerTimeoutMs).toBe(85_000);
+    expect(lease.providerTimeoutMs).toBeGreaterThan(84_000);
+    expect(lease.providerTimeoutMs).toBeLessThanOrEqual(85_000);
     await expect(lease.release()).resolves.toBeUndefined();
     expect(reserve).toHaveBeenCalledWith(
       accountId,
@@ -82,6 +84,7 @@ describe("AI request budget guard", () => {
           allowed: false,
           reason_code: "budget_exhausted",
           lease_id: null,
+          lease_expires_at: null,
         }),
         release: vi.fn(),
       },
@@ -91,5 +94,29 @@ describe("AI request budget guard", () => {
       reasonCode: "budget_exhausted",
       message: "AI assistance is temporarily unavailable",
     });
+  });
+
+  it("releases and fails closed when no safe provider time remains", async () => {
+    const release = vi.fn().mockResolvedValue(true);
+    const guard = createAiRequestBudgetGuard(accountId, {
+      environment,
+      persistence: {
+        reserve: vi.fn().mockResolvedValue({
+          allowed: true,
+          reason_code: "reserved",
+          lease_id: "22222222-2222-4222-8222-222222222222",
+          lease_expires_at: new Date(Date.now() + 4_000).toISOString(),
+        }),
+        release,
+      },
+    });
+
+    await expect(guard.reserve("policy_answer")).rejects.toMatchObject({
+      reasonCode: "budget_check_failed",
+    });
+    expect(release).toHaveBeenCalledWith(
+      accountId,
+      "22222222-2222-4222-8222-222222222222",
+    );
   });
 });

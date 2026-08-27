@@ -1,6 +1,6 @@
 begin;
 
-select plan(22);
+select plan(23);
 
 select has_table('app_private', 'ai_request_budget_months', 'global AI counters exist');
 select has_table('app_private', 'ai_request_budget_accounts', 'per-account AI counters exist');
@@ -84,6 +84,14 @@ select is(
     'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', 'policy_answer',
     100, 100, 20, 2, 1, 90
   )), true, 'the first authorized account request receives a lease'
+);
+select ok(
+  (
+    select expires_at > clock_timestamp() + interval '80 seconds'
+    from app_private.ai_request_budget_leases
+    where account_id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'
+  ),
+  'the concurrency lease receives a fresh post-contention lifetime'
 );
 select is(
   (select reason_code from app_private.reserve_ai_request_budget(

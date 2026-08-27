@@ -59,16 +59,24 @@ begin
     join pg_namespace as namespace on namespace.oid = relation.relnamespace
     where namespace.nspname in ('app_private', 'auth', 'storage')
       and relation.relkind in ('r', 'p')
-      and has_table_privilege(current_user, relation.oid, 'TRIGGER')
       and not (
         namespace.nspname = 'app_private'
         and relation.relname = 'production_backup_write_freeze'
       )
-      and not exists (
-        select 1 from pg_trigger as table_trigger
-        where table_trigger.tgrelid = relation.oid
-          and table_trigger.tgname like 'guided_operations_backup_freeze_%'
-          and table_trigger.tgenabled in ('O', 'A')
+      and (namespace.nspname, relation.relname) not in (
+        ('auth', 'schema_migrations'),
+        ('storage', 'migrations'),
+        ('storage', 'buckets_vectors'),
+        ('storage', 'vector_indexes')
+      )
+      and (
+        not has_table_privilege(current_user, relation.oid, 'TRIGGER')
+        or not exists (
+          select 1 from pg_trigger as table_trigger
+          where table_trigger.tgrelid = relation.oid
+            and table_trigger.tgname like 'guided_operations_backup_freeze_%'
+            and table_trigger.tgenabled in ('O', 'A')
+        )
       )
   ) then
     raise exception 'Production backup freeze table coverage is incomplete';
@@ -171,6 +179,12 @@ begin
       and not (
         namespace.nspname = 'app_private'
         and relation.relname = 'production_backup_write_freeze'
+      )
+      and (namespace.nspname, relation.relname) not in (
+        ('auth', 'schema_migrations'),
+        ('storage', 'migrations'),
+        ('storage', 'buckets_vectors'),
+        ('storage', 'vector_indexes')
       )
   loop
     trigger_name := 'guided_operations_backup_freeze_' ||

@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import { describe, it } from "node:test";
 
 import {
@@ -49,11 +50,10 @@ describe("Production backup primitives", () => {
   });
 
   it("uses opaque encrypted filenames that do not disclose bucket or object names", () => {
-    const fileName = opaqueObjectFileName(
-      "policy-sources",
-      "restricted/person-file.pdf",
-    );
+    const fileName = opaqueObjectFileName();
+    const secondFileName = opaqueObjectFileName();
     assert.match(fileName, /^[a-f0-9]{64}\.age$/u);
+    assert.notEqual(fileName, secondFileName);
     assert.equal(fileName.includes("policy"), false);
     assert.equal(fileName.includes("person"), false);
   });
@@ -73,6 +73,27 @@ describe("Production backup primitives", () => {
     const { deadlineAt, expiresAt } = productionBackupFreezeWindow(now);
     assert.equal(expiresAt.getTime() - now.getTime(), 20 * 60 * 1000);
     assert.equal(expiresAt.getTime() - deadlineAt.getTime(), 30 * 1000);
+  });
+
+  it("publishes success evidence only after releasing the verified freeze", () => {
+    const source = readFileSync(
+      new URL("./create-production-backup.mjs", import.meta.url),
+      "utf8",
+    );
+    const finalAssertion = source.indexOf("await freeze.assertActive();");
+    const release = source.indexOf("await freeze.release();", finalAssertion);
+    const evidenceWrite = source.indexOf(
+      "writeFileSync(\n      partialEvidencePath",
+      release,
+    );
+    const evidencePublish = source.indexOf(
+      "renameSync(partialEvidencePath, evidencePath);",
+      evidenceWrite,
+    );
+    assert.ok(finalAssertion >= 0);
+    assert.ok(release > finalAssertion);
+    assert.ok(evidenceWrite > release);
+    assert.ok(evidencePublish > evidenceWrite);
   });
 
   it("requires an ordered 14-digit migration history", () => {

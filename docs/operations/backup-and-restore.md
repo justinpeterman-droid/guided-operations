@@ -79,12 +79,18 @@ does not by itself close the backup or restore gates. The tool:
   count and SHA-256, re-inventories all buckets and objects, and rejects any
   addition, deletion, same-size replacement, metadata/version change, or bucket
   configuration change;
+- fails closed if a new application, Auth, or Storage table cannot receive the
+  write-freeze trigger. The only explicit exclusions are Supabase's internal
+  Auth/Storage migration ledgers and unused Storage-vector metadata tables;
+  Guided Operations RAG vectors remain protected in PostgreSQL;
 - keeps object keys, bucket details, source checksums, and the project reference
-  only inside the encrypted manifest; and
+  only inside the encrypted manifest. Each encrypted object also receives a new
+  random opaque filename for every backup so guessed object paths cannot be
+  matched across packages; and
 - writes a value-free evidence file containing aggregate counts, hashes, tool
   versions, dates, and bounded references. An incomplete backup directory is
-  removed without touching the destination root. Success is recorded only after
-  the freeze is reverified following evidence creation.
+  removed without touching the destination root. The success evidence is
+  atomically published only after the freeze is reverified and released.
 
 The freeze is deliberately brief and makes normal writes temporarily
 unavailable. Do not start it during live use. The backup client cancels work 30
