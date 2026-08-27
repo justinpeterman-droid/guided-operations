@@ -7,6 +7,7 @@ import {
   createBlankCountPayload,
   parseCountValue,
 } from "./calculations";
+import printStyles from "./count-sheet-print.module.css";
 import { PrintCountSheetButton } from "./print-count-sheet-button";
 import type { CountSheetPayload, CountSheetStructure } from "./types";
 
@@ -98,7 +99,7 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
 
   return (
     <section
-      className="count-sheet-preview"
+      className={`count-sheet-preview ${printStyles.printLayout}`}
       aria-labelledby="count-sheet-title"
     >
       <div className="count-sheet-heading">

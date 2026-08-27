@@ -12,6 +12,7 @@ import {
   APPROVED_COUNT_SHEET_STRUCTURE,
   isApprovedCountSheetStructure,
 } from "./approved-structure";
+import printStyles from "./count-sheet-print.module.css";
 import { parseCountSheetStructure } from "./schema";
 import { PrintCountSheetButton } from "./print-count-sheet-button";
 import {
@@ -342,7 +343,7 @@ export function CountSheetWorkspace({
 
   return (
     <section
-      className="count-sheet-preview"
+      className={`count-sheet-preview ${printStyles.printLayout}`}
       aria-labelledby="count-sheet-title"
     >
       <div className="count-sheet-heading">

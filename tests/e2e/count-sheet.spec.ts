@@ -100,7 +100,9 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
     name: "A/W Office, 1",
     exact: true,
   });
-  await firstCell.focus();
+  await page.getByRole("button", { name: "Print training preview" }).focus();
+  await page.keyboard.press("Tab");
+  await expect(firstCell).toBeFocused();
   await firstCell.fill("1");
   await expect(firstCell).toHaveValue("1");
   await page.emulateMedia({ media: "print", reducedMotion: "reduce" });
@@ -109,6 +111,20 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
       "Fictional training preview — not an approved operational form",
     ),
   ).toBeVisible();
+  const printFit = await page.evaluate(() => {
+    const wrapper = document.querySelector<HTMLElement>(
+      ".count-sheet-table-wrap",
+    );
+    return {
+      pageWidth: document.documentElement.scrollWidth,
+      viewportWidth: document.documentElement.clientWidth,
+      wrapperOverflowX: wrapper
+        ? getComputedStyle(wrapper).overflowX
+        : "missing",
+    };
+  });
+  expect(printFit.wrapperOverflowX).toBe("visible");
+  expect(printFit.pageWidth).toBeLessThanOrEqual(printFit.viewportWidth);
   expect(browserErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
 });

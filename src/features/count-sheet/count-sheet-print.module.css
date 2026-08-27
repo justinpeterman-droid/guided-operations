@@ -1,0 +1,94 @@
+.printLayout {
+  /* The class scopes the print rules to Count Sheet routes only. */
+}
+
+@media print {
+  @page {
+    size: landscape;
+    margin: 0.35in;
+  }
+
+  .printLayout :global(.count-sheet-heading) {
+    max-width: none;
+  }
+
+  .printLayout :global(.count-sheet-grid) {
+    display: block;
+    margin-top: 12px;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap) {
+    width: 100%;
+    overflow: visible;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap table) {
+    width: 100%;
+    table-layout: fixed;
+    font-size: 6.5pt;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap caption) {
+    padding: 5px 6px;
+    font-size: 7pt;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap th),
+  .printLayout :global(.count-sheet-table-wrap td) {
+    min-width: 0;
+    padding: 2px;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap th:first-child),
+  .printLayout :global(.count-sheet-table-wrap td:first-child) {
+    width: 1.25in;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap tbody th) {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    font-size: 6.5pt;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap input) {
+    min-height: 15px;
+    padding: 0 1px;
+    font-size: 6.5pt;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap thead) {
+    display: table-header-group;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap tr) {
+    break-inside: avoid;
+  }
+
+  .printLayout :global(.count-sheet-summary) {
+    margin-top: 10px;
+    padding: 8px;
+    break-inside: avoid;
+  }
+
+  .printLayout :global(.count-sheet-summary dl) {
+    display: flex;
+    gap: 18px;
+    margin: 6px 0;
+  }
+
+  .printLayout :global(.count-sheet-summary dl > div) {
+    min-width: 1.25in;
+    padding: 0;
+    border: 0;
+  }
+
+  .printLayout :global(.operational-inputs) {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 4px;
+  }
+
+  .printLayout :global(.operational-inputs h2) {
+    grid-column: 1 / -1;
+  }
+}
