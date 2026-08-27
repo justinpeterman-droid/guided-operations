@@ -297,6 +297,9 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Pass custodian-approved retrieval, citation, conflict/supersession,
       abstention, prompt-injection, invented-fact, access, latency, and cost
       evaluations.
+- [x] Implement and unit-test a provider-neutral, value-free scorecard for
+      citation recall/precision, abstention, injection markers, and p95 latency.
+      The private approved-corpus run and human acceptance remain open.
 - [ ] Back up and restore corpus objects/manifests, rebuild indexes, and rerun
       the golden set.
 
