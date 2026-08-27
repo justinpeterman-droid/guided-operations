@@ -391,6 +391,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Run expected-load plus margin tests using fictional data.
 - [ ] Run concurrency, retry, provider-degradation, cost, and quota tests.
 - [ ] Freeze exact release candidate and complete the dated release record.
+- [x] Add a local release-record verifier that binds qualification, approval,
+      promotion, rollback compatibility, backups, evidence, and the 15-minute
+      Production watch to one exact artifact. Real records remain private and no
+      hosted release has been verified.
 - [ ] Pass web/database CI on the exact commit.
 - [ ] Pass Auth/RLS/Storage negative and revoked-session tests.
 - [ ] Pass authenticated fictional browser, accessibility, screen-reader,

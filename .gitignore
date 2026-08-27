@@ -25,6 +25,7 @@
 
 # production
 /build
+/release-evidence/
 
 # misc
 .DS_Store

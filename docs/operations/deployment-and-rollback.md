@@ -68,6 +68,12 @@ application promotion.
    through the first representative use window.
 10. **MANUAL:** complete the release record and communicate outcome.
 
+Run `npm run release:verify -- --phase production --file <private-record>` only
+after the full monitoring window. A passing result proves that the required
+references are present and bound to one candidate; operators still have to
+inspect the underlying provider, browser, security, backup, and approval
+evidence. Keep the real record private and outside Git.
+
 Production smoke must not create a real incident, real roster entry, or real
 operational form. Use clearly reserved fictional qualification identities and
 remove only the rows the smoke test owns.

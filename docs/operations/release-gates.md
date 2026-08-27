@@ -47,6 +47,27 @@ Create a dated release record before production promotion containing:
 - owner approval and operator;
 - post-release observations and final outcome.
 
+The record is a private operational artifact, not application source. Create it
+under the Git-ignored `release-evidence/` directory or in another protected
+location. Do not include secret values, tokens, connection strings, real names,
+employee numbers, policy text, prompts, responses, report content, or other
+operational/personal data. Use bounded aliases, digests, immutable deployment
+identifiers, and private evidence references.
+
+Verify the record before qualification and again after the Production watch:
+
+```powershell
+npm run release:verify -- --phase qualification --file release-evidence/<private-record>.json
+npm run release:verify -- --phase production --file release-evidence/<private-record>.json
+```
+
+The verifier fails closed when required proof is absent, the approval does not
+name the exact commit/deployment/migration, the rollback target is not declared
+schema-compatible, or the Production monitoring window is shorter than 15
+minutes. The verifier checks that evidence is present and consistently bound; it
+does not replace human review of the linked evidence. Its tests use only
+fictional values, and a real release record must never be committed.
+
 ## Stop conditions
 
 Do not promote when any of these is true:
