@@ -485,6 +485,7 @@ declare
   request_id uuid;
   manifest record;
   child_report record;
+  expired_request record;
   decision_time timestamptz := statement_timestamp();
 begin
   if p_record_id is null
@@ -537,6 +538,29 @@ begin
   perform app_private.assert_retention_target_ready(
     actor_facility_id, p_record_type, p_record_id, decision_time
   );
+
+  for expired_request in
+    update app_private.retention_deletion_requests
+    set status = 'canceled', canceled_at = decision_time
+    where facility_id = actor_facility_id
+      and record_type = p_record_type
+      and record_id = p_record_id
+      and status = 'approved'
+      and approval_expires_at <= decision_time
+    returning id
+  loop
+    insert into app_private.audit_events (
+      facility_id, actor_auth_user_id, event_type, target_type, target_id,
+      metadata
+    ) values (
+      actor_facility_id,
+      p_actor_auth_user_id,
+      'retention.deletion.canceled',
+      'retention_deletion_request',
+      expired_request.id,
+      jsonb_build_object('reason_code', 'approval_expired')
+    );
+  end loop;
 
   select * into manifest
   from app_private.retention_artifact_manifest(
@@ -616,6 +640,7 @@ returns table (
   artifact_count integer,
   artifacts_deleted_count integer,
   status text,
+  approval_current boolean,
   approved_at timestamptz,
   approval_expires_at timestamptz,
   completed_at timestamptz,
@@ -652,7 +677,10 @@ begin
     request.authority_reference, request.database_backup_reference,
     request.storage_backup_reference, request.backup_verified_at,
     request.backup_expires_at, request.artifact_count,
-    request.artifacts_deleted_count, request.status, request.approved_at,
+    request.artifacts_deleted_count, request.status,
+    (request.status = 'approved'
+      and request.approval_expires_at > statement_timestamp()),
+    request.approved_at,
     request.approval_expires_at, request.completed_at,
     request.database_rows_deleted
   from app_private.retention_deletion_requests as request

@@ -51,6 +51,9 @@ jobs are configured. Entries with a pending `release_status` or
   a SHA-256 manifest. The restore check must be from the prior 24 hours.
   Execution requires a separate fresh administrator step-up and exact record-ID
   confirmation within the 24-hour approval window.
+- Expired approvals cannot execute or permanently block the target. A later
+  valid approval attempt marks the expired request canceled, retains its
+  metadata-only evidence, and records an allowlisted reason code.
 - Execution locks and rechecks the entire target scope, verifies the registered
   private export manifest, removes and verifies those objects, and deletes the
   database package inside one database transaction. Any failed check rolls the

@@ -222,7 +222,7 @@ function DeletionRequestRegister({
                   </p>
                 ) : null}
               </div>
-              {request.status === "approved" ? (
+              {request.status === "approved" && request.approvalCurrent ? (
                 <ExecuteRetentionDeletionControl
                   recordId={request.recordId}
                   requestId={request.requestId}
@@ -233,7 +233,9 @@ function DeletionRequestRegister({
                     ? "Completed"
                     : request.status === "canceled"
                       ? "Canceled"
-                      : "Execution in progress"}
+                      : request.status === "approved"
+                        ? "Approval expired"
+                        : "Execution in progress"}
                 </span>
               )}
             </article>

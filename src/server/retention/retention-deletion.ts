@@ -64,6 +64,7 @@ const deletionRequestSummarySchema = z
     artifactCount: z.number().int().min(0).max(10_000),
     artifactsDeletedCount: z.number().int().min(0).max(10_000),
     status: z.enum(["approved", "executing", "completed", "canceled"]),
+    approvalCurrent: z.boolean(),
     approvedAt: z.iso.datetime({ offset: true }),
     approvalExpiresAt: z.iso.datetime({ offset: true }),
     completedAt: z.iso.datetime({ offset: true }).nullable(),

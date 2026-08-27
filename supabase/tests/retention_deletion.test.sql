@@ -1,6 +1,6 @@
 begin;
 
-select plan(36);
+select plan(39);
 
 select has_table(
   'app_private', 'retention_deletion_requests',
@@ -288,6 +288,25 @@ select throws_ok(
   'backup restore evidence must be from the prior 24 hours'
 );
 
+insert into app_private.retention_deletion_requests (
+  id, facility_id, record_type, record_id, authority_reference,
+  database_backup_reference, storage_backup_reference, backup_manifest_sha256,
+  backup_verified_at, backup_expires_at, artifact_manifest_sha256,
+  artifact_count, approved_by_account_id, approved_at, approval_expires_at
+)
+select
+  '93939393-9393-4393-8393-939393939393', facility.id, 'incident',
+  '85858585-8585-4585-8585-858585858585', 'FICTIONAL-EXPIRED-AUTHORITY',
+  'FICTIONAL-EXPIRED-DB-BACKUP', 'FICTIONAL-EXPIRED-STORAGE-BACKUP',
+  repeat('e', 64), statement_timestamp() - interval '49 hours',
+  statement_timestamp() + interval '2 days',
+  'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+  0, '81818181-8181-4181-8181-818181818181',
+  statement_timestamp() - interval '48 hours',
+  statement_timestamp() - interval '24 hours'
+from app_private.facilities as facility
+where facility.singleton_key = 1;
+
 select lives_ok(
   $$
     select set_config(
@@ -304,6 +323,25 @@ select lives_ok(
     )
   $$,
   'an administrator can approve an eligible package with backup evidence'
+);
+
+select is(
+  (
+    select status from app_private.retention_deletion_requests
+    where id = '93939393-9393-4393-8393-939393939393'
+  ),
+  'canceled',
+  'a replacement approval preserves an expired approval as canceled evidence'
+);
+select is(
+  (
+    select count(*)::integer from app_private.audit_events
+    where target_id = '93939393-9393-4393-8393-939393939393'
+      and event_type = 'retention.deletion.canceled'
+      and metadata = '{"reason_code":"approval_expired"}'::jsonb
+  ),
+  1,
+  'expiration cancellation records only a bounded reason code'
 );
 
 select is(
@@ -332,6 +370,17 @@ select is(
   ),
   1,
   'the approving facility administrator can list pending deletion evidence'
+);
+select is(
+  (
+    select approval_current
+    from app_private.list_retention_deletion_requests(
+      '81818181-8181-4181-8181-818181818181', false, 100
+    )
+    where request_id = current_setting('app.test.deletion_request_id')::uuid
+  ),
+  true,
+  'the private register reports whether an approval is still executable'
 );
 select throws_ok(
   $$

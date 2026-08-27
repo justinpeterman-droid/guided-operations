@@ -179,6 +179,9 @@ stored as non-current history but never promoted implicitly.
   separate execution proof plus exact record-ID confirmation is required.
   Execution supports only a complete incident package or one paperwork record;
   report-only deletion is rejected.
+- An expired approval cannot execute. The next valid approval attempt atomically
+  marks the expired request canceled, preserves it as evidence, and records a
+  bounded cancellation audit event before issuing a replacement.
 - Private routines lock and recheck the target and legal-hold scopes, bind the
   actor/backend/transaction, verify registered Storage cleanup, and delete the
   database package in one transaction. Append-only history tables reject all

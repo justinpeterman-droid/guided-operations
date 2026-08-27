@@ -16,7 +16,26 @@ vi.mock("@/server/retention/private-retention-deletion-store", () => ({
 vi.mock("@/server/retention/retention-deletion", () => ({
   listRetentionDeletionRequestsForCurrentSession: vi.fn().mockResolvedValue({
     kind: "listed",
-    requests: [],
+    requests: [
+      {
+        requestId: "44444444-4444-4444-8444-444444444444",
+        recordType: "incident",
+        recordId: "55555555-5555-4555-8555-555555555555",
+        authorityReference: "FICTIONAL-AUTHORITY-001",
+        databaseBackupReference: "FICTIONAL-DB-BACKUP-001",
+        storageBackupReference: "FICTIONAL-STORAGE-BACKUP-001",
+        backupVerifiedAt: "2020-01-01T01:00:00.000Z",
+        backupExpiresAt: "2020-01-03T01:00:00.000Z",
+        artifactCount: 1,
+        artifactsDeletedCount: 0,
+        status: "approved",
+        approvalCurrent: false,
+        approvedAt: "2020-01-01T02:00:00.000Z",
+        approvalExpiresAt: "2020-01-02T02:00:00.000Z",
+        completedAt: null,
+        databaseRowsDeleted: null,
+      },
+    ],
   }),
 }));
 vi.mock("@/server/retention/legal-hold", () => ({
@@ -66,6 +85,7 @@ describe("AdminRetentionPage", () => {
     expect(
       screen.getByRole("heading", { name: "Deletion approval register" }),
     ).toBeInTheDocument();
+    expect(screen.getByText("Approval expired")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Confirm legal hold" }),
     ).toBeInTheDocument();

@@ -47,6 +47,7 @@ function store(): RetentionDeletionStore {
         artifactCount: 1,
         artifactsDeletedCount: 0,
         status: "approved",
+        approvalCurrent: true,
         approvedAt: "2026-08-27T04:00:00.000Z",
         approvalExpiresAt: "2026-08-28T04:00:00.000Z",
         completedAt: null,
