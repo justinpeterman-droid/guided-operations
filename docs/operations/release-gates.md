@@ -64,8 +64,10 @@ npm run release:verify -- --phase production --file release-evidence/<private-re
 The verifier fails closed when required proof is absent, the approval does not
 name the exact commit/deployment/migration, the rollback target is not declared
 schema-compatible, or the Production monitoring window is shorter than 15
-minutes. The verifier checks that evidence is present and consistently bound; it
-does not replace human review of the linked evidence. Its tests use only
+minutes. It also requires qualification, restore, authorization, and approval
+proof before promotion, followed by Production smoke and monitoring after
+promotion. The verifier checks that evidence is present and consistently bound;
+it does not replace human review of the linked evidence. Its tests use only
 fictional values, and a real release record must never be committed.
 
 ## Stop conditions

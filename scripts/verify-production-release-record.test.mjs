@@ -41,6 +41,7 @@ function record(overrides = {}) {
       "productionAuthorization",
     ].map((name) => [name, gate()]),
   );
+  gates.productionSmoke.reviewedAtUtc = "2026-08-27T12:20:00Z";
   return {
     schemaVersion: 1,
     releaseId: "release-2026-08-27-001",
@@ -148,6 +149,29 @@ describe("production release record verifier", () => {
     const result = validateProductionReleaseRecord(value, "production");
     assert.equal(result.ok, false);
     assert.match(result.errors.join(" "), /at least 15 minutes/u);
+  });
+
+  it("rejects approval or monitoring that occurs on the wrong side of promotion", () => {
+    const value = record();
+    value.ownerApproval.approvedAtUtc = "2026-08-27T12:11:00Z";
+    value.monitoringWindow.startedAtUtc = "2026-08-27T11:30:00Z";
+    value.monitoringWindow.endedAtUtc = "2026-08-27T11:45:00Z";
+    const result = validateProductionReleaseRecord(value, "production");
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join(" "), /approval must occur before/u);
+    assert.match(result.errors.join(" "), /monitoring must start after/u);
+  });
+
+  it("rejects late qualification or restore proof and early Production smoke", () => {
+    const value = record();
+    value.backupAndRestore.restoreExerciseAtUtc = "2026-08-27T12:11:00Z";
+    value.gates.rollbackRehearsal.reviewedAtUtc = "2026-08-27T12:11:00Z";
+    value.gates.productionSmoke.reviewedAtUtc = "2026-08-27T12:09:00Z";
+    const result = validateProductionReleaseRecord(value, "production");
+    assert.equal(result.ok, false);
+    assert.match(result.errors.join(" "), /restore exercise/u);
+    assert.match(result.errors.join(" "), /rollbackRehearsal/u);
+    assert.match(result.errors.join(" "), /smoke evidence/u);
   });
 
   it("rejects a rollback target without explicit schema compatibility", () => {

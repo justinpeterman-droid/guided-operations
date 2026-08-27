@@ -124,6 +124,7 @@ export function validateProductionReleaseRecord(record, requiredPhase) {
   if (requiredPhase === "production") {
     validateProduction(record.production, candidate, errors);
     validateMonitoring(record.monitoringWindow, errors);
+    validateProductionChronology(record, errors);
   }
 
   return { ok: errors.length === 0, errors };
@@ -229,6 +230,56 @@ function validateMonitoring(value, errors) {
         errors.push(
           "Production monitoring signal names must be bounded aliases.",
         );
+}
+
+function validateProductionChronology(record, errors) {
+  const approval = object(record.ownerApproval);
+  const production = object(record.production);
+  const monitoring = object(record.monitoringWindow);
+  const backup = object(record.backupAndRestore);
+  const gates = object(record.gates);
+  const promotedAt = production.promotedAtUtc;
+
+  if (!isUtc(promotedAt)) return;
+
+  if (
+    isUtc(approval.approvedAtUtc) &&
+    Date.parse(approval.approvedAtUtc) > Date.parse(promotedAt)
+  )
+    errors.push("Owner approval must occur before Production promotion.");
+
+  if (
+    isUtc(backup.restoreExerciseAtUtc) &&
+    Date.parse(backup.restoreExerciseAtUtc) > Date.parse(promotedAt)
+  )
+    errors.push("The restore exercise must occur before Production promotion.");
+
+  if (
+    isUtc(monitoring.startedAtUtc) &&
+    Date.parse(monitoring.startedAtUtc) < Date.parse(promotedAt)
+  )
+    errors.push("Production monitoring must start after promotion.");
+
+  const prePromotionGates = [
+    ...REQUIRED_QUALIFICATION_GATES,
+    "productionMigration",
+    "productionAuthorization",
+  ];
+  for (const name of prePromotionGates) {
+    const gate = object(gates[name]);
+    if (
+      isUtc(gate.reviewedAtUtc) &&
+      Date.parse(gate.reviewedAtUtc) > Date.parse(promotedAt)
+    )
+      errors.push(`Gate ${name} must be reviewed before Production promotion.`);
+  }
+
+  const productionSmoke = object(gates.productionSmoke);
+  if (
+    isUtc(productionSmoke.reviewedAtUtc) &&
+    Date.parse(productionSmoke.reviewedAtUtc) < Date.parse(promotedAt)
+  )
+    errors.push("Production smoke evidence must be reviewed after promotion.");
 }
 
 function validateReferences(value, label, errors, requireHttps) {
