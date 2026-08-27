@@ -63,4 +63,93 @@ describe("validateGeneratedReportDraft", () => {
       ),
     ).toThrow("repeats a source fact reference");
   });
+
+  it("accepts operational identifiers only when the paragraph cites their confirmed fact", () => {
+    const operationalSource: ReportDraftSource = {
+      ...source,
+      confirmedFacts: [
+        {
+          id: factOne,
+          field: "Confirmed event details",
+          value: "ADC# 123456 at 9:50 pm on 8/27/2026",
+          sourceNoteIds: [],
+        },
+      ],
+    };
+    const candidate = {
+      paragraphs: [
+        {
+          text: "Inmate Example ADC# 123456 was present at 9:50 pm on 8/27/2026.",
+          sourceFactIds: [factOne],
+        },
+      ],
+    };
+
+    expect(validateGeneratedReportDraft(candidate, operationalSource)).toEqual(
+      candidate,
+    );
+  });
+
+  it.each([
+    ["Inmate Example ADC# 654321 was present.", "RW-030"],
+    ["The event occurred at 10:15 pm.", "RW-030"],
+    ["The event occurred on 8/28/2026.", "RW-030"],
+    ["Inmate Example ADC#123456 was present.", "RW-002"],
+    ["Sgt Example reviewed the draft.", "RW-003"],
+    ["The event occurred at 9:50 PM.", "RW-005"],
+    ["End of report.", "RW-014"],
+    ["The inmate had a laceration.", "RW-031"],
+    ["Review [NEEDED: location].", "RW-033"],
+  ])("rejects legacy blocking rule violations: %s", (text, ruleId) => {
+    expect(() =>
+      validateGeneratedReportDraft(
+        { paragraphs: [{ text, sourceFactIds: [factOne] }] },
+        source,
+      ),
+    ).toThrow(ruleId);
+  });
+
+  it("requires cited support from the same paragraph, not an unrelated confirmed fact", () => {
+    const candidate = {
+      paragraphs: [
+        {
+          text: "The event occurred at 9:50 pm.",
+          sourceFactIds: [factOne],
+        },
+      ],
+    };
+    const operationalSource: ReportDraftSource = {
+      ...source,
+      confirmedFacts: [
+        source.confirmedFacts[0],
+        { ...source.confirmedFacts[1], value: "9:50 pm" },
+      ],
+    };
+
+    expect(() =>
+      validateGeneratedReportDraft(candidate, operationalSource),
+    ).toThrow("RW-030");
+  });
+
+  it("keeps supervisor summaries in third person and disciplinary closings explicit", () => {
+    expect(() =>
+      validateGeneratedReportDraft(
+        { paragraphs: [{ text: "I reviewed it.", sourceFactIds: [factOne] }] },
+        { ...source, reportType: "supervisor_summary" },
+      ),
+    ).toThrow("RW-035");
+    expect(() =>
+      validateGeneratedReportDraft(
+        {
+          paragraphs: [
+            {
+              text: "The fictional conduct was reviewed.",
+              sourceFactIds: [factOne],
+            },
+          ],
+        },
+        { ...source, reportType: "disciplinary" },
+      ),
+    ).toThrow("RW-013");
+  });
 });

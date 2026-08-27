@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { createOpenAiReportDraftGenerationProvider } from "./openai-report-draft-generation";
+import { REPORT_WRITING_RULE_PROFILE } from "@/features/incidents/report-writing-rules";
 
 const environment = {
   OPENAI_API_KEY: "x".repeat(20),
@@ -57,11 +58,18 @@ describe("OpenAI report draft generation provider", () => {
       paragraphs: [{ text: "Fictional draft." }],
     });
     const [, init] = fetch.mock.calls[0] as [string, RequestInit];
-    expect(JSON.parse(init.body as string)).toMatchObject({
+    const body = JSON.parse(init.body as string);
+    expect(body).toMatchObject({
       model: environment.OPENAI_REPORT_DRAFT_MODEL,
       store: false,
       text: { format: { type: "json_schema", strict: true } },
     });
+    expect(body.instructions).toContain("ADC# 123456");
+    expect(JSON.parse(body.input)).toMatchObject({
+      ruleProfile: REPORT_WRITING_RULE_PROFILE,
+      reportType: request.source.reportType,
+    });
+    expect(provider.providerKey).toBe("openai-responses-report-draft-v2");
     expect(init.signal).toBeInstanceOf(AbortSignal);
     expect(release).toHaveBeenCalled();
   });

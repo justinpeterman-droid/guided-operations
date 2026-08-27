@@ -8,6 +8,9 @@ a later evidence record explicitly says otherwise.
   reconciliation, source paths, hashes, and unverified evidence.
 - [Reuse, Rewrite, and Omit](reuse-rewrite-omit.md) — file-level migration
   decisions and per-file import checklist.
+- [Legacy Assistant Parity Contract](legacy-assistant-parity-contract.md) —
+  exact Report Assistant and RAG Policy Assistant behavior to preserve, improve,
+  reject, and still complete.
 - [RAG Corpus Migration](rag-corpus-migration.md) — source acquisition, rights,
   SHA-256, private storage, page mapping, chunks, retrieval, citations, full
   reader, and corpus gates.
@@ -26,14 +29,16 @@ a later evidence record explicitly says otherwise.
   `ebe52c4b977ab742975974732beec42fff1bbce5`.
 - Branch-only Full Policy Reader source:
   `c5e49c809674750e6be36ae1b042222a6d2ce3cd`.
-- New repository: technical foundation only; no complete migrated user-facing
-  feature.
+- New repository: protected account, incident/report, Count Sheet, Policy
+  Expert, administration, retention, and recovery foundations are implemented on
+  the production-readiness branch. Legacy assistant parity and hosted
+  qualification remain incomplete.
 - RAG: the old Git manifest names 292 unique PDFs, but the audit did not prove
   that 292 authoritative source byte streams are recoverable, current, or
   rights-approved.
-- Deployment: a new hosted Supabase foundation and protected Vercel preview now
-  exist. No verified Vercel production deployment, application environment
-  linkage, user account, or corpus import is evidenced.
+- Deployment: a hosted Supabase Development foundation and protected Vercel
+  Preview exist. Production remains isolated and unpromoted; no real account,
+  real corpus import, or real operational data is enabled.
 - Google Cloud: no resource is authorized for deletion merely because these
   plans exist.
 

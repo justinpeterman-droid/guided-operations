@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 import type { ReportDraftSource } from "./report-draft-source";
+import { findBlockingReportWritingRule } from "./report-writing-rules";
 
 const opaqueIdSchema = z.uuid();
 
@@ -56,6 +57,13 @@ export function validateGeneratedReportDraft(
         );
       }
     }
+  }
+
+  const blockingRule = findBlockingReportWritingRule(parsed, source);
+  if (blockingRule) {
+    throw new GeneratedReportDraftError(
+      `Generated report draft failed ${blockingRule}.`,
+    );
   }
 
   return parsed;
