@@ -69,7 +69,8 @@ describe("GET /api/web/v1/policy-sources/[documentVersionId]", () => {
   });
 
   it("serves only a verified private PDF with restrictive response headers", async () => {
-    const pdf = new Blob(["%PDF-fictional"], { type: "application/pdf" });
+    const pdf = new TextEncoder().encode("%PDF-fictional")
+      .buffer as ArrayBuffer;
     vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
     vi.mocked(getAuthorizedPolicySource).mockResolvedValue(source as never);
     vi.mocked(createSupabasePolicySourceStorageReader).mockReturnValue(
@@ -102,6 +103,9 @@ describe("GET /api/web/v1/policy-sources/[documentVersionId]", () => {
     expect(getAuthorizedPolicySource).toHaveBeenCalledWith(
       client,
       documentVersionId,
+    );
+    expect(createSupabasePolicySourceStorageReader).toHaveBeenCalledWith(
+      client,
     );
     expect(readAuthorizedPolicySourcePdf).toHaveBeenCalledWith(source, storage);
     expect(writeSafeOperationalEvent).toHaveBeenCalledWith(

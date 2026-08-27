@@ -289,10 +289,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Quarantine missing, duplicate, unreadable, unauthorized, or ambiguous
       sources.
 - [ ] Import approved originals into private Storage.
-- [x] Implement session-bound same-facility authorization and a server-only
-      private PDF reader that verifies exact object path, size, MIME type, PDF
-      signature, and SHA-256 before delivery. Local database and route negative
-      tests pass; real corpus import and hosted browser proof remain open.
+- [x] Implement session-bound same-facility authorization, user-bound Storage
+      RLS, and a server-only private PDF reader that verifies exact object path,
+      size, MIME type, PDF signature, and SHA-256 before delivery. Routine reads
+      never use the Supabase secret credential. Local database and route
+      negative tests pass; real corpus import and hosted browser proof remain
+      open.
 - [ ] Build versioned extraction/OCR, page maps, chunks/hashes, full-text index,
       embeddings, and vector index.
 - [x] Implement separate provider-neutral retrieval and generation adapters,

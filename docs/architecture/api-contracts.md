@@ -250,16 +250,19 @@ The implemented PDF reader accepts only an opaque immutable document-version ID.
 It first verifies the current account, then calls a session-bound database
 function that rechecks facility, approval, rights-review dates, lifecycle,
 current/superseded state, PDF metadata, and the exact content-addressed object
-path. Only after that authorization does a narrow server-only Storage adapter
-download the private object. The server verifies byte size, MIME type, PDF
-signature, and SHA-256 before returning an inline `application/pdf` response
-with `private, no-store`, same-origin resource isolation, no-referrer, nosniff,
-and sandbox headers. The browser receives neither a Storage credential nor a
-signed/public URL. Denied or malformed source IDs are concealed as `404`, and
-Storage or integrity failures are generic `503` responses. Operational events
-contain only event/outcome/request/timing/deployment fields; they exclude source
-IDs, paths, titles, URLs, and content. Page-targeted excerpt/highlight behavior
-and the user-facing full-reader integration remain later implementation items.
+path. Only after that authorization does a narrow server-only Storage adapter,
+bound to the same user's session, download the private object. Storage RLS
+independently rechecks the same facility, rights, lifecycle, and object path at
+download time. The server verifies byte size, MIME type, PDF signature, and
+SHA-256 before returning an inline `application/pdf` response with
+`private, no-store`, same-origin resource isolation, no-referrer, nosniff, and
+sandbox headers. The browser receives neither a Storage credential nor a
+signed/public URL, and routine reads never use the Supabase secret credential.
+Denied or malformed source IDs are concealed as `404`, and Storage or integrity
+failures are generic `503` responses. Operational events contain only
+event/outcome/request/timing/deployment fields; they exclude source IDs, paths,
+titles, URLs, and content. Page-targeted excerpt/highlight behavior and the
+user-facing full-reader integration remain later implementation items.
 
 ### Forms, packets, and paperwork
 

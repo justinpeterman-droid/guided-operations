@@ -76,9 +76,12 @@ The implemented policy-source path is
 `GET /api/web/v1/policy-sources/{documentVersionId}`. It does not issue a signed
 URL or expose browser Storage access. A session-bound database function first
 authorizes one exact approved content-addressed object. A narrow server-only
-reader then downloads and rechecks the PDF MIME type, byte count, signature, and
-SHA-256 before responding with non-cacheable same-origin headers. Browser
-listing, upload, update, and delete access to `policy-sources` remains denied.
+reader uses that same user session, and Storage RLS independently rechecks the
+facility, rights, lifecycle, and object path before download. The server then
+rechecks PDF MIME type, byte count, signature, and SHA-256 before responding
+with non-cacheable same-origin headers. Application browser code has no direct
+Storage client or readable token; anonymous listing and every browser write
+remain denied. Routine reads never use the Supabase secret credential.
 
 ## Authoritative job state
 

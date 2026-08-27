@@ -52,16 +52,16 @@ export async function GET(
 
     const result = await readAuthorizedPolicySourcePdf(
       source,
-      createSupabasePolicySourceStorageReader(),
+      createSupabasePolicySourceStorageReader(client),
     );
     if (result.kind === "ready") {
       recordRead("served", 200, requestId, startedAt, environment.APP_ENV);
-      return new Response(await result.pdf.arrayBuffer(), {
+      return new Response(result.pdf, {
         status: 200,
         headers: {
           ...NO_STORE_HEADERS,
           "Content-Disposition": `inline; filename="${result.filename}"`,
-          "Content-Length": String(result.pdf.size),
+          "Content-Length": String(result.pdf.byteLength),
           "Content-Security-Policy": "sandbox",
           "Content-Type": "application/pdf",
           "Cross-Origin-Resource-Policy": "same-origin",

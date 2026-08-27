@@ -1,26 +1,25 @@
 import "server-only";
 
-import { createClient } from "@supabase/supabase-js";
-
-import { getAuthServerEnvironment } from "@/lib/env/auth-server";
-import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
-
 import type { PolicySourceStorageReader } from "./policy-source-reader";
 
-/**
- * Returns a deliberately narrow reader instead of exposing the privileged
- * Supabase client. Call it only after the session-bound database RPC has
- * authorized one exact immutable source path.
- */
-export function createSupabasePolicySourceStorageReader(): PolicySourceStorageReader {
-  const authEnvironment = getAuthServerEnvironment();
-  const publicEnvironment = getPublicSupabaseEnvironment();
-  const client = createClient(
-    publicEnvironment.NEXT_PUBLIC_SUPABASE_URL,
-    authEnvironment.SUPABASE_SECRET_KEY,
-    { auth: { autoRefreshToken: false, persistSession: false } },
-  );
+type UserBoundStorageClient = Readonly<{
+  storage: Readonly<{
+    from(bucket: "policy-sources"): Readonly<{
+      download(
+        path: string,
+      ): Promise<Readonly<{ data: Blob | null; error: unknown | null }>>;
+    }>;
+  }>;
+}>;
 
+/**
+ * Returns a deliberately narrow reader bound to the current user's Supabase
+ * session. Storage RLS independently rechecks that the exact object remains
+ * readable when the download begins.
+ */
+export function createSupabasePolicySourceStorageReader(
+  client: UserBoundStorageClient,
+): PolicySourceStorageReader {
   return {
     async download(bucket, path) {
       const result = await client.storage.from(bucket).download(path);

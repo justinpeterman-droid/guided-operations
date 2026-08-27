@@ -230,6 +230,10 @@ export type Database = {
           updated_at: string
         }[]
       }
+      policy_source_object_is_readable: {
+        Args: { p_object_name: string }
+        Returns: boolean
+      }
       record_count_sheet_print: {
         Args: {
           p_idempotency_key_digest: string

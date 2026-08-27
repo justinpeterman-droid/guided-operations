@@ -65,7 +65,7 @@ export type PolicySourceStorageReader = Readonly<{
 }>;
 
 export type PolicySourceReadResult =
-  | Readonly<{ kind: "ready"; pdf: Blob; filename: string }>
+  | Readonly<{ kind: "ready"; pdf: ArrayBuffer; filename: string }>
   | Readonly<{ kind: "storage_unavailable" }>
   | Readonly<{ kind: "integrity_failure" }>;
 
@@ -155,7 +155,8 @@ export async function readAuthorizedPolicySourcePdf(
       return { kind: "integrity_failure" };
     }
 
-    const bytes = new Uint8Array(await result.data.arrayBuffer());
+    const pdf = await result.data.arrayBuffer();
+    const bytes = new Uint8Array(pdf);
     if (
       bytes.length < 5 ||
       String.fromCharCode(...bytes.subarray(0, 5)) !== "%PDF-"
@@ -170,7 +171,7 @@ export async function readAuthorizedPolicySourcePdf(
 
     return {
       kind: "ready",
-      pdf: result.data,
+      pdf,
       filename: `${source.stableKey}-${source.sourceSha256.slice(0, 12)}.pdf`,
     };
   } catch {
