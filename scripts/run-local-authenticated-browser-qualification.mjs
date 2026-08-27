@@ -79,7 +79,14 @@ try {
 if (target) {
   const qualificationEnvironment = {
     ...process.env,
+    AI_ACCOUNT_CONCURRENCY_MAX: "2",
+    AI_ACCOUNT_MONTHLY_SHARE_PERCENT: "5",
+    AI_ACCOUNT_SHORT_WINDOW_MAX: "6",
+    AI_BUDGET_STOP_PERCENT: "90",
     AI_GENERATION_ENABLED: "false",
+    AI_MONTHLY_REQUEST_CAP: "1000",
+    AI_PROVIDER: "openai",
+    AI_REQUEST_LEASE_SECONDS: "90",
     APP_ENV: "development",
     APP_ORIGIN: "http://127.0.0.1:3109",
     AUTH_DUMMY_ALIAS: "fictional-dummy-local@auth.invalid",
@@ -100,6 +107,7 @@ if (target) {
     OPENAI_POLICY_MODEL: "fictional-local-disabled-model",
     OPENAI_REPORT_DRAFT_MODEL: "fictional-local-disabled-model",
     PLAYWRIGHT_PORT: "3109",
+    RAG_CORPUS_VERSION: "fictional-local-empty-v1",
     SAFE_OPERATIONAL_LOGGING_ENABLED: "false",
     SUPABASE_DB_URL: target.databaseUrl,
     SUPABASE_SECRET_KEY: target.secretKey,
@@ -133,7 +141,16 @@ if (target) {
       ["test", "tests/e2e/authenticated-count-sheet.spec.ts", "--workers=1"],
       { env: qualificationEnvironment },
     );
-    testStatus = result.status ?? 1;
+    if (result.status !== 0) {
+      throw new Error("The authenticated Officer qualification failed.");
+    }
+    resetLocalDatabase();
+    const adminResult = command(
+      playwrightCli,
+      ["test", "tests/e2e/authenticated-admin.spec.ts", "--workers=1"],
+      { env: qualificationEnvironment },
+    );
+    testStatus = adminResult.status ?? 1;
   } catch (error) {
     console.error(
       error instanceof Error

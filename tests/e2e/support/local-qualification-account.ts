@@ -8,6 +8,11 @@ export type LocalQualificationCredentials = Readonly<{
   passcode: string;
 }>;
 
+export type LocalQualificationAccounts = Readonly<{
+  administrator: LocalQualificationCredentials;
+  officer: LocalQualificationCredentials;
+}>;
+
 const OFFICER_EMPLOYEE_NUMBER = "FICTIONAL-E2E-0001";
 const OFFICER_PASSCODE = "FictionalLocalOfficerPasscode9!";
 const ADMIN_EMPLOYEE_NUMBER = "FICTIONAL-E2E-ADMIN";
@@ -43,7 +48,7 @@ function assertLocalQualificationEnvironment() {
   }
 }
 
-export async function createLocalQualificationOfficer(): Promise<LocalQualificationCredentials> {
+export async function createLocalQualificationAccounts(): Promise<LocalQualificationAccounts> {
   assertLocalQualificationEnvironment();
   const apiUrl = requiredEnvironment("NEXT_PUBLIC_SUPABASE_URL");
   const secretKey = requiredEnvironment("SUPABASE_SECRET_KEY");
@@ -145,10 +150,20 @@ export async function createLocalQualificationOfficer(): Promise<LocalQualificat
     `;
 
     return {
-      employeeNumber: OFFICER_EMPLOYEE_NUMBER,
-      passcode: OFFICER_PASSCODE,
+      administrator: {
+        employeeNumber: ADMIN_EMPLOYEE_NUMBER,
+        passcode: ADMIN_PASSCODE,
+      },
+      officer: {
+        employeeNumber: OFFICER_EMPLOYEE_NUMBER,
+        passcode: OFFICER_PASSCODE,
+      },
     };
   } finally {
     await sql.end({ timeout: 5 });
   }
+}
+
+export async function createLocalQualificationOfficer(): Promise<LocalQualificationCredentials> {
+  return (await createLocalQualificationAccounts()).officer;
 }
