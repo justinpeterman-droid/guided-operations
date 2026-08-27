@@ -35,6 +35,16 @@
       "trigger": "expires_at",
       "legal_hold": false
     },
+    "account-ai-usage-two-years": {
+      "duration_days": 730,
+      "trigger": "period_start",
+      "legal_hold": true
+    },
+    "short-window-technical": {
+      "duration_days": 1,
+      "trigger": "window_started_at",
+      "legal_hold": false
+    },
     "no-real-data": {
       "duration_days": 0,
       "trigger": "not_applicable",
@@ -234,6 +244,46 @@
       "retention_profile": "no-real-data",
       "real_data_boundary": "production_only",
       "deletion_status": "rolling-aggregate-no-record-content"
+    },
+    {
+      "id": "db:ai_request_budget_accounts",
+      "kind": "database_table",
+      "locator": "app_private.ai_request_budget_accounts",
+      "data_classes": ["account_identity", "aggregate_ai_usage_counter"],
+      "purpose": "Content-free per-account monthly AI fair-use counters",
+      "retention_profile": "account-ai-usage-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:ai_request_budget_windows",
+      "kind": "database_table",
+      "locator": "app_private.ai_request_budget_windows",
+      "data_classes": ["account_identity", "security_rate_limit"],
+      "purpose": "Content-free per-account short-window AI rate limits",
+      "retention_profile": "short-window-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "rolling-window-replacement"
+    },
+    {
+      "id": "db:ai_request_budget_leases",
+      "kind": "database_table",
+      "locator": "app_private.ai_request_budget_leases",
+      "data_classes": ["account_identity", "request_coordination"],
+      "purpose": "Short-lived content-free AI concurrency reservations",
+      "retention_profile": "ephemeral-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "expiry-column-present"
+    },
+    {
+      "id": "db:production_backup_write_freeze",
+      "kind": "database_table",
+      "locator": "app_private.production_backup_write_freeze",
+      "data_classes": ["backup_evidence", "authority_reference"],
+      "purpose": "Short-lived write and schema freeze during an approved Production backup",
+      "retention_profile": "ephemeral-technical",
+      "real_data_boundary": "production_only",
+      "deletion_status": "release-or-expiry-cleanup"
     },
     {
       "id": "db:report_draft_candidates",
