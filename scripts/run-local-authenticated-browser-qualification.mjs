@@ -24,6 +24,13 @@ const vitestCli = resolve(
   "vitest",
   "vitest.mjs",
 );
+const publicBrowserQualificationSpecs = [
+  "tests/e2e/admin-retention.spec.ts",
+  "tests/e2e/count-sheet.spec.ts",
+  "tests/e2e/forms-library.spec.ts",
+  "tests/e2e/foundation.spec.ts",
+  "tests/e2e/report-print.spec.ts",
+];
 
 function command(entry, args, options = {}) {
   return spawnSync(process.execPath, [entry, ...args], {
@@ -110,6 +117,15 @@ if (target) {
     );
     if (sessionResult.status !== 0) {
       throw new Error("The encrypted local session integration check failed.");
+    }
+    resetLocalDatabase();
+    const publicBrowserResult = command(
+      playwrightCli,
+      ["test", ...publicBrowserQualificationSpecs],
+      { env: qualificationEnvironment },
+    );
+    if (publicBrowserResult.status !== 0) {
+      throw new Error("The public local browser qualification failed.");
     }
     resetLocalDatabase();
     const result = command(

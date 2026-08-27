@@ -72,11 +72,13 @@
 
   .printLayout :global(.count-sheet-summary dl) {
     display: flex;
+    flex-wrap: wrap;
     gap: 18px;
     margin: 6px 0;
   }
 
   .printLayout :global(.count-sheet-summary dl > div) {
+    flex: 1 1 1.25in;
     min-width: 1.25in;
     padding: 0;
     border: 0;
