@@ -1,6 +1,6 @@
 begin;
 
-select plan(176);
+select plan(181);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1504,6 +1504,20 @@ select ok(
   'only authenticated users can execute the policy-retrieval RPC'
 );
 
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.retrieve_policy_passages_v2(text, integer, uuid[])',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.retrieve_policy_passages_v2(text, integer, uuid[])',
+    'execute'
+  ),
+  'only authenticated users can execute version-filtered policy retrieval'
+);
+
 select lives_ok(
   $$
     insert into app_private.policy_documents (
@@ -1625,12 +1639,64 @@ select is(
   'an authenticated request without a JWT subject receives no policy passages'
 );
 
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v2(
+      'fictional procedure',
+      8,
+      array['bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc']::uuid[]
+    )
+  ),
+  0,
+  'version filtering cannot bypass the missing-account denial'
+);
+
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
 
 select is(
   (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
   1,
   'an active current account receives only its approved indexed policy passage'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v2(
+      'fictional procedure',
+      8,
+      array['bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc']::uuid[]
+    )
+  ),
+  1,
+  'an explicit approved version filter returns its authorized passage'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v2(
+      'fictional procedure',
+      8,
+      array['99999999-9999-4999-8999-999999999999']::uuid[]
+    )
+  ),
+  0,
+  'an explicit version filter cannot return a different version'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v2(
+      'fictional procedure',
+      8,
+      array[]::uuid[]
+    );
+  $$,
+  'Invalid approved policy version filter',
+  'an empty approved-version filter is rejected instead of widened'
 );
 
 reset role;

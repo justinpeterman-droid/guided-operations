@@ -118,6 +118,14 @@ Index type, distance operator, weights, match count, chunk size/overlap, and
 reranking are evaluated choices. Do not copy a generic HNSW configuration
 without measuring the actual corpus.
 
+The current provider-neutral retrieval adapter uses the reviewed lexical RPC as
+the first bounded implementation. When an evaluation or future catalog flow
+supplies an explicit document-version set, the database applies that filter
+inside the same account, facility, rights, current-version, ingestion-QA, page,
+and chunk authorization boundary. An empty or oversized version filter is
+rejected instead of being widened. Semantic retrieval and measured rank fusion
+remain separate qualification work.
+
 ## Grounded answer generation
 
 The answer prompt has separate, fixed instruction and untrusted context

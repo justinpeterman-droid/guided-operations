@@ -48,14 +48,14 @@ describe("Supabase policy retrieval provider", () => {
         relevanceScore: row.relevance_score,
       },
     ]);
-    expect(rpc).toHaveBeenCalledWith("retrieve_policy_passages", {
+    expect(rpc).toHaveBeenCalledWith("retrieve_policy_passages_v2", {
       p_question: "What does the fictional procedure require?",
       p_limit: 8,
     });
   });
 
-  it("fails closed when a caller asks for an unsupported version filter", async () => {
-    const rpc = vi.fn();
+  it("passes an explicit approved-version filter to the authorized RPC", async () => {
+    const rpc = vi.fn().mockResolvedValue({ data: [row], error: null });
     const provider = createSupabasePolicyRetrievalProvider({ rpc });
 
     await expect(
@@ -65,8 +65,12 @@ describe("Supabase policy retrieval provider", () => {
         maximumPassages: 8,
         approvedDocumentVersionIds: ["22222222-2222-4222-8222-222222222222"],
       }),
-    ).resolves.toEqual([]);
-    expect(rpc).not.toHaveBeenCalled();
+    ).resolves.toHaveLength(1);
+    expect(rpc).toHaveBeenCalledWith("retrieve_policy_passages_v2", {
+      p_question: "Fictional policy question",
+      p_limit: 8,
+      p_approved_document_version_ids: ["22222222-2222-4222-8222-222222222222"],
+    });
   });
 
   it("does not treat malformed or failed RPC output as policy evidence", async () => {

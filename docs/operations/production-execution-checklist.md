@@ -287,7 +287,9 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Implement authorized streaming/download behavior.
 - [ ] Build versioned extraction/OCR, page maps, chunks/hashes, full-text index,
       embeddings, and vector index.
-- [ ] Implement separate provider-neutral retrieval and generation adapters.
+- [x] Implement separate provider-neutral retrieval and generation adapters,
+      including database-enforced approved-version filtering for bounded
+      evaluation and catalog requests.
 - [ ] Pin model/embedding IDs, timeouts, payload limits, retries, cost caps, and
       redacted errors.
 - [ ] Review OpenAI project data controls/retention and keep API data sharing

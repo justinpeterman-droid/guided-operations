@@ -270,6 +270,27 @@ export type Database = {
           version_label: string
         }[]
       }
+      retrieve_policy_passages_v2: {
+        Args: {
+          p_approved_document_version_ids?: string[]
+          p_limit?: number
+          p_question: string
+        }
+        Returns: {
+          chunk_id: string
+          document_id: string
+          document_version_id: string
+          excerpt: string
+          page_end: number
+          page_start: number
+          relevance_score: number
+          section_path: string
+          source_sha256: string
+          stable_key: string
+          title: string
+          version_label: string
+        }[]
+      }
       save_count_sheet: {
         Args: {
           p_base_revision_number: number

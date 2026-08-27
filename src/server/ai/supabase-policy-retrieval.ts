@@ -31,8 +31,12 @@ const rowsSchema = z
 
 export type PolicyRetrievalRpcClient = Readonly<{
   rpc(
-    functionName: "retrieve_policy_passages",
-    arguments_: Readonly<{ p_question: string; p_limit: number }>,
+    functionName: "retrieve_policy_passages_v2",
+    arguments_: Readonly<{
+      p_question: string;
+      p_limit?: number;
+      p_approved_document_version_ids?: string[];
+    }>,
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
@@ -49,16 +53,17 @@ export function createSupabasePolicyRetrievalProvider(
     async retrieve(
       request: PolicyRetrievalRequest,
     ): Promise<RetrievedPolicyPassage[]> {
-      if (request.approvedDocumentVersionIds?.length) {
-        // Version filtering will be added with the reviewed catalog/reader API.
-        // Failing closed prevents callers from assuming a filter was applied.
-        return [];
-      }
-
       try {
-        const result = await client.rpc("retrieve_policy_passages", {
+        const result = await client.rpc("retrieve_policy_passages_v2", {
           p_question: request.question,
           p_limit: request.maximumPassages,
+          ...(request.approvedDocumentVersionIds?.length
+            ? {
+                p_approved_document_version_ids: [
+                  ...request.approvedDocumentVersionIds,
+                ],
+              }
+            : {}),
         });
         if (result.error) return [];
 
