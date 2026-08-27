@@ -47,6 +47,32 @@ test("an officer cannot open administrator pages", async ({ page }) => {
   await signOut(page);
 });
 
+test("the last administrator cannot demote their own account", async ({
+  page,
+}) => {
+  await signIn(page, accounts.administrator);
+  await page.goto("/admin/accounts");
+
+  const administratorCard = page
+    .getByRole("listitem")
+    .filter({ hasText: "Fictional Qualification Administrator" });
+  await administratorCard.getByRole("button", { name: "Make officer" }).click();
+  await administratorCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await administratorCard
+    .getByRole("button", { name: "Confirm: Make officer" })
+    .click();
+  await expect(
+    administratorCard.getByText("This account role could not be changed."),
+  ).toBeVisible();
+  await expect(
+    administratorCard.getByText(/Administrator · active · no shift/),
+  ).toBeVisible();
+
+  await signOut(page);
+});
+
 test("a fictional administrator uses the protected roster and status pages", async ({
   page,
 }) => {
@@ -105,6 +131,88 @@ test("a fictional administrator uses the protected roster and status pages", asy
   ).toBeVisible();
   await expect(page.getByText(/Officer · active · shift B/)).toBeVisible();
   await page.getByRole("button", { name: "I have handed it over" }).click();
+
+  const invitedCard = page
+    .getByRole("listitem")
+    .filter({ hasText: "Fictional Invited Officer" });
+  await invitedCard.getByRole("button", { name: "Change shift" }).click();
+  await invitedCard.getByLabel("New assigned shift").selectOption("C");
+  await invitedCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await invitedCard
+    .getByRole("button", { name: "Confirm shift change" })
+    .click();
+  await expect(invitedCard.getByText("Shift changed")).toBeVisible();
+  await page.reload();
+  await expect(
+    invitedCard.getByText(/Officer · active · shift C/),
+  ).toBeVisible();
+
+  await invitedCard.getByRole("button", { name: "Make administrator" }).click();
+  await invitedCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await invitedCard
+    .getByRole("button", { name: "Confirm: Make administrator" })
+    .click();
+  await expect(invitedCard.getByText("Role changed")).toBeVisible();
+  await page.reload();
+  await expect(
+    invitedCard.getByText(/Administrator · active · shift C/),
+  ).toBeVisible();
+
+  await invitedCard.getByRole("button", { name: "Reset passcode" }).click();
+  await invitedCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await invitedCard.getByRole("button", { name: "Confirm reset" }).click();
+  await expect(
+    invitedCard.getByRole("heading", {
+      name: "Give this passcode to Fictional Invited Officer",
+    }),
+  ).toBeVisible();
+  await expect(
+    invitedCard.locator(".account-session-message strong"),
+  ).toHaveText(/^[A-HJ-NP-Za-km-z2-9]{20}$/);
+  await invitedCard
+    .getByRole("button", { name: "I have handed it over" })
+    .click();
+  await page.reload();
+  await expect(invitedCard.getByText(/passcode change required/)).toBeVisible();
+
+  await invitedCard.getByRole("button", { name: "Disable account" }).click();
+  await invitedCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await invitedCard.getByRole("button", { name: "Confirm disable" }).click();
+  await expect(invitedCard.getByText("Disabled")).toBeVisible();
+  await page.reload();
+  await expect(
+    invitedCard.getByText(/Administrator · disabled · shift C/),
+  ).toBeVisible();
+  await expect(
+    invitedCard.getByRole("button", { name: "Disable account" }),
+  ).toHaveCount(0);
+
+  const lockedOfficerCard = page
+    .getByRole("listitem")
+    .filter({ hasText: "Fictional Locked Officer" });
+  await expect(
+    lockedOfficerCard.getByText(/Officer · locked · shift D/),
+  ).toBeVisible();
+  await lockedOfficerCard
+    .getByRole("button", { name: "Unlock account" })
+    .click();
+  await lockedOfficerCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await lockedOfficerCard
+    .getByRole("button", { name: "Confirm unlock" })
+    .click();
+  await expect(
+    lockedOfficerCard.getByText(/Officer · active · shift D/),
+  ).toBeVisible();
 
   await page.goto("/admin/audit");
   await expect(

@@ -10,6 +10,7 @@ export type LocalQualificationCredentials = Readonly<{
 
 export type LocalQualificationAccounts = Readonly<{
   administrator: LocalQualificationCredentials;
+  lockedOfficer: LocalQualificationCredentials;
   officer: LocalQualificationCredentials;
 }>;
 
@@ -17,6 +18,8 @@ const OFFICER_EMPLOYEE_NUMBER = "FICTIONAL-E2E-0001";
 const OFFICER_PASSCODE = "FictionalLocalOfficerPasscode9!";
 const ADMIN_EMPLOYEE_NUMBER = "FICTIONAL-E2E-ADMIN";
 const ADMIN_PASSCODE = "FictionalLocalAdminPasscode9!";
+const LOCKED_OFFICER_EMPLOYEE_NUMBER = "FICTIONAL-E2E-LOCKED";
+const LOCKED_OFFICER_PASSCODE = "FictionalLocalLockedPasscode9!";
 
 function requiredEnvironment(name: string): string {
   const value = process.env[name];
@@ -149,10 +152,61 @@ export async function createLocalQualificationAccounts(): Promise<LocalQualifica
       )
     `;
 
+    const lockedOfficerAlias = `go-e2e-locked-${randomUUID()}@auth.invalid`;
+    const lockedOfficerUser = await adminClient.auth.admin.createUser({
+      email: lockedOfficerAlias,
+      password: LOCKED_OFFICER_PASSCODE,
+      email_confirm: true,
+    });
+    const lockedOfficerUserId = lockedOfficerUser.data.user?.id;
+    if (lockedOfficerUser.error || !lockedOfficerUserId) {
+      throw new Error("The fictional locked officer could not be created.");
+    }
+
+    const lockedOfficerDigest = employeeDigest(
+      LOCKED_OFFICER_EMPLOYEE_NUMBER,
+      pepper,
+    );
+    await sql`
+      select app_private.stage_invited_account(
+        ${adminUserId}::uuid,
+        ${lockedOfficerUserId}::uuid,
+        ${lockedOfficerDigest},
+        ${"LOCK"},
+        ${"Fictional Locked Officer"},
+        ${"officer"}::app_private.account_role,
+        ${"D"},
+        ${lockedOfficerAlias},
+        ${expiresAt}
+      )
+    `;
+    await sql`
+      select app_private.activate_invited_account(
+        ${adminUserId}::uuid,
+        ${lockedOfficerUserId}::uuid
+      )
+    `;
+    await sql`
+      select app_private.complete_temporary_passcode_change(
+        ${lockedOfficerUserId}::uuid,
+        ${lockedOfficerDigest}
+      )
+    `;
+    await sql`
+      update app_private.user_accounts
+      set status = 'locked', failed_attempts = 5,
+          locked_until = statement_timestamp() + interval '30 minutes'
+      where auth_user_id = ${lockedOfficerUserId}::uuid
+    `;
+
     return {
       administrator: {
         employeeNumber: ADMIN_EMPLOYEE_NUMBER,
         passcode: ADMIN_PASSCODE,
+      },
+      lockedOfficer: {
+        employeeNumber: LOCKED_OFFICER_EMPLOYEE_NUMBER,
+        passcode: LOCKED_OFFICER_PASSCODE,
       },
       officer: {
         employeeNumber: OFFICER_EMPLOYEE_NUMBER,
