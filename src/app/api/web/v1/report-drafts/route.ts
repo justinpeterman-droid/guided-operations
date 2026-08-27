@@ -127,8 +127,22 @@ export async function POST(request: Request): Promise<Response> {
         environment: appEnvironment,
       });
     }
+    const budgetUnavailable =
+      outcome.kind === "provider_unavailable" &&
+      (outcome.reasonCode === "budget_exhausted" ||
+        outcome.reasonCode === "budget_check_failed" ||
+        outcome.reasonCode === "generation_disabled");
     return observedResponse(
-      errorResponse(503, "service_unavailable", requestId),
+      errorResponse(
+        503,
+        budgetUnavailable
+          ? "ai_temporarily_unavailable"
+          : "service_unavailable",
+        requestId,
+        budgetUnavailable
+          ? "AI assistance is temporarily unavailable. Your other site tools still work."
+          : undefined,
+      ),
       {
         event_name: "report_draft.request",
         outcome:
@@ -139,7 +153,7 @@ export async function POST(request: Request): Promise<Response> {
           outcome.kind === "invalid_output"
             ? "invalid_output"
             : outcome.kind === "provider_unavailable"
-              ? "generation_failed"
+              ? outcome.reasonCode
               : "persistence_failed",
         request_id: requestId,
         status_code: 503,
@@ -179,10 +193,11 @@ function errorResponse(
   status: number,
   code: string,
   requestId: string,
+  message = "Request could not be completed.",
 ): Response {
   return Response.json(
     {
-      error: { code, message: "Request could not be completed." },
+      error: { code, message },
       meta: { request_id: requestId, api_version: API_VERSION },
     },
     { status, headers: NO_STORE_HEADERS },

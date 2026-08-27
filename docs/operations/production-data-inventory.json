@@ -226,6 +226,16 @@
       "deletion_status": "expiry-column-present"
     },
     {
+      "id": "db:ai_request_budget_months",
+      "kind": "database_table",
+      "locator": "app_private.ai_request_budget_months",
+      "data_classes": ["aggregate_ai_usage_counter"],
+      "purpose": "Content-free global monthly AI request circuit breaker",
+      "retention_profile": "no-real-data",
+      "real_data_boundary": "production_only",
+      "deletion_status": "rolling-aggregate-no-record-content"
+    },
+    {
       "id": "db:report_draft_candidates",
       "kind": "database_table",
       "locator": "app_private.report_draft_candidates",

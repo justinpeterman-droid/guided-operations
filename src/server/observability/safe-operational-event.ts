@@ -31,7 +31,10 @@ const safeOperationalEventInputSchema = z
     ]),
     reason_code: z
       .enum([
+        "budget_check_failed",
+        "budget_exhausted",
         "generation_failed",
+        "generation_disabled",
         "invalid_output",
         "persistence_failed",
         "retrieval_failed",

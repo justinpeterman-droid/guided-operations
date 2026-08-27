@@ -22,6 +22,7 @@ const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_POLICY_MODEL: "fictional-model",
 };
+const budgetGuard = { reserve: vi.fn().mockResolvedValue(undefined) };
 
 describe("OpenAI grounded generation provider", () => {
   it("uses a non-stored, tool-free strict structured response request", async () => {
@@ -42,6 +43,7 @@ describe("OpenAI grounded generation provider", () => {
     const provider = createOpenAiGroundedGenerationProvider({
       fetch: fetch as typeof globalThis.fetch,
       environment,
+      budgetGuard,
     });
 
     await expect(
@@ -78,6 +80,7 @@ describe("OpenAI grounded generation provider", () => {
           new Response("private provider detail", { status: 429 }),
         ),
       environment,
+      budgetGuard,
     });
 
     await expect(
@@ -87,5 +90,25 @@ describe("OpenAI grounded generation provider", () => {
         maximumAnswerCharacters: 4000,
       }),
     ).rejects.toThrow("OpenAI policy generation unavailable");
+  });
+
+  it("does not contact OpenAI when the shared budget denies the request", async () => {
+    const fetch = vi.fn();
+    const provider = createOpenAiGroundedGenerationProvider({
+      fetch,
+      environment,
+      budgetGuard: {
+        reserve: vi.fn().mockRejectedValue(new Error("circuit open")),
+      },
+    });
+
+    await expect(
+      provider.generate({
+        question: "What does the fictional policy say?",
+        passages: [{ citation, relevanceScore: 0.9 }],
+        maximumAnswerCharacters: 4000,
+      }),
+    ).rejects.toThrow("circuit open");
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

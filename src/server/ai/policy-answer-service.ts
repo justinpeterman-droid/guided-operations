@@ -13,6 +13,7 @@ import type {
   PolicyRetrievalProvider,
   RetrievedPolicyPassage,
 } from "./contracts";
+import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 
 const questionSchema = z.string().trim().min(3).max(2_000);
 const facilityIdSchema = z.uuid();
@@ -36,7 +37,13 @@ export type PolicyAnswerOutcome =
     }>
   | Readonly<{
       kind: "provider_unavailable";
-      reasonCode: "retrieval_failed" | "generation_failed" | "invalid_output";
+      reasonCode:
+        | "retrieval_failed"
+        | "generation_failed"
+        | "invalid_output"
+        | "budget_check_failed"
+        | "budget_exhausted"
+        | "generation_disabled";
     }>;
 
 export type PolicyAnswerDependencies = Readonly<{
@@ -112,6 +119,12 @@ export function createPolicyAnswerService(
           ? { kind: "answer", answer }
           : { kind: "insufficient_evidence", answer };
       } catch (error) {
+        if (error instanceof AiBudgetCircuitOpenError) {
+          return {
+            kind: "provider_unavailable",
+            reasonCode: error.reasonCode,
+          };
+        }
         return {
           kind: "provider_unavailable",
           reasonCode:

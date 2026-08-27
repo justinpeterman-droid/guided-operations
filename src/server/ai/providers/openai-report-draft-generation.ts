@@ -4,6 +4,10 @@ import { z } from "zod";
 
 import { getOpenAiReportDraftEnvironment } from "@/lib/env/openai-report-draft";
 
+import {
+  createAiRequestBudgetGuard,
+  type AiRequestBudgetGuard,
+} from "../ai-request-budget";
 import type { ReportDraftGenerationProvider } from "../contracts";
 
 const responseSchema = z
@@ -45,12 +49,15 @@ export function createOpenAiReportDraftGenerationProvider(
   options: Readonly<{
     fetch?: typeof fetch;
     environment?: Record<string, string | undefined>;
+    budgetGuard?: AiRequestBudgetGuard;
   }> = {},
 ): ReportDraftGenerationProvider {
   const fetchImplementation = options.fetch ?? fetch;
+  const budgetGuard = options.budgetGuard ?? createAiRequestBudgetGuard();
   return {
     providerKey: "openai-responses-report-draft-v1",
     async generate(request) {
+      await budgetGuard.reserve("report_draft");
       const environment = getOpenAiReportDraftEnvironment(options.environment);
       const response = await fetchImplementation(
         "https://api.openai.com/v1/responses",

@@ -342,7 +342,11 @@ Pause and report a blocker instead of guessing when work requires:
       Hosted backup jobs, hosted restore/deletion rehearsal, operational
       authority for a specific live deletion, and owner release approval remain
       open. No hosted data was changed.
-- [ ] Add cost/quota dashboards, alerts, budgets, and circuit breakers.
+- [x] Add a fail-closed shared application AI request circuit breaker with an
+      honest degraded state and content-free aggregate counters; local database
+      qualification remains part of this branch.
+- [ ] Approve and configure the monthly request cap, stop percentage, OpenAI
+      project budget, cost/quota dashboards, alerts, and test notifications.
 - [ ] Name incident/alert primary and alternate.
 - [ ] Exercise credential rotation, dependency update, incident response,
       feature disablement, and application rollback.

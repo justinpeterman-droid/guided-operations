@@ -10,6 +10,7 @@ import {
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
 
 import type { ReportDraftGenerationProvider } from "./contracts";
+import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 
 const sourceSchema = z.object({
   incidentId: z.uuid(),
@@ -30,7 +31,14 @@ const sourceSchema = z.object({
 
 export type ReportDraftOutcome =
   | Readonly<{ kind: "draft"; draft: GeneratedReportDraft }>
-  | Readonly<{ kind: "provider_unavailable" }>
+  | Readonly<{
+      kind: "provider_unavailable";
+      reasonCode:
+        | "generation_failed"
+        | "budget_check_failed"
+        | "budget_exhausted"
+        | "generation_disabled";
+    }>
   | Readonly<{ kind: "invalid_output" }>;
 
 /**
@@ -67,10 +75,16 @@ export function createReportDraftService(
           draft: validateGeneratedReportDraft(candidate, source),
         };
       } catch (error) {
+        if (error instanceof AiBudgetCircuitOpenError) {
+          return {
+            kind: "provider_unavailable",
+            reasonCode: error.reasonCode,
+          };
+        }
         return error instanceof GeneratedReportDraftError ||
           error instanceof z.ZodError
           ? { kind: "invalid_output" }
-          : { kind: "provider_unavailable" };
+          : { kind: "provider_unavailable", reasonCode: "generation_failed" };
       }
     },
   };

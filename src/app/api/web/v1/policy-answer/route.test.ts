@@ -124,4 +124,32 @@ describe("POST /api/web/v1/policy-answer", () => {
       }),
     );
   });
+
+  it("returns an honest degraded state when the AI budget is exhausted", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
+    vi.mocked(validatePolicyAnswerEndpointRequest).mockResolvedValue({
+      ok: true,
+      question: "Fictional question",
+    });
+    vi.mocked(createPolicyAnswerService).mockReturnValue({
+      answer: vi.fn().mockResolvedValue({
+        kind: "provider_unavailable",
+        reasonCode: "budget_exhausted",
+      }),
+    });
+
+    const response = await POST(new Request("https://app.example.test/api"));
+    expect(response.status).toBe(503);
+    await expect(response.json()).resolves.toMatchObject({
+      error: {
+        code: "ai_temporarily_unavailable",
+        message:
+          "AI assistance is temporarily unavailable. Your other site tools still work.",
+      },
+    });
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({ reason_code: "budget_exhausted" }),
+    );
+  });
 });

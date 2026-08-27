@@ -123,6 +123,14 @@ when qualifying an environment.
 
 - Put model/provider access behind a server-only adapter; browsers never receive
   provider credentials.
+- Every policy-answer and report-draft provider call first reserves one slot in
+  the shared private PostgreSQL monthly counter. The reservation is atomic
+  across Vercel instances and contains only an allowlisted operation and
+  aggregate counts—never an actor, prompt, response, citation, or record ID.
+- `AI_GENERATION_ENABLED=false`, a failed budget check, or reaching
+  `AI_BUDGET_STOP_PERCENT` of `AI_MONTHLY_REQUEST_CAP` prevents the provider
+  request. The API returns an honest temporary-unavailable message while
+  authentication, policy browsing, forms, and saved records remain available.
 - Configure per-user and global rate limits, request timeout, retry cap with
   jitter, concurrency cap, maximum input/retrieval/output tokens, and maximum
   retrieved chunks.
@@ -133,9 +141,10 @@ when qualifying an environment.
   spend more tokens to invent one.
 - Track cost per qualified request and daily/monthly aggregate without storing
   the request text.
-- Implement a budget circuit breaker that disables nonessential AI calls while
-  leaving authentication, policy browsing, and an honest unavailable state
-  operational.
+- Keep the OpenAI project budget and alerts as a second independent control. The
+  repository breaker counts requests, not currency or tokens, so the owner must
+  still approve the monthly request cap, stop percentage, models, provider spend
+  limit, and alert thresholds before Production is enabled.
 
 ## Dashboards and reviews
 

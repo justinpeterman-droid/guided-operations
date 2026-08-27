@@ -449,8 +449,12 @@ rehearsal, monitoring, alerts, budgets, and exercises remain open**
    verifies registered Storage objects, and completes database deletion in the
    same transaction. Hosted backup/deletion rehearsal and live authority for any
    specific deletion remain open.
-9. Set provider budgets and circuit breakers. A provider limit must create an
-   honest degraded state, not fabricated output or partial silent saves.
+9. The repository now has a fail-closed, database-backed global AI request
+   circuit breaker and an honest degraded response; local qualification and
+   hosted migration remain required. Set and record the owner-approved monthly
+   request cap, stop percentage, OpenAI project budget, and alert thresholds
+   before enabling Production. A provider limit must never create fabricated
+   output or partial silent saves.
 10. Exercise credential rotation, dependency update, incident response,
     application rollback, and feature-disable procedures.
 

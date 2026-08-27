@@ -4,6 +4,10 @@ import { z } from "zod";
 
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
 
+import {
+  createAiRequestBudgetGuard,
+  type AiRequestBudgetGuard,
+} from "../ai-request-budget";
 import type {
   GroundedGenerationProvider,
   GroundedGenerationRequest,
@@ -100,13 +104,16 @@ export function createOpenAiGroundedGenerationProvider(
   options: Readonly<{
     fetch?: OpenAiFetch;
     environment?: Record<string, string | undefined>;
+    budgetGuard?: AiRequestBudgetGuard;
   }> = {},
 ): GroundedGenerationProvider {
   const fetchImplementation = options.fetch ?? fetch;
+  const budgetGuard = options.budgetGuard ?? createAiRequestBudgetGuard();
 
   return {
     providerKey: "openai-responses-grounded-v1",
     async generate(request) {
+      await budgetGuard.reserve("policy_answer");
       const environment = getOpenAiPolicyEnvironment(options.environment);
       const response = await fetchImplementation(
         "https://api.openai.com/v1/responses",

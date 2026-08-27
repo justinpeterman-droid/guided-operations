@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getAiBudgetEnvironment } from "@/lib/env/ai-budget";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
 import { getOpenAiReportDraftEnvironment } from "@/lib/env/openai-report-draft";
@@ -27,6 +28,7 @@ export function assertApplicationEnvironmentReadiness(
   environment: Record<string, string | undefined> = process.env,
 ) {
   const runtime = getRuntimeEnvironment(environment);
+  getAiBudgetEnvironment(environment);
   const publicSupabase = getPublicSupabaseEnvironment(environment);
   const auth = getAuthServerEnvironment(environment);
   const incident = getIncidentServerEnvironment(environment);

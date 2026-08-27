@@ -20,6 +20,9 @@ function validEnvironment(overrides: Record<string, string | undefined> = {}) {
     SAFE_OPERATIONAL_LOGGING_ENABLED: "false",
     INCIDENT_IDEMPOTENCY_HMAC_KEY: "i".repeat(32),
     AI_PROVIDER: "openai",
+    AI_GENERATION_ENABLED: "true",
+    AI_MONTHLY_REQUEST_CAP: "1000",
+    AI_BUDGET_STOP_PERCENT: "90",
     OPENAI_API_KEY: "o".repeat(20),
     OPENAI_POLICY_MODEL: "fictional-policy-model",
     OPENAI_REPORT_DRAFT_MODEL: "fictional-report-model",
@@ -54,6 +57,14 @@ describe("application environment readiness", () => {
     expect(() =>
       assertApplicationEnvironmentReadiness(
         validEnvironment({ OPENAI_REPORT_DRAFT_MODEL: undefined }),
+      ),
+    ).toThrow();
+  });
+
+  it("rejects a missing AI monthly request cap", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({ AI_MONTHLY_REQUEST_CAP: undefined }),
       ),
     ).toThrow();
   });

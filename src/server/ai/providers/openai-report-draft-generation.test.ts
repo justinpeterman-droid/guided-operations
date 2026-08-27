@@ -8,6 +8,7 @@ const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_REPORT_DRAFT_MODEL: "fictional-report-model",
 };
+const budgetGuard = { reserve: vi.fn().mockResolvedValue(undefined) };
 const request = {
   source: {
     incidentId: "11111111-1111-4111-8111-111111111111",
@@ -47,6 +48,7 @@ describe("OpenAI report draft generation provider", () => {
     const provider = createOpenAiReportDraftGenerationProvider({
       fetch: fetch as typeof globalThis.fetch,
       environment,
+      budgetGuard,
     });
     await expect(provider.generate(request)).resolves.toMatchObject({
       paragraphs: [{ text: "Fictional draft." }],
@@ -67,9 +69,24 @@ describe("OpenAI report draft generation provider", () => {
           new Response("private provider detail", { status: 429 }),
         ),
       environment,
+      budgetGuard,
     });
     await expect(provider.generate(request)).rejects.toThrow(
       "OpenAI report draft generation unavailable",
     );
+  });
+
+  it("does not contact OpenAI when the shared budget denies the request", async () => {
+    const fetch = vi.fn();
+    const provider = createOpenAiReportDraftGenerationProvider({
+      fetch,
+      environment,
+      budgetGuard: {
+        reserve: vi.fn().mockRejectedValue(new Error("circuit open")),
+      },
+    });
+
+    await expect(provider.generate(request)).rejects.toThrow("circuit open");
+    expect(fetch).not.toHaveBeenCalled();
   });
 });

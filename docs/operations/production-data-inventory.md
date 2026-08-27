@@ -31,6 +31,9 @@ jobs are configured. Entries with a pending `release_status` or
   administrator step-up are technical controls, not record bodies. They expire
   on their bounded expiry fields; the durable allowlisted audit event is the
   retained accountability record.
+- The AI circuit breaker stores only monthly aggregate request counts by
+  allowlisted operation. It stores no actor, prompt, response, citation,
+  document, report, or incident identifier.
 - A legal hold or incident preservation decision overrides normal deletion for
   every hold-eligible source and all copies containing it.
 - Archived incident, report, and paperwork heads receive a database-derived

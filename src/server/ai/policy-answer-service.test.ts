@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import type { SourceCitation } from "@/features/policy/grounding";
 
+import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 import { createPolicyAnswerService } from "./policy-answer-service";
 
 const citation: SourceCitation = {
@@ -102,6 +103,20 @@ describe("policy answer service", () => {
     await expect(service.answer(request)).resolves.toEqual({
       kind: "provider_unavailable",
       reasonCode: "retrieval_failed",
+    });
+  });
+
+  it("preserves only the bounded budget reason for an honest degraded state", async () => {
+    const { service } = createService(
+      undefined,
+      vi
+        .fn()
+        .mockRejectedValue(new AiBudgetCircuitOpenError("budget_exhausted")),
+    );
+
+    await expect(service.answer(request)).resolves.toEqual({
+      kind: "provider_unavailable",
+      reasonCode: "budget_exhausted",
     });
   });
 });

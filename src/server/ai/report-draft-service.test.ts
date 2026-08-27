@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { createReportDraftService } from "./report-draft-service";
+import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 
 const source = {
   incidentId: "11111111-1111-4111-8111-111111111111",
@@ -55,6 +56,23 @@ describe("createReportDraftService", () => {
     );
     await expect(service.draft(source)).resolves.toEqual({
       kind: "invalid_output",
+    });
+  });
+
+  it("preserves only the bounded budget reason for an honest degraded state", async () => {
+    const service = createReportDraftService(
+      {
+        providerKey: "fixture",
+        generate: vi
+          .fn()
+          .mockRejectedValue(new AiBudgetCircuitOpenError("budget_exhausted")),
+      },
+      { maximumParagraphs: 8, maximumParagraphCharacters: 1_000 },
+    );
+
+    await expect(service.draft(source)).resolves.toEqual({
+      kind: "provider_unavailable",
+      reasonCode: "budget_exhausted",
     });
   });
 });
