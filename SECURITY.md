@@ -17,8 +17,9 @@ The repository now has guarded employee-number/passcode authentication,
 current-session authorization, forced/personal passcode changes, logout and
 revocation paths, protected account lifecycle with purpose-bound administrator
 step-up, narrow private RPCs, append-only product records, private Storage
-negative tests, citation-validated AI routes, complete runtime readiness, secret
-scanning, and strict allowlisted core operational events. Local fictional
+negative tests, a session-bound content-verified policy PDF reader,
+citation-validated AI routes, complete runtime readiness, secret scanning, and
+strict allowlisted core operational events. Local fictional
 database-plus-Storage recovery is automated and tested.
 
 These controls are not hosted security acceptance. The shared Development

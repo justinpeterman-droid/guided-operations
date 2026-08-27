@@ -90,4 +90,34 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records a policy-source read without a document id, path, or URL", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "policy_source.read",
+        outcome: "served",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 200,
+        duration_ms: 12,
+        environment: "preview",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-27T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "policy_source.read",
+      outcome: "served",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "document_id",
+        "document_version_id",
+        "storage_path",
+        "source_url",
+      ]),
+    );
+  });
 });

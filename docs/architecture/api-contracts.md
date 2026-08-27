@@ -236,7 +236,7 @@ progress, result references, and error codes rather than provider payloads.
 ### Policy Expert
 
 - POST /api/web/v1/policy-answer
-- GET /policy/sources/{sourceId}/citation?version=...&page=...
+- GET /api/web/v1/policy-sources/{documentVersionId}
 
 The implemented answer endpoint is same-origin and session-CSRF protected even
 though it has no durable mutation: this prevents cross-site use of the private
@@ -244,8 +244,22 @@ model/corpus allowance. It accepts a 3–2,000-character question, verifies the
 current account, retrieves only approved indexed passages for that account, and
 returns either a citation-validated answer or explicit insufficient evidence. It
 never retains the question, answer, passage, provider body, or storage key.
-Provider/retrieval failures are a generic `503`. The reader/citation-excerpt
-endpoint remains a later implementation item.
+Provider/retrieval failures are a generic `503`.
+
+The implemented PDF reader accepts only an opaque immutable document-version ID.
+It first verifies the current account, then calls a session-bound database
+function that rechecks facility, approval, rights-review dates, lifecycle,
+current/superseded state, PDF metadata, and the exact content-addressed object
+path. Only after that authorization does a narrow server-only Storage adapter
+download the private object. The server verifies byte size, MIME type, PDF
+signature, and SHA-256 before returning an inline `application/pdf` response
+with `private, no-store`, same-origin resource isolation, no-referrer, nosniff,
+and sandbox headers. The browser receives neither a Storage credential nor a
+signed/public URL. Denied or malformed source IDs are concealed as `404`, and
+Storage or integrity failures are generic `503` responses. Operational events
+contain only event/outcome/request/timing/deployment fields; they exclude source
+IDs, paths, titles, URLs, and content. Page-targeted excerpt/highlight behavior
+and the user-facing full-reader integration remain later implementation items.
 
 ### Forms, packets, and paperwork
 

@@ -72,6 +72,14 @@ a signed URL is used, make it single-purpose and very short-lived. Treat it as
 an unrevocable bearer until expiry and do not log it or place it in referrer
 paths.
 
+The implemented policy-source path is
+`GET /api/web/v1/policy-sources/{documentVersionId}`. It does not issue a signed
+URL or expose browser Storage access. A session-bound database function first
+authorizes one exact approved content-addressed object. A narrow server-only
+reader then downloads and rechecks the PDF MIME type, byte count, signature, and
+SHA-256 before responding with non-cacheable same-origin headers. Browser
+listing, upload, update, and delete access to `policy-sources` remains denied.
+
 ## Authoritative job state
 
 Supabase Queue messages are delivery signals. `app_private.ai_jobs` or a general

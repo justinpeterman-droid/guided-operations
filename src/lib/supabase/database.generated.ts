@@ -104,6 +104,25 @@ export type Database = {
           schema_version: number
         }[]
       }
+      get_policy_source_reader: {
+        Args: { p_document_version_id: string }
+        Returns: {
+          byte_size: number
+          document_id: string
+          document_version_id: string
+          effective_on: string
+          is_current: boolean
+          lifecycle_status: string
+          media_type: string
+          page_count: number
+          source_sha256: string
+          stable_key: string
+          storage_bucket: string
+          storage_path: string
+          title: string
+          version_label: string
+        }[]
+      }
       get_report: {
         Args: { p_report_id: string }
         Returns: {
