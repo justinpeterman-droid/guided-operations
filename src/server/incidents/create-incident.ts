@@ -24,6 +24,7 @@ type IncidentCreateRpcArguments = Readonly<{
   p_schema_version: number;
   p_field_notes: Json;
   p_reviewed_facts: Json;
+  p_staff_relationships: Json;
   p_idempotency_key_digest: string;
   p_request_digest: string;
 }>;
@@ -59,6 +60,7 @@ function canonicalRequest(command: CreateIncidentCommand): string {
     category: revision.category,
     fieldNotes: revision.fieldNotes,
     reviewedFacts: revision.reviewedFacts,
+    staffRelationships: command.staffRelationships,
   });
 }
 
@@ -107,6 +109,7 @@ export async function createIncidentForAuthorizedSession(
       p_schema_version: revision.schemaVersion,
       p_field_notes: revision.fieldNotes,
       p_reviewed_facts: revision.reviewedFacts,
+      p_staff_relationships: command.staffRelationships,
       p_idempotency_key_digest: digest(
         command.idempotencyKey,
         idempotencyHmacKey,

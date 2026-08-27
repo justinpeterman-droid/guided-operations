@@ -9,6 +9,24 @@ describe("NewIncidentWorkspace", () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              staff: [
+                {
+                  staffMemberId: "11111111-1111-4111-8111-111111111111",
+                  displayName: "Fictional Officer",
+                  employeeNumberHint: "11",
+                  shiftCode: "A",
+                  isCurrentAccount: true,
+                },
+              ],
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
         new Response(JSON.stringify({ csrfToken: "csrf-token" }), {
           status: 200,
         }),
@@ -21,7 +39,9 @@ describe("NewIncidentWorkspace", () => {
     render(<NewIncidentWorkspace />);
 
     await user.click(
-      screen.getByRole("button", { name: "Continue as signed-in officer" }),
+      await screen.findByRole("button", {
+        name: "Confirm officer relationships",
+      }),
     );
     await user.type(screen.getByLabelText("Incident number"), "FICTIONAL-101");
     await user.type(
@@ -84,22 +104,39 @@ describe("NewIncidentWorkspace", () => {
     expect(screen.getByText("005 409")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Save incident" }));
 
-    expect(fetch).toHaveBeenNthCalledWith(1, "/api/auth/csrf", {
+    expect(fetch).toHaveBeenNthCalledWith(1, "/api/web/v1/staff?limit=100", {
+      credentials: "same-origin",
+    });
+    expect(fetch).toHaveBeenNthCalledWith(2, "/api/auth/csrf", {
       credentials: "same-origin",
     });
     expect(fetch).toHaveBeenNthCalledWith(
-      2,
+      3,
       "/api/web/v1/incidents",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
     );
-    const [, request] = fetch.mock.calls[1] as [string, RequestInit];
+    const [, request] = fetch.mock.calls[2] as [string, RequestInit];
     const savedBody = JSON.parse(request.body as string) as {
+      staffRelationships: Array<{
+        staffMemberId: string;
+        relationship: string;
+      }>;
       revision: {
         category: string;
         fieldNotes: Array<{ text: string }>;
         reviewedFacts: Array<{ field: string }>;
       };
     };
+    expect(savedBody.staffRelationships).toEqual([
+      {
+        staffMemberId: "11111111-1111-4111-8111-111111111111",
+        relationship: "preparer",
+      },
+      {
+        staffMemberId: "11111111-1111-4111-8111-111111111111",
+        relationship: "reporting_officer",
+      },
+    ]);
     expect(savedBody.revision.category).toBe("incident_no_disciplinary");
     expect(savedBody.revision.fieldNotes).toEqual(
       expect.arrayContaining([

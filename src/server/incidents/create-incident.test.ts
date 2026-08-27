@@ -20,6 +20,16 @@ const command = {
     ],
     reviewedFacts: [],
   },
+  staffRelationships: [
+    {
+      staffMemberId: "66666666-6666-4666-8666-666666666666",
+      relationship: "reporting_officer" as const,
+    },
+    {
+      staffMemberId: "66666666-6666-4666-8666-666666666666",
+      relationship: "preparer" as const,
+    },
+  ],
   idempotencyKey: "a".repeat(16),
 };
 
@@ -78,6 +88,7 @@ describe("createIncidentForCurrentSession", () => {
       "create_incident",
       expect.objectContaining({
         p_facility_id: accountRow.facility_id,
+        p_staff_relationships: command.staffRelationships,
         p_idempotency_key_digest: expect.stringMatching(/^[a-f0-9]{64}$/),
         p_request_digest: expect.stringMatching(/^[a-f0-9]{64}$/),
       }),

@@ -8,6 +8,7 @@ import type { ReportDraftSource } from "@/features/incidents/report-draft-source
 const source: ReportDraftSource = {
   incidentId: "11111111-1111-4111-8111-111111111111",
   sourceIncidentRevisionId: "22222222-2222-4222-8222-222222222222",
+  reportingStaffMemberId: "55555555-5555-4555-8555-555555555555",
   reportType: "cover_letter",
   confirmedFacts: [
     {
@@ -79,6 +80,7 @@ describe("storeReportDraftCandidateForCurrentSession", () => {
       expect.objectContaining({
         p_incident_id: source.incidentId,
         p_source_incident_revision_id: source.sourceIncidentRevisionId,
+        p_reporting_staff_member_id: source.reportingStaffMemberId,
         p_source_fact_ids: [source.confirmedFacts[0].id],
         p_paragraphs: draft.paragraphs,
       }),

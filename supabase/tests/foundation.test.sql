@@ -1,6 +1,6 @@
 begin;
 
-select plan(188);
+select plan(198);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -27,6 +27,11 @@ select has_table(
 select has_table('app_private', 'audit_events', 'audit_events table exists');
 select has_table('app_private', 'incidents', 'incidents table exists');
 select has_table('app_private', 'incident_revisions', 'incident revisions table exists');
+select has_table(
+  'app_private',
+  'incident_staff_relationships',
+  'incident staff relationships table exists'
+);
 select has_table('app_private', 'reports', 'reports table exists');
 select has_table('app_private', 'report_access', 'report access table exists');
 select has_table('app_private', 'report_revisions', 'report revisions table exists');
@@ -854,15 +859,40 @@ select throws_ok(
 select ok(
   has_function_privilege(
     'authenticated',
-    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, text, text)',
+    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, jsonb, text, text)',
     'execute'
   )
   and not has_function_privilege(
     'anon',
-    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, text, text)',
+    'api.create_incident(uuid, text, text, timestamptz, text, integer, jsonb, jsonb, jsonb, text, text)',
     'execute'
   ),
   'only authenticated users can execute the reviewed incident-create RPC'
+);
+
+select ok(
+  has_function_privilege('authenticated', 'api.list_staff_selection(integer)', 'execute')
+  and not has_function_privilege('anon', 'api.list_staff_selection(integer)', 'execute'),
+  'only authenticated users can request the minimal active staff selection list'
+);
+
+select ok(
+  not has_table_privilege(
+    'authenticated',
+    'app_private.incident_staff_relationships',
+    'select,insert,update,delete'
+  ),
+  'authenticated users cannot bypass relationship RPC validation'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.list_staff_selection(100)
+    where is_current_account
+  ),
+  0,
+  'a staff list without an authenticated active subject returns no current account'
 );
 
 select lives_ok(
@@ -879,6 +909,7 @@ select lives_ok(
       1,
       '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
       '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
       repeat('1', 64),
       repeat('2', 64)
     );
@@ -898,6 +929,44 @@ select is(
   'the incident-create RPC created exactly one incident'
 );
 
+select is(
+  (
+    select count(*)::integer
+    from app_private.incident_staff_relationships as relationship
+    join app_private.incident_revisions as revision
+      on revision.id = relationship.incident_revision_id
+    join app_private.incidents as incident on incident.id = revision.incident_id
+    where incident.incident_number = 'FICTIONAL-RPC-001'
+  ),
+  2,
+  'incident creation recorded separate reporting and preparing relationships'
+);
+
+select throws_ok(
+  $$
+    select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.create_incident(
+      current_setting('app.test.facility_id')::uuid,
+      'FICTIONAL-RPC-WRONG-PREPARER',
+      'Fictional wrong preparer scenario',
+      '2026-08-26T12:00:00Z'::timestamptz,
+      'training',
+      1,
+      '[{"id":"15151515-1515-4151-8151-151515151515","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
+      '[]'::jsonb,
+      '[{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"reporting_officer"},{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"preparer"}]'::jsonb,
+      repeat('9', 64),
+      repeat('8', 64)
+    );
+  $$,
+  'Invalid incident staff relationships',
+  'the browser cannot assign another employee as the preparing officer'
+);
+
+reset role;
+
 select lives_ok(
   $$
     select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
@@ -912,6 +981,7 @@ select lives_ok(
       1,
       '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
       '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
       repeat('1', 64),
       repeat('2', 64)
     );
@@ -945,6 +1015,7 @@ select throws_ok(
       1,
       '[{"id":"14141414-1414-4141-8141-141414141414","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
       '[]'::jsonb,
+      '[{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"reporting_officer"},{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"preparer"}]'::jsonb,
       repeat('3', 64),
       repeat('4', 64)
     );
@@ -975,16 +1046,52 @@ reset role;
 select ok(
   has_function_privilege(
     'authenticated',
-    'api.store_report_draft_candidate(uuid, uuid, text, uuid[], jsonb, text, text, text)',
+    'api.store_report_draft_candidate(uuid, uuid, uuid, text, uuid[], jsonb, text, text, text)',
     'execute'
   )
   and not has_function_privilege(
     'anon',
-    'api.store_report_draft_candidate(uuid, uuid, text, uuid[], jsonb, text, text, text)',
+    'api.store_report_draft_candidate(uuid, uuid, uuid, text, uuid[], jsonb, text, text, text)',
     'execute'
   ),
   'only authenticated users can store a reviewed report draft candidate'
 );
+
+select throws_ok(
+  $$
+    select set_config(
+      'app.test.incident_id',
+      (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      true
+    );
+    select set_config(
+      'app.test.revision_id',
+      (
+        select revision.id::text
+        from app_private.incident_revisions as revision
+        join app_private.incidents as incident on incident.id = revision.incident_id
+        where incident.incident_number = 'FICTIONAL-RPC-001' and revision.revision_number = 1
+      ),
+      true
+    );
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.store_report_draft_candidate(
+      current_setting('app.test.incident_id')::uuid,
+      current_setting('app.test.revision_id')::uuid,
+      '22222222-2222-4222-8222-222222222222'::uuid,
+      'first_person',
+      array['13131313-1313-4131-8131-131313131313']::uuid[],
+      '[{"text":"Fictional candidate paragraph.","sourceFactIds":["13131313-1313-4131-8131-131313131313"]}]'::jsonb,
+      'fictional-provider-v1',
+      repeat('5', 64), repeat('6', 64)
+    );
+  $$,
+  'Not authorized to store a report draft candidate',
+  'a client cannot bind a draft to staff who are not a reporting officer on the source revision'
+);
+
+reset role;
 
 select lives_ok(
   $$
@@ -1008,6 +1115,7 @@ select lives_ok(
     select api.store_report_draft_candidate(
       current_setting('app.test.incident_id')::uuid,
       current_setting('app.test.revision_id')::uuid,
+      '12121212-1212-4121-8121-121212121212'::uuid,
       'first_person',
       array['13131313-1313-4131-8131-131313131313']::uuid[],
       '[{"text":"Fictional candidate paragraph.","sourceFactIds":["13131313-1313-4131-8131-131313131313"]}]'::jsonb,
@@ -1070,7 +1178,7 @@ select ok(
 );
 
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select set_config('request.jwt.claim.sub', '99999999-9999-4999-8999-999999999999', true);
 select lives_ok(
   $$ select api.finalize_report_draft_candidate(
     current_setting('app.test.candidate_id')::uuid,
@@ -1092,6 +1200,37 @@ select is(
   'explicit human finalization creates a complete report rather than leaving generated material in draft state'
 );
 
+select is(
+  (
+    select reporting_account_id
+    from app_private.reports
+    where id = current_setting('app.test.report_id')::uuid
+  ),
+  '99999999-9999-4999-8999-999999999999'::uuid,
+  'the finalized report is attributed to the selected reporting officer'
+);
+
+select is(
+  (
+    select prepared_by_account_id
+    from app_private.reports
+    where id = current_setting('app.test.report_id')::uuid
+  ),
+  '33333333-3333-4333-8333-333333333333'::uuid,
+  'the finalized report separately records the account that prepared the candidate'
+);
+
+select is(
+  (
+    select editor_account_id
+    from app_private.report_revisions
+    where report_id = current_setting('app.test.report_id')::uuid
+      and revision_number = 1
+  ),
+  '99999999-9999-4999-8999-999999999999'::uuid,
+  'the immutable final revision separately records the account that finalized it'
+);
+
 select ok(
   has_function_privilege('authenticated', 'api.get_report(uuid)', 'execute')
   and not has_function_privilege('anon', 'api.get_report(uuid)', 'execute'),
@@ -1099,7 +1238,7 @@ select ok(
 );
 
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select set_config('request.jwt.claim.sub', '99999999-9999-4999-8999-999999999999', true);
 select lives_ok(
   $$ select * from api.get_report(current_setting('app.test.report_id')::uuid) $$,
   'an active report owner can read the current immutable report revision'
@@ -1113,7 +1252,7 @@ select ok(
 );
 
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select set_config('request.jwt.claim.sub', '99999999-9999-4999-8999-999999999999', true);
 select ok(
   exists (
     select 1
@@ -1126,10 +1265,10 @@ reset role;
 
 select ok(has_function_privilege('authenticated','api.append_report_revision(uuid,integer,text,text,text,text)','execute') and not has_function_privilege('anon','api.append_report_revision(uuid,integer,text,text,text,text)','execute'),'only authenticated users can append report revisions');
 set local role authenticated;
-select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true);
 select lives_ok($$ select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional corrected narrative.','Fictional correction.',repeat('d',64),repeat('e',64)) $$,'an authorized owner appends an immutable report correction');
 reset role;
-select throws_ok($$ set local role authenticated; select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true); select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64)); $$,'Report revision conflict','a stale report revision is rejected instead of overwriting the newer immutable revision');
+select throws_ok($$ set local role authenticated; select set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true); select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64)); $$,'Report revision conflict','a stale report revision is rejected instead of overwriting the newer immutable revision');
 
 reset role;
 select ok(
@@ -1143,7 +1282,7 @@ select ok(
   'only authenticated users can execute the report-restore RPC'
 );
 set local role authenticated;
-select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+select set_config('request.jwt.claim.sub', '99999999-9999-4999-8999-999999999999', true);
 select is(
   (select count(*)::integer from api.list_report_revisions(current_setting('app.test.report_id')::uuid)),
   2,
@@ -1287,6 +1426,7 @@ select throws_ok(
     select api.store_report_draft_candidate(
       current_setting('app.test.incident_id')::uuid,
       current_setting('app.test.revision_id')::uuid,
+      '12121212-1212-4121-8121-121212121212'::uuid,
       'first_person',
       array['77777777-7777-4777-8777-777777777777']::uuid[],
       '[{"text":"Fictional invalid paragraph.","sourceFactIds":["77777777-7777-4777-8777-777777777777"]}]'::jsonb,

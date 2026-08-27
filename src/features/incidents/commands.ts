@@ -4,12 +4,14 @@ import {
   incidentRevisionInputSchema,
   type IncidentRevisionInput,
 } from "./schema";
+import { incidentStaffRelationshipsSchema } from "./incident-staff-relationships";
 
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9_-]{16,128}$/);
 
 export const createIncidentCommandSchema = z
   .object({
     revision: incidentRevisionInputSchema,
+    staffRelationships: incidentStaffRelationshipsSchema,
     idempotencyKey: idempotencyKeySchema,
   })
   .strict();

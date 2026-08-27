@@ -19,18 +19,30 @@ const revision = {
   ],
   reviewedFacts: [],
 };
+const staffRelationships = [
+  {
+    staffMemberId: "22222222-2222-4222-8222-222222222222",
+    relationship: "reporting_officer" as const,
+  },
+  {
+    staffMemberId: "22222222-2222-4222-8222-222222222222",
+    relationship: "preparer" as const,
+  },
+];
 
 describe("createIncidentCommand", () => {
   it("requires a bounded opaque idempotency key", () => {
     expect(
       createIncidentCommandSchema.safeParse({
         revision,
+        staffRelationships,
         idempotencyKey: "short",
       }).success,
     ).toBe(false);
     expect(
       createIncidentCommandSchema.parse({
         revision,
+        staffRelationships,
         idempotencyKey: "a".repeat(16),
       }).revision.incidentNumber,
     ).toBe("F-001");
@@ -39,6 +51,7 @@ describe("createIncidentCommand", () => {
   it("keeps actor and facility authority outside browser command data", () => {
     const command = createIncidentCommandSchema.parse({
       revision,
+      staffRelationships,
       idempotencyKey: "a".repeat(16),
     });
     expect(

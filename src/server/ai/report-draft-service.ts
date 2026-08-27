@@ -16,6 +16,7 @@ import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 const sourceSchema = z.object({
   incidentId: z.uuid(),
   sourceIncidentRevisionId: z.uuid(),
+  reportingStaffMemberId: z.uuid(),
   reportType: reportTypeSchema,
   confirmedFacts: z
     .array(
@@ -70,7 +71,16 @@ export function createReportDraftService(
     ): Promise<ReportDraftOutcome> {
       const source = sourceSchema.parse(sourceCandidate);
       try {
-        const candidate = await generation.generate({ source, ...options });
+        const providerSource = {
+          incidentId: source.incidentId,
+          sourceIncidentRevisionId: source.sourceIncidentRevisionId,
+          reportType: source.reportType,
+          confirmedFacts: source.confirmedFacts,
+        };
+        const candidate = await generation.generate({
+          source: providerSource,
+          ...options,
+        });
         return {
           kind: "draft",
           draft: validateGeneratedReportDraft(candidate, source),

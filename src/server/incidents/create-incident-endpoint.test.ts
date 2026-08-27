@@ -25,6 +25,16 @@ const revision = {
   ],
   reviewedFacts: [],
 };
+const staffRelationships = [
+  {
+    staffMemberId: "22222222-2222-4222-8222-222222222222",
+    relationship: "reporting_officer",
+  },
+  {
+    staffMemberId: "22222222-2222-4222-8222-222222222222",
+    relationship: "preparer",
+  },
+];
 
 function request(
   options: { origin?: string; csrfToken?: string; body?: unknown } = {},
@@ -38,7 +48,7 @@ function request(
       "x-csrf-token": options.csrfToken ?? csrf.token,
       cookie: `go-csrf-digest=${csrf.digest}`,
     },
-    body: JSON.stringify(options.body ?? { revision }),
+    body: JSON.stringify(options.body ?? { revision, staffRelationships }),
   });
 }
 
@@ -54,14 +64,20 @@ describe("validateCreateIncidentEndpointRequest", () => {
       ),
     ).resolves.toMatchObject({
       ok: true,
-      command: { idempotencyKey: "a".repeat(16), revision },
+      command: {
+        idempotencyKey: "a".repeat(16),
+        revision,
+        staffRelationships,
+      },
     });
   });
 
   it.each([
     request({ origin: "https://attacker.example.test" }),
     request({ csrfToken: "wrong-token" }),
-    request({ body: { revision, facilityId: "attacker-controlled" } }),
+    request({
+      body: { revision, staffRelationships, facilityId: "attacker-controlled" },
+    }),
   ])(
     "rejects cross-origin, invalid-CSRF, or non-closed browser input",
     async (input) => {
@@ -103,7 +119,7 @@ describe("validateCreateIncidentEndpointRequest", () => {
 
     await expect(
       validateCreateIncidentEndpointRequest(
-        request({ body: { revision: candidateRevision } }),
+        request({ body: { revision: candidateRevision, staffRelationships } }),
         origin,
         sessionId,
         csrfKey,
@@ -117,7 +133,7 @@ describe("validateCreateIncidentEndpointRequest", () => {
 
     await expect(
       validateCreateIncidentEndpointRequest(
-        request({ body: { revision: candidateRevision } }),
+        request({ body: { revision: candidateRevision, staffRelationships } }),
         origin,
         sessionId,
         csrfKey,

@@ -156,13 +156,15 @@ values (
 
 insert into app_private.report_draft_candidates (
   id, incident_id, source_incident_revision_id, requested_by_account_id,
-  report_type, source_fact_ids, paragraphs, provider_key
+  reporting_staff_member_id, report_type, source_fact_ids, paragraphs,
+  provider_key
 )
 values (
   '88888888-8888-4888-8888-888888888888',
   '85858585-8585-4585-8585-858585858585',
   '86868686-8686-4686-8686-868686868686',
   '81818181-8181-4181-8181-818181818181',
+  '83838383-8383-4383-8383-838383838383',
   'first_person',
   array['89898989-8989-4989-8989-898989898989'::uuid],
   '[{"text":"Fictional reviewed draft.","sourceFactIds":["89898989-8989-4989-8989-898989898989"]}]'::jsonb,

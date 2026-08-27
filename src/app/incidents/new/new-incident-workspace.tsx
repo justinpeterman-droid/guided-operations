@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
 
 import {
   REPORT_CHECKLIST_APPROVAL_STATUS,
@@ -13,9 +13,21 @@ import {
   type ReportChecklistAnswer,
   type ReportChecklistQuestion,
 } from "@/features/incidents/report-assistant-checklist";
+import type {
+  IncidentStaffRelationship,
+  IncidentStaffRelationshipType,
+} from "@/features/incidents/incident-staff-relationships";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type SaveState = "idle" | "saving" | "failed" | "saved";
+type StaffLoadState = "loading" | "failed" | "loaded";
+type StaffSelectionItem = Readonly<{
+  staffMemberId: string;
+  displayName: string;
+  employeeNumberHint: string;
+  shiftCode: "A" | "B" | "C" | "D" | "U" | "F" | null;
+  isCurrentAccount: boolean;
+}>;
 
 async function csrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
@@ -36,6 +48,12 @@ async function csrfToken(): Promise<string> {
 export function NewIncidentWorkspace() {
   const [step, setStep] = useState<Step>(1);
   const [officerConfirmed, setOfficerConfirmed] = useState(false);
+  const [staffLoadState, setStaffLoadState] =
+    useState<StaffLoadState>("loading");
+  const [staff, setStaff] = useState<readonly StaffSelectionItem[]>([]);
+  const [selectedRelationships, setSelectedRelationships] = useState<
+    ReadonlySet<string>
+  >(new Set());
   const [reportsReviewed, setReportsReviewed] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [incidentNumber, setIncidentNumber] = useState("");
@@ -54,6 +72,31 @@ export function NewIncidentWorkspace() {
     () => Object.values(checklistAnswers),
     [checklistAnswers],
   );
+  const currentStaff = staff.find((item) => item.isCurrentAccount);
+  const staffRelationships = useMemo<IncidentStaffRelationship[]>(() => {
+    if (!currentStaff) return [];
+    const relationships: IncidentStaffRelationship[] = [
+      {
+        staffMemberId: currentStaff.staffMemberId,
+        relationship: "preparer",
+      },
+    ];
+    for (const key of selectedRelationships) {
+      const [staffMemberId, relationship] = key.split(":");
+      if (
+        staffMemberId &&
+        (relationship === "reporting_officer" ||
+          relationship === "involved_officer" ||
+          relationship === "witness")
+      ) {
+        relationships.push({ staffMemberId, relationship });
+      }
+    }
+    return relationships;
+  }, [currentStaff, selectedRelationships]);
+  const reportingOfficerCount = staffRelationships.filter(
+    ({ relationship }) => relationship === "reporting_officer",
+  ).length;
   const categoryDefinition = getReportChecklistCategory(category);
   const applicableQuestions = getApplicableReportChecklistQuestions(
     category,
@@ -76,6 +119,45 @@ export function NewIncidentWorkspace() {
       ? [{ state: "unknown" as const, text: unknown.trim() }]
       : []),
   ];
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/web/v1/staff?limit=100", {
+      credentials: "same-origin",
+    })
+      .then(async (response) => {
+        const body: unknown = await response.json();
+        if (
+          !response.ok ||
+          !body ||
+          typeof body !== "object" ||
+          !("data" in body) ||
+          !body.data ||
+          typeof body.data !== "object" ||
+          !("staff" in body.data) ||
+          !Array.isArray(body.data.staff)
+        ) {
+          throw new Error("staff");
+        }
+        return body.data.staff as StaffSelectionItem[];
+      })
+      .then((items) => {
+        if (!active) return;
+        const current = items.filter((item) => item.isCurrentAccount);
+        if (current.length !== 1) throw new Error("staff");
+        setStaff(items);
+        setSelectedRelationships(
+          new Set([`${current[0].staffMemberId}:reporting_officer`]),
+        );
+        setStaffLoadState("loaded");
+      })
+      .catch(() => {
+        if (active) setStaffLoadState("failed");
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   function canOpenStep(candidate: Step): boolean {
     if (candidate === 1) return true;
@@ -112,6 +194,22 @@ export function NewIncidentWorkspace() {
     setSaveState("idle");
   }
 
+  function toggleStaffRelationship(
+    staffMemberId: string,
+    relationship: Exclude<IncidentStaffRelationshipType, "preparer">,
+  ) {
+    const key = `${staffMemberId}:${relationship}`;
+    setSelectedRelationships((current) => {
+      const next = new Set(current);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+    setOfficerConfirmed(false);
+    setReportsReviewed(false);
+    setSaveState("idle");
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
@@ -134,6 +232,7 @@ export function NewIncidentWorkspace() {
         idFactory: () => crypto.randomUUID(),
       });
       const body = {
+        staffRelationships,
         revision: {
           schemaVersion: 1,
           incidentNumber: incidentNumber.trim(),
@@ -266,21 +365,83 @@ export function NewIncidentWorkspace() {
           {step === 1 ? (
             <>
               <section className="incident-review">
-                <h2>Current signed-in officer</h2>
-                <p>
-                  Your individual account is recorded by the server. The browser
-                  cannot choose another employee or facility.
-                </p>
+                <h2>Officer relationships</h2>
+                {staffLoadState === "loading" ? (
+                  <p role="status">Loading the active facility roster…</p>
+                ) : null}
+                {staffLoadState === "failed" ? (
+                  <p role="alert">
+                    The active roster could not be loaded. No incident can be
+                    saved until it is available.
+                  </p>
+                ) : null}
+                {staffLoadState === "loaded" && currentStaff ? (
+                  <>
+                    <p>
+                      <strong>Preparing officer:</strong>{" "}
+                      {currentStaff.displayName}. The server fixes this to the
+                      signed-in account; preparation never changes authorship.
+                    </p>
+                    <p>
+                      Select at least one reporting officer. Mark other staff
+                      only when the incident identifies them as involved or as a
+                      witness.
+                    </p>
+                    <div className="incident-fields">
+                      {staff.map((item) => (
+                        <fieldset key={item.staffMemberId}>
+                          <legend>
+                            {item.displayName} · employee ending{" "}
+                            {item.employeeNumberHint}
+                            {item.shiftCode ? ` · ${item.shiftCode} shift` : ""}
+                          </legend>
+                          {(
+                            [
+                              ["reporting_officer", "Reporting officer"],
+                              ["involved_officer", "Involved officer"],
+                              ["witness", "Witness"],
+                            ] as const
+                          ).map(([relationship, label]) => (
+                            <label key={relationship}>
+                              <input
+                                checked={selectedRelationships.has(
+                                  `${item.staffMemberId}:${relationship}`,
+                                )}
+                                onChange={() =>
+                                  toggleStaffRelationship(
+                                    item.staffMemberId,
+                                    relationship,
+                                  )
+                                }
+                                type="checkbox"
+                              />
+                              {label}
+                            </label>
+                          ))}
+                        </fieldset>
+                      ))}
+                    </div>
+                    <p aria-live="polite">
+                      {reportingOfficerCount} reporting officer
+                      {reportingOfficerCount === 1 ? "" : "s"} selected.
+                    </p>
+                  </>
+                ) : null}
               </section>
               <button
                 className="incident-primary"
+                disabled={
+                  staffLoadState !== "loaded" ||
+                  !currentStaff ||
+                  reportingOfficerCount < 1
+                }
                 onClick={() => {
                   setOfficerConfirmed(true);
                   setStep(2);
                 }}
                 type="button"
               >
-                Continue as signed-in officer
+                Confirm officer relationships
               </button>
             </>
           ) : null}

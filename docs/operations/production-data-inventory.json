@@ -182,6 +182,20 @@
       "deletion_status": "procedure-required"
     },
     {
+      "id": "db:incident_staff_relationships",
+      "kind": "database_table",
+      "locator": "app_private.incident_staff_relationships",
+      "data_classes": [
+        "operational_record",
+        "personal_data",
+        "record_access_control"
+      ],
+      "purpose": "Immutable reporting, preparing, involved, and witness attribution for each incident revision",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
       "id": "db:reports",
       "kind": "database_table",
       "locator": "app_private.reports",

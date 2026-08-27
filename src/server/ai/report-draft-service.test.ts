@@ -9,6 +9,7 @@ import type { ReportDraftSource } from "@/features/incidents/report-draft-source
 const source: ReportDraftSource = {
   incidentId: "11111111-1111-4111-8111-111111111111",
   sourceIncidentRevisionId: "22222222-2222-4222-8222-222222222222",
+  reportingStaffMemberId: "55555555-5555-4555-8555-555555555555",
   reportType: "cover_letter",
   confirmedFacts: [
     {
@@ -37,7 +38,19 @@ describe("createReportDraftService", () => {
     await expect(service.draft(source)).resolves.toMatchObject({
       kind: "draft",
     });
-    expect(generate).toHaveBeenCalledWith(expect.objectContaining({ source }));
+    expect(generate).toHaveBeenCalledWith({
+      source: {
+        incidentId: source.incidentId,
+        sourceIncidentRevisionId: source.sourceIncidentRevisionId,
+        reportType: source.reportType,
+        confirmedFacts: source.confirmedFacts,
+      },
+      maximumParagraphs: 8,
+      maximumParagraphCharacters: 1_000,
+    });
+    expect(generate.mock.calls[0][0].source).not.toHaveProperty(
+      "reportingStaffMemberId",
+    );
   });
 
   it("rejects a paragraph that cites an unconfirmed fact", async () => {

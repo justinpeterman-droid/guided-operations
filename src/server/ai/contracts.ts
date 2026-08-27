@@ -2,7 +2,7 @@ import "server-only";
 
 import type { SourceCitation } from "@/features/policy/grounding";
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
-import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
+import type { ReportDraftGenerationSource } from "@/features/incidents/report-draft-source";
 
 export interface RetrievedPolicyPassage {
   citation: SourceCitation;
@@ -44,7 +44,7 @@ export interface GroundedGenerationProvider {
  * candidate and must pass source-reference validation before human review.
  */
 export interface ReportDraftGenerationRequest {
-  source: ReportDraftSource;
+  source: ReportDraftGenerationSource;
   maximumParagraphs: number;
   maximumParagraphCharacters: number;
 }

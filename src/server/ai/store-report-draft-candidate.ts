@@ -17,6 +17,7 @@ const requestSchema = z.object({
   source: z.object({
     incidentId: z.uuid(),
     sourceIncidentRevisionId: z.uuid(),
+    reportingStaffMemberId: z.uuid(),
     reportType: reportTypeSchema,
     confirmedFacts: z
       .array(z.object({ id: z.uuid() }).passthrough())
@@ -44,6 +45,7 @@ type StoreReportDraftCandidateRpcClient = Readonly<{
     arguments_: Readonly<{
       p_incident_id: string;
       p_source_incident_revision_id: string;
+      p_reporting_staff_member_id: string;
       p_report_type: string;
       p_source_fact_ids: string[];
       p_paragraphs: Json;
@@ -91,6 +93,7 @@ export async function storeReportDraftCandidateForCurrentSession(
   const canonicalRequest = JSON.stringify({
     incidentId: parsed.data.source.incidentId,
     sourceIncidentRevisionId: parsed.data.source.sourceIncidentRevisionId,
+    reportingStaffMemberId: parsed.data.source.reportingStaffMemberId,
     reportType: parsed.data.source.reportType,
     sourceFactIds,
     paragraphs: parsed.data.draft.paragraphs,
@@ -102,6 +105,7 @@ export async function storeReportDraftCandidateForCurrentSession(
       p_incident_id: parsed.data.source.incidentId,
       p_source_incident_revision_id:
         parsed.data.source.sourceIncidentRevisionId,
+      p_reporting_staff_member_id: parsed.data.source.reportingStaffMemberId,
       p_report_type: parsed.data.source.reportType,
       p_source_fact_ids: sourceFactIds,
       p_paragraphs: parsed.data.draft.paragraphs,

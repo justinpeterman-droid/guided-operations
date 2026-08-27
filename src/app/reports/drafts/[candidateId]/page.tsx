@@ -50,6 +50,9 @@ export default async function ReportDraftReviewPage({
         <div className="draft-review-meta">
           <span className="not-saved-label">Unreviewed draft</span>
           <span>Report type: {result.candidate.reportType}</span>
+          <span>
+            Reporting officer: {result.candidate.reportingOfficerDisplayName}
+          </span>
           <time dateTime={result.candidate.createdAt}>
             Created{" "}
             {new Intl.DateTimeFormat("en-US", {

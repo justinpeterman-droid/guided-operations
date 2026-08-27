@@ -3,17 +3,22 @@ import "server-only";
 import { z } from "zod";
 
 import { revisionUsesCandidateReportChecklist } from "@/features/incidents/report-assistant-checklist";
+import { incidentStaffRelationshipsSchema } from "@/features/incidents/incident-staff-relationships";
 import { incidentRevisionInputSchema } from "@/features/incidents/schema";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9_-]{16,128}$/);
 const requestBodySchema = z
-  .object({ revision: incidentRevisionInputSchema })
+  .object({
+    revision: incidentRevisionInputSchema,
+    staffRelationships: incidentStaffRelationshipsSchema,
+  })
   .strict();
 
 export type ValidatedCreateIncidentRequest = Readonly<{
   revision: z.infer<typeof incidentRevisionInputSchema>;
+  staffRelationships: z.infer<typeof incidentStaffRelationshipsSchema>;
   idempotencyKey: string;
 }>;
 
@@ -74,6 +79,7 @@ export async function validateCreateIncidentEndpointRequest(
     ok: true,
     command: {
       revision: parsed.data.revision,
+      staffRelationships: parsed.data.staffRelationships,
       idempotencyKey: idempotency.data,
     },
   };

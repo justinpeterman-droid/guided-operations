@@ -22,9 +22,16 @@ export type ConfirmedReportFact = {
 export type ReportDraftSource = {
   incidentId: string;
   sourceIncidentRevisionId: string;
+  reportingStaffMemberId: string;
   reportType: ReportType;
   confirmedFacts: ConfirmedReportFact[];
 };
+
+/** The provider never receives the staff identity used for database attribution. */
+export type ReportDraftGenerationSource = Omit<
+  ReportDraftSource,
+  "reportingStaffMemberId"
+>;
 
 /**
  * Select the only fact data a report-drafting adapter may receive. This keeps
@@ -63,6 +70,7 @@ export function buildReportDraftSource(
   return {
     incidentId: parsedRequest.incidentId,
     sourceIncidentRevisionId: parsedRequest.sourceIncidentRevisionId,
+    reportingStaffMemberId: parsedRequest.reportingStaffMemberId,
     reportType: parsedRequest.reportType,
     confirmedFacts,
   };

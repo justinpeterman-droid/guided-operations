@@ -38,6 +38,7 @@ export type Database = {
           p_request_digest: string
           p_reviewed_facts: Json
           p_schema_version: number
+          p_staff_relationships: Json
         }
         Returns: string
       }
@@ -146,6 +147,8 @@ export type Database = {
           incident_id: string
           paragraphs: Json
           report_type: string
+          reporting_officer_display_name: string
+          reporting_staff_member_id: string
           source_fact_ids: string[]
           source_incident_revision_id: string
         }[]
@@ -228,6 +231,16 @@ export type Database = {
           report_type: string
           status: string
           updated_at: string
+        }[]
+      }
+      list_staff_selection: {
+        Args: { p_limit?: number }
+        Returns: {
+          display_name: string
+          employee_number_hint: string
+          is_current_account: boolean
+          shift_code: string
+          staff_member_id: string
         }[]
       }
       policy_source_object_is_readable: {
@@ -336,6 +349,7 @@ export type Database = {
           p_paragraphs: Json
           p_provider_key: string
           p_report_type: string
+          p_reporting_staff_member_id: string
           p_request_digest: string
           p_source_fact_ids: string[]
           p_source_incident_revision_id: string

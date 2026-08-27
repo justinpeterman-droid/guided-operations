@@ -105,6 +105,12 @@ token, alias, or provider user body is an observable API contract.
 Staff search never returns credential, internal alias, lookup digest, full Auth
 metadata, or inactive accounts to ordinary users.
 
+The implemented `GET /api/web/v1/staff` returns at most 100 active same-facility
+selections: opaque staff ID, display name, bounded employee-number hint, shift
+code, and whether the row is the current account. It does not return an
+authentication user ID, sign-in alias, employee lookup digest, passcode state,
+or inactive record.
+
 ### Incidents
 
 - POST /incidents
@@ -134,8 +140,11 @@ first establishes current session authority, validates same-origin and
 session-bound CSRF, accepts a closed body plus bounded `Idempotency-Key`, and
 then invokes the RPC with the request-scoped JWT. It returns only an opaque
 incident ID. Direct RPC calls still enforce active facility scope and payload
-provenance. Hosted-session and browser-workflow integration remain separate
-release gates.
+provenance. Creation also requires one through twenty reporting officers and
+exactly one preparer. The RPC fixes the preparer to the authenticated account,
+verifies every selected staff member is active in the same facility, and denies
+duplicate or uncontrolled relationships. Hosted-session and browser-workflow
+integration remain separate release gates.
 
 The incident create contract also recognizes the recovered Report Assistant
 checklist candidate by its versioned fact-field marker. In Development, Test,
@@ -152,8 +161,9 @@ revision identity/version, and reviewed facts—but never field notes, facility
 scope, account identities, or relationship metadata. It returns no row for a
 missing, archived, cross-facility, inactive, or unrelated-officer request;
 active same-facility administrators may read a revision, as may its active
-creator. It is not exposed as a browser endpoint yet. Its intended caller is a
-server-side workflow that constructs a report-draft source from explicitly
+creator, reporting officers, and preparer. Involved and witness labels do not
+grant access. It is not exposed as a browser endpoint yet. Its intended caller
+is a server-side workflow that constructs a report-draft source from explicitly
 selected confirmed facts only.
 
 ### Reports
@@ -167,11 +177,14 @@ The implemented `POST /api/web/v1/report-drafts` is a versioned, private,
 no-store boundary for generating a review-only candidate. It requires a current
 account, same-origin request, session-bound CSRF proof, a closed JSON body, and
 a bounded idempotency key. The body identifies an incident, immutable source
-revision, report type, and explicit confirmed-fact IDs; it cannot choose an
-actor, facility, or source text. The server authorizes the revision, validates
-the provider output against those facts, and stores an immutable candidate
-before returning only an opaque candidate ID. It is not a final-report endpoint
-and it never returns generated narrative or source facts in the response.
+revision, one reporting staff member selected on that exact revision, report
+type, and explicit confirmed-fact IDs; it cannot assign an arbitrary actor,
+facility, or source text. The server verifies the selected person is an active
+reporting officer on the revision, removes that identity before provider input,
+validates the provider output against the confirmed facts, and stores an
+immutable attributed candidate before returning only an opaque candidate ID. It
+is not a final-report endpoint and it never returns generated narrative or
+source facts in the response.
 
 `reportType` is a closed value: `first_person`, `supervisor_summary`,
 `cover_letter`, or `disciplinary`. The same set is enforced at the request,
@@ -185,9 +198,11 @@ separate versioned, private, no-store boundary. It requires the same current
 account, same-origin, session-CSRF, closed-JSON, and bounded-retry protections,
 plus an explicit `reviewedByOfficer: true` attestation and a replacement
 narrative supplied by the officer. It creates the first immutable report
-revision with candidate provenance, marks the report `complete`, and returns
-only an opaque report ID. It does not accept AI output as a final report and it
-does not let a client choose the report actor, facility, or source revision.
+revision with candidate provenance, the candidate's selected reporting officer,
+the candidate requester as preparer, and the current finalizer as revision
+editor. It marks the report `complete` and returns only an opaque report ID. It
+does not accept AI output as a final report and it does not let the finalization
+request replace the reporter, facility, or source revision.
 
 The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
 RPC rather than a browser table query. It returns only the current immutable

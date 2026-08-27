@@ -40,6 +40,7 @@ const request: ReportDraftRequest = {
   schemaVersion: 1 as const,
   incidentId: source.incident_id,
   sourceIncidentRevisionId: source.incident_revision_id,
+  reportingStaffMemberId: "55555555-5555-4555-8555-555555555555",
   reportType: "cover_letter",
   confirmedFactIds: [source.reviewed_facts[0].id],
 };
@@ -95,6 +96,7 @@ describe("report draft workflow", () => {
       source: {
         incidentId: source.incident_id,
         sourceIncidentRevisionId: source.incident_revision_id,
+        reportingStaffMemberId: request.reportingStaffMemberId,
         reportType: request.reportType,
         confirmedFacts: [
           {
@@ -123,6 +125,9 @@ describe("report draft workflow", () => {
       maximumParagraphs: 3,
       maximumParagraphCharacters: 500,
     });
+    expect(generate.mock.calls[0][0].source).not.toHaveProperty(
+      "reportingStaffMemberId",
+    );
   });
 
   it("does not call the provider when the requested revision ID does not match", async () => {

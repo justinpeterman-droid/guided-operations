@@ -50,6 +50,16 @@ const session = {
 };
 const command = {
   idempotencyKey: "a".repeat(16),
+  staffRelationships: [
+    {
+      staffMemberId: "55555555-5555-4555-8555-555555555555",
+      relationship: "reporting_officer" as const,
+    },
+    {
+      staffMemberId: "55555555-5555-4555-8555-555555555555",
+      relationship: "preparer" as const,
+    },
+  ],
   revision: {
     schemaVersion: 1 as const,
     incidentName: "Fictional training scenario",

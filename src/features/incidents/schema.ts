@@ -146,6 +146,7 @@ export const reportDraftRequestSchema = z
     schemaVersion: z.literal(INCIDENT_SCHEMA_VERSION),
     incidentId: opaqueIdSchema,
     sourceIncidentRevisionId: opaqueIdSchema,
+    reportingStaffMemberId: opaqueIdSchema,
     reportType: reportTypeSchema,
     confirmedFactIds: z.array(opaqueIdSchema).min(1).max(300),
   })

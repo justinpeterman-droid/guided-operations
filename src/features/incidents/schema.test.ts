@@ -150,6 +150,7 @@ describe("report draft contract", () => {
     schemaVersion: INCIDENT_SCHEMA_VERSION,
     incidentId: "44444444-4444-4444-8444-444444444444",
     sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
+    reportingStaffMemberId: "66666666-6666-4666-8666-666666666666",
     reportType: "cover_letter",
     confirmedFactIds: [confirmedFactId],
   };

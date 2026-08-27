@@ -90,6 +90,11 @@ Already present:
   disciplinary closing language;
 - one controlled report package—first person, supervisor summary, cover letter,
   and disciplinary—enforced by the request, service, read, and database layers;
+- immutable incident-revision relationships for reporting, preparing, involved,
+  and witness staff, with the preparer fixed to the signed-in account;
+- one selected reporting officer bound to each review-only candidate and final
+  report, while reporting officer, preparer, and final editor attribution remain
+  distinct and the reporter identity never enters AI-provider input;
 - a nine-category, source-commit-bound checklist candidate with typed answer
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
@@ -102,9 +107,9 @@ Still required for parity:
 - implement category proposal/confirmation and structured extraction review;
 - operationally review every recovered question, option, dependency, required
   slot, report type, and paperwork mapping against the current source forms;
-- implement per-officer relationship selection; the report-type perspective
-  boundary is now enforced, but one incident still needs explicit reporting-
-  officer/preparer relationships;
+- bind each confirmed action and fact to the applicable officer before
+  generating that officer's perspective when multiple reporting officers are
+  selected;
 - implement required auto-content and the approved 005/409 output mapping;
 - approve the source DOCX/form revisions and qualify print/export fidelity;
 - add exact opening, first-reference, quote, attribution, and combined-action

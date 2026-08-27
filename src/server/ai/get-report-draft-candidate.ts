@@ -18,6 +18,8 @@ const candidateRowsSchema = z.array(
       candidate_id: z.uuid(),
       incident_id: z.uuid(),
       source_incident_revision_id: z.uuid(),
+      reporting_staff_member_id: z.uuid(),
+      reporting_officer_display_name: z.string().trim().min(1).max(160),
       report_type: reportTypeSchema,
       source_fact_ids: z.array(z.uuid()).min(1).max(300),
       paragraphs: generatedReportDraftSchema.shape.paragraphs,
@@ -40,6 +42,8 @@ export type ReportDraftCandidate = Readonly<{
   candidateId: string;
   incidentId: string;
   sourceIncidentRevisionId: string;
+  reportingStaffMemberId: string;
+  reportingOfficerDisplayName: string;
   reportType: ReportType;
   sourceFactIds: readonly string[];
   paragraphs: readonly {
@@ -82,6 +86,8 @@ export async function getReportDraftCandidateForCurrentSession(
         candidateId: row.candidate_id,
         incidentId: row.incident_id,
         sourceIncidentRevisionId: row.source_incident_revision_id,
+        reportingStaffMemberId: row.reporting_staff_member_id,
+        reportingOfficerDisplayName: row.reporting_officer_display_name,
         reportType: row.report_type,
         sourceFactIds: row.source_fact_ids,
         paragraphs: row.paragraphs,

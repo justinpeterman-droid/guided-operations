@@ -34,6 +34,7 @@ const request: ReportDraftRequest = {
   schemaVersion: INCIDENT_SCHEMA_VERSION,
   incidentId: "55555555-5555-4555-8555-555555555555",
   sourceIncidentRevisionId: revisionId,
+  reportingStaffMemberId: "66666666-6666-4666-8666-666666666666",
   reportType: "cover_letter",
   confirmedFactIds: [confirmedFactId],
 };
@@ -43,6 +44,7 @@ describe("buildReportDraftSource", () => {
     expect(buildReportDraftSource(request, revisionId, facts)).toEqual({
       incidentId: request.incidentId,
       sourceIncidentRevisionId: revisionId,
+      reportingStaffMemberId: request.reportingStaffMemberId,
       reportType: "cover_letter",
       confirmedFacts: [
         {

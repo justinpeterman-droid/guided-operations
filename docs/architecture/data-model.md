@@ -120,6 +120,22 @@ Immutable snapshot:
 
 Unique (incident_id, revision_number). A trigger rejects update/delete.
 
+### app_private.incident_staff_relationships
+
+- incident_revision_id
+- staff_member_id
+- relationship: reporting_officer, preparer, involved_officer, witness
+- selected_by_account_id
+- created_at
+
+Relationships are immutable and revision-bound. One through twenty reporting
+officers and exactly one preparer are required at creation. The preparer is
+always the authenticated actor; the browser cannot assign preparation to another
+account. Every selected person must have an active account and active staff row
+in the same facility. Reporting and preparing relationships grant record access;
+involved and witness labels preserve attribution without silently granting
+access.
+
 ### app_private.reports
 
 - id, incident_id, report_type
@@ -135,6 +151,16 @@ Unique (incident_id, revision_number). A trigger rejects update/delete.
 
 Unique active relationship per report/account. This table supports explicit
 future collaboration without broadening facility tenancy.
+
+### app_private.report_draft_candidates
+
+Each immutable review-only candidate records its incident and source revision,
+selected `reporting_staff_member_id`, requesting/preparing account, controlled
+report type, confirmed fact IDs, cited paragraphs, and provider key. The
+selected staff member must be an active `reporting_officer` on the exact source
+revision. Reporter identity is deliberately removed before AI-provider input.
+Finalization derives the reporting account from this stored selection and keeps
+the preparer and final revision editor as separate attributions.
 
 Both `app_private.reports` and immutable review-only draft candidates accept
 only `first_person`, `supervisor_summary`, `cover_letter`, or `disciplinary`.

@@ -8,6 +8,8 @@ const row = {
   candidate_id: "11111111-1111-4111-8111-111111111111",
   incident_id: "22222222-2222-4222-8222-222222222222",
   source_incident_revision_id: "33333333-3333-4333-8333-333333333333",
+  reporting_staff_member_id: "88888888-8888-4888-8888-888888888888",
+  reporting_officer_display_name: "Fictional Reporting Officer",
   report_type: "cover_letter",
   source_fact_ids: ["44444444-4444-4444-8444-444444444444"],
   paragraphs: [
@@ -56,7 +58,12 @@ describe("getReportDraftCandidateForCurrentSession", () => {
       getReportDraftCandidateForCurrentSession(row.candidate_id, sessionClient),
     ).resolves.toMatchObject({
       kind: "found",
-      candidate: { candidateId: row.candidate_id, paragraphs: row.paragraphs },
+      candidate: {
+        candidateId: row.candidate_id,
+        reportingStaffMemberId: row.reporting_staff_member_id,
+        reportingOfficerDisplayName: row.reporting_officer_display_name,
+        paragraphs: row.paragraphs,
+      },
     });
     expect(sessionClient.rpc).toHaveBeenLastCalledWith(
       "get_report_draft_candidate",
