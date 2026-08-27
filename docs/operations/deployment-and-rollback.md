@@ -117,8 +117,8 @@ Use when the prior application is compatible with the current schema:
    resuming normal releases.
 
 Qualify rollback retention and controls on the selected plan before the live
-hobby release. If the use stops being personal and non-commercial, recheck plan
-eligibility before another deployment.
+Production release. Recheck plan eligibility before every release and whenever
+access, ownership, funding, or purpose changes.
 
 ## Database or Storage recovery
 

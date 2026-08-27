@@ -19,8 +19,10 @@ All applicable items are required.
 
 - [ ] **MANUAL:** Acceptance criteria, non-goals, affected roles, failure
       states, and data classification are recorded.
-- [ ] **MANUAL:** The change stays within the private, web-only,
-      single-facility, no-operational-data boundary.
+- [ ] **MANUAL:** The change stays within the private, web-only, single-facility
+      boundary and preserves the environment data rules: real
+      operational/personal data only in approved Production; fictional data
+      everywhere else.
 - [ ] **OWNER:** Any material behavior, policy interpretation, new provider, new
       data class, or scope change is approved.
 - [ ] **MANUAL:** Architecture/schema/security decisions with lasting impact
@@ -127,10 +129,10 @@ check fails, stop and follow the rollback/incident runbooks. Do not describe a
 deployment as successful based only on build status, provider dashboard state,
 or HTTP 200.
 
-## Future official facility-use readiness
+## Official facility-use readiness
 
-This section is outside the current hobby-app scope. A verified hobby deployment
-is still not official facility-use approval.
+This section is outside the current privately operated Production scope. A
+verified private deployment is still not official facility-use approval.
 
 - [ ] **OWNER/EXTERNAL:** Facility authority approves the workflow, policy
       corpus, user roles, training, support model, and acceptable-use

@@ -19,8 +19,8 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
   hosted sinks, dashboards, alerts, budgets, access, and retention not
   established**
 - Production domain or traffic: **not established**
-- Intended use: **personal, non-commercial hobby app for selected invited
-  officers; not an official agency/facility system**
+- Intended use: **private, single-facility Production app for selected invited
+  officers; not represented as an official agency/facility system**
 - GCP retirement: **not authorized or performed**
 - Real operational/personal data: **Production-only after release gates**
 - Production retention: **two years from final revision**, subject to legal hold
@@ -46,7 +46,7 @@ current provider evidence and explicit limitations.
 
 | Document                                                                 | Purpose                                                                                               |
 | ------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [`production-execution-checklist.md`](production-execution-checklist.md) | Evidence-backed execution tracker for the gated path from foundation to live hobby production.        |
+| [`production-execution-checklist.md`](production-execution-checklist.md) | Evidence-backed execution tracker for the gated path from foundation to isolated live Production.     |
 | [`environments-and-secrets.md`](environments-and-secrets.md)             | Local, preview, staging-equivalent, and production isolation; regions; secret inventory and rotation. |
 | [`database-migrations.md`](database-migrations.md)                       | Supabase migration workflow, RLS review, compatibility, and recovery.                                 |
 | [`release-gates.md`](release-gates.md)                                   | Required automated, manual, owner, and external evidence.                                             |

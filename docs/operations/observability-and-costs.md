@@ -83,14 +83,14 @@ test notification has been received.
 
 ## Provider-plan qualification
 
-- Vercel Hobby is the starting candidate for the confirmed personal,
-  non-commercial use. Recheck eligibility if access, ownership, funding, or
-  purpose changes. The selected plan and any supplemental telemetry must
-  preserve enough evidence for incident investigation.
-- A Supabase Free project may be paused for low activity and does not include
-  managed daily backups. A private hobby release is blocked until the owner
-  accepts those availability and recovery limits or upgrades to a plan that
-  meets the agreed objectives.
+- The selected Vercel plan must permit the exact invited-user and real-data
+  Production use. Recheck eligibility before promotion and whenever access,
+  ownership, funding, or purpose changes. The selected plan and any supplemental
+  telemetry must preserve enough evidence for incident investigation.
+- A Supabase Free project may be paused for low activity and may not provide the
+  required managed backup/recovery controls. Real-data Production is blocked
+  until the selected plan meets the approved availability, recovery, and
+  retention objectives.
 - Supabase Free and Vercel Hobby impose service and eligibility limits. OpenAI
   API use is usage-priced. The owner must review current provider terms and the
   AI budget before each live promotion.
@@ -106,9 +106,9 @@ when qualifying an environment.
 
 ### Vercel and Supabase
 
-- While the limits continue to fit, keep one shared non-production Supabase
-  project and one live hobby project within the Free allowance. Do not create
-  hidden long-lived environments.
+- Keep one explicitly named shared non-production Supabase project and one
+  isolated live Production project only while their selected plans and limits
+  qualify. Do not create hidden long-lived environments.
 - Pin the Vercel and Supabase regions together to avoid unnecessary latency and
   data transfer.
 - Set database statement timeouts, bounded pagination, indexes for policy/RLS

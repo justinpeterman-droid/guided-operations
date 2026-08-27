@@ -1,9 +1,11 @@
 # Replacement Migration Plan
 
-> **Current release boundary:** a personal, non-commercial hobby app for a small
-> invited group of officers, with fictional operational data. References to an
-> official facility pilot, real-data use, or organizational production below are
-> future gates and are not authorized by this plan.
+> **Current release boundary:** a private, single-facility Production app for a
+> small invited group. Real operational and personal data are authorized only in
+> isolated Production after every release gate passes; Git, local development,
+> CI, Preview, staging, screenshots, logs, support artifacts, and fixtures
+> remain fictional-only. This plan does not establish official facility
+> adoption.
 
 ## Status and objective
 
@@ -32,9 +34,10 @@ dependencies.
   the first release.
 - Employee number plus PIN-like sign-in experience.
 - Officer and administrator interactive roles.
-- No real operational/personnel data under the current build/validation
-  authorization.
-- Existing authorized policy/RAG material is the only permitted real content.
+- Real operational/personnel data only in isolated Production after release
+  approval; build and validation environments remain fictional-only.
+- Authorized policy/RAG material follows the separate corpus boundary and may
+  enter only approved environments.
 - United States region assumption, to be verified for every
   service/subprocessor.
 - OpenAI is acceptable initially; AI interfaces remain provider-neutral.
@@ -120,7 +123,9 @@ distinct.
 - Corpus source recovery has a credible path; missing bytes are recorded as
   blockers.
 - GCP inventory and dependency graph are stored in a controlled location.
-- No real operational-data migration is planned under the current authorization.
+- No legacy operational-data migration is authorized by this plan. Initial
+  real-data entry begins only after controlled Production promotion unless a
+  separate, reconciled migration runbook is approved.
 
 ## Phase 1 — Repository and delivery foundation
 

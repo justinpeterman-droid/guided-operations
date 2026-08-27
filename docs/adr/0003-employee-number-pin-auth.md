@@ -13,8 +13,11 @@ identifiers, not an arbitrary employee-number username. A final implementation
 decision is required before production code can claim this requirement is
 complete.
 
-The initial release stores no real operational records, but authentication
-metadata still deserves production-grade protection.
+The original foundation stored no real operational records, but authentication
+metadata still deserved production-grade protection. The owner later authorized
+real operational and personal data only in isolated Production after release
+gates; that change raises the acceptance bar and does not make this Proposed ADR
+accepted.
 
 ## Proposed decision
 
@@ -155,9 +158,9 @@ credential is not an acceptable simplification.
 - The owner is the first/main administrator and is the sole initial authority to
   create accounts, reset passcodes, unlock accounts, and deliver temporary
   secrets.
-- Administrator MFA is deferred for the no-data hobby foundation. This decision
-  does not permit official adoption or real operational/personnel data, and MFA
-  must be reconsidered before either boundary changes.
+- Administrator MFA was deferred only for the no-data foundation. That exception
+  does not cover the current real-data Production target; MFA or an explicitly
+  approved, tested equivalent remains an acceptance gate.
 - The owner approved Option A, the private server-only Supabase alias bridge, on
   2026-08-25. This authorizes implementation only; it does not waive the
   security acceptance criteria or authorize real operational data.
@@ -247,8 +250,9 @@ role-change revocation proof remain separate acceptance requirements.
 
 ## Threat model — 2026-08-25
 
-This model covers the no-data hobby foundation. It does not authorize real
-personnel or operational information.
+This threat model was written for the no-data foundation. It remains historical
+evidence but does not qualify the current real-data Production target without
+the additional acceptance evidence required by this ADR and the release gates.
 
 | Threat                                            | Required control                                                                                                                         | Required evidence before acceptance                                                                                  |
 | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |

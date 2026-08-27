@@ -8,9 +8,10 @@ roles: **officer** and **administrator**. “Supervisor,” “reporting officer
 relationships; they do not grant application permissions unless an approved role
 model later says otherwise.
 
-The current build and validation boundary permits fictional operational records
-only. These permissions still need to be implemented and tested as if the data
-were sensitive.
+Build and qualification environments permit fictional operational records only.
+The isolated Production environment may hold owner-authorized real operational
+and personal data only after every release gate passes. These permissions must
+therefore be implemented and tested as sensitive-data controls.
 
 ## Identity model
 
@@ -181,5 +182,6 @@ not an acceptable control.
   The administrator roster shows and changes the assignment only after a fresh,
   purpose-bound administrator passcode check. A change revokes the target's
   existing sessions and records only bounded prior/new shift codes in audit.
-- Retention and legal-hold requirements for account, audit, incident, report,
-  and generated-artifact data if real operational use is later approved.
+- Operational acceptance of the implemented two-year retention, legal-hold,
+  verified deletion, backup-expiry, and evidence procedures for account, audit,
+  incident, report, paperwork, and generated-artifact data.

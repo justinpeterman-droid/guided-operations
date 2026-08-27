@@ -1,9 +1,10 @@
 # Incident response
 
 This runbook applies to the Guided Operations web application, Supabase project,
-Vercel project, AI provider integration, and the approved policy/reference
-corpus. It does not authorize putting real facility operations, personnel,
-resident, incident, or case data into the product.
+Vercel project, AI provider integration, approved policy/reference corpus, and
+owner-authorized real operational/personal data in isolated Production. The
+runbook does not itself authorize data entry or promotion; those remain bound to
+the real-data release gates and exact-candidate owner approval.
 
 ## Control labels
 

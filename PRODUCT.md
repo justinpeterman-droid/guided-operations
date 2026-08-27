@@ -101,9 +101,10 @@ records are authorized only in Production after the release gates pass.
 Development, automated tests, screenshots, demonstrations, preview deployments,
 logs, and seeded databases must use clearly fictional data.
 
-The only permitted real source material is the existing policy/RAG corpus after
-its provenance, access rights, retention, and processing rights are verified.
-Corpus files are private content and are not committed to Git by default.
+Outside isolated Production, the only permitted real source material is the
+existing policy/RAG corpus after its provenance, access rights, retention, and
+processing rights are verified. Corpus files are private content and are not
+committed to Git by default.
 
 See
 [`docs/operations/real-data-governance.md`](docs/operations/real-data-governance.md)

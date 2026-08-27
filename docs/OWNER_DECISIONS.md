@@ -15,13 +15,13 @@ resource.
 | O-004 | The login experience should use employee number plus a personal PIN-like secret, or the safest practical equivalent. It must not use a shared facility code.                                                                       | 2026-08-25    |
 | O-005 | Vercel and Supabase are the target hosting/data platforms. Google hosting is excluded.                                                                                                                                             | 2026-08-25    |
 | O-006 | OpenAI is acceptable as the initial AI provider; interfaces must permit another provider.                                                                                                                                          | 2026-08-25    |
-| O-007 | There is no real operational data. The existing RAG policy/reference content is the only real source material.                                                                                                                     | 2026-08-25    |
+| O-007 | Baseline assumption: there was no real operational data and the RAG policy/reference corpus was the only real source material. O-015 supersedes this for isolated Production only.                                                 | 2026-08-25    |
 | O-008 | Prefer free plans where their terms and controls fit; do not weaken safety or readiness to remain free.                                                                                                                            | 2026-08-25    |
 | O-009 | Use a United States region; the exact paired regions are not yet approved.                                                                                                                                                         | 2026-08-25    |
-| O-010 | This is a personal, non-commercial hobby app for a small invited group of officers, not an official organization/facility system.                                                                                                  | 2026-08-25    |
+| O-010 | The project began as a personal, non-commercial app for a small invited group and is not represented as an official agency/facility system. O-015 does not establish plan eligibility or official adoption.                        | 2026-08-25    |
 | O-011 | Create a separate Supabase project named `guided-operations` in `justinpeterman-droid's Org`, in `us-east-1`, leaving the inactive project untouched.                                                                              | 2026-08-25    |
 | O-012 | Officers and administrators use individual passcodes of at least eight characters. This is not a shared PIN or facility code.                                                                                                      | 2026-08-25    |
-| O-013 | Administrators use passcode-only access for the hobby foundation. MFA is deferred and must be reconsidered before any official or real-data use.                                                                                   | 2026-08-25    |
+| O-013 | Passcode-only administration was accepted only for the no-data foundation. That exception does not qualify the current real-data Production target; administrator assurance must be decided and tested before release.             | 2026-08-25    |
 | O-014 | The owner is the first/main administrator and is the only initial authority for additional-account creation, credential resets, unlocks, and temporary-secret delivery. Temporary passcodes are handed to the recipient in person. | 2026-08-26    |
 | O-015 | The owner authorizes production use of real operational and personal data and is accountable for product, security, records, privacy, retention, incident response, backup, billing, and production approval.                      | 2026-08-26    |
 | O-016 | Production records and controlled production copies are retained for two years from final revision, unless a legal hold, incident investigation, or later written records decision requires longer retention.                      | 2026-08-26    |
@@ -44,9 +44,9 @@ resource.
 - **O-012 passcode policy:** at least eight characters for individual officer
   and administrator passcodes. The implementation still rejects common patterns
   and employee-number equality.
-- **O-013 admin assurance:** passcode-only access is approved only for the
-  no-data hobby foundation. Administrator MFA is mandatory for reconsideration
-  before official or real-data use.
+- **O-013 admin assurance:** the earlier passcode-only exception does not cover
+  the real-data Production target. Administrator MFA or an explicitly approved,
+  tested equivalent is an open release gate.
 - **O-014 recovery/bootstrap owner:** the owner is the first/main administrator
   and sole initial authority for account lifecycle actions. The app must never
   print, log, or retain a temporary passcode after its protected delivery. The
@@ -70,7 +70,7 @@ resource.
       prohibited. The current target uses no Google hosting or Google-specific
       AI runtime either way.
 
-## Required before private hobby production
+## Required before Production
 
 - [ ] **OQ-016 — Repository enforcement:** choose a GitHub plan that supports
       branch protection/rulesets for the private repository, or explicitly
@@ -81,7 +81,7 @@ resource.
       Production domain, or approve a plan/add-on that provides the required
       provider-level Production protection.
 
-## Required before any future official adoption or real-data use
+## Required before real-data Production or any official adoption
 
 - [x] **OQ-011 — Operational data authorization:** the owner authorized real
       operational and personal data in production on 2026-08-26. This does not

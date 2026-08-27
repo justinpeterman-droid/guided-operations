@@ -11,9 +11,11 @@ irreversible. Execute these steps only with the named release/retirement owners
 and exact resource evidence. A repository merge or green deployment does not
 authorize traffic change or deletion.
 
-The current data authorization remains: fictional operational records only;
-authorized policy/RAG sources may be real after rights review. This runbook does
-not authorize migration or entry of real personnel/incident data.
+Real operational and personal data are authorized only in isolated Production
+after every release gate passes and the owner approves the exact candidate.
+Qualification remains fictional-only. This runbook does not authorize legacy
+personnel/incident migration; that requires a separate reconciled data-migration
+procedure and approval.
 
 ## Required records
 
@@ -45,7 +47,9 @@ All boxes must be checked before traffic change:
 - [ ] Required feature parity is accepted or each omission has explicit owner
       approval.
 - [ ] `SAFE-*` invariant test pack passes on the exact candidate.
-- [ ] Production contains no real operational/personnel data.
+- [ ] Before promotion, Production contains no real operational/personnel data;
+      fictional qualification records are removed or explicitly retained only
+      for cleanup-safe smoke tests.
 - [ ] Fictional smoke accounts/records are documented and removable.
 - [ ] Every active RAG source has verified bytes, SHA-256, rights,
       current/version state, private object, page mapping, accepted ingestion
@@ -117,10 +121,10 @@ During the window:
 - monitoring compares target behavior to acceptance thresholds;
 - data-bearing Google resources are not deleted.
 
-For current fictional-only scope, do not migrate old incident/personnel records.
-The only data migration is the rights-approved corpus and necessary
-non-sensitive configuration. A future real-data migration requires a separate
-data mapping/reconciliation/retention runbook.
+Do not migrate old incident/personnel records under this runbook. The only
+pre-promotion data migration is the rights-approved corpus and necessary
+non-sensitive configuration. Any legacy operational-data migration requires a
+separate approved mapping, reconciliation, retention, and rollback runbook.
 
 ## Cutover sequence
 

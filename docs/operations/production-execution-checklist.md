@@ -1,13 +1,16 @@
 # Production execution checklist
 
-**Goal:** Move Guided Operations from the verified no-data foundation to a live,
-owner-authorized private hobby release by completing the gated sequence in
-[`ROADMAP.md`](../../ROADMAP.md).
+**Goal:** Move Guided Operations from the verified no-data foundation to an
+owner-authorized, isolated private Production release by completing the gated
+sequence in [`ROADMAP.md`](../../ROADMAP.md).
 
 **Started:** 2026-08-25  
 **Working branch:** `codex/production-readiness`  
-**Data boundary:** fictional operational/personnel data only; approved real
-policy/reference content only after corpus authorization  
+**Data boundary:** real operational/personal data only in isolated Production
+after exact-candidate approval; Git, local development, CI, Preview, staging,
+screenshots, logs, support tools, recovery rehearsals, and fixtures remain
+fictional-only; real policy/reference content follows the corpus protocol.
+
 **Live target:** Vercel plus a separate live Supabase project in an approved
 United States region
 
@@ -136,7 +139,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Common-pattern and employee-number-equality rejection is required.
 - [x] Owner is recorded as first/main administrator and sole initial account
       lifecycle authority.
-- [x] Admin MFA is explicitly deferred only for the no-data hobby boundary.
+- [x] Record that administrator MFA was deferred only for the no-data
+      foundation.
+- [ ] Resolve and test administrator MFA or an explicitly approved equivalent
+      for the real-data Production target.
 - [ ] Define employee-number normalization and allowed passcode alphabet.
 - [x] Add a tested, provider-neutral minimum-passcode/common-pattern/employee-
       equality policy primitive without prematurely deciding the final

@@ -23,11 +23,12 @@ official output.
 
 ## A. Data authorization boundary
 
-**SAFE-001 — Fictional operational data only.** Until a separate real-data
-approval is recorded, source control, local/preview/production-like databases,
+**SAFE-001 — Production-only real operational data.** The owner authorized real
+operational and personal data only in the isolated Production environment after
+all release gates pass. Source control, local development, CI, Preview, staging,
 tests, screenshots, traces, support examples, logs, and demos use fictional
-personnel and operational data. The only real content permitted is authorized
-RAG source material.
+personnel and operational data. Authorized RAG source material follows its
+separate corpus-handling rules.
 
 **SAFE-002 — No production fallback fixtures.** Empty or failed authorized
 queries render an honest empty/error state. They never render sample incidents,

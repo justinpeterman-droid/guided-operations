@@ -3,11 +3,11 @@
 ## Environment strategy
 
 The minimum safe topology uses two hosted Supabase projects and Vercel's
-built-in environments. The current use is a personal, non-commercial hobby app
-for a small invited group of officers, so Vercel Hobby and Supabase Free are the
-starting candidates. Their quotas and exact plan terms must still be rechecked
-before provisioning. Any later official organizational adoption requires a new
-plan and readiness review.
+built-in environments. The selected Vercel and Supabase plans must permit the
+exact invited-user and owner-authorized real-data Production use and meet the
+documented protection, backup, recovery, retention, monitoring, and support
+gates. Any later official organizational adoption requires a new plan and
+readiness review.
 
 | Environment        | Application                                          | Data services                                                                | Allowed data                                                                            | Promotion model                                                         |
 | ------------------ | ---------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
@@ -165,8 +165,8 @@ linked project before a destructive operation.
 ## Free-plan qualification gate
 
 Free services are appropriate only where their terms permit the exact use.
-Before the private hobby release, the owner must explicitly accept or eliminate
-these limitations:
+Before the real-data Production release, the owner must eliminate or explicitly
+accept only those limitations that the release gates permit owner judgment on:
 
 - a low-activity Supabase Free project can pause;
 - free database backups require regular operator-managed logical exports;

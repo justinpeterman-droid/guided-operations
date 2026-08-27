@@ -30,8 +30,8 @@ foundation target is:
 - maximum 24-hour data-loss window (RPO) for production qualification data and
   corpus changes;
 - restore service within 8 hours (RTO) after provider/project loss;
-- a restore exercise at least quarterly and before the private hobby release,
-  then again before any future official facility pilot;
+- a restore exercise at least quarterly and before the first real-data
+  Production release, then again before any future official facility pilot;
 - an additional verified backup before risky migrations, bulk corpus
   replacement, or provider retirement.
 
