@@ -14,34 +14,45 @@ import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
 
 const aiEnvironmentSchema = z.object({
   AI_PROVIDER: z.literal("openai"),
-  OPENAI_EMBEDDING_MODEL: z.string().trim().min(1).max(160),
   RAG_CORPUS_VERSION: z
     .string()
     .trim()
     .regex(/^[a-z0-9][a-z0-9._-]{1,159}$/),
 });
 
+const enabledAiEnvironmentSchema = z.object({
+  OPENAI_EMBEDDING_MODEL: z.string().trim().min(1).max(160),
+});
+
 /**
- * Validates the complete runtime contract without returning or logging secret
+ * Validates the active runtime contract without returning or logging secret
  * values. A public readiness response may use only the success/failure result.
  */
 export function assertApplicationEnvironmentReadiness(
   environment: Record<string, string | undefined> = process.env,
 ) {
   const runtime = getRuntimeEnvironment(environment);
-  getAiBudgetEnvironment(environment);
+  const aiBudget = getAiBudgetEnvironment(environment);
   const publicSupabase = getPublicSupabaseEnvironment(environment);
   const auth = getAuthServerEnvironment(environment);
   const authSession = getAuthSessionEnvironment(environment);
   const incident = getIncidentServerEnvironment(environment);
   const observability = getObservabilityEnvironment(environment);
-  getOpenAiPolicyEnvironment(environment);
-  getOpenAiReportDraftEnvironment(environment);
   aiEnvironmentSchema.parse({
     AI_PROVIDER: environment.AI_PROVIDER,
-    OPENAI_EMBEDDING_MODEL: environment.OPENAI_EMBEDDING_MODEL,
     RAG_CORPUS_VERSION: environment.RAG_CORPUS_VERSION,
   });
+
+  // A deliberately disabled provider is a healthy degraded mode: the guarded
+  // adapters reject before reading provider credentials. Requiring an unused
+  // API key would add secret exposure without enabling any user capability.
+  if (aiBudget.AI_GENERATION_ENABLED) {
+    getOpenAiPolicyEnvironment(environment);
+    getOpenAiReportDraftEnvironment(environment);
+    enabledAiEnvironmentSchema.parse({
+      OPENAI_EMBEDDING_MODEL: environment.OPENAI_EMBEDDING_MODEL,
+    });
+  }
 
   if (runtime.APP_ENV === "production" && !auth.AUTH_SIGN_IN_ENABLED) {
     throw new Error("Production sign-in must be explicitly enabled.");

@@ -62,6 +62,31 @@ describe("application environment readiness", () => {
     ).toThrow();
   });
 
+  it("accepts disabled AI without unused provider credentials or models", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({
+          AI_GENERATION_ENABLED: "false",
+          OPENAI_API_KEY: undefined,
+          OPENAI_POLICY_MODEL: undefined,
+          OPENAI_REPORT_DRAFT_MODEL: undefined,
+          OPENAI_EMBEDDING_MODEL: undefined,
+        }),
+      ),
+    ).not.toThrow();
+  });
+
+  it("still requires an explicit corpus state while AI is disabled", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({
+          AI_GENERATION_ENABLED: "false",
+          RAG_CORPUS_VERSION: undefined,
+        }),
+      ),
+    ).toThrow();
+  });
+
   it("rejects a missing AI monthly request cap", () => {
     expect(() =>
       assertApplicationEnvironmentReadiness(
