@@ -58,13 +58,20 @@ export async function validateSignInEndpointRequest(
     return { ok: false, response: genericFailure(403) };
   }
 
-  if (!request.headers.get("content-type")?.startsWith("application/json")) {
-    return { ok: false, response: genericFailure(400) };
-  }
-
+  const contentType = request.headers.get("content-type") ?? "";
   let body: unknown;
   try {
-    body = await request.json();
+    if (contentType.startsWith("application/json")) {
+      body = await request.json();
+    } else if (contentType.startsWith("application/x-www-form-urlencoded")) {
+      const form = await request.formData();
+      body = {
+        employeeNumber: form.get("employeeNumber"),
+        passcode: form.get("passcode"),
+      };
+    } else {
+      return { ok: false, response: genericFailure(400) };
+    }
   } catch {
     return { ok: false, response: genericFailure(400) };
   }

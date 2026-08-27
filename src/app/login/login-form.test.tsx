@@ -15,6 +15,16 @@ afterEach(() => {
 });
 
 describe("LoginForm", () => {
+  it("uses a safe POST fallback when browser JavaScript is unavailable", () => {
+    render(<LoginForm />);
+
+    const form = screen
+      .getByRole("button", { name: "Sign in" })
+      .closest("form");
+    expect(form).toHaveAttribute("action", "/api/auth/sign-in");
+    expect(form).toHaveAttribute("method", "post");
+  });
+
   it("sends only the entered credentials to the guarded same-origin endpoint", async () => {
     const user = userEvent.setup();
     const fetchMock = vi

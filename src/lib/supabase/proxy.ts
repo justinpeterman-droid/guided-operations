@@ -7,6 +7,13 @@ import {
   createEncryptedSupabaseSessionStorage,
   type SessionCookieChange,
 } from "@/server/auth/encrypted-supabase-session-storage";
+import { parseSessionAuthority } from "@/server/auth/session-claims";
+import {
+  CSRF_DIGEST_COOKIE,
+  CSRF_TOKEN_COOKIE,
+  issueSessionCsrfToken,
+} from "@/server/security/session-csrf";
+import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
 import { createSupabaseSessionClient } from "./session-client";
 
@@ -54,7 +61,40 @@ export async function refreshSupabaseSession(request: NextRequest) {
     storage,
   );
 
-  await supabase.auth.getClaims();
+  const claimsResult = await supabase.auth.getClaims();
+  const authority = parseSessionAuthority(claimsResult.data?.claims);
+  if (
+    request.method === "GET" &&
+    request.nextUrl.pathname === "/account" &&
+    authority
+  ) {
+    const authEnvironment = getAuthServerEnvironment();
+    const token = issueSessionCsrfToken(
+      authority.sessionId,
+      authEnvironment.CSRF_HMAC_KEY,
+    );
+    const secure = runtimeEnvironment.APP_ENV !== "development";
+    request.cookies.set(CSRF_TOKEN_COOKIE, token.token);
+    request.cookies.set(CSRF_DIGEST_COOKIE, token.digest);
+    response = nextResponseWithRequestHeaders(request);
+    for (const { name, value, options } of pendingChanges.values()) {
+      response.cookies.set(name, value, options);
+    }
+    response.cookies.set(CSRF_TOKEN_COOKIE, token.token, {
+      httpOnly: false,
+      sameSite: "strict",
+      secure,
+      path: "/",
+      maxAge: 30 * 60,
+    });
+    response.cookies.set(CSRF_DIGEST_COOKIE, token.digest, {
+      httpOnly: true,
+      sameSite: "strict",
+      secure,
+      path: "/",
+      maxAge: 30 * 60,
+    });
+  }
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");

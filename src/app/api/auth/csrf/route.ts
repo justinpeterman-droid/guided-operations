@@ -30,6 +30,7 @@ export async function GET(): Promise<Response> {
     const result = await issueCsrfForCurrentSession(
       client,
       authEnvironment.CSRF_HMAC_KEY,
+      { allowForcedPasscodeChange: true },
     );
     if (result.kind !== "issued") return unauthorizedResponse();
 

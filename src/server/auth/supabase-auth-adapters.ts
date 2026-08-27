@@ -4,14 +4,23 @@ import { createClient } from "@supabase/supabase-js";
 import postgres from "postgres";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getAuthSessionEnvironment } from "@/lib/env/auth-session";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseSessionClient } from "@/lib/supabase/session-client";
+import {
+  createEncryptedSupabaseSessionStorage,
+  type SessionCookieIo,
+} from "@/server/auth/encrypted-supabase-session-storage";
 
 import type { PasswordAuthenticator } from "./employee-sign-in";
 import type { AuthUserProvisioner } from "./first-admin-bootstrap";
 import type { AdministratorPasscodeVerifier } from "./request-admin-step-up";
 import type { AuthPasswordResetter } from "./reset-account-passcode";
 import type { AccountPasscodeVerifier } from "./change-personal-passcode";
+
+export type { PasswordAuthenticator } from "./employee-sign-in";
 
 type ActiveAliasLookup = Readonly<{
   findActiveAlias(authUserId: string): Promise<string | null>;
@@ -66,7 +75,36 @@ export function createSupabaseAuthAdminClient() {
  */
 export async function createSupabasePasswordAuthenticator(): Promise<PasswordAuthenticator> {
   const client = await createSupabaseServerClient();
+  return createPasswordAuthenticator(client);
+}
 
+/**
+ * Creates a password authenticator whose encrypted session mutations are owned
+ * by the caller's response. Route handlers use this for native redirects.
+ */
+export function createSupabasePasswordAuthenticatorForCookieIo(
+  cookies: SessionCookieIo,
+): PasswordAuthenticator {
+  const environment = getPublicSupabaseEnvironment();
+  const authSessionEnvironment = getAuthSessionEnvironment();
+  const runtimeEnvironment = getRuntimeEnvironment();
+  const client = createSupabaseSessionClient(
+    environment.NEXT_PUBLIC_SUPABASE_URL,
+    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    createEncryptedSupabaseSessionStorage({
+      encryptionKey: authSessionEnvironment.AUTH_SESSION_ENCRYPTION_KEY,
+      secure:
+        runtimeEnvironment.APP_ENV !== "development" &&
+        runtimeEnvironment.APP_ENV !== "test",
+      cookies,
+    }),
+  );
+  return createPasswordAuthenticator(client);
+}
+
+function createPasswordAuthenticator(
+  client: Awaited<ReturnType<typeof createSupabaseServerClient>>,
+): PasswordAuthenticator {
   return {
     async signInWithPassword(alias, passcode) {
       const { data, error } = await client.auth.signInWithPassword({

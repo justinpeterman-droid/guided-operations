@@ -44,7 +44,12 @@ export function LoginForm() {
   const submitting = state === "submitting";
 
   return (
-    <form className="login-form" onSubmit={submit}>
+    <form
+      action="/api/auth/sign-in"
+      className="login-form"
+      method="post"
+      onSubmit={submit}
+    >
       <label htmlFor="employee-number">Employee number</label>
       <input
         autoComplete="username"

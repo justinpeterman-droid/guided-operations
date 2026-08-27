@@ -17,6 +17,19 @@ afterEach(() => {
 });
 
 describe("TemporaryPasscodeChangeForm", () => {
+  it("uses a POST fallback so a passcode cannot enter the address bar", () => {
+    render(<TemporaryPasscodeChangeForm csrfToken="fictional-csrf-token" />);
+
+    const form = screen
+      .getByRole("button", { name: "Change passcode" })
+      .closest("form");
+    expect(form).toHaveAttribute(
+      "action",
+      "/api/auth/complete-temporary-passcode-change",
+    );
+    expect(form).toHaveAttribute("method", "post");
+  });
+
   it("uses a fresh CSRF token and never sends the employee number in a URL", async () => {
     const user = userEvent.setup();
     const fetchMock = vi
@@ -26,7 +39,7 @@ describe("TemporaryPasscodeChangeForm", () => {
         Response.json({ data: { status: "passcode_changed" } }),
       );
     vi.stubGlobal("fetch", fetchMock);
-    render(<TemporaryPasscodeChangeForm />);
+    render(<TemporaryPasscodeChangeForm csrfToken="fictional-csrf-token" />);
 
     await user.type(screen.getByLabelText("Confirm employee number"), "EMP-42");
     await user.type(screen.getByLabelText("New personal passcode"), "Cedar7!9");

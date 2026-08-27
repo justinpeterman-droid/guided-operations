@@ -9,7 +9,9 @@ const FAILURE_MESSAGE =
   "We could not change your passcode. Check the requirements and try again.";
 
 /** The only browser UI available while a temporary passcode is active. */
-export function TemporaryPasscodeChangeForm() {
+export function TemporaryPasscodeChangeForm({
+  csrfToken,
+}: Readonly<{ csrfToken: string | null }>) {
   const router = useRouter();
   const [state, setState] = useState<FormState>("idle");
 
@@ -59,12 +61,15 @@ export function TemporaryPasscodeChangeForm() {
 
   return (
     <form
+      action="/api/auth/complete-temporary-passcode-change"
       className="account-session-controls"
+      method="post"
       onSubmit={(event) => {
         event.preventDefault();
         void submit(event.currentTarget);
       }}
     >
+      <input name="csrfToken" type="hidden" value={csrfToken ?? ""} />
       <p className="eyebrow">Account security</p>
       <h2>Choose your personal passcode</h2>
       <p>

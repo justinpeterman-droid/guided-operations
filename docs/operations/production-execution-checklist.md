@@ -191,7 +191,16 @@ Pause and report a blocker instead of guessing when work requires:
       lock, pending administrator, forced expiring temporary credential state,
       private-delivery activation, failed-delivery cleanup, and allowlisted
       audit outcomes. The ceremony is not exposed to a browser route and has not
-      been run with a real identity.
+      been run with a real identity. The explicit
+      `scripts/bootstrap-fictional-test-administrator.mjs` operator utility is
+      restricted to `APP_ENV=development`, a zero-account fictional project, and
+      its exact confirmation flag. It never accepts identity input or prints a
+      temporary passcode; delivery is an on-screen, local clipboard handoff
+      only. If that single fictional credential expires during local
+      qualification, `scripts/rotate-fictional-test-administrator.mjs` can
+      rotate only that fixed fictional account at the fixed fictional facility;
+      it verifies provider claims and the local encrypted-session route before
+      private clipboard delivery.
 - [x] Implement account create, deactivate, role change, reset, and unlock with
       purpose-bound admin step-up, plus personal passcode and session controls.
       Local service, route, UI, and database tests exist; hosted migration and

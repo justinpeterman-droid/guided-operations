@@ -28,6 +28,18 @@ function request(body: unknown, headers: Record<string, string> = {}): Request {
   });
 }
 
+function formRequest(body: Record<string, string>): Request {
+  return new Request(`${origin}/api/auth/sign-in`, {
+    method: "POST",
+    headers: {
+      "content-type": "application/x-www-form-urlencoded",
+      origin,
+      "sec-fetch-site": "same-origin",
+    },
+    body: new URLSearchParams(body),
+  });
+}
+
 describe("handleSignInEndpoint", () => {
   it("is unavailable while sign-in is disabled", async () => {
     const result = disabledSignInEndpoint();
@@ -90,5 +102,22 @@ describe("handleSignInEndpoint", () => {
     expect(result.response.status).toBe(200);
     expect(result.response.headers.get("cache-control")).toBe("no-store");
     expect(result.deviceCookieValue).toBe(subjects.deviceCookieValue);
+  });
+
+  it("accepts the native form fallback without putting credentials in a URL", async () => {
+    const authenticate = vi.fn().mockResolvedValue({ status: "signed_in" });
+
+    await handleSignInEndpoint(
+      formRequest({ employeeNumber: "EMP-42", passcode: "Cedar7!9" }),
+      origin,
+      subjects,
+      authenticate,
+    );
+
+    expect(authenticate).toHaveBeenCalledWith({
+      employeeNumber: "EMP-42",
+      passcode: "Cedar7!9",
+      ...subjects,
+    });
   });
 });

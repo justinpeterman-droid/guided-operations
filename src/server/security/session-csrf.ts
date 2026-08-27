@@ -28,6 +28,11 @@ function findCookie(cookieHeader: string | null, name: string): string | null {
   return null;
 }
 
+/** Reads only the browser-visible half of the session-bound CSRF pair. */
+export function readSessionCsrfToken(headers: RequestHeaders): string | null {
+  return findCookie(headers.get("cookie"), CSRF_TOKEN_COOKIE);
+}
+
 /** Issues a fresh browser token and a server-verifiable session-bound digest. */
 export function issueSessionCsrfToken(
   sessionId: string,
@@ -43,8 +48,23 @@ export function hasValidSessionCsrfRequest(
   sessionId: string,
   hmacKey: string,
 ): boolean {
-  return hasValidCsrfToken(
+  return hasValidSessionCsrfToken(
     headers.get(CSRF_HEADER),
+    headers,
+    sessionId,
+    hmacKey,
+  );
+}
+
+/** Validates a header or same-origin form token against the private digest. */
+export function hasValidSessionCsrfToken(
+  token: string | null,
+  headers: RequestHeaders,
+  sessionId: string,
+  hmacKey: string,
+): boolean {
+  return hasValidCsrfToken(
+    token,
     findCookie(headers.get("cookie"), CSRF_DIGEST_COOKIE),
     sessionId,
     hmacKey,

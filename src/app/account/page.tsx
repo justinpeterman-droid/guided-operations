@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { CSRF_TOKEN_COOKIE } from "@/server/security/session-csrf";
 
 import { AccountSessionControls } from "./account-session-controls";
 import { PersonalPasscodeChangeForm } from "./personal-passcode-change-form";
@@ -29,7 +31,10 @@ export default async function AccountPage() {
   const result = await loadCurrentAccount();
   if (result.kind === "denied") return <SignInRequired />;
   if (result.kind === "unavailable") return <AccountUnavailable />;
-  if (result.kind === "change_required") return <PasscodeChangeRequired />;
+  if (result.kind === "change_required") {
+    const csrfToken = (await cookies()).get(CSRF_TOKEN_COOKIE)?.value ?? null;
+    return <PasscodeChangeRequired csrfToken={csrfToken} />;
+  }
 
   return (
     <main className="reports-page account-page">
@@ -64,7 +69,9 @@ export default async function AccountPage() {
   );
 }
 
-function PasscodeChangeRequired() {
+function PasscodeChangeRequired({
+  csrfToken,
+}: Readonly<{ csrfToken: string | null }>) {
   return (
     <main className="reports-page account-page">
       <section
@@ -78,7 +85,7 @@ function PasscodeChangeRequired() {
           passcode is replaced.
         </p>
       </section>
-      <TemporaryPasscodeChangeForm />
+      <TemporaryPasscodeChangeForm csrfToken={csrfToken} />
     </main>
   );
 }

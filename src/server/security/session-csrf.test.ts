@@ -8,6 +8,7 @@ import {
   CSRF_TOKEN_COOKIE,
   hasValidSessionCsrfRequest,
   issueSessionCsrfToken,
+  readSessionCsrfToken,
 } from "./session-csrf";
 
 const sessionId = "11111111-1111-4111-8111-111111111111";
@@ -58,5 +59,16 @@ describe("session CSRF cookie contract", () => {
         hmacKey,
       ),
     ).toBe(false);
+  });
+
+  it("reads the browser-visible token without exposing the private digest", () => {
+    const issued = issueSessionCsrfToken(sessionId, hmacKey);
+    expect(
+      readSessionCsrfToken(
+        new Headers({
+          cookie: `${CSRF_TOKEN_COOKIE}=${issued.token}; ${CSRF_DIGEST_COOKIE}=${issued.digest}`,
+        }),
+      ),
+    ).toBe(issued.token);
   });
 });

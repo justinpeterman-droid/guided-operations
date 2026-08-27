@@ -9,6 +9,9 @@ vi.mock("./session-client", () => ({ createSupabaseSessionClient }));
 vi.mock("@/lib/env/auth-session", () => ({
   getAuthSessionEnvironment: vi.fn(),
 }));
+vi.mock("@/lib/env/auth-server", () => ({
+  getAuthServerEnvironment: vi.fn(),
+}));
 vi.mock("@/lib/env/runtime", () => ({
   getRuntimeEnvironment: vi.fn(),
 }));
@@ -19,6 +22,7 @@ vi.mock("@/lib/env/supabase-public", () => ({
 import { NextRequest } from "next/server";
 
 import { getAuthSessionEnvironment } from "@/lib/env/auth-session";
+import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
 import {
@@ -68,6 +72,14 @@ describe("refreshSupabaseSession", () => {
     });
     vi.mocked(getAuthSessionEnvironment).mockReturnValue({
       AUTH_SESSION_ENCRYPTION_KEY: encryptionKey,
+    });
+    vi.mocked(getAuthServerEnvironment).mockReturnValue({
+      SUPABASE_SECRET_KEY: "unused",
+      SUPABASE_DB_URL: "postgresql://unused.example.test/postgres",
+      EMPLOYEE_LOOKUP_PEPPER: "p".repeat(32),
+      AUTH_DUMMY_ALIAS: "fictional-dummy@auth.invalid",
+      CSRF_HMAC_KEY: "k".repeat(32),
+      AUTH_SIGN_IN_ENABLED: true,
     });
     vi.mocked(getRuntimeEnvironment).mockReturnValue({
       APP_ENV: "production",
@@ -130,6 +142,41 @@ describe("refreshSupabaseSession", () => {
 
     expect(response.headers.get("set-cookie")).toBeNull();
     expect(response.headers.get("cache-control")).toContain("no-store");
+  });
+
+  it("issues a session-bound CSRF pair only when an authorized account page is requested", async () => {
+    createSupabaseSessionClient.mockReturnValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "11111111-1111-4111-8111-111111111111",
+              session_id: "22222222-2222-4222-8222-222222222222",
+              app_metadata: { auth_version: 1 },
+            },
+          },
+          error: null,
+        }),
+      },
+    });
+
+    const response = await refreshSupabaseSession(
+      new NextRequest("https://guided-operations.example.test/account"),
+    );
+
+    const setCookies = response.headers.getSetCookie();
+    const browserToken = setCookies.find((cookie) =>
+      cookie.startsWith("go-csrf="),
+    );
+    const privateDigest = setCookies.find((cookie) =>
+      cookie.startsWith("go-csrf-digest="),
+    );
+    expect(browserToken).toContain("SameSite=strict");
+    expect(browserToken).toContain("Secure");
+    expect(browserToken).not.toContain("HttpOnly");
+    expect(privateDigest).toContain("HttpOnly");
+    expect(privateDigest).toContain("SameSite=strict");
+    expect(privateDigest).toContain("Secure");
   });
 
   it("expires a malformed encrypted session without disclosing its value", async () => {

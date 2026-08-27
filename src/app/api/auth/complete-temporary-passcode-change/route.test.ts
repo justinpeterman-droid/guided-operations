@@ -21,6 +21,8 @@ vi.mock("@/server/security/session-csrf", () => ({
   CSRF_DIGEST_COOKIE: "go-csrf-digest",
   CSRF_TOKEN_COOKIE: "go-csrf",
   hasValidSessionCsrfRequest: vi.fn(),
+  hasValidSessionCsrfToken: vi.fn(),
+  readSessionCsrfToken: vi.fn(),
 }));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -30,6 +32,10 @@ import { completeTemporaryPasscodeChange } from "@/server/auth/complete-temporar
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+import {
+  hasValidSessionCsrfToken,
+  readSessionCsrfToken,
+} from "@/server/security/session-csrf";
 
 import { POST } from "./route";
 
@@ -122,5 +128,42 @@ describe("POST /api/auth/complete-temporary-passcode-change", () => {
 
     expect(response.status).toBe(403);
     expect(completeTemporaryPasscodeChange).not.toHaveBeenCalled();
+  });
+
+  it("accepts the session-bound browser token for a native same-origin form fallback", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(session as never);
+    vi.mocked(isTrustedMutationRequest).mockReturnValue(true);
+    vi.mocked(readSessionCsrfToken).mockReturnValue("browser-token");
+    vi.mocked(hasValidSessionCsrfToken).mockReturnValue(true);
+    vi.mocked(completeTemporaryPasscodeChange).mockResolvedValue({
+      status: "completed",
+    });
+
+    const response = await POST(
+      new Request(`${origin}/api/auth/complete-temporary-passcode-change`, {
+        method: "POST",
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          origin,
+          cookie: "go-csrf=browser-token; go-csrf-digest=private-digest",
+        },
+        body: new URLSearchParams({
+          employeeNumber: "EMP-42",
+          passcode: "Cedar7!9",
+          csrfToken: "",
+        }),
+      }),
+    );
+
+    expect(readSessionCsrfToken).toHaveBeenCalled();
+    expect(hasValidSessionCsrfToken).toHaveBeenCalledWith(
+      "browser-token",
+      expect.any(Headers),
+      session.sessionId,
+      "k".repeat(32),
+    );
+    expect(response.status).toBe(303);
+    expect(response.headers.get("location")).toBe(`${origin}/login`);
   });
 });

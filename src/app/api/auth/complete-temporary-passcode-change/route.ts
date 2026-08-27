@@ -11,6 +11,8 @@ import {
   CSRF_DIGEST_COOKIE,
   CSRF_TOKEN_COOKIE,
   hasValidSessionCsrfRequest,
+  hasValidSessionCsrfToken,
+  readSessionCsrfToken,
 } from "@/server/security/session-csrf";
 
 export const dynamic = "force-dynamic";
@@ -33,18 +35,38 @@ export async function POST(request: Request): Promise<Response> {
       return authenticationRequired();
     }
 
+    const isNativeFormSubmission = request.headers
+      .get("content-type")
+      ?.startsWith("application/x-www-form-urlencoded");
+    const form = isNativeFormSubmission ? await request.formData() : null;
+    const formCsrfToken = form?.get("csrfToken");
+    const csrfValid = isNativeFormSubmission
+      ? hasValidSessionCsrfToken(
+          typeof formCsrfToken === "string" && formCsrfToken
+            ? formCsrfToken
+            : readSessionCsrfToken(request.headers),
+          request.headers,
+          session.sessionId,
+          environment.CSRF_HMAC_KEY,
+        )
+      : hasValidSessionCsrfRequest(
+          request.headers,
+          session.sessionId,
+          environment.CSRF_HMAC_KEY,
+        );
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
-      !hasValidSessionCsrfRequest(
-        request.headers,
-        session.sessionId,
-        environment.CSRF_HMAC_KEY,
-      )
+      !csrfValid
     ) {
       return requestNotAllowed();
     }
 
-    const input: unknown = await request.json();
+    const input: unknown = isNativeFormSubmission
+      ? {
+          employeeNumber: form?.get("employeeNumber"),
+          passcode: form?.get("passcode"),
+        }
+      : await request.json();
     const result = await completeTemporaryPasscodeChange(
       input,
       session.account.authUserId,
@@ -54,8 +76,14 @@ export async function POST(request: Request): Promise<Response> {
         store: createTemporaryPasscodeChangeStore(),
       },
     );
-    if (result.status === "invalid_input") return invalidInput();
-    if (result.status !== "completed") return unavailable();
+    if (result.status === "invalid_input")
+      return isNativeFormSubmission
+        ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "passcode")
+        : invalidInput();
+    if (result.status !== "completed")
+      return isNativeFormSubmission
+        ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "unavailable")
+        : unavailable();
 
     const response = NextResponse.json(
       { data: { status: "passcode_changed" } },
@@ -64,10 +92,29 @@ export async function POST(request: Request): Promise<Response> {
     response.cookies.delete(CSRF_TOKEN_COOKIE);
     response.cookies.delete(CSRF_DIGEST_COOKIE);
     response.cookies.delete("go-auth-device");
-    return response;
+    return isNativeFormSubmission
+      ? completedRedirect(runtimeEnvironment.APP_ORIGIN, response)
+      : response;
   } catch {
     return unavailable();
   }
+}
+
+function completedRedirect(applicationOrigin: string, response: NextResponse) {
+  const redirect = NextResponse.redirect(new URL("/login", applicationOrigin), {
+    status: 303,
+  });
+  for (const cookie of response.cookies.getAll()) {
+    redirect.cookies.set(cookie);
+  }
+  return redirect;
+}
+
+function accountRedirect(applicationOrigin: string, error: string) {
+  return NextResponse.redirect(
+    new URL(`/account?error=${encodeURIComponent(error)}`, applicationOrigin),
+    { status: 303 },
+  );
 }
 
 function authenticationRequired(): Response {

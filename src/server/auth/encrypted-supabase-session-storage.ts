@@ -30,7 +30,7 @@ export type SessionCookieChange = Readonly<{
   }>;
 }>;
 
-type SessionCookieIo = Readonly<{
+export type SessionCookieIo = Readonly<{
   readAll(): CookieValue[];
   writeAll(changes: SessionCookieChange[]): void | Promise<void>;
 }>;
