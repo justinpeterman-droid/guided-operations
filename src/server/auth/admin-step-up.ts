@@ -15,6 +15,8 @@ export const ADMIN_STEP_UP_PURPOSES = [
   "account.change_shift",
   "account.disable",
   "policy.promote",
+  "retention.place_legal_hold",
+  "retention.release_legal_hold",
   "system.destructive_cleanup",
 ] as const;
 

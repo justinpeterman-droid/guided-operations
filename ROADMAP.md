@@ -90,9 +90,10 @@ The hosted details and limitations are recorded in
 7. Production monitoring sinks, alert delivery, access/retention, cost caps,
    provider budgets, incident ownership, and release/rollback exercises do not
    exist.
-8. Two-year retention has been approved in documentation, but production data
-   inventory, legal-hold operation, deletion execution/verification, and backup
-   expiry evidence remain open.
+8. The production data inventory and protected, purpose-bound legal-hold
+   placement/release workflow are implemented locally. Controlled deletion,
+   Storage and backup reconciliation, hosted rehearsal, backup-expiry evidence,
+   and owner approval remain open.
 9. GitHub branch protection and private-repository rulesets are unavailable on
    the current account plan. The owner must upgrade or formally accept and
    document compensating release controls.
@@ -402,9 +403,9 @@ and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 
 ## Phase 6 — administration and operational controls
 
-Status: **account/audit/health controls, redacted core telemetry, and local
-recovery are implemented; hosted monitoring, alerts, budgets, and exercises
-remain open**
+Status: **account/audit/health controls, purpose-bound legal-hold operation,
+redacted core telemetry, and local recovery are implemented; controlled
+deletion, hosted monitoring, alerts, budgets, and exercises remain open**
 
 ### Steps
 
@@ -433,7 +434,10 @@ remain open**
 8. Encode the ordinary two-year deletion-review clock and legal-hold override in
    the database. Keep classification separate from deletion authority, and
    require protected admin workflow plus backup-aware evidence before any
-   destructive cleanup.
+   destructive cleanup. The protected `/admin/retention` register now places and
+   releases validated holds through separate one-time step-up purposes; it
+   exposes no deletion action. Backup-aware deletion and hosted evidence remain
+   open.
 9. Set provider budgets and circuit breakers. A provider limit must create an
    honest degraded state, not fabricated output or partial silent saves.
 10. Exercise credential rotation, dependency update, incident response,

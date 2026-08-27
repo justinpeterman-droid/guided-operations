@@ -328,9 +328,11 @@ Pause and report a blocker instead of guessing when work requires:
       non-production, support, and backup surfaces. Hosted settings, deletion
       automation, and evidence reconciliation remain open.
 - [x] Encode a 730-day post-archive deletion-review date for operational record
-      heads and a private, target-validated, audited legal-hold model. No data
-      is deleted and no hold-management endpoint is exposed; protected admin
-      workflow, controlled deletion, backups, and hosted evidence remain open.
+      heads and a private, target-validated, audited legal-hold model. Protected
+      `/admin/retention` placement and release require separate same-session,
+      one-time administrator step-up proofs; direct Data API access remains
+      denied. No data is deleted. Controlled deletion, backup/Storage
+      reconciliation, hosted rehearsal, and owner approval remain open.
 - [ ] Add cost/quota dashboards, alerts, budgets, and circuit breakers.
 - [ ] Name incident/alert primary and alternate.
 - [ ] Exercise credential rotation, dependency update, incident response,

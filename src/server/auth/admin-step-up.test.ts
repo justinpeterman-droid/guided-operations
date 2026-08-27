@@ -51,6 +51,8 @@ describe("issueAdminStepUp", () => {
       "account.change_shift",
       "account.disable",
       "policy.promote",
+      "retention.place_legal_hold",
+      "retention.release_legal_hold",
       "system.destructive_cleanup",
     ]);
   });

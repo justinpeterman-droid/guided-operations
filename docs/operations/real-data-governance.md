@@ -40,6 +40,10 @@ provider settings and deletion execution remain separate release gates.
   archived incidents, reports, and paperwork. A private, audited legal hold
   overrides that date. Classification is not deletion authority, and the
   application exposes no automatic deletion path.
+- The protected administrator records page may place or release only a validated
+  same-facility hold. Placement and release use separate, fresh, single-use
+  passcode confirmations; direct Data API access is denied. Release preserves
+  the original hold and its bounded release evidence.
 - The two-year period applies to database rows, private Storage artifacts,
   exports, indexes, caches, and backups. Backups may expire naturally only after
   their included data is eligible for deletion and no hold applies.

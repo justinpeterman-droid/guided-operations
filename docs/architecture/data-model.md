@@ -165,9 +165,14 @@ stored as non-current history but never promoted implicitly.
   staff, and account scopes are validated against the facility boundary.
 - The private `record_retention_status` routine classifies archived operational
   heads without deleting data. Data API roles have no direct table or function
-  access, and no public hold-management or cleanup RPC exists yet.
-- Protected administrator step-up, backup-aware deletion approval, Storage
-  reconciliation, deletion execution, and hosted evidence remain required.
+  access.
+- The server-only legal-hold adapter derives the administrator facility, lists a
+  bounded same-facility register, and calls private placement/release routines.
+  Protected routes require current administrator authority, trusted origin,
+  session CSRF, and distinct one-time step-up purposes for placement and
+  release. No cleanup RPC or deletion action is exposed.
+- Backup-aware deletion approval, Storage reconciliation, deletion execution,
+  hosted rehearsal, and owner acceptance remain required.
 
 ## Forms and packets
 

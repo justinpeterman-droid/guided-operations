@@ -1,22 +1,27 @@
 import Link from "next/link";
 
 const actions = [
-  [
-    "Roster",
-    "Invite and manage individual officer and administrator accounts.",
-  ],
-  [
-    "Account safety",
-    "Disable, reset, unlock, or change a role with a fresh security check.",
-  ],
-  [
-    "Policy sources",
-    "Review approved document versions and citation coverage.",
-  ],
-  [
-    "System health",
-    "See safe, redacted health and backup signals before they become release evidence.",
-  ],
+  {
+    title: "Roster",
+    copy: "Invite and manage individual officer and administrator accounts.",
+  },
+  {
+    title: "Account safety",
+    copy: "Disable, reset, unlock, or change a role with a fresh security check.",
+  },
+  {
+    title: "Policy sources",
+    copy: "Review approved document versions and citation coverage.",
+  },
+  {
+    title: "System health",
+    copy: "See safe, redacted health and backup signals before they become release evidence.",
+  },
+  {
+    title: "Records safety",
+    copy: "Place or release legal holds without exposing any deletion action.",
+    href: "/preview/admin-retention",
+  },
 ] as const;
 
 /** Visual contract only; no roster or account action is connected here. */
@@ -52,14 +57,20 @@ export default function AdministratorPreviewPage() {
         className="admin-action-list"
         aria-label="Administrator sections"
       >
-        {actions.map(([title, copy], index) => (
-          <article key={title}>
+        {actions.map((action, index) => (
+          <article key={action.title}>
             <span aria-hidden="true">{index + 1}</span>
             <div>
-              <h2>{title}</h2>
-              <p>{copy}</p>
+              <h2>{action.title}</h2>
+              <p>{action.copy}</p>
             </div>
-            <em>Planned protected area</em>
+            {"href" in action ? (
+              <Link className="reports-home-link" href={action.href}>
+                Review fictional layout
+              </Link>
+            ) : (
+              <em>Planned protected area</em>
+            )}
           </article>
         ))}
       </section>

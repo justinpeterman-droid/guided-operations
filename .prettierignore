@@ -1,4 +1,5 @@
 .next
+AGENTS.md
 coverage
 node_modules
 playwright-report

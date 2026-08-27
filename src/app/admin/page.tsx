@@ -73,6 +73,19 @@ export default async function AdminPage() {
             </Link>
           </div>
         </article>
+        <article>
+          <span aria-hidden="true">3</span>
+          <div>
+            <h2>Retention and legal holds</h2>
+            <p>
+              Place or release protected holds without exposing any deletion
+              action.
+            </p>
+          </div>
+          <Link className="reports-home-link" href="/admin/retention">
+            View records controls
+          </Link>
+        </article>
       </section>
     </main>
   );
