@@ -46,6 +46,9 @@ jobs:
       - name: Run unit and component tests
         run: npm test
 
+      - name: Run synthetic policy evaluation
+        run: npm run test:eval
+
       - name: Scan tracked files for secret patterns
         run: npm run secrets:check
 

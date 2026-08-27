@@ -12,9 +12,12 @@ under the controls in
 The command names below are target coverage contracts. They are not proof that
 separate scripts or CI jobs currently exist. The repository currently groups
 unit/component tests under npm test and also exposes npm run check, npm run
-test:e2e, and npm run db:test; inspect package.json for the current source of
-truth. As coverage matures, package scripts and CI must use the same underlying
-commands so local and automated results are comparable.
+test:e2e, npm run db:test, and npm run test:eval; inspect package.json for the
+current source of truth. The synthetic evaluation command runs in Web quality CI
+with fictional passages and deterministic providers. It does not replace the
+private approved-corpus qualification. As coverage matures, package scripts and
+CI must use the same underlying commands so local and automated results are
+comparable.
 
 | Target           | Purpose                                                                                        |
 | ---------------- | ---------------------------------------------------------------------------------------------- |

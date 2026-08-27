@@ -14,6 +14,7 @@
     "test": "vitest run && npm run test:operations",
     "test:operations": "node --test scripts/create-production-backup.test.mjs scripts/local-auth-config.test.mjs scripts/local-authenticated-browser-qualification-guard.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-policy-corpus-manifest.test.mjs scripts/verify-production-migration-history.test.mjs scripts/verify-production-release-record.test.mjs scripts/write-production-migration-evidence.test.mjs",
     "test:watch": "vitest",
+    "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:local-auth": "node scripts/run-local-authenticated-browser-qualification.mjs --confirm-local-guided-operations",
     "format": "prettier --write .",
