@@ -145,6 +145,21 @@ if (target) {
       throw new Error("The authenticated Officer qualification failed.");
     }
     resetLocalDatabase();
+    const reportWorkspaceResult = command(
+      playwrightCli,
+      [
+        "test",
+        "tests/e2e/authenticated-report-workspace.spec.ts",
+        "--workers=1",
+      ],
+      { env: qualificationEnvironment },
+    );
+    if (reportWorkspaceResult.status !== 0) {
+      throw new Error(
+        "The authenticated Report Assistant qualification failed.",
+      );
+    }
+    resetLocalDatabase();
     const adminResult = command(
       playwrightCli,
       ["test", "tests/e2e/authenticated-admin.spec.ts", "--workers=1"],

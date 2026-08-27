@@ -279,9 +279,10 @@ required before production login**
 
 ## Phase 3 — incident and report vertical slice
 
-Status: **implementation in progress; current-report browser print requests now
-have a redacted stale-revision audit guard; deterministic export, full browser
-qualification, and owner acceptance remain open**
+Status: **implementation in progress; the protected incident-to-draft path now
+enforces per-officer fact selection and connects to the review screen;
+deterministic export, full browser qualification, and owner acceptance remain
+open**
 
 ### Steps
 
@@ -307,7 +308,9 @@ qualification, and owner acceptance remain open**
    and cannot create or alter source facts.
 8. Implement report drafts, append-only revisions, restore-as-new-revision,
    ownership/history, persistence status, conflict handling, and retry-safe
-   mutations.
+   mutations. The current protected incident workspace now lets an authorized
+   user choose one reporting officer, see only that officer's scoped confirmed
+   facts, and request a review-only draft through the existing hardened route.
 9. Implement deterministic DOCX/print output behind an interface. Benchmark
    document generation before deciding whether ADR-0005 needs a worker.
 10. Add unit, contract, PostgreSQL, RLS, concurrency, stale-write, idempotency,

@@ -99,6 +99,10 @@ Already present:
   reporting officers, require deliberate assignment when multiple reporters are
   selected, and reject cross-officer facts before generation and database
   storage;
+- a protected incident-to-draft workspace that shows only the selected reporting
+  officer's confirmed facts, submits opaque fact IDs through the existing
+  generation boundary, and routes the result into the existing officer review
+  and finalization screen;
 - a nine-category, source-commit-bound checklist candidate with typed answer
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
@@ -115,8 +119,8 @@ Still required for parity:
 - approve the source DOCX/form revisions and qualify print/export fidelity;
 - add exact opening, first-reference, quote, attribution, and combined-action
   validation where the confirmed schema provides enough data;
-- complete browser acceptance for edit, comparison, history, restore, and
-  explicit-revision export.
+- complete real-browser acceptance for the incident-to-draft path, edit,
+  comparison, history, restore, and explicit-revision export.
 
 ## RAG Policy Assistant
 

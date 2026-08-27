@@ -93,6 +93,20 @@ export type Database = {
           work_date: string
         }[]
       }
+      get_incident_report_workspace: {
+        Args: { p_incident_id: string }
+        Returns: {
+          category: string
+          display_name: string
+          incident_id: string
+          incident_number: string
+          incident_revision_id: string
+          reporting_officers: Json
+          reviewed_facts: Json
+          revision_number: number
+          schema_version: number
+        }[]
+      }
       get_incident_revision: {
         Args: { p_incident_id: string; p_revision_number: number }
         Returns: {

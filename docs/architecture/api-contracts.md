@@ -169,6 +169,17 @@ grant access. It is not exposed as a browser endpoint yet. Its intended caller
 is a server-side workflow that constructs a report-draft source from explicitly
 selected confirmed facts only.
 
+The protected server-rendered `/incidents/{incidentId}` report workspace uses a
+separate `api.get_incident_report_workspace` RPC. The RPC returns only the
+current authorized revision, reviewed facts, and the minimum display fields for
+active reporting officers selected on that revision. It never returns field
+notes, facility scope, full employee numbers, account IDs, or arbitrary staff.
+The page filters confirmed facts by the chosen reporting officer and submits
+only opaque fact IDs to the existing report-draft boundary. The draft service
+and database repeat the officer/fact checks, so changing browser state cannot
+broaden the source material. Version-one unscoped revisions remain readable but
+cannot request a new draft.
+
 ### Reports
 
 - GET /incidents/{incidentId}/reports

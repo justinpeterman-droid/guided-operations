@@ -141,6 +141,13 @@ in the same facility. Reporting and preparing relationships grant record access;
 involved and witness labels preserve attribution without silently granting
 access.
 
+The protected Report Assistant workspace is a derived read, not another durable
+record. It combines the current incident revision with only the active selected
+reporting officers needed to choose an attributed draft. The read omits raw
+field notes, full employee numbers, account IDs, facility fields, and unrelated
+staff. Draft creation then revalidates the selected officer and every selected
+fact against these immutable relationships inside the server and database.
+
 ### app_private.reports
 
 - id, incident_id, report_type

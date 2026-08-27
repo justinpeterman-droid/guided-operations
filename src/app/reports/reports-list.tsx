@@ -122,7 +122,9 @@ export function ReportsList({
               {visibleIncidents.map((incident) => (
                 <tr key={incident.incidentId}>
                   <th scope="row">
-                    <span>{incident.incidentNumber}</span>
+                    <Link href={`/incidents/${incident.incidentId}`}>
+                      {incident.incidentNumber}
+                    </Link>
                     <strong>{incident.displayName}</strong>
                   </th>
                   <td>

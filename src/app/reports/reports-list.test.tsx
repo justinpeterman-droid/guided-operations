@@ -56,5 +56,9 @@ describe("ReportsList", () => {
       "href",
       "/reports/report-one",
     );
+    expect(screen.getByRole("link", { name: "F-002" })).toHaveAttribute(
+      "href",
+      "/incidents/two",
+    );
   });
 });
