@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { revisionUsesCandidateReportChecklist } from "@/features/incidents/report-assistant-checklist";
 import { incidentRevisionInputSchema } from "@/features/incidents/schema";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
@@ -30,6 +31,7 @@ export async function validateCreateIncidentEndpointRequest(
   applicationOrigin: string,
   sessionId: string,
   csrfHmacKey: string,
+  applicationEnvironment: "development" | "preview" | "production" | "test",
 ): Promise<CreateIncidentRequestValidation> {
   if (!isTrustedMutationRequest(request, applicationOrigin)) {
     return { ok: false, status: 403, code: "request_not_allowed" };
@@ -60,6 +62,12 @@ export async function validateCreateIncidentEndpointRequest(
   const parsed = requestBodySchema.safeParse(body);
   if (!parsed.success) {
     return { ok: false, status: 400, code: "invalid_request" };
+  }
+  if (
+    applicationEnvironment === "production" &&
+    revisionUsesCandidateReportChecklist(parsed.data.revision.reviewedFacts)
+  ) {
+    return { ok: false, status: 403, code: "checklist_not_approved" };
   }
 
   return {

@@ -1,9 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState, type FormEvent } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 
-type Step = 1 | 2 | 3;
+import {
+  REPORT_CHECKLIST_APPROVAL_STATUS,
+  REPORT_CHECKLIST_CATEGORIES,
+  buildReportChecklistReviewedItems,
+  getApplicableReportChecklistQuestions,
+  getReportChecklistCategory,
+  validateReportChecklistAnswers,
+  type ReportChecklistAnswer,
+  type ReportChecklistQuestion,
+} from "@/features/incidents/report-assistant-checklist";
+
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type SaveState = "idle" | "saving" | "failed" | "saved";
 
 async function csrfToken(): Promise<string> {
@@ -24,20 +35,40 @@ async function csrfToken(): Promise<string> {
 
 export function NewIncidentWorkspace() {
   const [step, setStep] = useState<Step>(1);
+  const [officerConfirmed, setOfficerConfirmed] = useState(false);
+  const [reportsReviewed, setReportsReviewed] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [incidentNumber, setIncidentNumber] = useState("");
   const [incidentName, setIncidentName] = useState("");
+  const [occurredAt, setOccurredAt] = useState("");
+  const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
   const [notes, setNotes] = useState("");
   const [fact, setFact] = useState("");
   const [unknown, setUnknown] = useState("");
+  const [checklistAnswers, setChecklistAnswers] = useState<
+    Record<string, ReportChecklistAnswer>
+  >({});
 
-  const readyForReview =
+  const answerList = useMemo(
+    () => Object.values(checklistAnswers),
+    [checklistAnswers],
+  );
+  const categoryDefinition = getReportChecklistCategory(category);
+  const applicableQuestions = getApplicableReportChecklistQuestions(
+    category,
+    answerList,
+  );
+  const checklistReview = validateReportChecklistAnswers(category, answerList);
+  const readyForFactReview = Boolean(
     incidentNumber.trim() &&
     incidentName.trim() &&
-    category.trim() &&
-    notes.trim();
-  const facts = [
+    occurredAt &&
+    location.trim() &&
+    categoryDefinition &&
+    notes.trim(),
+  );
+  const manualReviewedItems = [
     ...(fact.trim()
       ? [{ state: "confirmed" as const, text: fact.trim() }]
       : []),
@@ -46,43 +77,111 @@ export function NewIncidentWorkspace() {
       : []),
   ];
 
+  function canOpenStep(candidate: Step): boolean {
+    if (candidate === 1) return true;
+    if (candidate === 2) return officerConfirmed;
+    if (candidate === 3) return officerConfirmed && readyForFactReview;
+    if (candidate === 4) return manualReviewedItems.length > 0;
+    if (candidate === 5) return checklistReview.complete;
+    return checklistReview.complete && reportsReviewed;
+  }
+
+  function setChecklistAnswer(answer: ReportChecklistAnswer) {
+    setChecklistAnswers((current) => {
+      const next = { ...current, [answer.questionId]: answer };
+      const applicableIds = new Set(
+        getApplicableReportChecklistQuestions(
+          category,
+          Object.values(next),
+        ).map((question) => question.id),
+      );
+      for (const questionId of Object.keys(next)) {
+        if (!applicableIds.has(questionId)) delete next[questionId];
+      }
+      return next;
+    });
+    setSaveState("idle");
+  }
+
+  function clearChecklistAnswer(questionId: string) {
+    setChecklistAnswers((current) => {
+      const next = { ...current };
+      delete next[questionId];
+      return next;
+    });
+    setSaveState("idle");
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!readyForReview || !facts.length) return;
+    if (
+      !readyForFactReview ||
+      !manualReviewedItems.length ||
+      !checklistReview.complete
+    )
+      return;
     setSaveState("saving");
     try {
       const token = await csrfToken();
+      const recordedAt = new Date().toISOString();
+      const occurredAtIso = new Date(occurredAt).toISOString();
       const noteId = crypto.randomUUID();
+      const metadataNoteId = crypto.randomUUID();
+      const checklist = buildReportChecklistReviewedItems({
+        categoryKey: category,
+        answers: answerList,
+        recordedAt,
+        idFactory: () => crypto.randomUUID(),
+      });
       const body = {
         revision: {
           schemaVersion: 1,
           incidentNumber: incidentNumber.trim(),
           incidentName: incidentName.trim(),
-          category: category.trim(),
-          occurredAt: new Date().toISOString(),
+          category,
+          occurredAt: occurredAtIso,
           fieldNotes: [
+            { id: noteId, text: notes.trim(), recordedAt },
             {
-              id: noteId,
-              text: notes.trim(),
-              recordedAt: new Date().toISOString(),
+              id: metadataNoteId,
+              text: `Officer-entered incident metadata\nOccurred at: ${occurredAtIso}\nLocation: ${location.trim()}`,
+              recordedAt,
             },
+            ...checklist.fieldNotes,
           ],
-          reviewedFacts: facts.map((item) =>
-            item.state === "confirmed"
-              ? {
-                  id: crypto.randomUUID(),
-                  field: "Officer-confirmed fact",
-                  state: "confirmed",
-                  value: item.text,
-                  sourceNoteIds: [noteId],
-                }
-              : {
-                  id: crypto.randomUUID(),
-                  field: "Information not yet known",
-                  state: "unknown",
-                  reason: item.text,
-                },
-          ),
+          reviewedFacts: [
+            {
+              id: crypto.randomUUID(),
+              field: "Incident date and time",
+              state: "confirmed" as const,
+              value: occurredAtIso,
+              sourceNoteIds: [metadataNoteId],
+            },
+            {
+              id: crypto.randomUUID(),
+              field: "Location",
+              state: "confirmed" as const,
+              value: location.trim(),
+              sourceNoteIds: [metadataNoteId],
+            },
+            ...manualReviewedItems.map((item) =>
+              item.state === "confirmed"
+                ? {
+                    id: crypto.randomUUID(),
+                    field: "Officer-confirmed fact",
+                    state: "confirmed" as const,
+                    value: item.text,
+                    sourceNoteIds: [noteId],
+                  }
+                : {
+                    id: crypto.randomUUID(),
+                    field: "Information not yet known",
+                    state: "unknown" as const,
+                    reason: item.text,
+                  },
+            ),
+            ...checklist.reviewedFacts,
+          ],
         },
       };
       const response = await fetch("/api/web/v1/incidents", {
@@ -120,16 +219,26 @@ export function NewIncidentWorkspace() {
       <div className="incident-workspace">
         <nav className="incident-steps" aria-label="Incident workflow">
           <ol>
-            {([1, 2, 3] as const).map((item) => (
+            {([1, 2, 3, 4, 5, 6] as const).map((item) => (
               <li className={item === step ? "is-current" : ""} key={item}>
-                <button onClick={() => setStep(item)} type="button">
+                <button
+                  disabled={!canOpenStep(item)}
+                  onClick={() => setStep(item)}
+                  type="button"
+                >
                   <span>{item}</span>
                   <strong>
                     {item === 1
-                      ? "Field notes"
+                      ? "Officers"
                       : item === 2
-                        ? "Confirm facts"
-                        : "Review draft"}
+                        ? "Field notes"
+                        : item === 3
+                          ? "Review facts"
+                          : item === 4
+                            ? "Missing information"
+                            : item === 5
+                              ? "Reports"
+                              : "Forms & Export"}
                   </strong>
                 </button>
               </li>
@@ -139,10 +248,16 @@ export function NewIncidentWorkspace() {
         <form className="incident-stage" onSubmit={save}>
           <h1>
             {step === 1
-              ? "What is known"
+              ? "Confirm the reporting officer"
               : step === 2
-                ? "Confirm what the draft may use"
-                : "Review before saving"}
+                ? "What is known"
+                : step === 3
+                  ? "Confirm what a report may use"
+                  : step === 4
+                    ? "Resolve required questions"
+                    : step === 5
+                      ? "Review the report package"
+                      : "Review forms and save"}
           </h1>
           <p className="incident-guidance">
             Nothing is submitted automatically. Unknown information stays
@@ -150,13 +265,34 @@ export function NewIncidentWorkspace() {
           </p>
           {step === 1 ? (
             <>
+              <section className="incident-review">
+                <h2>Current signed-in officer</h2>
+                <p>
+                  Your individual account is recorded by the server. The browser
+                  cannot choose another employee or facility.
+                </p>
+              </section>
+              <button
+                className="incident-primary"
+                onClick={() => {
+                  setOfficerConfirmed(true);
+                  setStep(2);
+                }}
+                type="button"
+              >
+                Continue as signed-in officer
+              </button>
+            </>
+          ) : null}
+          {step === 2 ? (
+            <>
               <div className="incident-fields">
                 <label>
                   Incident number
                   <input
                     required
                     value={incidentNumber}
-                    onChange={(e) => setIncidentNumber(e.target.value)}
+                    onChange={(event) => setIncidentNumber(event.target.value)}
                   />
                 </label>
                 <label>
@@ -164,43 +300,75 @@ export function NewIncidentWorkspace() {
                   <input
                     required
                     value={incidentName}
-                    onChange={(e) => setIncidentName(e.target.value)}
+                    onChange={(event) => setIncidentName(event.target.value)}
                   />
                 </label>
                 <label>
-                  Category
+                  Date and time occurred
                   <input
                     required
-                    value={category}
-                    onChange={(e) => setCategory(e.target.value)}
+                    type="datetime-local"
+                    value={occurredAt}
+                    onChange={(event) => setOccurredAt(event.target.value)}
                   />
+                </label>
+                <label>
+                  Location
+                  <input
+                    required
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                  />
+                </label>
+                <label>
+                  Incident category
+                  <select
+                    required
+                    value={category}
+                    onChange={(event) => {
+                      setCategory(event.target.value);
+                      setChecklistAnswers({});
+                    }}
+                  >
+                    <option value="">Choose a controlled category</option>
+                    {REPORT_CHECKLIST_CATEGORIES.map((item) => (
+                      <option key={item.key} value={item.key}>
+                        {item.label}
+                      </option>
+                    ))}
+                  </select>
                 </label>
                 <label className="incident-full">
                   Your field notes
                   <textarea
                     required
                     value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
+                    onChange={(event) => setNotes(event.target.value)}
                   />
                 </label>
               </div>
+              <p className="incident-guidance">
+                This recovered checklist is a Preview candidate. It remains
+                blocked from Production until its operational owner approves the
+                exact version.
+              </p>
               <button
                 className="incident-primary"
-                disabled={!readyForReview}
-                onClick={() => setStep(2)}
+                disabled={!readyForFactReview}
+                onClick={() => setStep(3)}
                 type="button"
               >
                 Continue to fact review
               </button>
             </>
           ) : null}
-          {step === 2 ? (
+          {step === 3 ? (
             <>
               <label className="incident-fact">
                 Confirmed fact
                 <textarea
                   value={fact}
-                  onChange={(e) => setFact(e.target.value)}
+                  onChange={(event) => setFact(event.target.value)}
                   placeholder="Only a fact supported by your notes"
                 />
               </label>
@@ -208,21 +376,51 @@ export function NewIncidentWorkspace() {
                 Information not yet known
                 <textarea
                   value={unknown}
-                  onChange={(e) => setUnknown(e.target.value)}
+                  onChange={(event) => setUnknown(event.target.value)}
                   placeholder="Keep missing information visible"
                 />
               </label>
               <button
                 className="incident-primary"
-                disabled={!facts.length}
-                onClick={() => setStep(3)}
+                disabled={!manualReviewedItems.length}
+                onClick={() => setStep(4)}
                 type="button"
               >
-                Review incident
+                Continue to missing information
               </button>
             </>
           ) : null}
-          {step === 3 ? (
+          {step === 4 ? (
+            <>
+              <p className="incident-guidance">
+                Answer what is known. Unknown and Not applicable are valid
+                explicit answers; blank required items cannot be hidden.
+              </p>
+              {applicableQuestions.map((question) => (
+                <ChecklistQuestion
+                  answer={checklistAnswers[question.id]}
+                  key={question.id}
+                  onAnswer={setChecklistAnswer}
+                  onClear={() => clearChecklistAnswer(question.id)}
+                  question={question}
+                />
+              ))}
+              <p aria-live="polite" className="incident-status">
+                {checklistReview.complete
+                  ? "Required missing-information questions are reviewed."
+                  : `${checklistReview.issues.length} required or invalid checklist item${checklistReview.issues.length === 1 ? " remains" : "s remain"}.`}
+              </p>
+              <button
+                className="incident-primary"
+                disabled={!checklistReview.complete}
+                onClick={() => setStep(5)}
+                type="button"
+              >
+                Review report types
+              </button>
+            </>
+          ) : null}
+          {step === 5 ? (
             <>
               <section className="incident-review">
                 <h2>Review summary</h2>
@@ -231,14 +429,70 @@ export function NewIncidentWorkspace() {
                   {incidentName || "No incident name"}
                 </p>
                 <p>
-                  {facts.length} reviewed item{facts.length === 1 ? "" : "s"}.
-                  Saving creates an immutable first revision.
+                  {manualReviewedItems.length} manually reviewed item
+                  {manualReviewedItems.length === 1 ? "" : "s"} and{" "}
+                  {answerList.length} checklist answer
+                  {answerList.length === 1 ? "" : "s"}. Saving creates an
+                  immutable first revision.
+                </p>
+                {unknown.trim() ? (
+                  <p>
+                    <strong>Still unknown:</strong> {unknown.trim()}
+                  </p>
+                ) : null}
+                {categoryDefinition ? (
+                  <>
+                    <h2>Candidate report types</h2>
+                    <ul>
+                      {categoryDefinition.reportTypes.map((reportType) => (
+                        <li key={reportType}>
+                          {reportType.replaceAll("_", " ")}
+                        </li>
+                      ))}
+                    </ul>
+                    <p>
+                      Reports are not generated from this list. After the
+                      incident is saved, each draft still requires selected
+                      confirmed facts and officer review.
+                    </p>
+                  </>
+                ) : null}
+              </section>
+              <button
+                className="incident-primary"
+                onClick={() => {
+                  setReportsReviewed(true);
+                  setStep(6);
+                }}
+                type="button"
+              >
+                Continue to Forms &amp; Export
+              </button>
+            </>
+          ) : null}
+          {step === 6 ? (
+            <>
+              <section className="incident-review">
+                <h2>Candidate required paperwork</h2>
+                {categoryDefinition ? (
+                  <ul>
+                    {categoryDefinition.requiredForms.map((formType) => (
+                      <li key={formType}>{formType.replaceAll("_", " ")}</li>
+                    ))}
+                  </ul>
+                ) : null}
+                <p>
+                  This list is guidance from the recovered candidate. Saving
+                  does not claim that a form was completed, printed, or filed.
                 </p>
               </section>
               <button
                 className="incident-primary"
                 disabled={
-                  saveState === "saving" || !readyForReview || !facts.length
+                  saveState === "saving" ||
+                  !readyForFactReview ||
+                  !manualReviewedItems.length ||
+                  !checklistReview.complete
                 }
                 type="submit"
               >
@@ -255,22 +509,146 @@ export function NewIncidentWorkspace() {
           ) : null}
         </form>
         <aside className="incident-rail">
-          <h2>Missing information</h2>
+          <h2>Report Assistant rules</h2>
           <p>
-            Use the unknown field to keep unconfirmed details visible during
-            review.
+            Category questions come from one versioned candidate. Required
+            answers cannot disappear, and report generation may use only saved
+            confirmed facts.
           </p>
           <ul>
-            {facts.some((item) => item.state === "unknown") ? (
-              facts
-                .filter((item) => item.state === "unknown")
-                .map((item) => <li key={item.text}>{item.text}</li>)
-            ) : (
-              <li>No unknowns recorded yet.</li>
-            )}
+            <li>Checklist status: {REPORT_CHECKLIST_APPROVAL_STATUS}</li>
+            <li>
+              {manualReviewedItems.some((item) => item.state === "unknown")
+                ? "Unknown information is recorded."
+                : "No manual unknowns recorded yet."}
+            </li>
+            <li>
+              {checklistReview.complete
+                ? "Required checklist review complete."
+                : "Checklist review is not complete."}
+            </li>
           </ul>
         </aside>
       </div>
     </main>
+  );
+}
+
+function ChecklistQuestion({
+  answer,
+  onAnswer,
+  onClear,
+  question,
+}: Readonly<{
+  answer: ReportChecklistAnswer | undefined;
+  onAnswer: (answer: ReportChecklistAnswer) => void;
+  onClear: () => void;
+  question: ReportChecklistQuestion;
+}>) {
+  const answeredValue = answer?.state === "answered" ? answer.value : "";
+  const isOther = answeredValue.startsWith("Other: ");
+  return (
+    <fieldset className="incident-fact">
+      <legend>
+        {question.prompt} {question.blocking ? "(Required)" : "(If available)"}
+      </legend>
+      {question.answerType === "text" ? (
+        <textarea
+          aria-label={`${question.prompt} answer`}
+          value={answeredValue}
+          onChange={(event) =>
+            onAnswer({
+              questionId: question.id,
+              state: "answered",
+              value: event.target.value,
+            })
+          }
+        />
+      ) : null}
+      {question.answerType === "choice" ? (
+        <>
+          <select
+            aria-label={`${question.prompt} answer`}
+            value={isOther ? "__other__" : answeredValue}
+            onChange={(event) =>
+              onAnswer({
+                questionId: question.id,
+                state: "answered",
+                value:
+                  event.target.value === "__other__"
+                    ? "Other: "
+                    : event.target.value,
+              })
+            }
+          >
+            <option value="">Choose an answer</option>
+            {question.options?.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+            <option value="__other__">Other (type your own)</option>
+          </select>
+          {isOther ? (
+            <input
+              aria-label={`${question.prompt} other answer`}
+              value={answeredValue.slice("Other: ".length)}
+              onChange={(event) =>
+                onAnswer({
+                  questionId: question.id,
+                  state: "answered",
+                  value: `Other: ${event.target.value}`,
+                })
+              }
+            />
+          ) : null}
+        </>
+      ) : null}
+      {question.answerType === "yes_no" ? (
+        <div>
+          {(["Yes", "No"] as const).map((value) => (
+            <button
+              aria-pressed={answeredValue === value}
+              key={value}
+              onClick={() =>
+                onAnswer({
+                  questionId: question.id,
+                  state: "answered",
+                  value,
+                })
+              }
+              type="button"
+            >
+              {value}
+            </button>
+          ))}
+        </div>
+      ) : null}
+      <div>
+        <button
+          aria-pressed={answer?.state === "unknown"}
+          onClick={() =>
+            onAnswer({ questionId: question.id, state: "unknown" })
+          }
+          type="button"
+        >
+          Unknown
+        </button>
+        <button
+          aria-pressed={answer?.state === "not_applicable"}
+          onClick={() =>
+            onAnswer({ questionId: question.id, state: "not_applicable" })
+          }
+          type="button"
+        >
+          Not applicable
+        </button>
+        {answer ? (
+          <button onClick={onClear} type="button">
+            Clear
+          </button>
+        ) : null}
+      </div>
+    </fieldset>
   );
 }

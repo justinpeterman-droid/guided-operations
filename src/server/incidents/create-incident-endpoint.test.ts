@@ -50,6 +50,7 @@ describe("validateCreateIncidentEndpointRequest", () => {
         origin,
         sessionId,
         csrfKey,
+        "preview",
       ),
     ).resolves.toMatchObject({
       ok: true,
@@ -69,6 +70,7 @@ describe("validateCreateIncidentEndpointRequest", () => {
         origin,
         sessionId,
         csrfKey,
+        "preview",
       );
 
       expect(result.ok).toBe(false);
@@ -76,4 +78,51 @@ describe("validateCreateIncidentEndpointRequest", () => {
         expect(result.code).toMatch(/request_not_allowed|invalid_request/);
     },
   );
+
+  it("keeps the legacy-derived candidate checklist out of Production", async () => {
+    const candidateRevision = {
+      ...revision,
+      category: "incident_no_disciplinary",
+      reviewedFacts: [
+        {
+          id: "33333333-3333-4333-8333-333333333333",
+          field:
+            "[report-checklist:bmu-legacy-candidate@1:medical_disposition] Medical disposition",
+          state: "unknown",
+          reason: "Officer marked this checklist item Unknown.",
+        },
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          field:
+            "[report-checklist:bmu-legacy-candidate@1:investigation_occurred] Investigation occurred",
+          state: "unknown",
+          reason: "Officer marked this checklist item Unknown.",
+        },
+      ],
+    };
+
+    await expect(
+      validateCreateIncidentEndpointRequest(
+        request({ body: { revision: candidateRevision } }),
+        origin,
+        sessionId,
+        csrfKey,
+        "production",
+      ),
+    ).resolves.toEqual({
+      ok: false,
+      status: 403,
+      code: "checklist_not_approved",
+    });
+
+    await expect(
+      validateCreateIncidentEndpointRequest(
+        request({ body: { revision: candidateRevision } }),
+        origin,
+        sessionId,
+        csrfKey,
+        "preview",
+      ),
+    ).resolves.toMatchObject({ ok: true });
+  });
 });

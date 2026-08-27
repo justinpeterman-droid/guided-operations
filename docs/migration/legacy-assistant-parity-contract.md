@@ -87,12 +87,18 @@ Already present:
 - deterministic rejection of legacy blocking errors for ADC/rank/time format,
   invented numeric facts, placeholders, clinical wording, prohibited closers,
   supervisor first-person wording, and missing disciplinary closing language.
+- a nine-category, source-commit-bound checklist candidate with typed answer
+  controls, explicit Unknown/Not applicable states, deterministic dependent
+  questions, required-answer validation, note-backed confirmed facts, and
+  Preview-only enforcement while operational approval remains pending.
 
 Still required for parity:
 
-- approve and version the nine-category checklist and charge/form rules;
+- approve the exact nine-category candidate and its charge/form selection rules
+  before changing its status or permitting it in Production;
 - implement category proposal/confirmation and structured extraction review;
-- implement the complete prewritten gap-question flow and rule provenance;
+- operationally review every recovered question, option, dependency, required
+  slot, report type, and paperwork mapping against the current source forms;
 - implement per-officer relationship selection and perspective validation;
 - implement required auto-content and the approved 005/409 output mapping;
 - approve the source DOCX/form revisions and qualify print/export fidelity;

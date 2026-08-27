@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -20,12 +20,22 @@ describe("NewIncidentWorkspace", () => {
     const user = userEvent.setup();
     render(<NewIncidentWorkspace />);
 
+    await user.click(
+      screen.getByRole("button", { name: "Continue as signed-in officer" }),
+    );
     await user.type(screen.getByLabelText("Incident number"), "FICTIONAL-101");
     await user.type(
       screen.getByLabelText("Incident name"),
       "Training scenario",
     );
-    await user.type(screen.getByLabelText("Category"), "training");
+    fireEvent.change(screen.getByLabelText("Date and time occurred"), {
+      target: { value: "2026-08-27T12:00" },
+    });
+    await user.type(screen.getByLabelText("Location"), "Training room");
+    await user.selectOptions(
+      screen.getByLabelText("Incident category"),
+      "incident_no_disciplinary",
+    );
     await user.type(
       screen.getByLabelText("Your field notes"),
       "Fictional observed note.",
@@ -41,9 +51,37 @@ describe("NewIncidentWorkspace", () => {
       screen.getByLabelText("Information not yet known"),
       "Fictional missing detail.",
     );
-    await user.click(screen.getByRole("button", { name: "Review incident" }));
+    await user.click(
+      screen.getByRole("button", {
+        name: "Continue to missing information",
+      }),
+    );
+
+    await user.selectOptions(
+      screen.getByLabelText(
+        "What was the medical disposition for the inmate or inmates? answer",
+      ),
+      "N/A - no injuries reported",
+    );
+    const investigationQuestion = screen
+      .getByText(/Did an investigation occur\?/)
+      .closest("fieldset");
+    expect(investigationQuestion).not.toBeNull();
+    await user.click(
+      within(investigationQuestion as HTMLFieldSetElement).getByRole("button", {
+        name: "No",
+      }),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Review report types" }),
+    );
 
     expect(screen.getByText("Fictional missing detail.")).toBeVisible();
+    expect(screen.getByText("first person")).toBeVisible();
+    await user.click(
+      screen.getByRole("button", { name: "Continue to Forms & Export" }),
+    );
+    expect(screen.getByText("005 409")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Save incident" }));
 
     expect(fetch).toHaveBeenNthCalledWith(1, "/api/auth/csrf", {
@@ -53,6 +91,31 @@ describe("NewIncidentWorkspace", () => {
       2,
       "/api/web/v1/incidents",
       expect.objectContaining({ method: "POST", credentials: "same-origin" }),
+    );
+    const [, request] = fetch.mock.calls[1] as [string, RequestInit];
+    const savedBody = JSON.parse(request.body as string) as {
+      revision: {
+        category: string;
+        fieldNotes: Array<{ text: string }>;
+        reviewedFacts: Array<{ field: string }>;
+      };
+    };
+    expect(savedBody.revision.category).toBe("incident_no_disciplinary");
+    expect(savedBody.revision.fieldNotes).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          text: expect.stringContaining("Training room"),
+        }),
+      ]),
+    );
+    expect(savedBody.revision.reviewedFacts).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          field: expect.stringContaining(
+            "[report-checklist:bmu-legacy-candidate@1:medical_disposition]",
+          ),
+        }),
+      ]),
     );
     expect(await screen.findByText(/Incident saved/)).toBeVisible();
   });

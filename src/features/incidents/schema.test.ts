@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { buildReportChecklistReviewedItems } from "./report-assistant-checklist";
+
 import {
   INCIDENT_SCHEMA_VERSION,
   incidentRevisionInputSchema,
@@ -107,6 +109,37 @@ describe("incident revision contract", () => {
             sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
           },
         ],
+      }).success,
+    ).toBe(false);
+  });
+
+  it("binds candidate checklist facts to one complete controlled category", () => {
+    const ids = [
+      "44444444-4444-4444-8444-444444444444",
+      "55555555-5555-4555-8555-555555555555",
+    ];
+    const checklist = buildReportChecklistReviewedItems({
+      categoryKey: "incident_no_disciplinary",
+      answers: [
+        { questionId: "medical_disposition", state: "unknown" },
+        { questionId: "investigation_occurred", state: "unknown" },
+      ],
+      recordedAt: "2026-08-25T15:31:00-05:00",
+      idFactory: () => ids.shift() ?? "",
+    });
+    const candidateRevision = {
+      ...incidentRevision,
+      category: "incident_no_disciplinary",
+      reviewedFacts: checklist.reviewedFacts,
+    };
+
+    expect(
+      incidentRevisionInputSchema.safeParse(candidateRevision).success,
+    ).toBe(true);
+    expect(
+      incidentRevisionInputSchema.safeParse({
+        ...candidateRevision,
+        category: "contraband",
       }).success,
     ).toBe(false);
   });

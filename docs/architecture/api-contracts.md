@@ -137,6 +137,15 @@ incident ID. Direct RPC calls still enforce active facility scope and payload
 provenance. Hosted-session and browser-workflow integration remain separate
 release gates.
 
+The incident create contract also recognizes the recovered Report Assistant
+checklist candidate by its versioned fact-field marker. In Development, Test,
+and Preview, every candidate checklist answer must match one controlled
+category, one known question, its answer type, dependency rule, and all
+applicable blocking questions. Answered questions become note-backed confirmed
+facts; Unknown and Not applicable remain explicit limited states. Production
+rejects this candidate marker until the operational owner approves the exact
+definition version. Removing the marker does not claim checklist completion.
+
 The server-only `api.get_incident_revision` RPC is the corresponding narrow read
 primitive for an immutable revision. It returns the incident identifiers,
 revision identity/version, and reviewed facts—but never field notes, facility

@@ -68,6 +68,7 @@ export async function POST(request: Request): Promise<Response> {
       runtimeEnvironment.APP_ORIGIN,
       session.sessionId,
       authEnvironment.CSRF_HMAC_KEY,
+      runtimeEnvironment.APP_ENV,
     );
     if (!validation.ok) {
       return errorResponse(validation.status, validation.code, requestId);

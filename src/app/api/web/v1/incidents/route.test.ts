@@ -111,6 +111,13 @@ describe("POST /api/web/v1/incidents", () => {
       client,
       "i".repeat(32),
     );
+    expect(validateCreateIncidentEndpointRequest).toHaveBeenCalledWith(
+      expect.any(Request),
+      "https://guided-operations.example.test",
+      session.sessionId,
+      "k".repeat(32),
+      "preview",
+    );
   });
 
   it("stops before request parsing or persistence when no current session exists", async () => {

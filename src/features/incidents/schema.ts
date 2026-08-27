@@ -1,5 +1,11 @@
 import { z } from "zod";
 
+import {
+  REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX,
+  validateReportChecklistAnswers,
+  type ReportChecklistAnswer,
+} from "./report-assistant-checklist";
+
 export const INCIDENT_SCHEMA_VERSION = 1;
 
 const opaqueIdSchema = z.uuid();
@@ -90,6 +96,43 @@ export const incidentRevisionInputSchema = z
         }
       });
     });
+
+    const checklistAnswers: ReportChecklistAnswer[] = [];
+    let hasMalformedChecklistField = false;
+    revision.reviewedFacts.forEach((fact) => {
+      if (!fact.field.startsWith(REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX)) {
+        return;
+      }
+      const questionIdEnd = fact.field.indexOf("]");
+      const questionId = fact.field.slice(
+        REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX.length,
+        questionIdEnd,
+      );
+      if (questionIdEnd < 0 || !questionId) {
+        hasMalformedChecklistField = true;
+        return;
+      }
+      checklistAnswers.push(
+        fact.state === "confirmed"
+          ? { questionId, state: "answered", value: fact.value }
+          : { questionId, state: fact.state },
+      );
+    });
+
+    if (checklistAnswers.length || hasMalformedChecklistField) {
+      const review = validateReportChecklistAnswers(
+        revision.category,
+        checklistAnswers,
+      );
+      if (hasMalformedChecklistField || !review.complete) {
+        context.addIssue({
+          code: "custom",
+          message:
+            "Candidate checklist facts must match one complete versioned category review.",
+          path: ["reviewedFacts"],
+        });
+      }
+    }
   });
 
 /**
