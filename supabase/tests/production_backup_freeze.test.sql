@@ -1,6 +1,14 @@
 begin;
 
-select plan(17);
+select plan(20);
+
+select ok(
+  exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260827070000'
+  ),
+  'the backup freeze fix is delivered by a forward migration'
+);
 
 select has_table(
   'app_private',
@@ -88,6 +96,36 @@ select throws_ok(
 alter table app_private.user_accounts enable always trigger
   guided_operations_backup_freeze_a899cc74db7c2640;
 
+create function app_private.test_noop_backup_trigger()
+returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  return null;
+end;
+$$;
+drop trigger guided_operations_backup_freeze_a899cc74db7c2640
+  on app_private.user_accounts;
+create trigger guided_operations_backup_freeze_a899cc74db7c2640
+before insert on app_private.user_accounts
+for each statement execute function app_private.test_noop_backup_trigger();
+select throws_ok(
+  $$ select app_private.begin_production_backup_write_freeze(
+    'backup-20260827T115200000Z-0123456789abcdef',
+    'OWNER-BACKUP-APPROVAL-000',
+    statement_timestamp() + interval '10 minutes'
+  ) $$,
+  'Production backup freeze table coverage is incomplete',
+  'a same-name partial or wrong-function table trigger cannot satisfy coverage'
+);
+drop trigger guided_operations_backup_freeze_a899cc74db7c2640
+  on app_private.user_accounts;
+create trigger guided_operations_backup_freeze_a899cc74db7c2640
+before insert or update or delete or truncate on app_private.user_accounts
+for each statement execute function
+  app_private.require_no_production_backup_write_freeze();
+
 alter event trigger guided_operations_backup_freeze_ddl enable replica;
 select throws_ok(
   $$ select app_private.begin_production_backup_write_freeze(
@@ -98,6 +136,35 @@ select throws_ok(
   'Production backup freeze DDL coverage is incomplete',
   'a replica-only DDL trigger cannot satisfy backup coverage'
 );
+alter event trigger guided_operations_backup_freeze_ddl enable always;
+
+create function app_private.test_noop_backup_ddl()
+returns event_trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  return;
+end;
+$$;
+drop event trigger guided_operations_backup_freeze_ddl;
+create event trigger guided_operations_backup_freeze_ddl
+on ddl_command_start
+execute function app_private.test_noop_backup_ddl();
+alter event trigger guided_operations_backup_freeze_ddl enable always;
+select throws_ok(
+  $$ select app_private.begin_production_backup_write_freeze(
+    'backup-20260827T115700000Z-0123456789abcdef',
+    'OWNER-BACKUP-APPROVAL-000',
+    statement_timestamp() + interval '10 minutes'
+  ) $$,
+  'Production backup freeze DDL coverage is incomplete',
+  'a same-name DDL trigger bound to the wrong function cannot satisfy coverage'
+);
+drop event trigger guided_operations_backup_freeze_ddl;
+create event trigger guided_operations_backup_freeze_ddl
+on ddl_command_start
+execute function app_private.require_no_production_backup_ddl();
 alter event trigger guided_operations_backup_freeze_ddl enable always;
 
 select set_config(

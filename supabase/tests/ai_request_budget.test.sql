@@ -1,6 +1,14 @@
 begin;
 
-select plan(23);
+select plan(24);
+
+select ok(
+  exists (
+    select 1 from supabase_migrations.schema_migrations
+    where version = '20260827070000'
+  ),
+  'the AI lease fix is delivered by a forward migration'
+);
 
 select has_table('app_private', 'ai_request_budget_months', 'global AI counters exist');
 select has_table('app_private', 'ai_request_budget_accounts', 'per-account AI counters exist');
