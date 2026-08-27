@@ -134,6 +134,36 @@ migration set. **MANUAL/AUTOMATED:** a protected production job applies it.
    locks and audit events.
 10. Record outcome. Cleanup/contraction migrations occur in a later release.
 
+### Protected production workflow
+
+`.github/workflows/production-database.yml` is the only repository automation
+allowed to run production migrations. It is manual-only and never runs on a
+push, pull request, schedule, or deployment. The job checks out the exact
+40-character candidate SHA without push credentials and fails unless all of
+these agree:
+
+- the checked-out SHA and clean tree;
+- the candidate's final 14-digit migration version;
+- the protected 20-character Supabase project reference and `us-east-1` region;
+- the dedicated TLS-protected database URL's project identity;
+- the externally configured `PRODUCTION_MIGRATION_ENABLED=true` gate;
+- a bounded owner approval reference; and
+- the exact typed `DRY-RUN <SHA>` or `APPLY <SHA>` confirmation.
+
+Every request first proves the remote migration history is an exact prefix of
+the candidate and runs `supabase db push --dry-run --skip-vault`. Apply is a
+separate manual workflow request and additionally requires references to a
+reviewed dry-run run and verified database-plus-Storage backup. After apply, the
+job requires the remote history to reach the exact candidate head. It retains
+only hashes, byte counts, run identifiers, bounded references, and timestamps;
+raw command output, SQL, project references, connection strings, and data are
+not uploaded.
+
+The workflow is implemented but remains unusable until the owner configures and
+protects the `production-database` GitHub environment. Do not add its variables
+or credential at repository scope, and do not run apply until every preceding
+release and backup gate is satisfied.
+
 ## Recovery
 
 Database rollback and application rollback are different operations.

@@ -473,8 +473,11 @@ Status: **planned**
    exact project, region, `APP_ENV`, `APP_ORIGIN`, Auth redirects, publishable
    key, server secrets, AI project/key, model IDs, corpus version, and migration
    credentials without recording values.
-4. Disable automatic remote database migration. Production migrations run only
-   through an owner-protected job against an explicitly verified target.
+4. Keep automatic remote database migration disabled. The manual-only,
+   exact-candidate workflow and fail-closed request/history guards are
+   implemented; configure its owner-protected `production-database` GitHub
+   environment before the first dry-run. Production migrations run only through
+   that job against an explicitly verified target.
 5. Implement scheduled encrypted logical database export plus a separate
    private-Storage object inventory/export to an off-provider destination.
 6. Restore the database and Storage backup into a new isolated project; verify

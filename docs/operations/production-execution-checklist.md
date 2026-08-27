@@ -358,7 +358,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Create a separate live Supabase project in the approved U.S. region.
 - [ ] Configure isolated Vercel Production values and Auth redirects.
 - [ ] Verify all secret/configuration references without exposing values.
-- [ ] Implement protected production migration dry-run/apply job.
+- [x] Implement a manual-only, fail-closed production migration dry-run/apply
+      workflow pinned to an exact commit, migration head, project, region, owner
+      reference, reviewed dry-run, and backup evidence. The protected GitHub
+      environment is not yet configured and no remote run has occurred.
 - [ ] Implement encrypted off-provider logical database backup.
 - [ ] Implement separate private-Storage inventory/object backup.
 - [x] Implement and locally pass a fictional database archive restore plus
