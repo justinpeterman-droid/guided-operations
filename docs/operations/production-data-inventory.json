@@ -1,6 +1,6 @@
 {
   "inventory_version": 1,
-  "last_reviewed_on": "2026-08-26",
+  "last_reviewed_on": "2026-08-27",
   "status": "repository-complete-hosted-verification-pending",
   "authority": {
     "decision_ids": ["OQ-011", "OQ-012"],
@@ -302,6 +302,34 @@
       "retention_profile": "legal-hold-lifecycle",
       "real_data_boundary": "production_only",
       "deletion_status": "release-evidence-immutable-deletion-procedure-required"
+    },
+    {
+      "id": "db:record_artifacts",
+      "kind": "database_table",
+      "locator": "app_private.record_artifacts",
+      "data_classes": [
+        "controlled_export_metadata",
+        "source_integrity",
+        "retention_control"
+      ],
+      "purpose": "Private generated-export ownership, checksum, and deletion evidence",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "controlled-source-linked-deletion-implemented-hosted-rehearsal-pending"
+    },
+    {
+      "id": "db:retention_deletion_requests",
+      "kind": "database_table",
+      "locator": "app_private.retention_deletion_requests",
+      "data_classes": [
+        "retention_control",
+        "backup_evidence",
+        "security_audit_metadata"
+      ],
+      "purpose": "Metadata-only approval, transaction binding, and completion evidence for controlled deletion",
+      "retention_profile": "event-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "completion-evidence-retained-two-years-hosted-rehearsal-pending"
     },
     {
       "id": "storage:generated-exports",

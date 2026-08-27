@@ -26,6 +26,15 @@ test("shows the fictional legal-hold layout safely at desktop and mobile sizes",
   ).toBeVisible();
   await expect(page.getByText("Protected by legal hold")).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Deletion approval register" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Prepare deletion approval" }),
+  ).toBeDisabled();
+  await expect(
+    page.getByRole("button", { name: "Review permanent deletion" }),
+  ).toBeDisabled();
+  await expect(
     page.getByRole("button", { name: "Confirm legal hold" }),
   ).toBeDisabled();
   await expect(
@@ -35,7 +44,9 @@ test("shows the fictional legal-hold layout safely at desktop and mobile sizes",
   await expect(page.getByLabel("Target record ID")).toBeDisabled();
   await expect(page.getByLabel("Authority reference")).toBeDisabled();
   await expect(page.getByLabel(/administrator passcode/i)).toHaveCount(0);
-  await expect(page.getByRole("button", { name: /delete/i })).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /permanently delete/i }),
+  ).toHaveCount(0);
 
   await page
     .getByRole("link", { name: /return to administrator preview/i })

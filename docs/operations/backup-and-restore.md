@@ -116,6 +116,30 @@ test a restore over production.
     securely remove the disposable project only after evidence is retained and
     owner authorizes deletion.
 
+## Controlled retention deletion
+
+The administrator deletion workflow accepts a backup only when both the database
+and private-Storage references are recorded, a restore was verified within the
+prior 24 hours, the combined backup manifest SHA-256 is recorded, and the backup
+remains available beyond the 24-hour approval window. These are evidence
+references; backup bytes and record bodies never belong in the application
+evidence table.
+
+Execution must use the exact approved target and a separate fresh passcode
+confirmation. The server locks and rechecks the complete incident package or
+paperwork record, validates the registered export manifest, removes each
+registered `generated-exports` object, verifies absence, and then completes the
+database deletion in the same PostgreSQL transaction. Any exception rolls back
+the database changes and leaves metadata-only evidence.
+
+Supabase Storage API deletion is external to PostgreSQL and cannot itself roll
+back. If objects were verified absent but a later database check or commit
+fails, immediately keep the request closed to further execution, restore those
+exact objects from the verified Storage backup, reconcile checksums against the
+registered manifest, and record value-free incident evidence before retrying.
+The isolated hosted rehearsal must prove this failure path before Production
+promotion.
+
 ## Local fictional recovery rehearsal
 
 Run `npm run recovery:local` only against the repository's loopback Supabase

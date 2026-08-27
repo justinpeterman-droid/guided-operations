@@ -9,20 +9,36 @@ import {
   type RetentionReviewSummary,
 } from "@/server/retention/legal-hold";
 import { createLegalHoldStore } from "@/server/retention/private-legal-hold-store";
+import { createRetentionDeletionStore } from "@/server/retention/private-retention-deletion-store";
+import {
+  listRetentionDeletionRequestsForCurrentSession,
+  type RetentionDeletionRequestSummary,
+} from "@/server/retention/retention-deletion";
 
+import { ApproveRetentionDeletionForm } from "./approve-retention-deletion-form";
+import { ExecuteRetentionDeletionControl } from "./execute-retention-deletion-control";
 import { PlaceLegalHoldForm } from "./place-legal-hold-form";
 import { ReleaseLegalHoldControl } from "./release-legal-hold-control";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminRetentionPage() {
-  const [holdResult, reviewResult] = await Promise.all([
+  const [holdResult, reviewResult, deletionResult] = await Promise.all([
     loadLegalHolds(),
     loadRetentionReview(),
+    loadRetentionDeletionRequests(),
   ]);
-  if (holdResult.kind === "denied" || reviewResult.kind === "denied")
+  if (
+    holdResult.kind === "denied" ||
+    reviewResult.kind === "denied" ||
+    deletionResult.kind === "denied"
+  )
     return <AccessRequired />;
-  if (holdResult.kind === "unavailable" || reviewResult.kind === "unavailable")
+  if (
+    holdResult.kind === "unavailable" ||
+    reviewResult.kind === "unavailable" ||
+    deletionResult.kind === "unavailable"
+  )
     return <Unavailable />;
 
   return (
@@ -49,12 +65,14 @@ export default async function AdminRetentionPage() {
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="retention-title">Retention and legal holds</h1>
         <p>
-          Active holds stop affected records from entering deletion review. This
-          page does not delete records and does not approve deletion.
+          Active holds stop deletion. Permanent deletion requires verified
+          database and private-Storage backups, one passcode check to approve,
+          and a second fresh passcode check to execute. Nothing is automatic.
         </p>
       </section>
 
       <RetentionReviewRegister candidates={reviewResult.candidates} />
+      <DeletionRequestRegister requests={deletionResult.requests} />
       <PlaceLegalHoldForm />
       <LegalHoldRegister holds={holdResult.holds} />
     </main>
@@ -84,8 +102,8 @@ function RetentionReviewRegister({
       <h2 id="retention-review-title">Two-year deletion review</h2>
       <p>
         These archived records reached their ordinary review date. This list
-        does not approve or perform deletion. Active legal holds always block
-        further action.
+        does not perform deletion. Active legal holds always block further
+        action. Reports stay with their complete incident package.
       </p>
       {candidates.length === 0 ? (
         <div className="reports-empty-state">
@@ -112,9 +130,112 @@ function RetentionReviewRegister({
                 <p>Archived {formatTime(candidate.archivedAt)}</p>
                 <p>Review date {formatTime(candidate.deletionEligibleAt)}</p>
               </div>
-              <span className="report-status">
-                {candidate.activeLegalHold ? "Hold active" : "Review only"}
-              </span>
+              {candidate.activeLegalHold ? (
+                <span className="report-status">Hold active</span>
+              ) : candidate.recordType === "report" ? (
+                <span className="report-status">
+                  Deleted with incident package
+                </span>
+              ) : candidate.deletionReady ? (
+                <ApproveRetentionDeletionForm
+                  recordId={candidate.recordId}
+                  recordType={candidate.recordType}
+                />
+              ) : (
+                <span className="report-status">Review only</span>
+              )}
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
+export async function loadRetentionDeletionRequests() {
+  try {
+    return await listRetentionDeletionRequestsForCurrentSession(
+      await createSupabaseServerClient(),
+      createRetentionDeletionStore(),
+      { includeCompleted: true, limit: 100 },
+    );
+  } catch {
+    return { kind: "unavailable" } as const;
+  }
+}
+
+function DeletionRequestRegister({
+  requests,
+}: Readonly<{ requests: readonly RetentionDeletionRequestSummary[] }>) {
+  return (
+    <section
+      className="reports-list-section"
+      aria-labelledby="deletion-register-title"
+    >
+      <h2 id="deletion-register-title">Deletion approval register</h2>
+      <p>
+        This register contains backup and approval evidence only. Approved
+        requests still require a separate confirmation before anything is
+        permanently removed.
+      </p>
+      {requests.length === 0 ? (
+        <div className="reports-empty-state">
+          <p>No deletion approvals are recorded.</p>
+        </div>
+      ) : (
+        <div className="reports-list" role="list">
+          {requests.map((request) => (
+            <article
+              className="report-list-item"
+              key={request.requestId}
+              role="listitem"
+            >
+              <div>
+                <p className="eyebrow">
+                  {request.status === "completed"
+                    ? "Completed deletion"
+                    : "Approved deletion"}
+                </p>
+                <h3>{deletionRecordLabel(request.recordType)}</h3>
+                <p>
+                  Target ID: <code>{request.recordId}</code>
+                </p>
+                <p>Authority: {request.authorityReference}</p>
+                <p>Database backup: {request.databaseBackupReference}</p>
+                <p>Private-Storage backup: {request.storageBackupReference}</p>
+                <p>
+                  Backup verified {formatTime(request.backupVerifiedAt)} ·
+                  available through {formatTime(request.backupExpiresAt)}
+                </p>
+                <p>
+                  Approved {formatTime(request.approvedAt)} · approval expires{" "}
+                  {formatTime(request.approvalExpiresAt)}
+                </p>
+                <p>
+                  Registered exports: {request.artifactCount} · removed:{" "}
+                  {request.artifactsDeletedCount}
+                </p>
+                {request.completedAt ? (
+                  <p>
+                    Completed {formatTime(request.completedAt)} · database rows
+                    removed: {request.databaseRowsDeleted}
+                  </p>
+                ) : null}
+              </div>
+              {request.status === "approved" ? (
+                <ExecuteRetentionDeletionControl
+                  recordId={request.recordId}
+                  requestId={request.requestId}
+                />
+              ) : (
+                <span className="report-status">
+                  {request.status === "completed"
+                    ? "Completed"
+                    : request.status === "canceled"
+                      ? "Canceled"
+                      : "Execution in progress"}
+                </span>
+              )}
             </article>
           ))}
         </div>
@@ -201,6 +322,14 @@ function reviewLabel(recordType: RetentionReviewSummary["recordType"]): string {
     report: "Archived report",
     paperwork_record: "Archived paperwork record",
   }[recordType];
+}
+
+function deletionRecordLabel(
+  recordType: RetentionDeletionRequestSummary["recordType"],
+): string {
+  return recordType === "incident"
+    ? "Complete incident package"
+    : "Paperwork record";
 }
 
 function formatTime(value: string): string {

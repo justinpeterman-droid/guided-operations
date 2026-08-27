@@ -25,7 +25,8 @@ export default function AdminRetentionPreviewPage() {
         <h1 id="preview-retention-title">Retention and legal holds</h1>
         <p>
           Visual review only. The example below is fictional, and this preview
-          cannot read, change, or delete any operational record.
+          cannot read, change, or delete any operational record. The live
+          workflow requires verified backups and two separate passcode checks.
         </p>
       </section>
 
@@ -50,6 +51,49 @@ export default function AdminRetentionPreviewPage() {
               <p>Review date Dec 31, 2025, 3:00 AM UTC</p>
             </div>
             <span className="report-status">Hold active</span>
+          </article>
+          <article className="report-list-item" role="listitem">
+            <div>
+              <p className="eyebrow">Archived paperwork record</p>
+              <h3>Eligible for records review</h3>
+              <p>
+                Target ID: <code>55555555-5555-4555-8555-555555555555</code>
+              </p>
+              <p>Archived Jan 2, 2024, 3:00 AM UTC</p>
+              <p>Review date Jan 1, 2026, 3:00 AM UTC</p>
+            </div>
+            <button disabled type="button">
+              Prepare deletion approval
+            </button>
+          </article>
+        </div>
+      </section>
+
+      <section
+        className="reports-list-section"
+        aria-labelledby="preview-deletion-register-title"
+      >
+        <h2 id="preview-deletion-register-title">Deletion approval register</h2>
+        <p>
+          Fictional evidence only. The separate execution control is disabled in
+          this preview.
+        </p>
+        <div className="reports-list" role="list">
+          <article className="report-list-item" role="listitem">
+            <div>
+              <p className="eyebrow">Approved deletion</p>
+              <h3>Complete incident package</h3>
+              <p>
+                Target ID: <code>66666666-6666-4666-8666-666666666666</code>
+              </p>
+              <p>Authority: FICTIONAL-AUTHORITY-001</p>
+              <p>Database backup: FICTIONAL-DB-BACKUP-001</p>
+              <p>Private-Storage backup: FICTIONAL-STORAGE-BACKUP-001</p>
+              <p>Registered exports: 1 · removed: 0</p>
+            </div>
+            <button disabled type="button">
+              Review permanent deletion
+            </button>
           </article>
         </div>
       </section>

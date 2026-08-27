@@ -10,6 +10,15 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/server/retention/private-legal-hold-store", () => ({
   createLegalHoldStore: vi.fn(() => ({})),
 }));
+vi.mock("@/server/retention/private-retention-deletion-store", () => ({
+  createRetentionDeletionStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/retention/retention-deletion", () => ({
+  listRetentionDeletionRequestsForCurrentSession: vi.fn().mockResolvedValue({
+    kind: "listed",
+    requests: [],
+  }),
+}));
 vi.mock("@/server/retention/legal-hold", () => ({
   listLegalHoldsForCurrentSession: vi.fn().mockResolvedValue({
     kind: "listed",
@@ -54,6 +63,9 @@ describe("AdminRetentionPage", () => {
       screen.getByRole("heading", { name: "Two-year deletion review" }),
     ).toBeInTheDocument();
     expect(screen.getByText("Protected by legal hold")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Deletion approval register" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Confirm legal hold" }),
     ).toBeInTheDocument();

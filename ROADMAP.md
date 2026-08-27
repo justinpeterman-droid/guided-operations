@@ -91,9 +91,9 @@ The hosted details and limitations are recorded in
    provider budgets, incident ownership, and release/rollback exercises do not
    exist.
 8. The production data inventory and protected, purpose-bound legal-hold
-   placement/release workflow are implemented locally. Controlled deletion,
-   Storage and backup reconciliation, hosted rehearsal, backup-expiry evidence,
-   and owner approval remain open.
+   placement/release and controlled-deletion workflows are implemented locally.
+   Hosted Storage/backup reconciliation, restore/deletion rehearsal, live
+   backup-expiry evidence, and owner approval remain open.
 9. GitHub branch protection and private-repository rulesets are unavailable on
    the current account plan. The owner must upgrade or formally accept and
    document compensating release controls.
@@ -404,9 +404,9 @@ and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 ## Phase 6 — administration and operational controls
 
 Status: **account/audit/health controls, purpose-bound legal-hold operation,
-bounded two-year review, redacted core telemetry, and local recovery are
-implemented; controlled deletion, hosted monitoring, alerts, budgets, and
-exercises remain open**
+bounded two-year review, fail-closed controlled deletion, redacted core
+telemetry, and local recovery are implemented; hosted deletion/recovery
+rehearsal, monitoring, alerts, budgets, and exercises remain open**
 
 ### Steps
 
@@ -435,11 +435,16 @@ exercises remain open**
 8. Encode the ordinary two-year deletion-review clock and legal-hold override in
    the database. Keep classification separate from deletion authority, and
    require protected admin workflow plus backup-aware evidence before any
-   destructive cleanup. The protected `/admin/retention` register now places and
-   releases validated holds through separate one-time step-up purposes and shows
-   a bounded same-facility list after the two-year review date. Held records
-   stay visible but blocked. The page exposes no deletion action. Backup-aware
-   approval, deletion execution, and hosted evidence remain open.
+   destructive cleanup. The protected `/admin/retention` register places and
+   releases validated holds, shows a bounded same-facility review list, and
+   permits only complete incident packages or eligible paperwork records to
+   enter controlled deletion. Approval and execution have separate one-time
+   administrator proofs. Approval is non-destructive, requires verified database
+   and Storage backup evidence, and expires after 24 hours. Execution requires
+   exact record-ID confirmation, locks and rechecks the target and holds,
+   verifies registered Storage objects, and completes database deletion in the
+   same transaction. Hosted backup/deletion rehearsal and live authority for any
+   specific deletion remain open.
 9. Set provider budgets and circuit breakers. A provider limit must create an
    honest degraded state, not fabricated output or partial silent saves.
 10. Exercise credential rotation, dependency update, incident response,

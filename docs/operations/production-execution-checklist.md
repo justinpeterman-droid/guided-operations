@@ -331,8 +331,17 @@ Pause and report a blocker instead of guessing when work requires:
       heads and a private, target-validated, audited legal-hold model. Protected
       `/admin/retention` placement and release require separate same-session,
       one-time administrator step-up proofs; direct Data API access remains
-      denied. No data is deleted. Controlled deletion, backup/Storage
-      reconciliation, hosted rehearsal, and owner approval remain open.
+      denied.
+- [x] Implement a fail-closed controlled deletion path for complete incident
+      packages and eligible paperwork records. Approval and execution require
+      separate single-use administrator proofs; approval requires verified
+      database/Storage backup evidence and expires after 24 hours; execution
+      requires exact record-ID confirmation, locked hold/eligibility rechecks,
+      manifest-bound private-Storage verification, and same-transaction database
+      deletion. Local PostgreSQL, route, component, and negative tests pass.
+      Hosted backup jobs, hosted restore/deletion rehearsal, operational
+      authority for a specific live deletion, and owner release approval remain
+      open. No hosted data was changed.
 - [ ] Add cost/quota dashboards, alerts, budgets, and circuit breakers.
 - [ ] Name incident/alert primary and alternate.
 - [ ] Exercise credential rotation, dependency update, incident response,
@@ -358,6 +367,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Promote the passing local fictional database-plus-Storage recovery
       rehearsal to protected hosted backup jobs and an isolated replacement
       Supabase project. Local proof alone does not close this gate.
+- [ ] Rehearse the controlled deletion workflow in an isolated hosted project
+      with fictional data: verified database and Storage backups, legal-hold
+      race rejection, failed-Storage rollback, post-removal database rollback
+      followed by Storage restore, completed evidence, and safe retry.
 - [ ] Restore database and Storage into an isolated recovery project.
 - [ ] Verify Auth-linked state, migration history, constraints, RLS, object
       checksums, corpus rebuild, and achieved RPO/RTO.

@@ -43,8 +43,19 @@ jobs are configured. Entries with a pending `release_status` or
   purpose-bound step-up checks for placement and release.
 - The protected administrator retention page shows a bounded same-facility
   review list only after the two-year date. Held records remain visible but
-  blocked. Classification grants no deletion authority, and no deletion action
-  or automatic cleanup path is exposed.
+  blocked. Classification grants no deletion authority. Only a complete incident
+  package or an eligible paperwork record can enter the controlled deletion
+  workflow; a report cannot be deleted separately from its incident.
+- Controlled deletion is never automatic. Approval records database and
+  private-Storage backup references, a verified restore time, backup expiry, and
+  a SHA-256 manifest. The restore check must be from the prior 24 hours.
+  Execution requires a separate fresh administrator step-up and exact record-ID
+  confirmation within the 24-hour approval window.
+- Execution locks and rechecks the entire target scope, verifies the registered
+  private export manifest, removes and verifies those objects, and deletes the
+  database package inside one database transaction. Any failed check rolls the
+  database transaction back. Metadata-only approval, completion, backup, and
+  artifact-integrity evidence remains for its own two-year period.
 - Backups remain protected until every included source record is deletion
   eligible and any hold has cleared.
 

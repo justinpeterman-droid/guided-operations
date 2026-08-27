@@ -26,7 +26,8 @@ a non-production environment.
 The current repository-level inventory is maintained in
 [`production-data-inventory.json`](production-data-inventory.json) and is
 checked against every private application table and Storage bucket. Hosted
-provider settings and deletion execution remain separate release gates.
+provider settings and hosted backup/restore/deletion rehearsal remain separate
+release gates.
 
 ## Retention and deletion
 
@@ -34,16 +35,29 @@ provider settings and deletion execution remain separate release gates.
   from its final revision.
 - A legal hold, incident investigation, or later written records decision
   suspends deletion for the affected scope.
-- Before deletion, record the scope, authority, hold check, deletion job,
-  completion evidence, and backup-expiry date without retaining record bodies.
+- Before deletion, record the scope, authority, database and private-Storage
+  backup references, verified-restore time, combined manifest checksum, approval
+  expiry, completion evidence, and backup-expiry date without copying record
+  bodies into the evidence register.
 - The database calculates the earliest ordinary deletion-review date for
   archived incidents, reports, and paperwork. A private, audited legal hold
   overrides that date. Classification is not deletion authority, and the
-  application exposes no automatic deletion path.
+  application exposes no automatic deletion path. It permits only a complete
+  incident package or one eligible paperwork record; reports cannot be removed
+  independently.
 - The protected administrator records page may place or release only a validated
   same-facility hold. Placement and release use separate, fresh, single-use
   passcode confirmations; direct Data API access is denied. Release preserves
   the original hold and its bounded release evidence.
+- Deletion approval and deletion execution use two additional, separate,
+  single-use passcode confirmations. Approval is non-destructive and expires
+  after 24 hours. Execution requires the administrator to type the exact record
+  ID and rechecks eligibility, legal holds, backup validity, registered export
+  manifest, actor, backend connection, and database transaction before commit.
+- Private-Storage removal is verified before database commit. If Storage removal
+  succeeds but a later database check rolls back, restore the objects from the
+  already-verified Storage backup before closing or retrying the request. Never
+  treat a database rollback as restoration of external objects.
 - The two-year period applies to database rows, private Storage artifacts,
   exports, indexes, caches, and backups. Backups may expire naturally only after
   their included data is eligible for deletion and no hold applies.

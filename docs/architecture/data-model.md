@@ -151,7 +151,7 @@ Immutable snapshot:
 Restore copies a selected snapshot into a new revision. Recovery output may be
 stored as non-current history but never promoted implicitly.
 
-### app_private.legal_holds and retention classification
+### app_private.legal_holds and controlled retention deletion
 
 - Archived incident, report, and paperwork heads expose a database-derived
   `deletion_eligible_at` exactly 730 days after the UTC archival instant.
@@ -170,9 +170,19 @@ stored as non-current history but never promoted implicitly.
   bounded same-facility register, and calls private placement/release routines.
   Protected routes require current administrator authority, trusted origin,
   session CSRF, and distinct one-time step-up purposes for placement and
-  release. No cleanup RPC or deletion action is exposed.
-- Backup-aware deletion approval, Storage reconciliation, deletion execution,
-  hosted rehearsal, and owner acceptance remain required.
+  release.
+- `record_artifacts` privately registers generated exports by source target,
+  bucket/path, checksum, and size. `retention_deletion_requests` retains
+  metadata-only authority, backup, manifest, transaction-binding, and completion
+  evidence. Both tables force RLS and deny Data API roles.
+- Backup-aware approval is non-destructive and expires after 24 hours. A
+  separate execution proof plus exact record-ID confirmation is required.
+  Execution supports only a complete incident package or one paperwork record;
+  report-only deletion is rejected.
+- Private routines lock and recheck the target and legal-hold scopes, bind the
+  actor/backend/transaction, verify registered Storage cleanup, and delete the
+  database package in one transaction. Append-only history tables reject all
+  other deletion paths. Hosted rehearsal and owner acceptance remain required.
 
 ## Forms and packets
 
