@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { dirname, resolve } from "node:path";
 import { describe, it } from "node:test";
 
 import { validateProductionBackupRequest } from "./production-backup-guard.mjs";
@@ -22,9 +23,15 @@ function input(overrides = {}) {
   };
 }
 
+const repositoryRoot = resolve(
+  "test-fixtures",
+  "workspace",
+  "guided-operations",
+);
+
 const paths = {
-  repositoryRoot: "C:\\workspace\\guided-operations",
-  destinationRoot: "D:\\protected-backups",
+  repositoryRoot,
+  destinationRoot: resolve("test-fixtures", "protected-backups"),
   targetAttestation: {
     schema_version: 1,
     purpose: "guided-operations-production-backup",
@@ -70,7 +77,7 @@ describe("production backup request guard", () => {
   it("requires an external destination that cannot contain the repository", () => {
     const result = validateProductionBackupRequest(input(), {
       ...paths,
-      destinationRoot: "C:\\workspace",
+      destinationRoot: dirname(repositoryRoot),
     });
     assert.equal(result.ok, false);
     assert.match(result.errors.join(" "), /repository cannot be inside/u);
@@ -79,7 +86,7 @@ describe("production backup request guard", () => {
   it("rejects a destination inside the repository", () => {
     const result = validateProductionBackupRequest(input(), {
       ...paths,
-      destinationRoot: "C:\\workspace\\guided-operations\\backups",
+      destinationRoot: resolve(repositoryRoot, "backups"),
     });
     assert.equal(result.ok, false);
     assert.match(result.errors.join(" "), /outside the repository/u);
