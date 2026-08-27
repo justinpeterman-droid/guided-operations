@@ -29,6 +29,7 @@ import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createPersistedReportDraftWorkflow } from "@/server/ai/persisted-report-draft-workflow";
+import { createOpenAiReportDraftGenerationProvider } from "@/server/ai/providers/openai-report-draft-generation";
 import { validateReportDraftEndpointRequest } from "@/server/ai/report-draft-endpoint";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
@@ -107,6 +108,9 @@ describe("POST /api/web/v1/report-drafts", () => {
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
     ).not.toContain("Fictional protected report type");
+    expect(createOpenAiReportDraftGenerationProvider).toHaveBeenCalledWith({
+      accountId: session.account.authUserId,
+    });
   });
 
   it("records only a bounded outcome when authentication is denied", async () => {

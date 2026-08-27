@@ -68,6 +68,12 @@ application promotion.
    through the first representative use window.
 10. **MANUAL:** complete the release record and communicate outcome.
 
+For the AI fair-use migration, steps 6–7 are a declared AI-only maintenance
+window: older application instances receive a fail-closed budget denial, not a
+working identity-free fallback. Other site tools remain available. Rolling the
+application back is data-safe but leaves AI unavailable until the
+fair-use-capable application is restored.
+
 Run `npm run release:verify -- --phase production --file <private-record>` only
 after the full monitoring window. A passing result proves that the required
 references are present and bound to one candidate; operators still have to

@@ -75,7 +75,9 @@ export async function POST(request: Request): Promise<Response> {
     const service = createPolicyAnswerService(
       {
         retrieval: createSupabasePolicyRetrievalProvider(client),
-        generation: createOpenAiGroundedGenerationProvider(),
+        generation: createOpenAiGroundedGenerationProvider({
+          accountId: session.account.authUserId,
+        }),
       },
       { maximumPassages: 8, maximumAnswerCharacters: 4_000 },
     );

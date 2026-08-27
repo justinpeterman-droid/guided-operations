@@ -3,9 +3,12 @@ import { describe, it } from "node:test";
 
 import {
   buildProductionBackupEvidence,
+  assertDatabaseMetadataUnchanged,
+  assertStorageInventoryUnchanged,
   inventoryPrivateStorage,
   normalizeMigrationVersions,
   opaqueObjectFileName,
+  productionBackupFreezeWindow,
   validateBackupExpiry,
 } from "./create-production-backup.mjs";
 
@@ -63,6 +66,13 @@ describe("Production backup primitives", () => {
     assert.equal(validateBackupExpiry("2027-02-30", now), false);
     assert.equal(validateBackupExpiry("2026-08-26", now), false);
     assert.equal(validateBackupExpiry("not-a-date", now), false);
+  });
+
+  it("ends backup work before the database freeze expires", () => {
+    const now = new Date("2026-08-27T12:00:00.000Z");
+    const { deadlineAt, expiresAt } = productionBackupFreezeWindow(now);
+    assert.equal(expiresAt.getTime() - now.getTime(), 20 * 60 * 1000);
+    assert.equal(expiresAt.getTime() - deadlineAt.getTime(), 30 * 1000);
   });
 
   it("requires an ordered 14-digit migration history", () => {
@@ -132,14 +142,95 @@ describe("Production backup primitives", () => {
     );
     assert.deepEqual(inventory.objects, [
       {
+        id: "object-1",
         bucket: "private-a",
         name: "folder/file.pdf",
         bytes: 12,
         media_type: "application/pdf",
         created_at: "2026-08-27T00:00:00Z",
         updated_at: "2026-08-27T00:00:00Z",
+        version: null,
+        etag: null,
       },
     ]);
+  });
+
+  it("rejects a migration-head change across the database export", () => {
+    const before = {
+      migration_count: 2,
+      migration_head: "20260827062000",
+      server_version: "17.4",
+    };
+    assert.doesNotThrow(() =>
+      assertDatabaseMetadataUnchanged(before, { ...before }),
+    );
+    assert.throws(
+      () =>
+        assertDatabaseMetadataUnchanged(before, {
+          ...before,
+          migration_head: "20260827063000",
+        }),
+      /database changed/u,
+    );
+  });
+
+  it("rejects object additions, deletions, replacements, and bucket changes", () => {
+    const before = {
+      buckets: [{ id: "private-a", name: "private-a", public: false }],
+      objects: [
+        {
+          id: "object-1",
+          bucket: "private-a",
+          name: "file.pdf",
+          bytes: 12,
+          updated_at: "2026-08-27T00:00:00Z",
+        },
+      ],
+    };
+    assert.doesNotThrow(() =>
+      assertStorageInventoryUnchanged(before, structuredClone(before)),
+    );
+    assert.throws(
+      () =>
+        assertStorageInventoryUnchanged(before, {
+          ...before,
+          objects: [
+            ...before.objects,
+            { ...before.objects[0], id: "object-2", name: "new.pdf" },
+          ],
+        }),
+      /Storage changed/u,
+    );
+    assert.throws(
+      () =>
+        assertStorageInventoryUnchanged(before, {
+          ...before,
+          objects: [],
+        }),
+      /Storage changed/u,
+    );
+    assert.throws(
+      () =>
+        assertStorageInventoryUnchanged(before, {
+          ...before,
+          objects: [
+            {
+              ...before.objects[0],
+              id: "replacement-1",
+              updated_at: "2026-08-27T00:01:00Z",
+            },
+          ],
+        }),
+      /Storage changed/u,
+    );
+    assert.throws(
+      () =>
+        assertStorageInventoryUnchanged(before, {
+          ...before,
+          buckets: [{ ...before.buckets[0], file_size_limit: 1024 }],
+        }),
+      /Storage changed/u,
+    );
   });
 
   it("rejects any public Storage bucket", async () => {

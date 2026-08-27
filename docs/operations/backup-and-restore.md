@@ -68,14 +68,32 @@ does not by itself close the backup or restore gates. The tool:
 - requires `pg_dump` and `age`, streams the database archive directly from
   `pg_dump` into public-key encryption, and never writes a plaintext database
   archive;
+- acquires a purpose-bound, 20-minute database freeze before the first remote
+  read. Existing writes must finish first; new database, Auth, Storage-metadata,
+  and schema mutations are rejected until the exact backup connection releases
+  the freeze or its database-enforced expiry is reached;
+- reads migration metadata before and after `pg_dump` and rejects the package if
+  the migration count, head, or server version changes;
 - rejects public Storage buckets, recursively inventories every private object,
   downloads each object through the authenticated Storage API, checks its byte
-  count and SHA-256, and writes only individually encrypted opaque filenames;
+  count and SHA-256, re-inventories all buckets and objects, and rejects any
+  addition, deletion, same-size replacement, metadata/version change, or bucket
+  configuration change;
 - keeps object keys, bucket details, source checksums, and the project reference
   only inside the encrypted manifest; and
 - writes a value-free evidence file containing aggregate counts, hashes, tool
   versions, dates, and bounded references. An incomplete backup directory is
-  removed without touching the destination root.
+  removed without touching the destination root. Success is recorded only after
+  the freeze is reverified following evidence creation.
+
+The freeze is deliberately brief and makes normal writes temporarily
+unavailable. Do not start it during live use. The backup client cancels work 30
+seconds before the 20-minute database lease ends. Even if the operator process
+or its connection hangs, database, Auth, Storage-metadata, and schema writes
+resume automatically when the lease expires. An expired or lost freeze fails the
+backup and removes the incomplete package when the client regains control. The
+local implementation and tests do not replace a hosted rehearsal of Supabase
+object-version/ETag behavior.
 
 The destination must already exist outside the repository and contain this
 non-secret attestation file:

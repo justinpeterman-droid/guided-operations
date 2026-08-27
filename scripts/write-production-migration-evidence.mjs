@@ -4,39 +4,81 @@ import { dirname, resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 
 export function buildProductionMigrationEvidence(input) {
+  const operation = allowed(input.operation, ["dry-run", "apply"]);
   return {
     evidence_version: 1,
     environment: "production",
-    operation: input.operation,
-    result: input.result,
-    candidate_sha: input.candidateSha,
-    candidate_migration_head: input.expectedMigrationHead,
-    project_reference_sha256: sha256(Buffer.from(input.projectRef, "utf8")),
-    region: input.region,
-    approval_reference: input.approvalReference,
+    operation,
+    result: allowed(input.result, [
+      "success",
+      "failure",
+      "cancelled",
+      "skipped",
+    ]),
+    candidate_sha: matches(input.candidateSha, /^[a-f0-9]{40}$/u),
+    candidate_migration_head: matches(input.expectedMigrationHead, /^\d{14}$/u),
+    project_reference_sha256: projectReferenceDigest(input.projectRef),
+    region: allowed(input.region, ["us-east-1"]),
+    approval_reference: boundedReference(input.approvalReference),
     backup_evidence_reference:
-      input.operation === "apply" ? input.backupEvidenceReference : null,
+      operation === "apply"
+        ? boundedReference(input.backupEvidenceReference)
+        : null,
     dry_run_evidence_reference:
-      input.operation === "apply" ? input.dryRunEvidenceReference : null,
+      operation === "apply"
+        ? boundedReference(input.dryRunEvidenceReference)
+        : null,
     workflow: {
-      repository: input.repository,
-      run_id: input.runId,
-      run_attempt: input.runAttempt,
+      repository: matches(
+        input.repository,
+        /^[A-Za-z0-9_.-]{1,100}\/[A-Za-z0-9_.-]{1,100}$/u,
+      ),
+      run_id: matches(input.runId, /^\d{1,20}$/u),
+      run_attempt: matches(input.runAttempt, /^\d{1,6}$/u),
     },
     command_evidence: Object.fromEntries(
-      Object.entries(input.files).map(([label, filePath]) => [
-        label,
-        fileDigest(filePath),
-      ]),
+      [
+        "migration_history_before",
+        "dry_run",
+        "apply",
+        "migration_history_after",
+      ].map((label) => [label, fileDigest(input.files?.[label])]),
     ),
-    started_at: input.startedAt,
-    completed_at: input.completedAt,
+    started_at: utcTimestamp(input.startedAt),
+    completed_at: utcTimestamp(input.completedAt),
     limitations: [
       "Value-free workflow evidence; command output and credentials are not retained.",
       "A successful dry-run does not authorize apply or production traffic.",
       "An apply result still requires post-migration application qualification and owner acceptance.",
     ],
   };
+}
+
+function allowed(value, values) {
+  return typeof value === "string" && values.includes(value) ? value : null;
+}
+
+function matches(value, pattern) {
+  return typeof value === "string" && pattern.test(value) ? value : null;
+}
+
+function boundedReference(value) {
+  return matches(value, /^[A-Za-z0-9][A-Za-z0-9._:/-]{7,159}$/u);
+}
+
+function projectReferenceDigest(value) {
+  const projectRef = matches(value, /^[a-z]{20}$/u);
+  return projectRef ? sha256(Buffer.from(projectRef, "utf8")) : null;
+}
+
+function utcTimestamp(value) {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/u.test(value)
+  )
+    return null;
+  const parsed = new Date(value);
+  return Number.isNaN(parsed.valueOf()) ? null : value;
 }
 
 function fileDigest(filePath) {

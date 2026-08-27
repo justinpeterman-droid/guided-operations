@@ -102,6 +102,7 @@ jobs:
           fi
 
       - name: Validate exact candidate and owner gate
+        id: validate_request
         run: node scripts/production-migration-guard.mjs
 
       - name: Verify remote migration history is a candidate prefix
@@ -162,14 +163,14 @@ jobs:
             after
 
       - name: Write value-free migration evidence
-        if: always()
+        if: always() && steps.validate_request.outcome == 'success'
         env:
           MIGRATION_RESULT: ${{ job.status }}
         run: node scripts/write-production-migration-evidence.mjs
 
       - name: Retain value-free migration evidence
         if:
-          always() &&
+          always() && steps.validate_request.outcome == 'success' &&
           hashFiles('test-results/production-migration-evidence.json') != ''
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:

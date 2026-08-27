@@ -28,6 +28,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createPolicyAnswerService } from "@/server/ai/policy-answer-service";
+import { createOpenAiGroundedGenerationProvider } from "@/server/ai/providers/openai-grounded-generation";
 import { validatePolicyAnswerEndpointRequest } from "@/server/ai/policy-answer-endpoint";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
@@ -102,6 +103,9 @@ describe("POST /api/web/v1/policy-answer", () => {
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
     ).not.toContain("Fictional cited answer");
+    expect(createOpenAiGroundedGenerationProvider).toHaveBeenCalledWith({
+      accountId: session.account.authUserId,
+    });
   });
 
   it("rejects before parsing or provider setup when the current session is denied", async () => {

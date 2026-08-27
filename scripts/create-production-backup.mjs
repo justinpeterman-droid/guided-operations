@@ -23,6 +23,8 @@ import {
 
 const MAX_STORAGE_OBJECTS = 1_000_000;
 const MAX_DIRECTORY_DEPTH = 64;
+const BACKUP_FREEZE_DURATION_MS = 20 * 60 * 1000;
+const BACKUP_DEADLINE_SAFETY_MS = 30 * 1000;
 export function buildProductionBackupEvidence(input) {
   return {
     evidence_version: 1,
@@ -66,9 +68,19 @@ export async function inventoryPrivateStorage(storage) {
       "Production backup rejected because a public bucket exists.",
     );
 
-  const buckets = [...bucketsResult.data].sort((left, right) =>
-    left.id.localeCompare(right.id),
-  );
+  const buckets = bucketsResult.data
+    .map((bucket) => ({
+      id: String(bucket.id),
+      name: String(bucket.name),
+      public: bucket.public === true,
+      file_size_limit: numericSize(bucket.file_size_limit),
+      allowed_mime_types: Array.isArray(bucket.allowed_mime_types)
+        ? [...bucket.allowed_mime_types].map(String).sort()
+        : null,
+      created_at: bucket.created_at ?? null,
+      updated_at: bucket.updated_at ?? null,
+    }))
+    .sort((left, right) => left.id.localeCompare(right.id));
   const objects = [];
   for (const bucket of buckets) {
     await inventoryDirectory(storage, bucket.id, "", 0, objects);
@@ -76,6 +88,11 @@ export async function inventoryPrivateStorage(storage) {
       throw new Error("Production Storage inventory exceeds the safety limit.");
   }
 
+  objects.sort((left, right) =>
+    `${left.bucket}\0${left.name}`.localeCompare(
+      `${right.bucket}\0${right.name}`,
+    ),
+  );
   return { buckets, objects };
 }
 
@@ -105,12 +122,15 @@ async function inventoryDirectory(storage, bucket, prefix, depth, objects) {
         );
       } else {
         objects.push({
+          id: String(item.id),
           bucket,
           name: objectName,
           bytes: numericSize(item.metadata?.size),
           media_type: item.metadata?.mimetype ?? null,
           created_at: item.created_at ?? null,
           updated_at: item.updated_at ?? null,
+          version: item.metadata?.version ?? null,
+          etag: item.metadata?.eTag ?? item.metadata?.etag ?? null,
         });
       }
       if (objects.length > MAX_STORAGE_OBJECTS)
@@ -155,6 +175,26 @@ export function normalizeMigrationVersions(rows) {
   return { migration_count: versions.length, migration_head: versions.at(-1) };
 }
 
+export function assertDatabaseMetadataUnchanged(before, after) {
+  if (JSON.stringify(before) !== JSON.stringify(after))
+    throw new Error("Production backup database changed during export.");
+}
+
+export function assertStorageInventoryUnchanged(before, after) {
+  if (JSON.stringify(before) !== JSON.stringify(after))
+    throw new Error("Production backup Storage changed during export.");
+}
+
+export function productionBackupFreezeWindow(now = new Date()) {
+  const startedAt = now.getTime();
+  return {
+    expiresAt: new Date(startedAt + BACKUP_FREEZE_DURATION_MS),
+    deadlineAt: new Date(
+      startedAt + BACKUP_FREEZE_DURATION_MS - BACKUP_DEADLINE_SAFETY_MS,
+    ),
+  };
+}
+
 function environmentInput() {
   return {
     appEnvironment: process.env.APP_ENV,
@@ -196,39 +236,47 @@ async function main() {
   const startedAt = new Date().toISOString();
   const backupId = createBackupId(new Date());
   const backupRoot = createBackupRoot(paths.destinationRoot, backupId);
+  let freeze;
 
   try {
+    freeze = await acquireProductionBackupFreeze({
+      databaseUrl: input.databaseUrl,
+      backupId,
+      approvalReference: input.approvalReference,
+    });
+    const { signal } = freeze;
+    await freeze.assertActive();
     const tools = {
       pg_dump: toolVersion(input.pgDumpPath, ["--version"]),
       age: toolVersion(input.agePath, ["--version"]),
       node: process.version,
     };
-    const database = await backupDatabase({ input, backupRoot });
+    const database = await backupDatabase({ input, backupRoot, signal });
     const client = createClient(input.supabaseUrl, input.supabaseSecretKey, {
       auth: { autoRefreshToken: false, persistSession: false },
-      global: { headers: { "Cache-Control": "no-store" } },
+      global: {
+        headers: { "Cache-Control": "no-store" },
+        fetch: (resource, options = {}) =>
+          fetch(resource, { ...options, signal }),
+      },
     });
     const inventory = await inventoryPrivateStorage(client.storage);
     const storage = await backupStorage({
       input,
       backupRoot,
       inventory,
+      signal,
     });
+    const finalInventory = await inventoryPrivateStorage(client.storage);
+    assertStorageInventoryUnchanged(inventory, finalInventory);
+    await freeze.assertActive();
     const manifest = {
       manifest_version: 1,
       backup_id: backupId,
       project_reference: input.projectRef,
       region: input.region,
       database,
-      buckets: inventory.buckets.map((bucket) => ({
-        id: bucket.id,
-        name: bucket.name,
-        public: false,
-        file_size_limit: bucket.file_size_limit ?? null,
-        allowed_mime_types: bucket.allowed_mime_types ?? null,
-        created_at: bucket.created_at ?? null,
-        updated_at: bucket.updated_at ?? null,
-      })),
+      buckets: inventory.buckets,
       objects: storage.objects,
       created_at: startedAt,
       expires_on: input.expiresOn,
@@ -238,6 +286,7 @@ async function main() {
       outputPath: resolve(backupRoot, "manifest.json.age"),
       recipient: input.ageRecipient,
       agePath: input.agePath,
+      signal,
     });
     const evidence = buildProductionBackupEvidence({
       backupId,
@@ -259,8 +308,12 @@ async function main() {
       `${JSON.stringify(evidence, null, 2)}\n`,
       { encoding: "utf8", mode: 0o600 },
     );
+    await freeze.assertActive();
+    await freeze.release();
+    freeze = undefined;
     console.log(`Encrypted Production backup completed: ${backupId}`);
   } catch (error) {
+    if (freeze) await freeze.release().catch(() => {});
     removeIncompleteBackup(paths.destinationRoot, backupRoot, backupId);
     throw new Error(
       error instanceof Error && error.message.startsWith("Production backup")
@@ -315,12 +368,18 @@ function toolVersion(executable, args) {
   }
 }
 
-async function backupDatabase({ input, backupRoot }) {
+async function backupDatabase({ input, backupRoot, signal }) {
+  throwIfBackupAborted(signal);
   const outputPath = resolve(backupRoot, "database.dump.age");
-  const metadata = await readDatabaseMetadata(input.databaseUrl);
+  const metadataBefore = await readDatabaseMetadata(input.databaseUrl, signal);
   const dumper = spawn(
     input.pgDumpPath,
-    ["--format=custom", "--no-owner", "--no-privileges"],
+    [
+      "--format=custom",
+      "--no-owner",
+      "--no-privileges",
+      "--exclude-table-data=app_private.production_backup_write_freeze",
+    ],
     {
       env: {
         ...sanitizedToolEnvironment(),
@@ -328,6 +387,7 @@ async function backupDatabase({ input, backupRoot }) {
       },
       stdio: ["ignore", "pipe", "pipe"],
       windowsHide: true,
+      signal,
     },
   );
   discard(dumper.stderr);
@@ -338,6 +398,7 @@ async function backupDatabase({ input, backupRoot }) {
       outputPath,
       recipient: input.ageRecipient,
       agePath: input.agePath,
+      signal,
     }),
     dumpExitPromise,
   ]);
@@ -345,15 +406,91 @@ async function backupDatabase({ input, backupRoot }) {
     rmSync(outputPath, { force: true });
     throw new Error("Production backup database export failed.");
   }
-  return { ...metadata, ...encrypted };
+  const metadataAfter = await readDatabaseMetadata(input.databaseUrl, signal);
+  assertDatabaseMetadataUnchanged(metadataBefore, metadataAfter);
+  return { ...metadataBefore, ...encrypted };
 }
 
-async function readDatabaseMetadata(databaseUrl) {
+export async function acquireProductionBackupFreeze({
+  databaseUrl,
+  backupId,
+  approvalReference,
+  now = new Date(),
+}) {
+  const sql = postgres(databaseUrl, {
+    max: 1,
+    prepare: false,
+    connect_timeout: 10,
+    idle_timeout: 0,
+    query_timeout: 30,
+    ssl: "require",
+    onnotice: () => {},
+  });
+  let ownerBackendPid;
+  const { expiresAt, deadlineAt } = productionBackupFreezeWindow(now);
+  try {
+    const rows = await sql`
+      select app_private.begin_production_backup_write_freeze(
+        ${backupId}, ${approvalReference}, ${expiresAt.toISOString()}::timestamptz
+      ) as owner_backend_pid
+    `;
+    ownerBackendPid = Number(rows[0]?.owner_backend_pid);
+    if (!Number.isSafeInteger(ownerBackendPid) || ownerBackendPid <= 0)
+      throw new Error("Production backup write freeze was not acquired.");
+  } catch {
+    await sql.end({ timeout: 2 }).catch(() => {});
+    throw new Error("Production backup write freeze was not acquired.");
+  }
+
+  const abortController = new AbortController();
+  const deadlineTimer = setTimeout(
+    () => abortController.abort(),
+    Math.max(0, deadlineAt.getTime() - Date.now()),
+  );
+  deadlineTimer.unref?.();
+  let released = false;
+  return {
+    signal: abortController.signal,
+    async assertActive() {
+      throwIfBackupAborted(abortController.signal);
+      if (released) throw new Error("Production backup write freeze was lost.");
+      const rows = await sql`
+        select app_private.assert_production_backup_write_freeze(
+          ${backupId}, ${ownerBackendPid}
+        ) as active
+      `;
+      if (rows[0]?.active !== true)
+        throw new Error("Production backup write freeze was lost or expired.");
+    },
+    async release() {
+      if (released) return;
+      clearTimeout(deadlineTimer);
+      try {
+        const rows = await sql`
+          select app_private.release_production_backup_write_freeze(
+            ${backupId}, ${ownerBackendPid}
+          ) as released
+        `;
+        released = rows[0]?.released === true;
+      } finally {
+        await sql.end({ timeout: 2 });
+      }
+      if (!released)
+        throw new Error(
+          "Production backup write freeze could not be released.",
+        );
+    },
+  };
+}
+
+async function readDatabaseMetadata(databaseUrl, signal) {
+  throwIfBackupAborted(signal);
   const sql = postgres(databaseUrl, {
     max: 1,
     prepare: false,
     connect_timeout: 10,
     idle_timeout: 5,
+    query_timeout: 30,
     ssl: "require",
     onnotice: () => {},
   });
@@ -366,25 +503,28 @@ async function readDatabaseMetadata(databaseUrl) {
     const server = await sql`
       select current_setting('server_version') as server_version
     `;
-    return {
+    const metadata = {
       ...normalizeMigrationVersions(versions),
       server_version: String(server[0]?.server_version ?? "unknown").slice(
         0,
         40,
       ),
     };
+    throwIfBackupAborted(signal);
+    return metadata;
   } finally {
     await sql.end({ timeout: 2 });
   }
 }
 
-async function backupStorage({ input, backupRoot, inventory }) {
+async function backupStorage({ input, backupRoot, inventory, signal }) {
   const objects = [];
   let plaintextBytes = 0;
   let ciphertextBytes = 0;
   const ciphertextDigests = [];
 
   for (const object of inventory.objects) {
+    throwIfBackupAborted(signal);
     const response = await fetch(storageObjectUrl(input.supabaseUrl, object), {
       method: "GET",
       headers: {
@@ -394,6 +534,7 @@ async function backupStorage({ input, backupRoot, inventory }) {
       },
       cache: "no-store",
       redirect: "error",
+      signal,
     });
     if (!response.ok || !response.body)
       throw new Error("Production backup could not read a private object.");
@@ -404,6 +545,7 @@ async function backupStorage({ input, backupRoot, inventory }) {
       outputPath: resolve(backupRoot, "objects", ciphertextFile),
       recipient: input.ageRecipient,
       agePath: input.agePath,
+      signal,
     });
     if (object.bytes !== null && encrypted.plaintext.bytes !== object.bytes)
       throw new Error("Production backup object size did not reconcile.");
@@ -448,7 +590,14 @@ async function encryptBuffer({ bytes, ...options }) {
   return encryptReadable({ readable: Readable.from(bytes), ...options });
 }
 
-async function encryptReadable({ readable, outputPath, recipient, agePath }) {
+async function encryptReadable({
+  readable,
+  outputPath,
+  recipient,
+  agePath,
+  signal,
+}) {
+  throwIfBackupAborted(signal);
   const partialPath = `${outputPath}.partial`;
   const plaintextHash = createHash("sha256");
   let plaintextBytes = 0;
@@ -466,6 +615,7 @@ async function encryptReadable({ readable, outputPath, recipient, agePath }) {
       env: sanitizedToolEnvironment(),
       stdio: ["pipe", "ignore", "pipe"],
       windowsHide: true,
+      signal,
     },
   );
   discard(encryptor.stderr);
@@ -473,7 +623,7 @@ async function encryptReadable({ readable, outputPath, recipient, agePath }) {
 
   try {
     const [, exitCode] = await Promise.all([
-      pipeline(readable, meter, encryptor.stdin),
+      pipeline(readable, meter, encryptor.stdin, { signal }),
       encryptorExitPromise,
     ]);
     if (exitCode !== 0) throw new Error("Production backup encryption failed.");
@@ -491,6 +641,11 @@ async function encryptReadable({ readable, outputPath, recipient, agePath }) {
     rmSync(outputPath, { force: true });
     throw new Error("Production backup encryption failed.");
   }
+}
+
+function throwIfBackupAborted(signal) {
+  if (signal?.aborted)
+    throw new Error("Production backup exceeded its protected freeze window.");
 }
 
 function sanitizedToolEnvironment() {

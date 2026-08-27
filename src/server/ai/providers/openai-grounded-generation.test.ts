@@ -22,7 +22,10 @@ const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_POLICY_MODEL: "fictional-model",
 };
-const budgetGuard = { reserve: vi.fn().mockResolvedValue(undefined) };
+const release = vi.fn().mockResolvedValue(undefined);
+const budgetGuard = {
+  reserve: vi.fn().mockResolvedValue({ release, providerTimeoutMs: 85_000 }),
+};
 
 describe("OpenAI grounded generation provider", () => {
   it("uses a non-stored, tool-free strict structured response request", async () => {
@@ -64,12 +67,14 @@ describe("OpenAI grounded generation provider", () => {
     expect(request.headers).toMatchObject({
       Authorization: `Bearer ${environment.OPENAI_API_KEY}`,
     });
+    expect(request.signal).toBeInstanceOf(AbortSignal);
     expect(JSON.parse(request.body as string)).toMatchObject({
       model: environment.OPENAI_POLICY_MODEL,
       store: false,
       max_output_tokens: 2400,
       text: { format: { type: "json_schema", strict: true } },
     });
+    expect(release).toHaveBeenCalled();
   });
 
   it("rejects provider failures without exposing their body", async () => {

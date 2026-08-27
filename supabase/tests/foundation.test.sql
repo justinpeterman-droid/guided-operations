@@ -1,6 +1,6 @@
 begin;
 
-select plan(181);
+select plan(187);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1653,6 +1653,56 @@ select is(
 );
 
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+
+select set_config('request.jwt.claims', '{}', true);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'policy retrieval denies a current subject whose JWT lacks an auth version'
+);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages_v2('fictional procedure', 8, null)),
+  0,
+  'version-filtered retrieval denies a JWT without an auth version'
+);
+
+select set_config('request.jwt.claims', '{"app_metadata":{"auth_version":"1"}}', true);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'policy retrieval denies a numeric-string auth-version claim'
+);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages_v2('fictional procedure', 8, null)),
+  0,
+  'version-filtered retrieval denies a numeric-string auth-version claim'
+);
+
+select set_config('request.jwt.claims', '{"app_metadata":{"auth_version":999}}', true);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
+  0,
+  'policy retrieval denies a stale auth-version claim after logout-all'
+);
+select is(
+  (select count(*)::integer from api.retrieve_policy_passages_v2('fictional procedure', 8, null)),
+  0,
+  'version-filtered retrieval denies a stale auth-version claim after logout-all'
+);
+
+reset role;
+select set_config(
+  'request.jwt.claims',
+  jsonb_build_object(
+    'app_metadata',
+    jsonb_build_object(
+      'auth_version',
+      (select auth_version from app_private.user_accounts where auth_user_id = '33333333-3333-4333-8333-333333333333')
+    )
+  )::text,
+  true
+);
+set local role authenticated;
 
 select is(
   (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),

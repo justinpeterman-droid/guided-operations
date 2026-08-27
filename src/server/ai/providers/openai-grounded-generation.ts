@@ -105,46 +105,57 @@ export function createOpenAiGroundedGenerationProvider(
     fetch?: OpenAiFetch;
     environment?: Record<string, string | undefined>;
     budgetGuard?: AiRequestBudgetGuard;
+    accountId?: string;
   }> = {},
 ): GroundedGenerationProvider {
   const fetchImplementation = options.fetch ?? fetch;
-  const budgetGuard = options.budgetGuard ?? createAiRequestBudgetGuard();
+  const budgetGuard =
+    options.budgetGuard ?? createAiRequestBudgetGuard(options.accountId ?? "");
 
   return {
     providerKey: "openai-responses-grounded-v1",
     async generate(request) {
-      await budgetGuard.reserve("policy_answer");
-      const environment = getOpenAiPolicyEnvironment(options.environment);
-      const response = await fetchImplementation(
-        "https://api.openai.com/v1/responses",
-        {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${environment.OPENAI_API_KEY}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            model: environment.OPENAI_POLICY_MODEL,
-            store: false,
-            instructions: buildInstructions(),
-            input: buildInput(request),
-            max_output_tokens: Math.min(2400, request.maximumAnswerCharacters),
-            text: {
-              format: {
-                type: "json_schema",
-                name: "grounded_policy_answer",
-                strict: true,
-                schema: answerJsonSchema,
-              },
+      const lease = await budgetGuard.reserve("policy_answer");
+      try {
+        const environment = getOpenAiPolicyEnvironment(options.environment);
+        const response = await fetchImplementation(
+          "https://api.openai.com/v1/responses",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${environment.OPENAI_API_KEY}`,
+              "Content-Type": "application/json",
             },
-          }),
-        },
-      );
+            signal: AbortSignal.timeout(lease.providerTimeoutMs),
+            body: JSON.stringify({
+              model: environment.OPENAI_POLICY_MODEL,
+              store: false,
+              instructions: buildInstructions(),
+              input: buildInput(request),
+              max_output_tokens: Math.min(
+                2400,
+                request.maximumAnswerCharacters,
+              ),
+              text: {
+                format: {
+                  type: "json_schema",
+                  name: "grounded_policy_answer",
+                  strict: true,
+                  schema: answerJsonSchema,
+                },
+              },
+            }),
+          },
+        );
 
-      if (!response.ok) throw new Error("OpenAI policy generation unavailable");
+        if (!response.ok)
+          throw new Error("OpenAI policy generation unavailable");
 
-      const parsedResponse = responseSchema.parse(await response.json());
-      return JSON.parse(parsedResponse.output_text) as unknown;
+        const parsedResponse = responseSchema.parse(await response.json());
+        return JSON.parse(parsedResponse.output_text) as unknown;
+      } finally {
+        await lease.release();
+      }
     },
   };
 }

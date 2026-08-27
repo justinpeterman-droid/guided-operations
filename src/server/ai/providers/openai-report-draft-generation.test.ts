@@ -8,7 +8,10 @@ const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_REPORT_DRAFT_MODEL: "fictional-report-model",
 };
-const budgetGuard = { reserve: vi.fn().mockResolvedValue(undefined) };
+const release = vi.fn().mockResolvedValue(undefined);
+const budgetGuard = {
+  reserve: vi.fn().mockResolvedValue({ release, providerTimeoutMs: 85_000 }),
+};
 const request = {
   source: {
     incidentId: "11111111-1111-4111-8111-111111111111",
@@ -59,6 +62,8 @@ describe("OpenAI report draft generation provider", () => {
       store: false,
       text: { format: { type: "json_schema", strict: true } },
     });
+    expect(init.signal).toBeInstanceOf(AbortSignal);
+    expect(release).toHaveBeenCalled();
   });
 
   it("redacts provider response bodies on failure", async () => {

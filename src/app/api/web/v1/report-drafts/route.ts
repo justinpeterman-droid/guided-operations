@@ -73,7 +73,9 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const workflow = createPersistedReportDraftWorkflow(
-      createOpenAiReportDraftGenerationProvider(),
+      createOpenAiReportDraftGenerationProvider({
+        accountId: session.account.authUserId,
+      }),
       { maximumParagraphs: 12, maximumParagraphCharacters: 2_000 },
     );
     const outcome = await workflow.draftAndStore(

@@ -13,19 +13,35 @@ export type AiBudgetReasonCode =
 
 type Reservation = Readonly<{
   allowed: boolean;
-  reason_code: "reserved" | "budget_exhausted";
+  reason_code:
+    | "reserved"
+    | "budget_exhausted"
+    | "account_monthly_limited"
+    | "account_rate_limited"
+    | "account_concurrency_limited";
+  lease_id: string | null;
 }>;
 
 export type AiBudgetPersistence = Readonly<{
   reserve(
+    accountId: string,
     operation: AiBudgetOperation,
     monthlyRequestCap: number,
     stopPercent: number,
+    accountMonthlySharePercent: number,
+    accountShortWindowMax: number,
+    accountConcurrencyMax: number,
+    leaseSeconds: number,
   ): Promise<Reservation>;
+  release(accountId: string, leaseId: string): Promise<boolean>;
 }>;
 
+export type AiBudgetLease = Readonly<{
+  providerTimeoutMs: number;
+  release(): Promise<void>;
+}>;
 export type AiRequestBudgetGuard = Readonly<{
-  reserve(operation: AiBudgetOperation): Promise<void>;
+  reserve(operation: AiBudgetOperation): Promise<AiBudgetLease>;
 }>;
 
 export class AiBudgetCircuitOpenError extends Error {
@@ -46,25 +62,51 @@ function createPostgresPersistence(databaseUrl: string): AiBudgetPersistence {
   const sql = sharedAiBudgetSql;
 
   return {
-    async reserve(operation, monthlyRequestCap, stopPercent) {
+    async reserve(
+      accountId,
+      operation,
+      monthlyRequestCap,
+      stopPercent,
+      accountMonthlySharePercent,
+      accountShortWindowMax,
+      accountConcurrencyMax,
+      leaseSeconds,
+    ) {
       const rows = await sql<Reservation[]>`
-        select allowed, reason_code
+        select allowed, reason_code, lease_id
         from app_private.reserve_ai_request_budget(
-          ${operation}, ${monthlyRequestCap}, ${stopPercent}
+          ${accountId}::uuid,
+          ${operation},
+          ${monthlyRequestCap},
+          ${stopPercent},
+          ${accountMonthlySharePercent},
+          ${accountShortWindowMax},
+          ${accountConcurrencyMax},
+          ${leaseSeconds}
         )
       `;
       const reservation = rows[0];
       if (!reservation) throw new Error("AI budget reservation unavailable");
       return reservation;
     },
+    async release(accountId, leaseId) {
+      const rows = await sql<{ released: boolean }[]>`
+        select app_private.release_ai_request_budget_lease(
+          ${accountId}::uuid, ${leaseId}::uuid
+        ) as released
+      `;
+      return rows[0]?.released === true;
+    },
   };
 }
 
 /**
  * Reserves a shared database-backed request slot before any provider call.
- * It receives no prompt, answer, actor, document, or operational identifier.
+ * It receives only the authorized opaque account UUID and operation—never a
+ * prompt, answer, personnel field, document, or record identifier.
  */
 export function createAiRequestBudgetGuard(
+  accountId: string,
   options: Readonly<{
     environment?: Record<string, string | undefined>;
     persistence?: AiBudgetPersistence;
@@ -86,17 +128,38 @@ export function createAiRequestBudgetGuard(
       let reservation: Reservation;
       try {
         reservation = await persistence.reserve(
+          accountId,
           operation,
           environment.AI_MONTHLY_REQUEST_CAP,
           environment.AI_BUDGET_STOP_PERCENT,
+          environment.AI_ACCOUNT_MONTHLY_SHARE_PERCENT,
+          environment.AI_ACCOUNT_SHORT_WINDOW_MAX,
+          environment.AI_ACCOUNT_CONCURRENCY_MAX,
+          environment.AI_REQUEST_LEASE_SECONDS,
         );
       } catch {
         throw new AiBudgetCircuitOpenError("budget_check_failed");
       }
 
-      if (!reservation.allowed) {
+      if (!reservation.allowed || !reservation.lease_id) {
         throw new AiBudgetCircuitOpenError("budget_exhausted");
       }
+
+      const leaseId = reservation.lease_id;
+      let released = false;
+      return {
+        providerTimeoutMs: environment.AI_REQUEST_LEASE_SECONDS * 1_000 - 5_000,
+        async release() {
+          if (released) return;
+          try {
+            released = await persistence!.release(accountId, leaseId);
+          } catch {
+            throw new AiBudgetCircuitOpenError("budget_check_failed");
+          }
+          if (!released)
+            throw new AiBudgetCircuitOpenError("budget_check_failed");
+        },
+      };
     },
   };
 }

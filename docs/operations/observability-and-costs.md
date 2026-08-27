@@ -124,16 +124,25 @@ when qualifying an environment.
 - Put model/provider access behind a server-only adapter; browsers never receive
   provider credentials.
 - Every policy-answer and report-draft provider call first reserves one slot in
-  the shared private PostgreSQL monthly counter. The reservation is atomic
-  across Vercel instances and contains only an allowlisted operation and
-  aggregate counts—never an actor, prompt, response, citation, or record ID.
+  the shared private PostgreSQL limiter using the already-authorized opaque
+  account UUID. The atomic reservation enforces both the global monthly ceiling
+  and per-account fair-use controls. It stores no name, employee number, prompt,
+  response, citation, incident, report, or policy content.
 - `AI_GENERATION_ENABLED=false`, a failed budget check, or reaching
   `AI_BUDGET_STOP_PERCENT` of `AI_MONTHLY_REQUEST_CAP` prevents the provider
   request. The API returns an honest temporary-unavailable message while
   authentication, policy browsing, forms, and saved records remain available.
-- Configure per-user and global rate limits, request timeout, retry cap with
-  jitter, concurrency cap, maximum input/retrieval/output tokens, and maximum
-  retrieved chunks.
+- The fail-closed defaults limit one account to 5% of the effective monthly
+  total, six requests per operation per minute, two concurrent provider calls,
+  and a 90-second crash-recovery lease. Configure these with
+  `AI_ACCOUNT_MONTHLY_SHARE_PERCENT`, `AI_ACCOUNT_SHORT_WINDOW_MAX`,
+  `AI_ACCOUNT_CONCURRENCY_MAX`, and `AI_REQUEST_LEASE_SECONDS`; the monthly
+  share cannot exceed 20%, so one account cannot consume the shared total.
+- Provider requests receive an abort deadline five seconds shorter than their
+  database concurrency lease. A still-running request therefore cannot outlive
+  its lease and silently free another concurrency slot.
+- Keep request timeout, retry cap with jitter, maximum input/retrieval/output
+  tokens, and maximum retrieved chunks bounded.
 - Cache only provider-neutral answers that contain no user or operational
   content. Key the cache by corpus version, retrieval configuration, model
   alias, and prompt-template version.

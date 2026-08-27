@@ -134,6 +134,15 @@ migration set. **MANUAL/AUTOMATED:** a protected production job applies it.
    locks and audit events.
 10. Record outcome. Cleanup/contraction migrations occur in a later release.
 
+The per-account AI fair-use migration is intentionally fail-closed during this
+order: its legacy identity-free reservation signature remains callable for
+rolling compatibility but always denies provider capacity. From migration apply
+until the new application is promoted, AI assistance shows the honest
+temporary-unavailable state while authentication, forms, saved records, and
+policy browsing remain available. Schedule and announce this brief maintenance
+window. An application rollback remains safe but keeps AI unavailable; restore
+the fair-use-capable application rather than re-enabling identity-free AI.
+
 ### Protected production workflow
 
 `.github/workflows/production-database.yml` is the only repository automation
