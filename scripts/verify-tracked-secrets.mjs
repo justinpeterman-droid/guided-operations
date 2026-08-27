@@ -1,5 +1,5 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 
 const trackedFiles = execFileSync("git", ["ls-files", "-z"], {
   encoding: "buffer",
@@ -49,7 +49,12 @@ const secretPatterns = [
 const findings = [];
 
 for (const file of trackedFiles) {
-  const content = readFileSync(file, "utf8");
+  // A tracked file can be intentionally deleted in the current worktree before
+  // its deletion is staged. Scan the indexed copy in that case so a local
+  // deletion cannot hide a secret that remains in the candidate commit.
+  const content = existsSync(file)
+    ? readFileSync(file, "utf8")
+    : execFileSync("git", ["show", `:${file}`], { encoding: "utf8" });
 
   for (const { label, pattern } of secretPatterns) {
     pattern.lastIndex = 0;

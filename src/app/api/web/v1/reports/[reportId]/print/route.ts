@@ -41,7 +41,12 @@ export async function POST(
       return error(validation.status, validation.code, requestId);
 
     const result = await recordReportPrintForCurrentSession(
-      { reportId, requestId, ...validation },
+      {
+        reportId,
+        requestId,
+        revisionNumber: validation.revisionNumber,
+        idempotencyKey: validation.idempotencyKey,
+      },
       client,
       incident.INCIDENT_IDEMPOTENCY_HMAC_KEY,
     );

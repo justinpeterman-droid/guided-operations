@@ -11,11 +11,11 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/server/auth/current-session", () => ({
   authorizeCurrentSession: vi.fn(),
 }));
-vi.mock("@/server/incidents/record-report-print", () => ({
-  recordReportPrintForCurrentSession: vi.fn(),
+vi.mock("@/server/incidents/restore-report-revision", () => ({
+  restoreReportRevisionForCurrentSession: vi.fn(),
 }));
-vi.mock("@/server/incidents/report-print-endpoint", () => ({
-  validateReportPrintRequest: vi.fn(),
+vi.mock("@/server/incidents/restore-report-revision-endpoint", () => ({
+  validateReportRestoreRequest: vi.fn(),
 }));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -23,15 +23,15 @@ import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
-import { recordReportPrintForCurrentSession } from "@/server/incidents/record-report-print";
-import { validateReportPrintRequest } from "@/server/incidents/report-print-endpoint";
+import { restoreReportRevisionForCurrentSession } from "@/server/incidents/restore-report-revision";
+import { validateReportRestoreRequest } from "@/server/incidents/restore-report-revision-endpoint";
 
 import { POST } from "./route";
 
 const client = {};
 const reportId = "11111111-1111-4111-8111-111111111111";
 
-describe("POST report print audit", () => {
+describe("POST report revision restore", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.mocked(getAuthServerEnvironment).mockReturnValue({
@@ -50,50 +50,34 @@ describe("POST report print audit", () => {
     } as never);
   });
 
-  it("records the current report revision before returning permission to print", async () => {
-    vi.mocked(validateReportPrintRequest).mockResolvedValue({
+  it("passes only the validated restore command to the strict service boundary", async () => {
+    vi.mocked(validateReportRestoreRequest).mockResolvedValue({
       ok: true,
+      baseRevisionNumber: 2,
+      restoreRevisionNumber: 1,
+      reason: "Fictional restore.",
+      idempotencyKey: "fictional-restore-key-1234",
+    });
+    vi.mocked(restoreReportRevisionForCurrentSession).mockResolvedValue({
+      kind: "restored",
       revisionNumber: 3,
-      idempotencyKey: "fictional-print-key-1234",
     });
-    vi.mocked(recordReportPrintForCurrentSession).mockResolvedValue({
-      kind: "recorded",
-    });
+
     const response = await POST(new Request("https://example.test"), {
       params: Promise.resolve({ reportId }),
     });
+
     expect(response.status).toBe(201);
-    expect(recordReportPrintForCurrentSession).toHaveBeenCalledWith(
+    expect(restoreReportRevisionForCurrentSession).toHaveBeenCalledWith(
       {
         reportId,
-        requestId: expect.any(String),
-        revisionNumber: 3,
-        idempotencyKey: "fictional-print-key-1234",
+        baseRevisionNumber: 2,
+        restoreRevisionNumber: 1,
+        reason: "Fictional restore.",
+        idempotencyKey: "fictional-restore-key-1234",
       },
       client,
       "i".repeat(32),
     );
-    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
-    await expect(response.json()).resolves.toMatchObject({
-      data: { recorded: true },
-    });
-  });
-
-  it("returns a conflict instead of authorizing print for a stale revision", async () => {
-    vi.mocked(validateReportPrintRequest).mockResolvedValue({
-      ok: true,
-      revisionNumber: 2,
-      idempotencyKey: "fictional-print-key-1234",
-    });
-    vi.mocked(recordReportPrintForCurrentSession).mockResolvedValue({
-      kind: "conflict",
-    });
-    const response = await POST(new Request("https://example.test"), {
-      params: Promise.resolve({ reportId }),
-    });
-    expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toMatchObject({
-      error: { code: "revision_conflict" },
-    });
   });
 });

@@ -97,6 +97,7 @@ environment settings, Supabase secrets, or protected GitHub environments.
 | `APP_ORIGIN`                                                                   |          yes |             yes |                               yes | Non-secret exact allowed origin                                                     |
 | `EMPLOYEE_LOOKUP_PEPPER`                                                       | local server |     server only |                       server only | **Secret**; keys employee-number lookup without storing raw values                  |
 | `AUTH_DUMMY_ALIAS`                                                             | local server |     server only |                       server only | **Secret**; fixed timing-defense identity, never browser-visible                    |
+| `AUTH_SESSION_ENCRYPTION_KEY`                                                  | local server |     server only |                       server only | **Secret**; exact random 32-byte base64url key for the encrypted session envelope   |
 | `CSRF_HMAC_KEY`                                                                | local server |     server only |                       server only | **Secret**; environment-specific session-bound CSRF signing key                     |
 | `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                | local server |     server only |                       server only | **Secret**; hashes retry keys without retaining their raw values                    |
 | `AUTH_SIGN_IN_ENABLED`                                                         |          yes |             yes |                               yes | Non-secret fail-closed feature gate; enabled only after auth proof                  |
@@ -139,6 +140,10 @@ JWT so RLS evaluates the user directly.
    pilot.
 9. Validate old-key revocation after rotation. Creating a replacement does not
    necessarily revoke a legacy key.
+10. Never reuse `AUTH_SESSION_ENCRYPTION_KEY` for employee lookup, CSRF,
+    idempotency, backups, or any provider key. Rotation has no overlap window:
+    it invalidates all existing application cookies, so schedule it as a
+    sign-in-again event and verify old cookies fail closed.
 
 The public readiness endpoint validates this complete runtime contract and the
 Supabase public API probe but returns only `ready` or `not_ready`. It never

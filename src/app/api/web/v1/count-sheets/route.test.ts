@@ -85,6 +85,11 @@ describe("POST /api/web/v1/count-sheets", () => {
     const response = await POST(new Request("https://example.test"));
 
     expect(response.status).toBe(201);
+    expect(saveCountSheetForCurrentSession).toHaveBeenCalledWith(
+      command,
+      client,
+      "i".repeat(32),
+    );
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toMatchObject({
       data: {

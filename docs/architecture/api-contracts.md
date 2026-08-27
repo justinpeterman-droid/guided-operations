@@ -91,8 +91,9 @@ prompts, answers, or record content.
 | DELETE /account/sessions/{id}   | Revoke one session                      | CSRF, ownership                                                           |
 | POST /account/logout-all        | Revoke all sessions                     | CSRF, auth-version increment                                              |
 
-Whether renew is a visible route or fully handled by the supported Supabase SSR
-proxy is an implementation detail; the observable contract must remain tested.
+Renewal is handled by the server-only encrypted-session proxy. It may rotate the
+Supabase refresh token and rewrite only authenticated ciphertext cookies; no
+token, alias, or provider user body is an observable API contract.
 
 ### Workspace and staff
 

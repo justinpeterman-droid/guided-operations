@@ -16,6 +16,7 @@ function validEnvironment(overrides: Record<string, string | undefined> = {}) {
     EMPLOYEE_LOOKUP_PEPPER: "e".repeat(32),
     AUTH_DUMMY_ALIAS: "timing-defense@fictional.invalid",
     CSRF_HMAC_KEY: "c".repeat(32),
+    AUTH_SESSION_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     AUTH_SIGN_IN_ENABLED: "false",
     SAFE_OPERATIONAL_LOGGING_ENABLED: "false",
     INCIDENT_IDEMPOTENCY_HMAC_KEY: "i".repeat(32),
@@ -100,6 +101,15 @@ describe("application environment readiness", () => {
         validEnvironment({
           INCIDENT_IDEMPOTENCY_HMAC_KEY: "c".repeat(32),
         }),
+      ),
+    ).toThrow("Security keys must be unique per purpose.");
+  });
+
+  it("rejects reuse of the session encryption key for CSRF signing", () => {
+    const reused = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({ CSRF_HMAC_KEY: reused }),
       ),
     ).toThrow("Security keys must be unique per purpose.");
   });

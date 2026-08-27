@@ -23,13 +23,14 @@ sequenceDiagram
   A-->>N: access/refresh session or generic failure
   N->>D: verify active account, staff state, role, forced-change state
   N->>AU: append content-free success/failure event
-  N-->>U: Secure HttpOnly cookies + generic response
+  N-->>U: Encrypted HttpOnly session cookies + generic response
 ```
 
 Rules:
 
 - Resolution and Auth failure use a comparable path and one generic message.
-- The internal Auth alias is never returned to the browser or logged.
+- The internal Auth alias, provider user object, and raw access/refresh tokens
+  are never returned to the browser or logged.
 - Public signup and user-supplied email/phone identifiers are unavailable.
 - The browser receives no service credential and stores no token in
   localStorage.
@@ -37,8 +38,9 @@ Rules:
 
 ## 2. Authenticated page read
 
-1. Next.js refreshes/verifies the cookie session using the supported SSR Auth
-   flow.
+1. Next.js decrypts the server-managed session cookie, refreshes it through the
+   Supabase JavaScript client when required, verifies claims, and re-encrypts
+   any rotated session before the request reaches application code.
 2. The DAL loads the current application account by Auth user ID and rejects
    inactive, locked, or forced-change states where appropriate.
 3. The DAL calls a purpose-specific query/RPC using the request identity.

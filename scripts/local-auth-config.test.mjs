@@ -40,5 +40,13 @@ describe("local private password sign-in configuration", () => {
       settingInSection(config, "auth.email", "enable_signup"),
       "true",
     );
+    assert.equal(
+      settingInSection(config, "auth.hook.custom_access_token", "enabled"),
+      "true",
+    );
+    assert.match(
+      sectionBody(config, "auth.hook.custom_access_token") ?? "",
+      /^uri\s*=\s*"pg-functions:\/\/postgres\/app_private\/custom_access_token_hook"\s*$/m,
+    );
   });
 });

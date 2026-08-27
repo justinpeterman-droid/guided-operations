@@ -42,7 +42,12 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  page.on("requestfailed", (request) => {
+    const failure = request.failure()?.errorText ?? "unknown network failure";
+    if (!failure.includes("ERR_ABORTED")) {
+      failedRequests.push(`${request.url()}: ${failure}`);
+    }
+  });
   await page.addInitScript(() => {
     window.print = () => {
       document.documentElement.dataset.printInvoked = "true";
@@ -54,6 +59,23 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
   await page.getByLabel("Passcode").fill(officer.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
+
+  const authCookies = (await page.context().cookies())
+    .filter((cookie) => cookie.name.startsWith("go-auth-session"))
+    .sort((left, right) => left.name.localeCompare(right.name));
+  expect(authCookies.length).toBeGreaterThan(0);
+  expect(authCookies.every((cookie) => cookie.httpOnly)).toBe(true);
+  expect(authCookies.every((cookie) => cookie.sameSite === "Lax")).toBe(true);
+  expect(authCookies.every((cookie) => !cookie.secure)).toBe(true);
+  const encryptedSession = authCookies.map((cookie) => cookie.value).join("");
+  expect(encryptedSession).toMatch(/^v1\./);
+  expect(encryptedSession).not.toContain("eyJ");
+  expect(encryptedSession).not.toContain("access_token");
+  expect(encryptedSession).not.toContain("refresh_token");
+  expect(encryptedSession).not.toContain("@");
+  expect(await page.evaluate(() => document.cookie)).not.toContain(
+    "go-auth-session",
+  );
 
   await page.goto("/count-sheet");
   await expect(
@@ -101,6 +123,11 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
   await page.goto("/account");
   await page.getByRole("button", { name: "Sign out of this browser" }).click();
   await page.waitForURL("**/login");
+  expect(
+    (await page.context().cookies()).filter((cookie) =>
+      cookie.name.startsWith("go-auth-session"),
+    ),
+  ).toEqual([]);
   await page.goto("/count-sheet");
   await expect(
     page.getByRole("heading", { name: "Sign in to use the Count Sheet." }),

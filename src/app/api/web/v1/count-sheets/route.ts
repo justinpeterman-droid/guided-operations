@@ -67,7 +67,14 @@ export async function POST(request: Request): Promise<Response> {
       return error(validated.status, validated.code, requestId);
 
     const saved = await saveCountSheetForCurrentSession(
-      validated,
+      {
+        workDate: validated.workDate,
+        baseRevisionNumber: validated.baseRevisionNumber,
+        structure: validated.structure,
+        payload: validated.payload,
+        reason: validated.reason,
+        idempotencyKey: validated.idempotencyKey,
+      },
       client,
       incident.INCIDENT_IDEMPOTENCY_HMAC_KEY,
     );

@@ -1,5 +1,7 @@
 import "server-only";
 
+import { isDeepStrictEqual } from "node:util";
+
 import { z } from "zod";
 
 import {
@@ -153,7 +155,7 @@ export async function getCurrentShiftCountSheet(
       row.payload as CountSheetPayload,
     );
     const validation = calculateCountTotals(structure, payload);
-    if (JSON.stringify(validation) !== JSON.stringify(row.validation))
+    if (!isDeepStrictEqual(validation, row.validation))
       return { kind: "unavailable" };
 
     return {

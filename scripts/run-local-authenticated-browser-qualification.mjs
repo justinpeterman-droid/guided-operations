@@ -18,6 +18,12 @@ const playwrightCli = resolve(
   "test",
   "cli.js",
 );
+const vitestCli = resolve(
+  repositoryRoot,
+  "node_modules",
+  "vitest",
+  "vitest.mjs",
+);
 
 function command(entry, args, options = {}) {
   return spawnSync(process.execPath, [entry, ...args], {
@@ -70,6 +76,7 @@ if (target) {
     APP_ENV: "development",
     APP_ORIGIN: "http://127.0.0.1:3109",
     AUTH_DUMMY_ALIAS: "fictional-dummy-local@auth.invalid",
+    AUTH_SESSION_ENCRYPTION_KEY: "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA",
     AUTH_SIGN_IN_ENABLED: "true",
     CSRF_HMAC_KEY: "fictional-local-only-csrf-hmac-key-qualification-v1",
     EMPLOYEE_LOOKUP_PEPPER:
@@ -77,6 +84,7 @@ if (target) {
     INCIDENT_IDEMPOTENCY_HMAC_KEY:
       "fictional-local-only-incident-idempotency-key-qualification-v1",
     LOCAL_AUTH_BROWSER_QUALIFICATION_ENABLED: "true",
+    LOCAL_SESSION_INTEGRATION_ENABLED: "true",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: target.publishableKey,
     NEXT_PUBLIC_SUPABASE_URL: target.apiUrl,
     NEXT_TELEMETRY_DISABLED: "1",
@@ -94,6 +102,15 @@ if (target) {
   let testStatus = 1;
   let cleanupStatus = 1;
   try {
+    resetLocalDatabase();
+    const sessionResult = command(
+      vitestCli,
+      ["run", "src/lib/supabase/local-encrypted-session.integration.test.ts"],
+      { env: qualificationEnvironment },
+    );
+    if (sessionResult.status !== 0) {
+      throw new Error("The encrypted local session integration check failed.");
+    }
     resetLocalDatabase();
     const result = command(
       playwrightCli,

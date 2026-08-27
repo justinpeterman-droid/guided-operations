@@ -63,6 +63,16 @@ describe("POST Count Sheet print audit", () => {
       params: Promise.resolve({ recordId }),
     });
     expect(response.status).toBe(201);
+    expect(recordCountSheetPrintForCurrentSession).toHaveBeenCalledWith(
+      {
+        recordId,
+        requestId: expect.any(String),
+        revisionNumber: 3,
+        idempotencyKey: "fictional-print-key-1234",
+      },
+      client,
+      "i".repeat(32),
+    );
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toMatchObject({
       data: { recorded: true },

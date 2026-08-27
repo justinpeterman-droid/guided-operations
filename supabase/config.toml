@@ -282,7 +282,7 @@ inactivity_timeout = "30m"
 # uri = "pg-functions://postgres/auth/before-user-created-hook"
 
 # This hook runs before a token is issued and allows you to add additional claims based on the authentication method used.
-# [auth.hook.custom_access_token]
+[auth.hook.custom_access_token]
 enabled = true
 uri = "pg-functions://postgres/app_private/custom_access_token_hook"
 

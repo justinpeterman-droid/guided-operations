@@ -19,18 +19,21 @@ revocation paths, protected account lifecycle with purpose-bound administrator
 step-up, narrow private RPCs, append-only product records, private Storage
 negative tests, a session-bound content-verified policy PDF reader,
 citation-validated AI routes, complete runtime readiness, secret scanning, and
-strict allowlisted core operational events. Local fictional
-database-plus-Storage recovery is automated and tested.
+strict allowlisted core operational events. Supabase access/refresh sessions are
+now held only by server code inside an authenticated encrypted HttpOnly cookie
+envelope; a fictional browser test proves the alias and raw tokens are not
+browser-readable. Local fictional database-plus-Storage recovery is automated
+and tested.
 
 These controls are not hosted security acceptance. The shared Development
 Supabase project remains empty and behind the repository migration head; no
-hosted account exists. The current candidate still needs alias/recovery
-non-exposure proof, cookie refresh/rotation/expiry and revocation tests,
-complete direct RLS/API/Storage negatives, signed-in browser qualification,
-real-corpus security evaluation, hosted recovery, monitoring/alerts,
-retention/deletion proof, and an isolated Production environment. A missing
-target control is a gap; code that claims to establish a boundary but fails to
-do so is a security finding.
+hosted account exists. The current candidate still needs hosted
+recovery/email/log/analytics non-exposure proof, cookie expiry and
+revoked-session tests, complete hosted RLS/API/Storage negatives, full
+officer/administrator browser qualification, real-corpus security evaluation,
+hosted recovery, monitoring/alerts, retention/deletion proof, and an isolated
+Production environment. A missing target control is a gap; code that claims to
+establish a boundary but fails to do so is a security finding.
 
 The target is a private, internet-reachable web application:
 
@@ -102,8 +105,15 @@ payload, signed URL, nor AI answer is an authority.
 - Pre-auth account resolution is server-only through a dedicated execute-only
   function/role; it must not use a browser-callable endpoint or the broad
   service role.
-- Session tokens live only in Secure, HttpOnly, SameSite cookies managed on the
-  server. Do not place tokens in localStorage or application logs.
+- Raw session tokens and the synthetic Auth alias live only in server-managed
+  authenticated ciphertext. The browser receives versioned HttpOnly,
+  SameSite=Lax cookies that are Secure outside explicit local development/test;
+  it never receives a decodable access token, refresh token, provider user
+  object, or alias. Do not place those values in localStorage or logs.
+- The session-cookie encryption key is a dedicated 32-byte random secret. It is
+  never reused for lookup, CSRF, or idempotency. Rotation invalidates every
+  existing application cookie and therefore requires a planned sign-in-again
+  event.
 - Session refresh, rotation, expiry, logout-all, disabled-account behavior, and
   credential-change revocation require integration tests.
 - Administrative or destructive actions require a recent, purpose-bound step-up

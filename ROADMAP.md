@@ -75,8 +75,10 @@ The hosted details and limitations are recorded in
 1. The Development Supabase project does not have the newest forward migrations
    or any hosted fictional officer/admin account. A separate isolated live
    Supabase project is still required before release.
-2. Authentication and authorization need hosted fictional end-to-end proof:
-   alias non-exposure, real cookie refresh/rotation/expiry, timing bounds,
+2. Authentication and authorization have local fictional proof for encrypted
+   alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
+   Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
+   still required for recovery/email configuration, expiry, timing bounds,
    revoked-session behavior, direct RLS/API/Storage negatives, and full
    officer/admin browser flows.
 3. The officer product slice needs protected-browser completion and owner
@@ -223,10 +225,10 @@ open**
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap
 
-Status: **private lifecycle, local password-provider configuration, and a
-guarded fictional officer browser runner are built; completing the browser run,
-hosted proof, and ADR-0003 security acceptance remain required before production
-login**
+Status: **private lifecycle, local password-provider configuration, encrypted
+server-only sessions, and the fictional officer sign-in/save/reopen/print/logout
+browser run are passing; hosted proof and ADR-0003 security acceptance remain
+required before production login**
 
 ### Steps
 
@@ -247,10 +249,11 @@ login**
 6. Implement separate server-only clients for routine user requests and narrow
    administrative Auth operations. Routine requests must carry the user's
    identity so RLS can evaluate it.
-7. Implement SSR Secure/HttpOnly/SameSite cookies, refresh rotation, expiry,
-   logout, logout-all, reset revocation, disabled-account checks, safe
-   redirects, CSRF/origin checks, and `no-store` behavior for authenticated
-   pages.
+7. Implement server-only encrypted Secure/HttpOnly/SameSite cookies, refresh
+   rotation, expiry, logout, logout-all, reset revocation, disabled-account
+   checks, safe redirects, CSRF/origin checks, and `no-store` behavior for
+   authenticated pages. The encrypted cookie, local rotation/logout, CSRF, and
+   no-store portions are implemented; hosted expiry/revocation remains.
 8. Implement default-deny operation-specific RLS/Storage policies and server
    authorization for officer, administrator, disabled, missing-identity,
    cross-user, and cross-role cases.

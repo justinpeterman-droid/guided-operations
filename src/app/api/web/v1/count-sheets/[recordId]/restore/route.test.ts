@@ -66,6 +66,17 @@ describe("POST Count Sheet revision restore", () => {
       params: Promise.resolve({ recordId }),
     });
     expect(response.status).toBe(201);
+    expect(restoreCountSheetRevisionForCurrentSession).toHaveBeenCalledWith(
+      {
+        recordId,
+        baseRevisionNumber: 2,
+        restoreRevisionNumber: 1,
+        reason: "Fictional restore.",
+        idempotencyKey: "fictional-restore-key-1234",
+      },
+      client,
+      "i".repeat(32),
+    );
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
     await expect(response.json()).resolves.toMatchObject({
       data: { revisionNumber: 3 },

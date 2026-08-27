@@ -40,7 +40,13 @@ export async function POST(
       return error(validation.status, validation.code, requestId);
 
     const result = await restoreCountSheetRevisionForCurrentSession(
-      { recordId, ...validation },
+      {
+        recordId,
+        baseRevisionNumber: validation.baseRevisionNumber,
+        restoreRevisionNumber: validation.restoreRevisionNumber,
+        reason: validation.reason,
+        idempotencyKey: validation.idempotencyKey,
+      },
       client,
       incident.INCIDENT_IDEMPOTENCY_HMAC_KEY,
     );

@@ -153,6 +153,10 @@ Pause and report a blocker instead of guessing when work requires:
       temporary account was deleted. See ADR-0003 (2026-08-25).
 - [ ] Prove the internal alias is absent from UI, APIs, redirects, recovery,
       email, logs, analytics, cookies, and browser storage.
+  - [x] Local fictional Auth and browser qualification proves the alias and raw
+        access/refresh values are absent from the encrypted cookie,
+        `document.cookie`, and browser storage; hosted recovery/email/log review
+        remains open.
 - [ ] Threat-model enumeration, timing, lockout denial, credential stuffing,
       token theft, Auth-admin key misuse, bootstrap, reset, role changes, and
       last-admin safety.
@@ -161,7 +165,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add generated Data API types and an exact local migration drift check.
 - [ ] Add least-privilege routine and administrative server clients.
 - [ ] Implement sign-in with generic failures and layered throttling/lockout.
-- [ ] Implement Secure/HttpOnly/SameSite session cookies and safe redirects.
+- [x] Implement server-only authenticated encrypted session cookies that are
+      HttpOnly/SameSite=Lax and Secure outside explicit local development/test;
+      local tamper, chunk, alias/token non-exposure, safe redirect, and browser
+      tests pass. Hosted qualification remains a separate gate.
 - [ ] Implement refresh rotation, expiry, logout, logout-all, forced temporary
       passcode change, reset revocation, and disabled-account behavior. Local
       forced-change completion is implemented and passes a clean local

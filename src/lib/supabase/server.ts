@@ -1,34 +1,38 @@
 import "server-only";
 
-import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+import { getAuthSessionEnvironment } from "@/lib/env/auth-session";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { getPublicSupabaseEnvironment } from "@/lib/env/supabase-public";
+import { createEncryptedSupabaseSessionStorage } from "@/server/auth/encrypted-supabase-session-storage";
 
-import type { Database } from "./database.generated";
+import { createSupabaseSessionClient } from "./session-client";
 
 export async function createSupabaseServerClient() {
   const environment = getPublicSupabaseEnvironment();
+  const authSessionEnvironment = getAuthSessionEnvironment();
+  const runtimeEnvironment = getRuntimeEnvironment();
   const cookieStore = await cookies();
 
-  return createServerClient<Database>(
-    environment.NEXT_PUBLIC_SUPABASE_URL,
-    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet) {
-          try {
-            for (const { name, value, options } of cookiesToSet) {
-              cookieStore.set(name, value, options);
-            }
-          } catch {
-            // Server Components cannot write cookies. The session proxy will own refreshes.
-          }
-        },
+  const storage = createEncryptedSupabaseSessionStorage({
+    encryptionKey: authSessionEnvironment.AUTH_SESSION_ENCRYPTION_KEY,
+    secure:
+      runtimeEnvironment.APP_ENV !== "development" &&
+      runtimeEnvironment.APP_ENV !== "test",
+    cookies: {
+      readAll: () => cookieStore.getAll(),
+      writeAll: (changes) => {
+        for (const { name, value, options } of changes) {
+          cookieStore.set(name, value, options);
+        }
       },
     },
+  });
+
+  return createSupabaseSessionClient(
+    environment.NEXT_PUBLIC_SUPABASE_URL,
+    environment.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY,
+    storage,
   );
 }

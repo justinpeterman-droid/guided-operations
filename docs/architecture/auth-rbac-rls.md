@@ -35,7 +35,9 @@ The preferred spike is a **server-only Auth alias bridge**:
 4. For a missing row, continue through a constant/generic dummy Auth path.
 5. Call Supabase Auth signInWithPassword server-side using the internal alias
    and submitted PIN-like secret.
-6. Establish the supported SSR cookie session.
+6. Persist the Supabase session only in server-managed encrypted cookie storage;
+   the browser receives authenticated ciphertext, not Auth tokens or the
+   provider user object.
 7. Load current account status, role, forced-change state, and auth_version.
 8. Return one generic failure for unknown account, wrong secret, inactive
    account, or disallowed state.
@@ -57,8 +59,8 @@ hosted project and proving refresh/revocation remain required integration gates.
 
 The spike must prove that a non-deliverable/random alias is supported by the
 hosted Auth lifecycle, remains invisible, does not trigger outbound mail, and
-works with SSR refresh/revocation. If it cannot, use the custom opaque-session
-option in ADR-0003 rather than weakening the boundary.
+works with encrypted-cookie refresh/revocation. If it cannot, use the custom
+opaque-session option in ADR-0003 rather than weakening the boundary.
 
 ## Credential policy
 
@@ -123,13 +125,22 @@ the lifecycle outcome and opaque target ID.
 
 ## Session design
 
-- Use the current supported Supabase SSR package/flow.
-- Access and refresh credentials live in Secure, HttpOnly, SameSite=Lax cookies.
+- Use the server-only Supabase JavaScript client with a repository-owned custom
+  storage adapter. Do not create a browser Supabase Auth client.
+- Access and refresh credentials live only inside a versioned authenticated
+  encrypted envelope. Browser cookies contain only ciphertext and are HttpOnly,
+  SameSite=Lax, and Secure outside explicit local development/test.
 - Cookie Domain is omitted unless a reviewed cross-subdomain requirement exists.
-- Cookie Path is as narrow as compatible with the framework/Auth refresh flow.
+- Cookie Path is `/` because every protected application route shares the same
+  session and proxy refresh boundary.
 - Never use localStorage for Auth tokens.
-- A server proxy/refresh boundary verifies tokens using the provider-recommended
-  claims/user call; it is a convenience gate, not the sole authorization layer.
+- A server proxy/refresh boundary decrypts the session, lets the provider client
+  refresh it when necessary, verifies claims using `getClaims()`, and
+  re-encrypts any rotated value. It is a convenience gate, not the sole
+  authorization layer.
+- Malformed, mixed, oversized, noncontiguous, or authentication-failed cookie
+  envelopes are expired and treated as signed out. Rotating the dedicated
+  encryption key intentionally signs out every browser.
 - Logout, refresh rotation/reuse behavior, expiry, disabled account, logout-all,
   and multi-device revocation receive browser integration tests.
 - Authenticated pages and APIs are private/no-store.

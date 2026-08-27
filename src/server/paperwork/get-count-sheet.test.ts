@@ -88,6 +88,22 @@ describe("getCurrentShiftCountSheet", () => {
     });
   });
 
+  it("accepts equivalent database validation regardless of JSON object key order", async () => {
+    const reorderedValidation = Object.fromEntries(
+      Object.entries(validation).reverse(),
+    );
+
+    await expect(
+      getCurrentShiftCountSheet(
+        "2026-08-26",
+        client({ records: [{ ...detail, validation: reorderedValidation }] }),
+      ),
+    ).resolves.toMatchObject({
+      kind: "found",
+      countSheet: { revisionNumber: 2 },
+    });
+  });
+
   it("returns a blank approved sheet when the shift has no record", async () => {
     await expect(
       getCurrentShiftCountSheet("2026-08-26", client({ summaries: [] })),

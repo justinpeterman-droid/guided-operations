@@ -28,7 +28,9 @@ security approval:
   non-exposed `app_private` schema.
 - Map the account to a random, non-user-facing Auth alias.
 - Call Supabase Auth password sign-in on the server using that alias.
-- Use the supported SSR access/refresh cookie flow.
+- Use the server-only Supabase JavaScript client with custom encrypted session
+  storage. Raw access/refresh values and the provider user object remain on the
+  server; the browser receives only an authenticated ciphertext envelope.
 - Keep application role, status, forced-change state, and auth_version in
   `app_private.user_accounts` and recheck them server-side.
 - Disable public signup and generic email/phone recovery.
@@ -52,14 +54,14 @@ strength or exposing aliases.
 | User experience      | Meets employee number + PIN-like requirement |
 | Supabase integration | Strong after adapter                         |
 | Security complexity  | Medium-high                                  |
-| Custom cryptography  | Low                                          |
+| Custom cryptography  | Narrow AES-GCM cookie envelope               |
 | Status               | Preferred, requires spike                    |
 
 Pros:
 
 - Supabase owns password hashing and session rotation.
 - Works with Auth JWT identity and RLS.
-- Browser never learns the synthetic alias.
+- Browser never learns the synthetic alias or receives a decodable Auth token.
 - Preserves the practical login UI.
 
 Cons:
@@ -68,6 +70,8 @@ Cons:
 - Auth admin API secret is powerful and must be isolated.
 - Generic recovery/email flows do not naturally fit.
 - JWT revocation is not instantaneous without current account checks/short TTL.
+- The application owns encryption-key custody, chunk compatibility, and a
+  planned sign-in-again event whenever that key rotates.
 
 ### Option B: Custom employee credential and opaque session tables
 
@@ -189,7 +193,7 @@ Observed results:
   any development or live account exists.
 
 This evidence supports Option A but does not accept it. It does not yet prove
-the required SSR cookie lifecycle, recovery/email absence, rate limits,
+the required hosted cookie lifecycle, recovery/email absence, rate limits,
 enumeration timing bounds, Auth-admin isolation, bootstrap ceremony, or RLS
 authorization matrix.
 
@@ -206,7 +210,7 @@ This is implementation evidence only: the browser sign-in route exists but fails
 closed with a 404 unless the server-only `AUTH_SIGN_IN_ENABLED` setting is
 explicitly enabled. There is no hosted account, public recovery path, or
 operational data. Hosted integration, timing measurement, trusted
-proxy/device-subject derivation, SSR cookie lifecycle, reset/bootstrap, and
+proxy/device-subject derivation, cookie expiry/revocation, reset/bootstrap, and
 authorization/RLS negative tests remain open.
 
 The pre-auth request helper also converts the Vercel-managed client-network
@@ -248,22 +252,48 @@ cover the local sign-out success, failed, and denied cases; focused route tests
 cover global revocation success and denied cases. Reset, disabled-account, and
 role-change revocation proof remain separate acceptance requirements.
 
+## Encrypted session evidence — 2026-08-27
+
+Supabase requires the synthetic email-like alias in the Auth access-token
+claims, so removing the alias from that JWT is not a supported solution. The
+repository therefore replaced the browser-readable SSR cookie representation
+with a server-only `@supabase/supabase-js` client and custom storage backed by a
+versioned AES-256-GCM envelope. The encryption key is an exact 32-byte base64url
+secret; every write uses a fresh 96-bit nonce and authenticated associated data.
+Cookies are bounded, strictly ordered when chunked, HttpOnly, SameSite=Lax,
+Secure outside explicit local development/test, and fail closed by expiring all
+session chunks after malformed or unauthenticated input.
+
+The local integration test signs in a fictional Shift A officer through the real
+local Auth provider, verifies provider claims and current-account RLS authority,
+forces refresh-token rotation, and proves the browser-cookie representation
+contains neither alias nor access/refresh token. The real browser qualification
+additionally proves `document.cookie` cannot read the session,
+saves/reopens/prints a fictional Count Sheet, signs out, observes all session
+chunks removed, and is denied on the next protected request. Public signup
+remains disabled. No real identity or operational data is used.
+
+This closes the local alias-in-cookie finding and preserves employee-number
+sign-in and RLS identity. It does not close the separate hosted gates for
+recovery/email configuration, expiry, global revocation, disabled/reset/role
+invalidation, multi-device behavior, or protected-Preview qualification.
+
 ## Threat model — 2026-08-25
 
 This threat model was written for the no-data foundation. It remains historical
 evidence but does not qualify the current real-data Production target without
 the additional acceptance evidence required by this ADR and the release gates.
 
-| Threat                                            | Required control                                                                                                                         | Required evidence before acceptance                                                                                  |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Employee-number enumeration or timing comparison  | Keyed lookup digest, a dummy password-auth path for unknown accounts, generic external responses, and bounded timing tests               | Known/unknown/disabled/locked cases have indistinguishable public responses and measured bounded timing difference   |
-| Credential stuffing and lockout denial of service | Account, device, network, and global rate limits; short bounded lockouts; administrator unlock only after step-up                        | Direct route tests cover each dimension, retry guidance, lock expiry, unlock, and distributed failure behavior       |
-| Stolen refresh token or stale JWT                 | Secure HttpOnly SameSite cookies, provider refresh rotation, short expiry, and current `auth_version`/status check on protected requests | Browser tests prove rotation, logout, logout-all, reset/status/role-change invalidation, and rejected stale sessions |
-| Auth-admin secret misuse                          | Separate server-only admin adapter, no routine request access, purpose-bound administrator step-up, audit allowlist                      | Static secret scan, adapter-boundary tests, authorization tests, and a denied direct routine-DAL attempt             |
-| Alias disclosure or public recovery               | Alias remains server-only; no provider user/error forwarding; no recovery UI or product call; public signup disabled                     | Browser/network/log/audit/redirect checks and a hosted Auth configuration review                                     |
-| Bootstrap or last-admin loss                      | Transactional zero-account bootstrap, generated temporary secret, one-time protected delivery, lifecycle trigger, and last-admin check   | Rollback-only database tests plus first-admin and last-admin integration tests without credentials in logs           |
-| Cross-account/role data access                    | Current-account server gate plus operation-specific RLS and narrow grants                                                                | Direct database/API/Storage negative matrix for officer, administrator, disabled, missing, and unrelated identities  |
-| CSRF and unsafe redirects                         | Exact Origin/Fetch-Metadata validation, CSRF token, closed schemas, and allow-listed redirects                                           | Route/browser tests for cross-site POST, missing/invalid token, and hostile redirect targets                         |
+| Threat                                            | Required control                                                                                                                                        | Required evidence before acceptance                                                                                  |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Employee-number enumeration or timing comparison  | Keyed lookup digest, a dummy password-auth path for unknown accounts, generic external responses, and bounded timing tests                              | Known/unknown/disabled/locked cases have indistinguishable public responses and measured bounded timing difference   |
+| Credential stuffing and lockout denial of service | Account, device, network, and global rate limits; short bounded lockouts; administrator unlock only after step-up                                       | Direct route tests cover each dimension, retry guidance, lock expiry, unlock, and distributed failure behavior       |
+| Stolen refresh token or stale JWT                 | Server-only encrypted HttpOnly SameSite cookies, provider refresh rotation, short expiry, and current `auth_version`/status check on protected requests | Browser tests prove rotation, logout, logout-all, reset/status/role-change invalidation, and rejected stale sessions |
+| Auth-admin secret misuse                          | Separate server-only admin adapter, no routine request access, purpose-bound administrator step-up, audit allowlist                                     | Static secret scan, adapter-boundary tests, authorization tests, and a denied direct routine-DAL attempt             |
+| Alias disclosure or public recovery               | Alias remains server-only; no provider user/error forwarding; no recovery UI or product call; public signup disabled                                    | Browser/network/log/audit/redirect checks and a hosted Auth configuration review                                     |
+| Bootstrap or last-admin loss                      | Transactional zero-account bootstrap, generated temporary secret, one-time protected delivery, lifecycle trigger, and last-admin check                  | Rollback-only database tests plus first-admin and last-admin integration tests without credentials in logs           |
+| Cross-account/role data access                    | Current-account server gate plus operation-specific RLS and narrow grants                                                                               | Direct database/API/Storage negative matrix for officer, administrator, disabled, missing, and unrelated identities  |
+| CSRF and unsafe redirects                         | Exact Origin/Fetch-Metadata validation, CSRF token, closed schemas, and allow-listed redirects                                                          | Route/browser tests for cross-site POST, missing/invalid token, and hostile redirect targets                         |
 
 The lifecycle trigger and current-account gate now cover only portions of the
 bootstrap, stale-session, and last-admin controls. They do not satisfy this
@@ -285,9 +315,18 @@ threat model by themselves.
 1. [ ] Decide final secret length, alphabet, normalization, and admin MFA
        requirement.
 2. [x] Spike random internal aliases on a disposable hosted Supabase project.
-3. [ ] Prove no email/recovery/alias exposure and document account lifecycle.
-4. [ ] Implement SSR cookies and session revocation tests in a vertical slice.
+3. [ ] Complete hosted email/recovery/alias non-exposure proof and document the
+       hosted account lifecycle. Local cookie/browser non-exposure is proven.
+4. [ ] Complete hosted expiry and revocation qualification. The encrypted
+       server-only cookie, local refresh rotation, local sign-out, and protected
+       fictional vertical slice are implemented and passing.
 5. [x] Threat-model enumeration, lockout denial, Auth admin secret, and
        bootstrap requirements are recorded above. Implement and test each listed
        control before acceptance.
 6. [ ] Obtain product/security acceptance or record Option B as a new ADR.
+
+## References
+
+- [Supabase JavaScript Auth storage](https://supabase.com/docs/reference/javascript/auth)
+- [Supabase Custom Access Token Hook required claims](https://supabase.com/docs/guides/auth/auth-hooks/custom-access-token-hook)
+- [Supabase user sessions and refresh rotation](https://supabase.com/docs/guides/auth/sessions)

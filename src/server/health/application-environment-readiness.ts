@@ -3,6 +3,7 @@ import "server-only";
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getAuthSessionEnvironment } from "@/lib/env/auth-session";
 import { getAiBudgetEnvironment } from "@/lib/env/ai-budget";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
@@ -31,6 +32,7 @@ export function assertApplicationEnvironmentReadiness(
   getAiBudgetEnvironment(environment);
   const publicSupabase = getPublicSupabaseEnvironment(environment);
   const auth = getAuthServerEnvironment(environment);
+  const authSession = getAuthSessionEnvironment(environment);
   const incident = getIncidentServerEnvironment(environment);
   const observability = getObservabilityEnvironment(environment);
   getOpenAiPolicyEnvironment(environment);
@@ -54,9 +56,10 @@ export function assertApplicationEnvironmentReadiness(
   const dedicatedSecrets = new Set([
     auth.EMPLOYEE_LOOKUP_PEPPER,
     auth.CSRF_HMAC_KEY,
+    authSession.AUTH_SESSION_ENCRYPTION_KEY,
     incident.INCIDENT_IDEMPOTENCY_HMAC_KEY,
   ]);
-  if (dedicatedSecrets.size !== 3) {
+  if (dedicatedSecrets.size !== 4) {
     throw new Error("Security keys must be unique per purpose.");
   }
 
