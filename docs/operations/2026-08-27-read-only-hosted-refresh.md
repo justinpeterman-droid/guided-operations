@@ -8,13 +8,16 @@ planning evidence only and does not authorize deployment or real-data use.
 
 - Repository access was verified for the private
   `justinpeterman-droid/guided-operations` repository.
-- The inspected local branch head was `c8a1e9292172219bf52f2f3feb6bc55a4751fd81`
+- The inspected local branch head is `402fa802d89849327ffbc20b22cd012a04598dcd`
   on `codex/production-readiness`.
 - The remote branch remained at `823d44a7388154504f14dc3e80f0cd2cf34a2e33`. The
-  local head was not pushed because its security review found an unresolved
-  high-severity report attribution issue.
+  local head has not yet been pushed.
 - Web quality, database quality, and recovery rehearsal were green on the remote
   head. Those runs do not qualify the newer unpushed local head.
+- The cross-officer report-finalization issue was reproduced and fixed. The
+  exact clean local head passed the web gate, 442 database tests, database lint,
+  generated-type verification, fictional-data inventory, tracked-secret scan,
+  and dependency audit.
 
 ## Vercel state
 
@@ -74,8 +77,12 @@ value was read, copied, or written.
 - `guided-operations` and `guided-operations-auth-spike` were `ACTIVE_HEALTHY`,
   in `us-east-1`, on PostgreSQL 17.
 - An older unrelated project was inactive.
-- This checkout is not CLI-linked to a hosted project. A linked migration
-  dry-run therefore stopped before making any connection or change.
+- With owner approval, this checkout was linked to the active
+  `guided-operations` Development project, ref `mfkunfqhosmrjbreythc`. The
+  separate `guided-operations-auth-spike` project was not selected.
+- The linked migration history matched through `20260827071000`. A read-only
+  dry-run reported four pending Development migrations: `20260827080000`,
+  `20260827100000`, `20260827110000`, and `20260827120000`.
 - No hosted migration, reset, seed, identity creation, Storage operation, or
   configuration change was performed.
 - A separate isolated Production Supabase project was not present in the
@@ -83,15 +90,13 @@ value was read, copied, or written.
 
 ## Current stop conditions
 
-1. Obtain explicit approval to fix the cross-officer report-finalization flaw,
-   then rerun the exact local and security qualification.
-2. Push the approved fix and require green web, database, and recovery CI on the
+1. Push the approved fix and require green web, database, and recovery CI on the
    exact new head.
-3. Explicitly authorize linking this checkout to the named fictional-data
-   Development project before any hosted migration dry-run or qualification.
-4. Create and configure a separate isolated Production Supabase project and
+2. Obtain separate approval before applying the four pending migrations to the
+   fictional-data Development project.
+3. Create and configure a separate isolated Production Supabase project and
    complete the Production Vercel variables only during the controlled release
    process.
-5. Complete the approved corpus evaluation, database and Storage restore
+4. Complete the approved corpus evaluation, database and Storage restore
    rehearsal, monitoring and alerts, rollback proof, production smoke tests,
    observation window, and exact-candidate owner approval.
