@@ -67,9 +67,11 @@ describe("POST /api/web/v1/policy-answer", () => {
   it("returns a validated cited answer with private no-store headers", async () => {
     mockEnvironment();
     vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
+    const history = [{ question: "Earlier fictional question" }];
     vi.mocked(validatePolicyAnswerEndpointRequest).mockResolvedValue({
       ok: true,
       question: "Fictional question",
+      history,
     });
     const answer = {
       status: "answered" as const,
@@ -77,8 +79,9 @@ describe("POST /api/web/v1/policy-answer", () => {
       citations: [],
       limitations: [],
     };
+    const answerPolicy = vi.fn().mockResolvedValue({ kind: "answer", answer });
     vi.mocked(createPolicyAnswerService).mockReturnValue({
-      answer: vi.fn().mockResolvedValue({ kind: "answer", answer }),
+      answer: answerPolicy,
     });
 
     const response = await POST(new Request("https://app.example.test/api"));
@@ -103,6 +106,14 @@ describe("POST /api/web/v1/policy-answer", () => {
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
     ).not.toContain("Fictional cited answer");
+    expect(
+      JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
+    ).not.toContain("Earlier fictional question");
+    expect(answerPolicy).toHaveBeenCalledWith({
+      facilityId: session.account.facilityId,
+      question: "Fictional question",
+      history,
+    });
     expect(createOpenAiGroundedGenerationProvider).toHaveBeenCalledWith({
       accountId: session.account.authUserId,
     });
@@ -135,6 +146,7 @@ describe("POST /api/web/v1/policy-answer", () => {
     vi.mocked(validatePolicyAnswerEndpointRequest).mockResolvedValue({
       ok: true,
       question: "Fictional question",
+      history: [],
     });
     vi.mocked(createPolicyAnswerService).mockReturnValue({
       answer: vi.fn().mockResolvedValue({

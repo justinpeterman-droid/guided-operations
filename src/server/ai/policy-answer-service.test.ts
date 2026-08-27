@@ -78,6 +78,50 @@ describe("policy answer service", () => {
     expect(generate).not.toHaveBeenCalled();
   });
 
+  it("uses bounded prior questions to resolve a follow-up but never as evidence", async () => {
+    const { service, retrieve, generate } = createService();
+    const history = [
+      { question: "When may the fictional visiting room open?" },
+      { question: "Who documents the fictional opening check?" },
+    ];
+
+    await service.answer({
+      ...request,
+      question: "What about weekends?",
+      history,
+    });
+
+    expect(retrieve).toHaveBeenCalledWith({
+      facilityId: request.facilityId,
+      question:
+        "Who documents the fictional opening check? What about weekends?",
+      maximumPassages: 8,
+      approvedDocumentVersionIds: undefined,
+    });
+    expect(generate).toHaveBeenCalledWith({
+      question: "What about weekends?",
+      passages: [{ citation, relevanceScore: 0.9 }],
+      maximumAnswerCharacters: 4_000,
+      conversationContext: {
+        previousUserQuestions: history.map((turn) => turn.question),
+      },
+    });
+    expect(generate.mock.calls[0]?.[0]).not.toHaveProperty("previousAnswers");
+  });
+
+  it("does not alter retrieval for a complete standalone question", async () => {
+    const { service, retrieve } = createService();
+
+    await service.answer({
+      ...request,
+      history: [{ question: "An unrelated earlier question?" }],
+    });
+
+    expect(retrieve).toHaveBeenCalledWith(
+      expect.objectContaining({ question: request.question }),
+    );
+  });
+
   it("fails closed when a provider alters a retrieved source label", async () => {
     const { service } = createService(
       undefined,

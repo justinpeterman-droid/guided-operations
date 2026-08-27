@@ -33,6 +33,94 @@ describe("policy answer endpoint validation", () => {
     ).resolves.toEqual({
       ok: true,
       question: "What does the fictional policy require?",
+      history: [],
+    });
+  });
+
+  it("accepts at most six bounded prior user questions", async () => {
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    const history = Array.from({ length: 6 }, (_, index) => ({
+      question: `Earlier fictional question ${index + 1}`,
+    }));
+    const request = new Request("https://app.example.test/api", {
+      method: "POST",
+      headers: {
+        origin: "https://app.example.test",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({ question: "What about weekends?", history }),
+    });
+
+    await expect(
+      validatePolicyAnswerEndpointRequest(
+        request,
+        "https://app.example.test",
+        "11111111-1111-4111-8111-111111111111",
+        "k".repeat(32),
+      ),
+    ).resolves.toEqual({ ok: true, question: "What about weekends?", history });
+  });
+
+  it("rejects oversized conversation history", async () => {
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    const request = new Request("https://app.example.test/api", {
+      method: "POST",
+      headers: {
+        origin: "https://app.example.test",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        question: "What about weekends?",
+        history: Array.from({ length: 7 }, (_, index) => ({
+          question: `Earlier fictional question ${index + 1}`,
+        })),
+      }),
+    });
+
+    await expect(
+      validatePolicyAnswerEndpointRequest(
+        request,
+        "https://app.example.test",
+        "11111111-1111-4111-8111-111111111111",
+        "k".repeat(32),
+      ),
+    ).resolves.toEqual({
+      ok: false,
+      status: 400,
+      code: "invalid_request",
+    });
+  });
+
+  it("rejects browser-supplied prior answer text", async () => {
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    const request = new Request("https://app.example.test/api", {
+      method: "POST",
+      headers: {
+        origin: "https://app.example.test",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        question: "What about weekends?",
+        history: [
+          {
+            question: "What is the fictional schedule?",
+            answer: "Untrusted browser-supplied answer.",
+          },
+        ],
+      }),
+    });
+
+    await expect(
+      validatePolicyAnswerEndpointRequest(
+        request,
+        "https://app.example.test",
+        "11111111-1111-4111-8111-111111111111",
+        "k".repeat(32),
+      ),
+    ).resolves.toEqual({
+      ok: false,
+      status: 400,
+      code: "invalid_request",
     });
   });
 

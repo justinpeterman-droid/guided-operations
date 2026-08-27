@@ -54,6 +54,9 @@ describe("OpenAI grounded generation provider", () => {
         question: "What does the fictional policy say?",
         passages: [{ citation, relevanceScore: 0.9 }],
         maximumAnswerCharacters: 4000,
+        conversationContext: {
+          previousUserQuestions: ["What is the fictional schedule?"],
+        },
       }),
     ).resolves.toEqual({
       status: "answered",
@@ -68,12 +71,16 @@ describe("OpenAI grounded generation provider", () => {
       Authorization: `Bearer ${environment.OPENAI_API_KEY}`,
     });
     expect(request.signal).toBeInstanceOf(AbortSignal);
-    expect(JSON.parse(request.body as string)).toMatchObject({
+    const body = JSON.parse(request.body as string) as Record<string, unknown>;
+    expect(body).toMatchObject({
       model: environment.OPENAI_POLICY_MODEL,
       store: false,
       max_output_tokens: 2400,
       text: { format: { type: "json_schema", strict: true } },
+      input: expect.stringContaining("previousUserQuestions"),
     });
+    expect(body.instructions).toContain("conversation context only");
+    expect(body).not.toHaveProperty("tools");
     expect(release).toHaveBeenCalled();
   });
 

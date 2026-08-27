@@ -5,11 +5,23 @@ import { z } from "zod";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
 const requestSchema = z
-  .object({ question: z.string().trim().min(3).max(2_000) })
+  .object({
+    question: z.string().trim().min(3).max(2_000),
+    history: z
+      .array(
+        z.object({ question: z.string().trim().min(3).max(2_000) }).strict(),
+      )
+      .max(6)
+      .default([]),
+  })
   .strict();
 
 export type PolicyAnswerEndpointValidation =
-  | Readonly<{ ok: true; question: string }>
+  | Readonly<{
+      ok: true;
+      question: string;
+      history: readonly Readonly<{ question: string }>[];
+    }>
   | Readonly<{
       ok: false;
       status: 400 | 403 | 415;
@@ -36,7 +48,11 @@ export async function validatePolicyAnswerEndpointRequest(
   try {
     const parsed = requestSchema.safeParse(await request.json());
     return parsed.success
-      ? { ok: true, question: parsed.data.question }
+      ? {
+          ok: true,
+          question: parsed.data.question,
+          history: parsed.data.history,
+        }
       : { ok: false, status: 400, code: "invalid_request" };
   } catch {
     return { ok: false, status: 400, code: "invalid_request" };

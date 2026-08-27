@@ -147,6 +147,9 @@ Already present:
 - strict structured answer/refusal/conflict outcomes;
 - exact immutable citation-object validation with no model-created source,
   version, page, hash, excerpt, or chunk identity;
+- at most six transient prior user questions for follow-up interpretation; prior
+  answers are never accepted from the browser, and prior questions are context
+  only rather than evidence;
 - accessible citation display and private source-reader authorization;
 - deterministic fictional evaluation for retrieval, citations, conflicts,
   refusal, prompt injection, access boundaries, provider outage, and value-free
@@ -156,8 +159,6 @@ Still required for parity and release:
 
 - recover, approve, hash, version, page-map, and privately ingest the real
   policy corpus;
-- add bounded conversational history that helps resolve follow-ups but is never
-  cited or persisted as policy evidence;
 - add reviewed slang/query expansion only where it improves retrieval without
   changing the officer's question;
 - complete the authorized full-policy reader with source highlighting and focus

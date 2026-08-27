@@ -242,9 +242,14 @@ progress, result references, and error codes rather than provider payloads.
 The implemented answer endpoint is same-origin and session-CSRF protected even
 though it has no durable mutation: this prevents cross-site use of the private
 model/corpus allowance. It accepts a 3–2,000-character question, verifies the
-current account, retrieves only approved indexed passages for that account, and
-returns either a citation-validated answer or explicit insufficient evidence. It
-never retains the question, answer, passage, provider body, or storage key.
+current account, and may accept at most six 3–2,000-character prior user
+questions as transient follow-up context. It does not accept prior answer text
+from the browser. A likely follow-up may use the latest prior question to make
+retrieval understandable, while generation treats every prior question as
+untrusted context rather than policy evidence. The endpoint retrieves only
+approved indexed passages for that account and returns either a
+citation-validated answer or explicit insufficient evidence. It never retains
+the question, prior questions, answer, passage, provider body, or storage key.
 Provider/retrieval failures are a generic `503`.
 
 The implemented PDF reader accepts only an opaque immutable document-version ID.

@@ -21,10 +21,16 @@ export interface PolicyRetrievalProvider {
   retrieve(request: PolicyRetrievalRequest): Promise<RetrievedPolicyPassage[]>;
 }
 
+export interface PolicyConversationContext {
+  /** Prior user questions only. They help resolve references but are not evidence. */
+  previousUserQuestions: string[];
+}
+
 export interface GroundedGenerationRequest {
   question: string;
   passages: RetrievedPolicyPassage[];
   maximumAnswerCharacters: number;
+  conversationContext?: PolicyConversationContext;
 }
 
 export interface GroundedGenerationProvider {

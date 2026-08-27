@@ -12,6 +12,11 @@ type AnswerOutcome =
   | { kind: "answer" | "insufficient_evidence"; answer: GroundedPolicyAnswer }
   | undefined;
 
+type ConversationEntry = Readonly<{
+  question: string;
+  outcome: Exclude<AnswerOutcome, undefined>;
+}>;
+
 async function getCsrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
     credentials: "same-origin",
@@ -32,12 +37,11 @@ async function getCsrfToken(): Promise<string> {
 export function PolicyExpert() {
   const [question, setQuestion] = useState("");
   const [state, setState] = useState<SubmissionState>("idle");
-  const [outcome, setOutcome] = useState<AnswerOutcome>();
+  const [conversation, setConversation] = useState<ConversationEntry[]>([]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setState("submitting");
-    setOutcome(undefined);
     try {
       const csrfToken = await getCsrfToken();
       const response = await fetch("/api/web/v1/policy-answer", {
@@ -47,7 +51,12 @@ export function PolicyExpert() {
           "Content-Type": "application/json",
           "x-csrf-token": csrfToken,
         },
-        body: JSON.stringify({ question }),
+        body: JSON.stringify({
+          question,
+          history: conversation.slice(-6).map((entry) => ({
+            question: entry.question,
+          })),
+        }),
       });
       const data: unknown = await response.json();
       if (
@@ -68,7 +77,16 @@ export function PolicyExpert() {
             candidate.kind === "insufficient_evidence") &&
           "answer" in candidate
         ) {
-          setOutcome(candidate as AnswerOutcome);
+          setConversation((current) =>
+            [
+              ...current,
+              {
+                question,
+                outcome: candidate as Exclude<AnswerOutcome, undefined>,
+              },
+            ].slice(-6),
+          );
+          setQuestion("");
           setState("idle");
           return;
         }
@@ -129,7 +147,21 @@ export function PolicyExpert() {
             </p>
           </form>
 
-          {outcome ? <PolicyAnswer outcome={outcome} /> : null}
+          {conversation.length ? (
+            <section aria-label="Policy conversation">
+              {conversation.map((entry, index) => (
+                <article key={`${index}-${entry.question}`}>
+                  <p>
+                    <strong>Question:</strong> {entry.question}
+                  </p>
+                  <PolicyAnswer
+                    headingId={`policy-answer-title-${index}`}
+                    outcome={entry.outcome}
+                  />
+                </article>
+              ))}
+            </section>
+          ) : null}
         </section>
 
         <aside className="policy-rail" aria-label="Policy Expert guidance">
@@ -149,15 +181,17 @@ export function PolicyExpert() {
 }
 
 function PolicyAnswer({
+  headingId,
   outcome,
 }: {
+  headingId: string;
   outcome: Exclude<AnswerOutcome, undefined>;
 }) {
   const heading =
     outcome.kind === "answer" ? "Cited guidance" : "Evidence is not sufficient";
   return (
-    <section className="policy-answer" aria-labelledby="policy-answer-title">
-      <h2 id="policy-answer-title">{heading}</h2>
+    <section className="policy-answer" aria-labelledby={headingId}>
+      <h2 id={headingId}>{heading}</h2>
       <p className="policy-answer-copy">{outcome.answer.answer}</p>
       {outcome.answer.limitations.length ? (
         <p className="policy-limitation">

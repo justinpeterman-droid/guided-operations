@@ -84,6 +84,7 @@ export async function POST(request: Request): Promise<Response> {
     const outcome = await service.answer({
       facilityId: session.account.facilityId,
       question: validation.question,
+      history: validation.history,
     });
 
     if (outcome.kind === "answer" || outcome.kind === "insufficient_evidence") {
