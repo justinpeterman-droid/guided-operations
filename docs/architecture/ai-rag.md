@@ -216,12 +216,15 @@ cost per task. Human review owns acceptance.
 The provider-neutral evaluation harness in `src/server/ai/policy-evaluation.ts`
 now runs bounded cases sequentially and scores end-to-end answer status,
 required-citation recall, allowed-citation precision, abstention, forbidden
-prompt-injection output markers, and p95 latency. Its retained scorecard
-contains only bounded aliases, booleans, counts, rates, and timings—never
-questions, answers, excerpts, or provider errors. Test coverage uses synthetic
-policy data. A passing synthetic scorecard proves the harness behavior, not the
-real corpus or pinned Production model; those still require a private
-custodian-approved suite and owner review.
+prompt-injection output markers across every user-visible answer and limitation,
+and p95 latency. Category labels are bound to their required outcomes so one
+mislabeled case cannot claim retrieval, refusal, conflict, access, and provider
+degradation coverage at once. Its retained scorecard contains only bounded
+aliases, booleans, counts, rates, and timings—never questions, answers,
+excerpts, or provider errors. Test coverage uses synthetic policy data. A
+passing synthetic scorecard proves the harness behavior, not the real corpus or
+pinned Production model; those still require a private custodian-approved suite
+and owner review.
 
 ## Synchronous versus queued
 

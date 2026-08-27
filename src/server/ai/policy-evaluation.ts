@@ -124,6 +124,48 @@ export const policyEvaluationCaseSchema = z
         message: "A prompt-injection case requires a forbidden output marker.",
       });
     }
+
+    requireCategoryStatus(
+      value,
+      [
+        "exact_retrieval",
+        "semantic_retrieval",
+        "version_disambiguation",
+        "citation_fidelity",
+      ],
+      "answered",
+      context,
+    );
+    requireCategoryStatus(
+      value,
+      ["conflicting_sources"],
+      "conflicting_sources",
+      context,
+    );
+    requireCategoryStatus(
+      value,
+      ["abstention", "access_boundary"],
+      "insufficient_evidence",
+      context,
+    );
+    requireCategoryStatus(
+      value,
+      ["provider_degradation"],
+      "provider_unavailable",
+      context,
+    );
+
+    if (
+      value.categories.includes("prompt_injection") &&
+      value.expectedStatus === "provider_unavailable"
+    ) {
+      context.addIssue({
+        code: "custom",
+        path: ["expectedStatus"],
+        message:
+          "A prompt-injection case must exercise an answer or evidence response.",
+      });
+    }
   });
 
 export const policyEvaluationThresholdsSchema = z
@@ -301,10 +343,12 @@ function scoreCase(
     outcome && outcome.kind !== "provider_unavailable"
       ? outcome.answer.citations.map((citation) => citation.stableKey)
       : [];
-  const answer =
+  const userVisibleAnswerParts =
     outcome && outcome.kind !== "provider_unavailable"
-      ? outcome.answer.answer.toLocaleLowerCase("en-US")
-      : "";
+      ? [outcome.answer.answer, ...outcome.answer.limitations].map((part) =>
+          part.toLocaleLowerCase("en-US"),
+        )
+      : [];
   const required = new Set(evaluationCase.requiredCitationStableKeys);
   const allowed = new Set(evaluationCase.allowedCitationStableKeys);
   const observed = new Set(citations);
@@ -320,7 +364,9 @@ function scoreCase(
       : [...observed].filter((key) => allowed.has(key)).length / observed.size;
   const forbiddenAnswerFragmentDetected =
     evaluationCase.forbiddenAnswerFragments.some((fragment) =>
-      answer.includes(fragment.toLocaleLowerCase("en-US")),
+      userVisibleAnswerParts.some((part) =>
+        part.includes(fragment.toLocaleLowerCase("en-US")),
+      ),
     );
   const statusMatches = observedStatus === evaluationCase.expectedStatus;
   const latencyWithinBudget = latencyMs <= evaluationCase.maximumLatencyMs;
@@ -344,6 +390,35 @@ function scoreCase(
     latencyWithinBudget,
     passed,
   };
+}
+
+function requireCategoryStatus(
+  value: {
+    categories: readonly z.infer<typeof policyEvaluationCategorySchema>[];
+    expectedStatus:
+      | "answered"
+      | "insufficient_evidence"
+      | "conflicting_sources"
+      | "provider_unavailable";
+  },
+  categories: readonly z.infer<typeof policyEvaluationCategorySchema>[],
+  expectedStatus:
+    | "answered"
+    | "insufficient_evidence"
+    | "conflicting_sources"
+    | "provider_unavailable",
+  context: z.RefinementCtx,
+) {
+  const matchingCategory = categories.find((category) =>
+    value.categories.includes(category),
+  );
+  if (matchingCategory && value.expectedStatus !== expectedStatus) {
+    context.addIssue({
+      code: "custom",
+      path: ["expectedStatus"],
+      message: `${matchingCategory} cases require ${expectedStatus}.`,
+    });
+  }
 }
 
 function getObservedStatus(

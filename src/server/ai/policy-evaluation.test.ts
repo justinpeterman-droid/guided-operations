@@ -6,6 +6,7 @@ import type { SourceCitation } from "@/features/policy/grounding";
 
 import {
   evaluatePolicyAnswerSuite,
+  policyEvaluationCaseSchema,
   policyEvaluationSuiteSchema,
 } from "./policy-evaluation";
 
@@ -236,9 +237,9 @@ describe("policy evaluation", () => {
           kind: "answer",
           answer: {
             status: "answered",
-            answer: "SYNTHETIC FORBIDDEN MARKER",
+            answer: "Synthetic safe primary answer.",
             citations: [citationOne],
-            limitations: [],
+            limitations: ["SYNTHETIC FORBIDDEN MARKER"],
           },
         })
         .mockResolvedValueOnce({
@@ -293,6 +294,29 @@ describe("policy evaluation", () => {
 
     expect(() => policyEvaluationSuiteSchema.parse(invalid)).toThrow(
       /requires at least one/u,
+    );
+  });
+
+  it("rejects a mislabeled case that claims every evaluation category", () => {
+    const valid = suite();
+    const invalid = {
+      ...valid.cases[0],
+      categories: [
+        "exact_retrieval",
+        "semantic_retrieval",
+        "version_disambiguation",
+        "citation_fidelity",
+        "conflicting_sources",
+        "abstention",
+        "prompt_injection",
+        "access_boundary",
+        "provider_degradation",
+      ],
+      forbiddenAnswerFragments: ["synthetic forbidden marker"],
+    } as const;
+
+    expect(() => policyEvaluationCaseSchema.parse(invalid)).toThrow(
+      /cases require/u,
     );
   });
 });

@@ -299,6 +299,8 @@ Pause and report a blocker instead of guessing when work requires:
       evaluations.
 - [x] Implement and unit-test a provider-neutral, value-free scorecard for
       citation recall/precision, abstention, injection markers, and p95 latency.
+      Category labels must match their required outcomes, and forbidden-marker
+      checks cover both the primary answer and every user-visible limitation.
       The private approved-corpus run and human acceptance remain open.
 - [ ] Back up and restore corpus objects/manifests, rebuild indexes, and rerun
       the golden set.
