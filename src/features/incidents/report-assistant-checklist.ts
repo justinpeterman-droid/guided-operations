@@ -885,6 +885,9 @@ export function buildReportChecklistReviewedItems(
     answers: readonly unknown[];
     recordedAt: string;
     idFactory: () => string;
+    reportingStaffMemberIdsByQuestionId: Readonly<
+      Record<string, readonly string[]>
+    >;
   }>,
 ): Readonly<{
   fieldNotes: readonly Readonly<{
@@ -899,6 +902,7 @@ export function buildReportChecklistReviewedItems(
         state: "confirmed";
         value: string;
         sourceNoteIds: readonly string[];
+        reportingStaffMemberIds: readonly string[];
       }>
     | Readonly<{
         id: string;
@@ -931,6 +935,7 @@ export function buildReportChecklistReviewedItems(
         state: "confirmed";
         value: string;
         sourceNoteIds: string[];
+        reportingStaffMemberIds: string[];
       }
     | {
         id: string;
@@ -957,6 +962,10 @@ export function buildReportChecklistReviewedItems(
         state: "confirmed",
         value: answer.value,
         sourceNoteIds: [noteId],
+        reportingStaffMemberIds: [
+          ...(input.reportingStaffMemberIdsByQuestionId[answer.questionId] ??
+            []),
+        ],
       });
     } else {
       reviewedFacts.push({

@@ -11,7 +11,7 @@ const sessionId = "11111111-1111-4111-8111-111111111111";
 const csrfKey = "k".repeat(32);
 const csrf = issueSessionCsrfToken(sessionId, csrfKey);
 const revision = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   incidentName: "Fictional training scenario",
   incidentNumber: "F-INC-101",
   occurredAt: "2026-08-26T12:00:00Z",

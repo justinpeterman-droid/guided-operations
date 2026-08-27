@@ -7,7 +7,7 @@ import {
 } from "./report-assistant-checklist";
 import { reportTypeSchema } from "./report-types";
 
-export const INCIDENT_SCHEMA_VERSION = 1;
+export const INCIDENT_SCHEMA_VERSION = 2;
 
 const opaqueIdSchema = z.uuid();
 const nonEmptyText = (maximum: number) => z.string().trim().min(1).max(maximum);
@@ -20,16 +20,40 @@ export const fieldNoteSchema = z
   })
   .strict();
 
-export const reviewedFactSchema = z.discriminatedUnion("state", [
-  z
-    .object({
-      id: opaqueIdSchema,
-      field: nonEmptyText(120),
-      state: z.literal("confirmed"),
-      value: nonEmptyText(8_000),
-      sourceNoteIds: z.array(opaqueIdSchema).min(1).max(100),
-    })
-    .strict(),
+const reportingStaffMemberIdsSchema = z
+  .array(opaqueIdSchema)
+  .max(20)
+  .superRefine((staffMemberIds, context) => {
+    if (new Set(staffMemberIds).size !== staffMemberIds.length) {
+      context.addIssue({
+        code: "custom",
+        message: "Reporting officer fact scopes must be unique.",
+      });
+    }
+  });
+
+const confirmedReviewedFactSchema = z
+  .object({
+    id: opaqueIdSchema,
+    field: nonEmptyText(120),
+    state: z.literal("confirmed"),
+    value: nonEmptyText(8_000),
+    sourceNoteIds: z.array(opaqueIdSchema).min(1).max(100),
+    reportingStaffMemberIds: reportingStaffMemberIdsSchema,
+  })
+  .strict();
+
+const legacyConfirmedReviewedFactSchema = z
+  .object({
+    id: opaqueIdSchema,
+    field: nonEmptyText(120),
+    state: z.literal("confirmed"),
+    value: nonEmptyText(8_000),
+    sourceNoteIds: z.array(opaqueIdSchema).min(1).max(100),
+  })
+  .strict();
+
+const limitedReviewedFactSchemas = [
   z
     .object({
       id: opaqueIdSchema,
@@ -46,6 +70,17 @@ export const reviewedFactSchema = z.discriminatedUnion("state", [
       reason: nonEmptyText(500),
     })
     .strict(),
+] as const;
+
+export const reviewedFactSchema = z.discriminatedUnion("state", [
+  confirmedReviewedFactSchema,
+  ...limitedReviewedFactSchemas,
+]);
+
+/** Read compatibility for immutable version-one revisions created before fact scoping. */
+export const storedReviewedFactSchema = z.union([
+  reviewedFactSchema,
+  legacyConfirmedReviewedFactSchema,
 ]);
 
 /** The user-reviewed source of truth for an immutable incident revision. */
@@ -166,3 +201,4 @@ export const reportDraftRequestSchema = z
 export type IncidentRevisionInput = z.infer<typeof incidentRevisionInputSchema>;
 export type ReportDraftRequest = z.infer<typeof reportDraftRequestSchema>;
 export type ReviewedFact = z.infer<typeof reviewedFactSchema>;
+export type StoredReviewedFact = z.infer<typeof storedReviewedFactSchema>;

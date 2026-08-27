@@ -1,7 +1,7 @@
 import {
   reportDraftRequestSchema,
   type ReportDraftRequest,
-  type ReviewedFact,
+  type StoredReviewedFact,
 } from "./schema";
 import type { ReportType } from "./report-types";
 
@@ -41,7 +41,7 @@ export type ReportDraftGenerationSource = Omit<
 export function buildReportDraftSource(
   request: ReportDraftRequest,
   sourceIncidentRevisionId: string,
-  reviewedFacts: readonly ReviewedFact[],
+  reviewedFacts: readonly StoredReviewedFact[],
 ): ReportDraftSource {
   const parsedRequest = reportDraftRequestSchema.parse(request);
   if (parsedRequest.sourceIncidentRevisionId !== sourceIncidentRevisionId) {
@@ -53,9 +53,16 @@ export function buildReportDraftSource(
   const factsById = new Map(reviewedFacts.map((fact) => [fact.id, fact]));
   const confirmedFacts = parsedRequest.confirmedFactIds.map((factId) => {
     const fact = factsById.get(factId);
-    if (!fact || fact.state !== "confirmed") {
+    if (
+      !fact ||
+      fact.state !== "confirmed" ||
+      !("reportingStaffMemberIds" in fact) ||
+      !fact.reportingStaffMemberIds.includes(
+        parsedRequest.reportingStaffMemberId,
+      )
+    ) {
       throw new ReportDraftSourceError(
-        "A report draft may reference only confirmed facts.",
+        "A report draft may reference only confirmed facts scoped to its reporting officer.",
       );
     }
 

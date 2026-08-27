@@ -122,9 +122,14 @@ describe("NewIncidentWorkspace", () => {
         relationship: string;
       }>;
       revision: {
+        schemaVersion: number;
         category: string;
         fieldNotes: Array<{ text: string }>;
-        reviewedFacts: Array<{ field: string }>;
+        reviewedFacts: Array<{
+          field: string;
+          state: string;
+          reportingStaffMemberIds?: string[];
+        }>;
       };
     };
     expect(savedBody.staffRelationships).toEqual([
@@ -137,6 +142,7 @@ describe("NewIncidentWorkspace", () => {
         relationship: "reporting_officer",
       },
     ]);
+    expect(savedBody.revision.schemaVersion).toBe(2);
     expect(savedBody.revision.category).toBe("incident_no_disciplinary");
     expect(savedBody.revision.fieldNotes).toEqual(
       expect.arrayContaining([
@@ -154,6 +160,15 @@ describe("NewIncidentWorkspace", () => {
         }),
       ]),
     );
+    expect(
+      savedBody.revision.reviewedFacts
+        .filter(({ state }) => state === "confirmed")
+        .every(({ reportingStaffMemberIds }) =>
+          reportingStaffMemberIds?.includes(
+            "11111111-1111-4111-8111-111111111111",
+          ),
+        ),
+    ).toBe(true);
     expect(await screen.findByText(/Incident saved/)).toBeVisible();
   });
 });

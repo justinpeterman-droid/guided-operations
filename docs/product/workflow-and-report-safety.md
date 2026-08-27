@@ -62,6 +62,13 @@ reviewed scope clear.
 more field notes in the same immutable incident revision. A note from a
 different revision cannot provide silent provenance.
 
+**SAFE-012b — Officer-scoped facts.** Each confirmed fact records the selected
+reporting officers whose perspectives may use it. An empty scope means the fact
+is incident-only and cannot enter a generated report. When multiple reporting
+officers are selected, the user must assign every confirmed fact deliberately;
+generation and database storage both reject a fact outside the requested
+officer's scope.
+
 **SAFE-013 — Unknown remains unknown.** Missing values remain blank or
 explicitly Unknown/Not applicable according to the target form. The system
 cannot infer a person, time, location, quantity, charge, injury, evidence
@@ -99,7 +106,8 @@ and generated-output state. The UI identifies what needs review again.
 
 **SAFE-030 — Generation input is pinned.** Every generation request references
 an immutable confirmed-fact revision, reporting officer relationship, report
-type, prompt/template version, and idempotency key.
+type, prompt/template version, and idempotency key. Every selected fact must
+also be explicitly scoped to that reporting officer.
 
 **SAFE-031 — Schema first.** Provider output is parsed into a strict domain
 schema. Unexpected fields, missing provenance, invalid identifiers, or unbounded

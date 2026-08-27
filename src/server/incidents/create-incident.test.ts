@@ -6,7 +6,7 @@ import { createIncidentForCurrentSession } from "./create-incident";
 
 const command = {
   revision: {
-    schemaVersion: 1,
+    schemaVersion: 2,
     incidentName: "Fictional scenario",
     incidentNumber: "F-RPC-901",
     occurredAt: "2026-08-26T12:00:00Z",

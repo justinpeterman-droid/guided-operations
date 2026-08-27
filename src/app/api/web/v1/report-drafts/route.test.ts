@@ -74,7 +74,7 @@ describe("POST /api/web/v1/report-drafts", () => {
     vi.mocked(validateReportDraftEndpointRequest).mockResolvedValue({
       ok: true,
       request: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         incidentId: "44444444-4444-4444-8444-444444444444",
         sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
         reportingStaffMemberId: "77777777-7777-4777-8777-777777777777",
@@ -141,7 +141,7 @@ describe("POST /api/web/v1/report-drafts", () => {
     vi.mocked(validateReportDraftEndpointRequest).mockResolvedValue({
       ok: true,
       request: {
-        schemaVersion: 1,
+        schemaVersion: 2,
         incidentId: "44444444-4444-4444-8444-444444444444",
         sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
         reportingStaffMemberId: "77777777-7777-4777-8777-777777777777",

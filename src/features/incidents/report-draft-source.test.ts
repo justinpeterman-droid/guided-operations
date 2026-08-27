@@ -13,6 +13,7 @@ import {
 const revisionId = "11111111-1111-4111-8111-111111111111";
 const confirmedFactId = "22222222-2222-4222-8222-222222222222";
 const unknownFactId = "33333333-3333-4333-8333-333333333333";
+const reportingStaffMemberId = "66666666-6666-4666-8666-666666666666";
 
 const facts: ReviewedFact[] = [
   {
@@ -21,6 +22,7 @@ const facts: ReviewedFact[] = [
     state: "confirmed",
     value: "Fictional training room",
     sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
+    reportingStaffMemberIds: [reportingStaffMemberId],
   },
   {
     id: unknownFactId,
@@ -34,7 +36,7 @@ const request: ReportDraftRequest = {
   schemaVersion: INCIDENT_SCHEMA_VERSION,
   incidentId: "55555555-5555-4555-8555-555555555555",
   sourceIncidentRevisionId: revisionId,
-  reportingStaffMemberId: "66666666-6666-4666-8666-666666666666",
+  reportingStaffMemberId,
   reportType: "cover_letter",
   confirmedFactIds: [confirmedFactId],
 };
@@ -85,5 +87,21 @@ describe("buildReportDraftSource", () => {
         facts,
       ),
     ).toThrow("do not belong");
+  });
+
+  it("rejects a confirmed fact scoped only to another reporting officer", () => {
+    const confirmedFact = facts[0];
+    if (confirmedFact.state !== "confirmed") {
+      throw new Error("Test fixture must begin with a confirmed fact.");
+    }
+    expect(() =>
+      buildReportDraftSource(request, revisionId, [
+        {
+          ...confirmedFact,
+          reportingStaffMemberIds: ["77777777-7777-4777-8777-777777777777"],
+        },
+        facts[1],
+      ]),
+    ).toThrow("scoped to its reporting officer");
   });
 });

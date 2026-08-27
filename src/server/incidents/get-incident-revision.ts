@@ -3,8 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import {
-  reviewedFactSchema,
-  type ReviewedFact,
+  storedReviewedFactSchema,
+  type StoredReviewedFact,
 } from "@/features/incidents/schema";
 import {
   authorizeCurrentSession,
@@ -16,19 +16,34 @@ const revisionReferenceSchema = z.object({
   revisionNumber: z.number().int().positive(),
 });
 
-const incidentRevisionRowsSchema = z.array(
-  z
-    .object({
-      incident_id: z.uuid(),
-      incident_number: z.string().min(1).max(80),
-      display_name: z.string().min(1).max(160),
-      incident_revision_id: z.uuid(),
-      revision_number: z.number().int().positive(),
-      schema_version: z.literal(1),
-      reviewed_facts: z.array(reviewedFactSchema).max(300),
-    })
-    .strict(),
-);
+const incidentRevisionRowSchema = z
+  .object({
+    incident_id: z.uuid(),
+    incident_number: z.string().min(1).max(80),
+    display_name: z.string().min(1).max(160),
+    incident_revision_id: z.uuid(),
+    revision_number: z.number().int().positive(),
+    schema_version: z.union([z.literal(1), z.literal(2)]),
+    reviewed_facts: z.array(storedReviewedFactSchema).max(300),
+  })
+  .strict()
+  .superRefine((row, context) => {
+    if (
+      row.schema_version === 2 &&
+      row.reviewed_facts.some(
+        (fact) =>
+          fact.state === "confirmed" && !("reportingStaffMemberIds" in fact),
+      )
+    ) {
+      context.addIssue({
+        code: "custom",
+        message: "Version-two confirmed facts require reporting scope.",
+        path: ["reviewed_facts"],
+      });
+    }
+  });
+
+const incidentRevisionRowsSchema = z.array(incidentRevisionRowSchema);
 
 type IncidentRevisionRpcClient = Readonly<{
   rpc(
@@ -49,8 +64,8 @@ export type AuthorizedIncidentRevision = Readonly<{
   displayName: string;
   incidentRevisionId: string;
   revisionNumber: number;
-  schemaVersion: 1;
-  reviewedFacts: readonly ReviewedFact[];
+  schemaVersion: 1 | 2;
+  reviewedFacts: readonly StoredReviewedFact[];
 }>;
 
 export type GetIncidentRevisionResult =

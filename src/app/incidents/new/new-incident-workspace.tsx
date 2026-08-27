@@ -17,6 +17,7 @@ import type {
   IncidentStaffRelationship,
   IncidentStaffRelationshipType,
 } from "@/features/incidents/incident-staff-relationships";
+import { INCIDENT_SCHEMA_VERSION } from "@/features/incidents/schema";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type SaveState = "idle" | "saving" | "failed" | "saved";
@@ -28,6 +29,12 @@ type StaffSelectionItem = Readonly<{
   shiftCode: "A" | "B" | "C" | "D" | "U" | "F" | null;
   isCurrentAccount: boolean;
 }>;
+
+const INCIDENT_DATE_SCOPE_KEY = "incident-date-time";
+const LOCATION_SCOPE_KEY = "location";
+const MANUAL_FACT_SCOPE_KEY = "manual-confirmed-fact";
+const checklistScopeKey = (questionId: string) =>
+  `report-checklist:${questionId}`;
 
 async function csrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
@@ -54,6 +61,9 @@ export function NewIncidentWorkspace() {
   const [selectedRelationships, setSelectedRelationships] = useState<
     ReadonlySet<string>
   >(new Set());
+  const [factReportingScopes, setFactReportingScopes] = useState<
+    Readonly<Record<string, readonly string[]>>
+  >({});
   const [reportsReviewed, setReportsReviewed] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [incidentNumber, setIncidentNumber] = useState("");
@@ -97,6 +107,9 @@ export function NewIncidentWorkspace() {
   const reportingOfficerCount = staffRelationships.filter(
     ({ relationship }) => relationship === "reporting_officer",
   ).length;
+  const reportingStaff = staff.filter((item) =>
+    selectedRelationships.has(`${item.staffMemberId}:reporting_officer`),
+  );
   const categoryDefinition = getReportChecklistCategory(category);
   const applicableQuestions = getApplicableReportChecklistQuestions(
     category,
@@ -119,6 +132,28 @@ export function NewIncidentWorkspace() {
       ? [{ state: "unknown" as const, text: unknown.trim() }]
       : []),
   ];
+  const confirmedFactScopeItems = [
+    { key: INCIDENT_DATE_SCOPE_KEY, label: "Incident date and time" },
+    { key: LOCATION_SCOPE_KEY, label: "Location" },
+    ...(fact.trim()
+      ? [{ key: MANUAL_FACT_SCOPE_KEY, label: "Officer-confirmed fact" }]
+      : []),
+    ...answerList.flatMap((answer) => {
+      if (answer.state !== "answered") return [];
+      const question = applicableQuestions.find(
+        (candidate) => candidate.id === answer.questionId,
+      );
+      return question
+        ? [{ key: checklistScopeKey(answer.questionId), label: question.field }]
+        : [];
+    }),
+  ];
+  const reportingScopeFor = (key: string): readonly string[] =>
+    factReportingScopes[key] ??
+    (reportingStaff.length === 1 ? [reportingStaff[0].staffMemberId] : []);
+  const factReportingScopesComplete = confirmedFactScopeItems.every(
+    ({ key }) => reportingScopeFor(key).length > 0,
+  );
 
   useEffect(() => {
     let active = true;
@@ -182,6 +217,8 @@ export function NewIncidentWorkspace() {
       }
       return next;
     });
+    setFactReportingScopes({});
+    setReportsReviewed(false);
     setSaveState("idle");
   }
 
@@ -191,6 +228,8 @@ export function NewIncidentWorkspace() {
       delete next[questionId];
       return next;
     });
+    setFactReportingScopes({});
+    setReportsReviewed(false);
     setSaveState("idle");
   }
 
@@ -205,7 +244,24 @@ export function NewIncidentWorkspace() {
       else next.add(key);
       return next;
     });
+    setFactReportingScopes({});
     setOfficerConfirmed(false);
+    setReportsReviewed(false);
+    setSaveState("idle");
+  }
+
+  function toggleFactReportingScope(key: string, staffMemberId: string) {
+    setFactReportingScopes((current) => {
+      const selected = new Set(
+        current[key] ??
+          (reportingStaff.length === 1
+            ? [reportingStaff[0].staffMemberId]
+            : []),
+      );
+      if (selected.has(staffMemberId)) selected.delete(staffMemberId);
+      else selected.add(staffMemberId);
+      return { ...current, [key]: [...selected] };
+    });
     setReportsReviewed(false);
     setSaveState("idle");
   }
@@ -215,7 +271,8 @@ export function NewIncidentWorkspace() {
     if (
       !readyForFactReview ||
       !manualReviewedItems.length ||
-      !checklistReview.complete
+      !checklistReview.complete ||
+      !factReportingScopesComplete
     )
       return;
     setSaveState("saving");
@@ -230,11 +287,17 @@ export function NewIncidentWorkspace() {
         answers: answerList,
         recordedAt,
         idFactory: () => crypto.randomUUID(),
+        reportingStaffMemberIdsByQuestionId: Object.fromEntries(
+          answerList.map((answer) => [
+            answer.questionId,
+            reportingScopeFor(checklistScopeKey(answer.questionId)),
+          ]),
+        ),
       });
       const body = {
         staffRelationships,
         revision: {
-          schemaVersion: 1,
+          schemaVersion: INCIDENT_SCHEMA_VERSION,
           incidentNumber: incidentNumber.trim(),
           incidentName: incidentName.trim(),
           category,
@@ -255,6 +318,9 @@ export function NewIncidentWorkspace() {
               state: "confirmed" as const,
               value: occurredAtIso,
               sourceNoteIds: [metadataNoteId],
+              reportingStaffMemberIds: reportingScopeFor(
+                INCIDENT_DATE_SCOPE_KEY,
+              ),
             },
             {
               id: crypto.randomUUID(),
@@ -262,6 +328,7 @@ export function NewIncidentWorkspace() {
               state: "confirmed" as const,
               value: location.trim(),
               sourceNoteIds: [metadataNoteId],
+              reportingStaffMemberIds: reportingScopeFor(LOCATION_SCOPE_KEY),
             },
             ...manualReviewedItems.map((item) =>
               item.state === "confirmed"
@@ -271,6 +338,9 @@ export function NewIncidentWorkspace() {
                     state: "confirmed" as const,
                     value: item.text,
                     sourceNoteIds: [noteId],
+                    reportingStaffMemberIds: reportingScopeFor(
+                      MANUAL_FACT_SCOPE_KEY,
+                    ),
                   }
                 : {
                     id: crypto.randomUUID(),
@@ -470,7 +540,11 @@ export function NewIncidentWorkspace() {
                     required
                     type="datetime-local"
                     value={occurredAt}
-                    onChange={(event) => setOccurredAt(event.target.value)}
+                    onChange={(event) => {
+                      setOccurredAt(event.target.value);
+                      setFactReportingScopes({});
+                      setReportsReviewed(false);
+                    }}
                   />
                 </label>
                 <label>
@@ -478,7 +552,11 @@ export function NewIncidentWorkspace() {
                   <input
                     required
                     value={location}
-                    onChange={(event) => setLocation(event.target.value)}
+                    onChange={(event) => {
+                      setLocation(event.target.value);
+                      setFactReportingScopes({});
+                      setReportsReviewed(false);
+                    }}
                   />
                 </label>
                 <label>
@@ -489,6 +567,8 @@ export function NewIncidentWorkspace() {
                     onChange={(event) => {
                       setCategory(event.target.value);
                       setChecklistAnswers({});
+                      setFactReportingScopes({});
+                      setReportsReviewed(false);
                     }}
                   >
                     <option value="">Choose a controlled category</option>
@@ -529,7 +609,11 @@ export function NewIncidentWorkspace() {
                 Confirmed fact
                 <textarea
                   value={fact}
-                  onChange={(event) => setFact(event.target.value)}
+                  onChange={(event) => {
+                    setFact(event.target.value);
+                    setFactReportingScopes({});
+                    setReportsReviewed(false);
+                  }}
                   placeholder="Only a fact supported by your notes"
                 />
               </label>
@@ -618,9 +702,45 @@ export function NewIncidentWorkspace() {
                     </p>
                   </>
                 ) : null}
+                <h2>Facts allowed for each officer report</h2>
+                <p>
+                  Choose which reporting officer may use each confirmed fact.
+                  With more than one reporting officer, nothing is shared until
+                  you choose it here.
+                </p>
+                <div className="incident-fields">
+                  {confirmedFactScopeItems.map((item) => (
+                    <fieldset key={item.key}>
+                      <legend>{item.label}</legend>
+                      {reportingStaff.map((officer) => (
+                        <label key={officer.staffMemberId}>
+                          <input
+                            checked={reportingScopeFor(item.key).includes(
+                              officer.staffMemberId,
+                            )}
+                            onChange={() =>
+                              toggleFactReportingScope(
+                                item.key,
+                                officer.staffMemberId,
+                              )
+                            }
+                            type="checkbox"
+                          />
+                          {officer.displayName}
+                        </label>
+                      ))}
+                    </fieldset>
+                  ))}
+                </div>
+                <p aria-live="polite">
+                  {factReportingScopesComplete
+                    ? "Every confirmed fact has an officer scope."
+                    : "Choose at least one reporting officer for every confirmed fact."}
+                </p>
               </section>
               <button
                 className="incident-primary"
+                disabled={!factReportingScopesComplete}
                 onClick={() => {
                   setReportsReviewed(true);
                   setStep(6);
@@ -653,7 +773,8 @@ export function NewIncidentWorkspace() {
                   saveState === "saving" ||
                   !readyForFactReview ||
                   !manualReviewedItems.length ||
-                  !checklistReview.complete
+                  !checklistReview.complete ||
+                  !factReportingScopesComplete
                 }
                 type="submit"
               >

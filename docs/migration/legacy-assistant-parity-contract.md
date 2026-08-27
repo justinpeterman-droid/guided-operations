@@ -95,6 +95,10 @@ Already present:
 - one selected reporting officer bound to each review-only candidate and final
   report, while reporting officer, preparer, and final editor attribution remain
   distinct and the reporter identity never enters AI-provider input;
+- schema-versioned confirmed-fact scopes that bind each fact to applicable
+  reporting officers, require deliberate assignment when multiple reporters are
+  selected, and reject cross-officer facts before generation and database
+  storage;
 - a nine-category, source-commit-bound checklist candidate with typed answer
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
@@ -107,9 +111,6 @@ Still required for parity:
 - implement category proposal/confirmation and structured extraction review;
 - operationally review every recovered question, option, dependency, required
   slot, report type, and paperwork mapping against the current source forms;
-- bind each confirmed action and fact to the applicable officer before
-  generating that officer's perspective when multiple reporting officers are
-  selected;
 - implement required auto-content and the approved 005/409 output mapping;
 - approve the source DOCX/form revisions and qualify print/export fidelity;
 - add exact opening, first-reference, quote, attribution, and combined-action

@@ -118,7 +118,12 @@ Immutable snapshot:
 - schema_version
 - provenance JSONB with bounded, validated keys
 
-Unique (incident_id, revision_number). A trigger rejects update/delete.
+Unique (incident_id, revision_number). A trigger rejects update/delete. Schema
+version two confirmed facts contain a bounded, unique `reportingStaffMemberIds`
+array. Every ID must match a `reporting_officer` relationship on that same
+revision. An empty array keeps a confirmed fact in the incident record but makes
+it unavailable to report generation. Immutable schema version one rows remain
+readable, but their unscoped facts cannot be used for a new draft.
 
 ### app_private.incident_staff_relationships
 
@@ -158,9 +163,11 @@ Each immutable review-only candidate records its incident and source revision,
 selected `reporting_staff_member_id`, requesting/preparing account, controlled
 report type, confirmed fact IDs, cited paragraphs, and provider key. The
 selected staff member must be an active `reporting_officer` on the exact source
-revision. Reporter identity is deliberately removed before AI-provider input.
-Finalization derives the reporting account from this stored selection and keeps
-the preparer and final revision editor as separate attributions.
+revision, and every source fact must name that selected staff member in its
+revision-local officer scope. Reporter identity is deliberately removed before
+AI-provider input. Finalization derives the reporting account from this stored
+selection and keeps the preparer and final revision editor as separate
+attributions.
 
 Both `app_private.reports` and immutable review-only draft candidates accept
 only `first_person`, `supervisor_summary`, `cover_letter`, or `disciplinary`.

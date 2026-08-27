@@ -61,7 +61,7 @@ const command = {
     },
   ],
   revision: {
-    schemaVersion: 1 as const,
+    schemaVersion: 2 as const,
     incidentName: "Fictional training scenario",
     incidentNumber: "F-INC-101",
     occurredAt: "2026-08-26T12:00:00Z",

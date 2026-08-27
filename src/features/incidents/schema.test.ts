@@ -11,6 +11,7 @@ import {
 const noteId = "11111111-1111-4111-8111-111111111111";
 const confirmedFactId = "22222222-2222-4222-8222-222222222222";
 const unknownFactId = "33333333-3333-4333-8333-333333333333";
+const reportingStaffMemberId = "66666666-6666-4666-8666-666666666666";
 
 const incidentRevision = {
   schemaVersion: INCIDENT_SCHEMA_VERSION,
@@ -32,6 +33,7 @@ const incidentRevision = {
       state: "confirmed",
       value: "Training room",
       sourceNoteIds: [noteId],
+      reportingStaffMemberIds: [reportingStaffMemberId],
     },
     {
       id: unknownFactId,
@@ -62,6 +64,7 @@ describe("incident revision contract", () => {
           state: "confirmed",
           value: "Training room",
           sourceNoteIds: [],
+          reportingStaffMemberIds: [reportingStaffMemberId],
         },
       ],
     };
@@ -88,6 +91,23 @@ describe("incident revision contract", () => {
     expect(incidentRevisionInputSchema.safeParse(duplicateFact).success).toBe(
       false,
     );
+  });
+
+  it("rejects duplicate reporting officer scopes", () => {
+    expect(
+      incidentRevisionInputSchema.safeParse({
+        ...incidentRevision,
+        reviewedFacts: [
+          {
+            ...incidentRevision.reviewedFacts[0],
+            reportingStaffMemberIds: [
+              reportingStaffMemberId,
+              reportingStaffMemberId,
+            ],
+          },
+        ],
+      }).success,
+    ).toBe(false);
   });
 
   it("rejects duplicate notes and fact provenance from another revision", () => {
@@ -126,6 +146,7 @@ describe("incident revision contract", () => {
       ],
       recordedAt: "2026-08-25T15:31:00-05:00",
       idFactory: () => ids.shift() ?? "",
+      reportingStaffMemberIdsByQuestionId: {},
     });
     const candidateRevision = {
       ...incidentRevision,
@@ -150,7 +171,7 @@ describe("report draft contract", () => {
     schemaVersion: INCIDENT_SCHEMA_VERSION,
     incidentId: "44444444-4444-4444-8444-444444444444",
     sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
-    reportingStaffMemberId: "66666666-6666-4666-8666-666666666666",
+    reportingStaffMemberId,
     reportType: "cover_letter",
     confirmedFactIds: [confirmedFactId],
   };

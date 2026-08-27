@@ -143,8 +143,11 @@ incident ID. Direct RPC calls still enforce active facility scope and payload
 provenance. Creation also requires one through twenty reporting officers and
 exactly one preparer. The RPC fixes the preparer to the authenticated account,
 verifies every selected staff member is active in the same facility, and denies
-duplicate or uncontrolled relationships. Hosted-session and browser-workflow
-integration remain separate release gates.
+duplicate or uncontrolled relationships. Schema version two also binds every
+confirmed fact to zero or more selected reporting officers. A fact scoped to an
+unselected person is rejected by the browser contract, server command, and
+database RPC. Hosted-session and browser-workflow integration remain separate
+release gates.
 
 The incident create contract also recognizes the recovered Report Assistant
 checklist candidate by its versioned fact-field marker. In Development, Test,
@@ -181,10 +184,14 @@ revision, one reporting staff member selected on that exact revision, report
 type, and explicit confirmed-fact IDs; it cannot assign an arbitrary actor,
 facility, or source text. The server verifies the selected person is an active
 reporting officer on the revision, removes that identity before provider input,
-validates the provider output against the confirmed facts, and stores an
-immutable attributed candidate before returning only an opaque candidate ID. It
-is not a final-report endpoint and it never returns generated narrative or
-source facts in the response.
+requires every requested confirmed fact to be explicitly scoped to that officer,
+removes the identity before provider input, validates the provider output
+against the confirmed facts, and stores an immutable attributed candidate before
+returning only an opaque candidate ID. Both the server source builder and
+database storage RPC fail closed on a cross-officer fact. Immutable schema
+version one facts remain readable but are not eligible for new report
+generation. This is not a final-report endpoint and it never returns generated
+narrative or source facts in the response.
 
 `reportType` is a closed value: `first_person`, `supervisor_summary`,
 `cover_letter`, or `disciplinary`. The same set is enforced at the request,

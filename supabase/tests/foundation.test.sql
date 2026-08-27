@@ -1,6 +1,6 @@
 begin;
 
-select plan(198);
+select plan(200);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -906,10 +906,10 @@ select lives_ok(
       'Fictional RPC scenario',
       '2026-08-26T12:00:00Z'::timestamptz,
       'training',
-      1,
+      2,
       '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
-      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
-      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
+      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"],"reportingStaffMemberIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
       repeat('1', 64),
       repeat('2', 64)
     );
@@ -938,7 +938,7 @@ select is(
     join app_private.incidents as incident on incident.id = revision.incident_id
     where incident.incident_number = 'FICTIONAL-RPC-001'
   ),
-  2,
+  3,
   'incident creation recorded separate reporting and preparing relationships'
 );
 
@@ -953,7 +953,7 @@ select throws_ok(
       'Fictional wrong preparer scenario',
       '2026-08-26T12:00:00Z'::timestamptz,
       'training',
-      1,
+      2,
       '[{"id":"15151515-1515-4151-8151-151515151515","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
       '[]'::jsonb,
       '[{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"reporting_officer"},{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"preparer"}]'::jsonb,
@@ -978,10 +978,10 @@ select lives_ok(
       'Fictional RPC scenario',
       '2026-08-26T12:00:00Z'::timestamptz,
       'training',
-      1,
+      2,
       '[{"id":"12121212-1212-4121-8121-121212121212","text":"Fictional note from an RPC test.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
-      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
-      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
+      '[{"id":"13131313-1313-4131-8131-131313131313","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["12121212-1212-4121-8121-121212121212"],"reportingStaffMemberIds":["12121212-1212-4121-8121-121212121212"]}]'::jsonb,
+      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
       repeat('1', 64),
       repeat('2', 64)
     );
@@ -1005,6 +1005,31 @@ select throws_ok(
   $$
     select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
     set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.create_incident(
+      current_setting('app.test.facility_id')::uuid,
+      'FICTIONAL-RPC-BAD-SCOPE',
+      'Fictional invalid fact scope scenario',
+      '2026-08-26T12:00:00Z'::timestamptz,
+      'training',
+      2,
+      '[{"id":"16161616-1616-4161-8161-161616161616","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
+      '[{"id":"17171717-1717-4171-8171-171717171717","field":"Fictional field","state":"confirmed","value":"Fictional value","sourceNoteIds":["16161616-1616-4161-8161-161616161616"],"reportingStaffMemberIds":["22222222-2222-4222-8222-222222222222"]}]'::jsonb,
+      '[{"staffMemberId":"12121212-1212-4121-8121-121212121212","relationship":"reporting_officer"},{"staffMemberId":"44444444-4444-4444-8444-444444444444","relationship":"preparer"}]'::jsonb,
+      repeat('b', 64),
+      repeat('c', 64)
+    );
+  $$,
+  'Invalid incident fact reporting scopes',
+  'a client cannot scope a confirmed fact to staff who are not a selected reporting officer'
+);
+
+reset role;
+
+select throws_ok(
+  $$
+    select set_config('app.test.facility_id', (select id::text from app_private.facilities limit 1), true);
+    set local role authenticated;
     select set_config('request.jwt.claim.sub', '11111111-1111-4111-8111-111111111111', true);
     select api.create_incident(
       current_setting('app.test.facility_id')::uuid,
@@ -1012,7 +1037,7 @@ select throws_ok(
       'Fictional denied scenario',
       '2026-08-26T12:00:00Z'::timestamptz,
       'training',
-      1,
+      2,
       '[{"id":"14141414-1414-4141-8141-141414141414","text":"Fictional note.","recordedAt":"2026-08-26T12:00:00Z"}]'::jsonb,
       '[]'::jsonb,
       '[{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"reporting_officer"},{"staffMemberId":"22222222-2222-4222-8222-222222222222","relationship":"preparer"}]'::jsonb,
@@ -1087,8 +1112,44 @@ select throws_ok(
       repeat('5', 64), repeat('6', 64)
     );
   $$,
-  'Not authorized to store a report draft candidate',
+  'Not authorized to use one or more report facts',
   'a client cannot bind a draft to staff who are not a reporting officer on the source revision'
+);
+
+reset role;
+
+select throws_ok(
+  $$
+    select set_config(
+      'app.test.incident_id',
+      (select id::text from app_private.incidents where incident_number = 'FICTIONAL-RPC-001'),
+      true
+    );
+    select set_config(
+      'app.test.revision_id',
+      (
+        select revision.id::text
+        from app_private.incident_revisions as revision
+        join app_private.incidents as incident on incident.id = revision.incident_id
+        where incident.incident_number = 'FICTIONAL-RPC-001' and revision.revision_number = 1
+      ),
+      true
+    );
+    set local role authenticated;
+    select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
+    select api.store_report_draft_candidate(
+      current_setting('app.test.incident_id')::uuid,
+      current_setting('app.test.revision_id')::uuid,
+      '44444444-4444-4444-8444-444444444444'::uuid,
+      'first_person',
+      array['13131313-1313-4131-8131-131313131313']::uuid[],
+      '[{"text":"Fictional mismatched officer paragraph.","sourceFactIds":["13131313-1313-4131-8131-131313131313"]}]'::jsonb,
+      'fictional-provider-v1',
+      repeat('d', 64), repeat('e', 64)
+    );
+  $$,
+  'Not authorized to use one or more report facts',
+  'a draft cannot use a confirmed fact scoped only to another selected reporting officer'
 );
 
 reset role;
@@ -1433,7 +1494,7 @@ select throws_ok(
       'fictional-provider-v1', repeat('9', 64), repeat('a', 64)
     );
   $$,
-  'Report draft source contains an unconfirmed fact',
+  'Not authorized to use one or more report facts',
   'a draft candidate cannot cite an unknown fact even through direct RPC access'
 );
 

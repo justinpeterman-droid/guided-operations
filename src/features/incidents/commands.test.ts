@@ -5,7 +5,7 @@ import {
 } from "./commands";
 
 const revision = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   incidentName: "Fictional scenario",
   incidentNumber: "F-001",
   occurredAt: "2026-08-26T12:00:00Z",
@@ -64,6 +64,28 @@ describe("createIncidentCommand", () => {
     expect(
       createIncidentCommandSchema.safeParse({ ...command, actorAccountId: "x" })
         .success,
+    ).toBe(false);
+  });
+
+  it("rejects a confirmed fact scoped to an unselected reporting officer", () => {
+    expect(
+      createIncidentCommandSchema.safeParse({
+        revision: {
+          ...revision,
+          reviewedFacts: [
+            {
+              id: "33333333-3333-4333-8333-333333333333",
+              field: "Fictional fact",
+              state: "confirmed",
+              value: "Fictional value",
+              sourceNoteIds: [revision.fieldNotes[0].id],
+              reportingStaffMemberIds: ["44444444-4444-4444-8444-444444444444"],
+            },
+          ],
+        },
+        staffRelationships,
+        idempotencyKey: "a".repeat(16),
+      }).success,
     ).toBe(false);
   });
 });

@@ -301,8 +301,10 @@ qualification, and owner acceptance remain open**
 6. Implement incident identity using official incident number and descriptive
    incident name, officer/preparer selection, field notes, missing-information
    review, and explicit unknown states.
-7. Implement deterministic fact confirmation before any generated narrative. AI
-   drafts remain visibly unreviewed and cannot create or alter source facts.
+7. Implement deterministic fact confirmation before any generated narrative.
+   Confirmed facts now carry reporting-officer scopes and cross-officer use is
+   rejected by the application and database. AI drafts remain visibly unreviewed
+   and cannot create or alter source facts.
 8. Implement report drafts, append-only revisions, restore-as-new-revision,
    ownership/history, persistence status, conflict handling, and retry-safe
    mutations.

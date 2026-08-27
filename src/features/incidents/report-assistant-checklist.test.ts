@@ -137,6 +137,10 @@ describe("versioned Report Assistant checklist", () => {
       answers,
       recordedAt: "2026-08-27T12:00:00.000Z",
       idFactory: () => ids.shift() ?? "",
+      reportingStaffMemberIdsByQuestionId: {
+        medical_disposition: ["66666666-6666-4666-8666-666666666666"],
+        investigation_occurred: ["66666666-6666-4666-8666-666666666666"],
+      },
     });
 
     expect(built.fieldNotes).toHaveLength(2);
@@ -145,6 +149,7 @@ describe("versioned Report Assistant checklist", () => {
       state: "confirmed",
       value: "N/A - no injuries reported",
       sourceNoteIds: ["11111111-1111-4111-8111-111111111111"],
+      reportingStaffMemberIds: ["66666666-6666-4666-8666-666666666666"],
     });
     expect(built.reviewedFacts[2]).toMatchObject({
       state: "unknown",

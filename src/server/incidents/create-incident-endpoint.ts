@@ -3,22 +3,16 @@ import "server-only";
 import { z } from "zod";
 
 import { revisionUsesCandidateReportChecklist } from "@/features/incidents/report-assistant-checklist";
-import { incidentStaffRelationshipsSchema } from "@/features/incidents/incident-staff-relationships";
-import { incidentRevisionInputSchema } from "@/features/incidents/schema";
+import { createIncidentRequestSchema } from "@/features/incidents/commands";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
 const idempotencyKeySchema = z.string().regex(/^[A-Za-z0-9_-]{16,128}$/);
-const requestBodySchema = z
-  .object({
-    revision: incidentRevisionInputSchema,
-    staffRelationships: incidentStaffRelationshipsSchema,
-  })
-  .strict();
-
 export type ValidatedCreateIncidentRequest = Readonly<{
-  revision: z.infer<typeof incidentRevisionInputSchema>;
-  staffRelationships: z.infer<typeof incidentStaffRelationshipsSchema>;
+  revision: z.infer<typeof createIncidentRequestSchema>["revision"];
+  staffRelationships: z.infer<
+    typeof createIncidentRequestSchema
+  >["staffRelationships"];
   idempotencyKey: string;
 }>;
 
@@ -64,7 +58,7 @@ export async function validateCreateIncidentEndpointRequest(
     return { ok: false, status: 400, code: "invalid_request" };
   }
 
-  const parsed = requestBodySchema.safeParse(body);
+  const parsed = createIncidentRequestSchema.safeParse(body);
   if (!parsed.success) {
     return { ok: false, status: 400, code: "invalid_request" };
   }

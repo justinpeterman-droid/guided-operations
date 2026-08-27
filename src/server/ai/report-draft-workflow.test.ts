@@ -19,7 +19,7 @@ const source = {
   display_name: "Fictional report-draft scenario",
   incident_revision_id: "44444444-4444-4444-8444-444444444444",
   revision_number: 1,
-  schema_version: 1,
+  schema_version: 2,
   reviewed_facts: [
     {
       id: "55555555-5555-4555-8555-555555555555",
@@ -27,6 +27,7 @@ const source = {
       state: "confirmed",
       value: "Fictional confirmed value",
       sourceNoteIds: ["66666666-6666-4666-8666-666666666666"],
+      reportingStaffMemberIds: ["55555555-5555-4555-8555-555555555555"],
     },
     {
       id: "77777777-7777-4777-8777-777777777777",
@@ -37,7 +38,7 @@ const source = {
   ],
 };
 const request: ReportDraftRequest = {
-  schemaVersion: 1 as const,
+  schemaVersion: 2 as const,
   incidentId: source.incident_id,
   sourceIncidentRevisionId: source.incident_revision_id,
   reportingStaffMemberId: "55555555-5555-4555-8555-555555555555",
@@ -160,6 +161,29 @@ describe("report draft workflow", () => {
     await expect(workflow.draft(request, 1, client([]))).resolves.toEqual({
       kind: "not_found",
     });
+    expect(generate).not.toHaveBeenCalled();
+  });
+
+  it("does not call the provider when a fact belongs only to another reporter", async () => {
+    const generate = vi.fn();
+    const workflow = createReportDraftWorkflow(
+      { providerKey: "fictional", generate },
+      { maximumParagraphs: 3, maximumParagraphCharacters: 500 },
+    );
+    const mismatchedSource = {
+      ...source,
+      reviewed_facts: [
+        {
+          ...source.reviewed_facts[0],
+          reportingStaffMemberIds: ["99999999-9999-4999-8999-999999999999"],
+        },
+        source.reviewed_facts[1],
+      ],
+    };
+
+    await expect(
+      workflow.draft(request, 1, client([mismatchedSource])),
+    ).resolves.toEqual({ kind: "not_found" });
     expect(generate).not.toHaveBeenCalled();
   });
 });
