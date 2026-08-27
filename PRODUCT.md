@@ -166,6 +166,9 @@ The target boundary is:
 
 - [Product Principles](docs/product/principles.md) — decisions that
   implementation may not weaken.
+- [Experience Design Brief](docs/product/experience-design-brief.md) —
+  owner-approved visual direction, command-center hierarchy, responsive
+  behavior, and design acceptance checklist.
 - [Roles and Permissions](docs/product/roles-and-permissions.md) — identity,
   role, and authorization matrix.
 - [Feature Catalog and Parity](docs/product/feature-catalog-and-parity.md) —

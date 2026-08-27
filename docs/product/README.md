@@ -9,6 +9,9 @@ no accepted complete migrated product route.
 
 - [Product Principles](principles.md) — non-negotiable experience, trust,
   privacy, accessibility, and provider rules.
+- [Experience Design Brief](experience-design-brief.md) — owner-approved visual
+  direction, command-center hierarchy, responsive behavior, and design
+  acceptance checklist.
 - [Roles and Permissions](roles-and-permissions.md) — identity concepts,
   officer/admin matrix, RLS/server enforcement, and open decisions.
 - [Feature Catalog and Parity](feature-catalog-and-parity.md) — old canonical
