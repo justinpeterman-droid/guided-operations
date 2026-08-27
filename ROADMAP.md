@@ -58,10 +58,13 @@ The hosted details and limitations are recorded in
   retrieval RPCs, and immutable ingestion/page/chunk provenance are built. The
   real corpus is still absent and may not be imported until custody, rights,
   hashing, page reconciliation, and evaluation gates pass.
-- Local fictional recovery now rehearses both a PostgreSQL archive restore and
-  private Storage object copy/checksum reconciliation with cleanup. This does
-  not replace encrypted off-provider hosted backups or a restore into an
-  isolated replacement project.
+- Local fictional recovery rehearses both a PostgreSQL archive restore and
+  private Storage object copy/checksum reconciliation with cleanup. A guarded
+  operator-host tool now streams the Production database and each private
+  Storage object into public-key encryption at an attested off-provider target,
+  with an encrypted detailed manifest and value-free evidence. It has not been
+  run against hosted Production and does not replace a successful scheduled
+  backup, decryption, or restore into an isolated replacement project.
 - Complete runtime readiness, secret/dependency scanning, strict allowlisted
   sign-in/policy/report telemetry, and repeated web/database/recovery CI exist.
   Hosted monitoring, alert delivery, budgets, backup jobs, and a live restore
@@ -84,9 +87,10 @@ The hosted details and limitations are recorded in
 5. The approved corpus has not passed retrieval, citation, refusal,
    supersession/conflict, prompt-injection, latency, and cost evaluation on the
    pinned production configuration.
-6. Encrypted off-provider hosted database and Storage backup jobs plus a restore
-   into an isolated replacement project do not exist. Local same-stack recovery
-   proof does not close this gate.
+6. The guarded encrypted off-provider database and Storage backup tool is built
+   locally, but its protected operator host, schedule, key custody, hosted run,
+   decryption proof, and restore into an isolated replacement project do not
+   exist. Local code and same-stack recovery proof do not close this gate.
 7. Production monitoring sinks, alert delivery, access/retention, cost caps,
    provider budgets, incident ownership, and release/rollback exercises do not
    exist.
@@ -460,7 +464,8 @@ rehearsal, monitoring, alerts, budgets, and exercises remain open**
 
 ## Phase 7 — live-environment qualification
 
-Status: **planned**
+Status: **protected backup tooling built locally; isolated live infrastructure,
+hosted backup/restore, qualification, and owner approval remain open**
 
 ### Steps
 
@@ -478,8 +483,10 @@ Status: **planned**
    implemented; configure its owner-protected `production-database` GitHub
    environment before the first dry-run. Production migrations run only through
    that job against an explicitly verified target.
-5. Implement scheduled encrypted logical database export plus a separate
-   private-Storage object inventory/export to an off-provider destination.
+5. Configure the guarded operator-host tool for scheduled encrypted logical
+   database export plus separate private-Storage object inventory/export to an
+   attested off-provider destination. Keep Production data and credentials out
+   of GitHub Actions, developer machines, and every non-production environment.
 6. Restore the database and Storage backup into a new isolated project; verify
    Auth-linked state, constraints, RLS, object checksums, corpus rebuild,
    browser flows, and achieved RPO/RTO.

@@ -77,26 +77,27 @@ protection before launch.
 Names are a contract; actual values belong in local ignored files, Vercel
 environment settings, Supabase secrets, or protected GitHub environments.
 
-| Variable                                                                       |        Local |       Preview/staging |                        Production | Classification                                                                      |
-| ------------------------------------------------------------------------------ | -----------: | --------------------: | --------------------------------: | ----------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                                                     |          yes |                   yes |                               yes | Public endpoint, environment-specific                                               |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                         |          yes |                   yes |                               yes | Public low-privilege key; RLS remains mandatory                                     |
-| `SUPABASE_SECRET_KEY`                                                          |     optional |           server only |                       server only | **Secret**, elevated and RLS-bypassing                                              |
-| `SUPABASE_DB_URL`                                                              | local server |           server only |                       server only | **Secret**; current private RPC/auth adapter connection                             |
-| `SUPABASE_MIGRATION_DB_URL`                                                    |           no |                    no | protected GitHub environment only | **Secret**; dedicated production migration connection, never a Vercel runtime value |
-| `AI_PROVIDER`                                                                  |          yes |                   yes |                               yes | Non-secret provider selector                                                        |
-| `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL` |          yes |                   yes |                               yes | Non-secret configuration; pin and record in releases                                |
-| `OPENAI_API_KEY`                                                               | local server |           server only |                       server only | **Secret**; never `NEXT_PUBLIC_*`                                                   |
-| `RAG_CORPUS_VERSION`                                                           |          yes |                   yes |                               yes | Non-secret immutable manifest/version identifier                                    |
-| `SAFE_OPERATIONAL_LOGGING_ENABLED`                                             |          yes |                   yes |                               yes | Non-secret fail-closed gate; required `true` in Production                          |
-| `APP_ENV`                                                                      |          yes |                   yes |                               yes | Non-secret guard against cross-environment writes                                   |
-| `APP_ORIGIN`                                                                   |          yes |                   yes |                               yes | Non-secret exact allowed origin                                                     |
-| `EMPLOYEE_LOOKUP_PEPPER`                                                       | local server |           server only |                       server only | **Secret**; keys employee-number lookup without storing raw values                  |
-| `AUTH_DUMMY_ALIAS`                                                             | local server |           server only |                       server only | **Secret**; fixed timing-defense identity, never browser-visible                    |
-| `CSRF_HMAC_KEY`                                                                | local server |           server only |                       server only | **Secret**; environment-specific session-bound CSRF signing key                     |
-| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                | local server |           server only |                       server only | **Secret**; hashes retry keys without retaining their raw values                    |
-| `AUTH_SIGN_IN_ENABLED`                                                         |          yes |                   yes |                               yes | Non-secret fail-closed feature gate; enabled only after auth proof                  |
-| backup destination credentials                                                 |           no | protected operator/CI |             protected operator/CI | **Secret**, separate from runtime credentials                                       |
+| Variable                                                                       |        Local | Preview/staging |                        Production | Classification                                                                      |
+| ------------------------------------------------------------------------------ | -----------: | --------------: | --------------------------------: | ----------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                                                     |          yes |             yes |                               yes | Public endpoint, environment-specific                                               |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                         |          yes |             yes |                               yes | Public low-privilege key; RLS remains mandatory                                     |
+| `SUPABASE_SECRET_KEY`                                                          |     optional |     server only |                       server only | **Secret**, elevated and RLS-bypassing                                              |
+| `SUPABASE_DB_URL`                                                              | local server |     server only |                       server only | **Secret**; current private RPC/auth adapter connection                             |
+| `SUPABASE_MIGRATION_DB_URL`                                                    |           no |              no | protected GitHub environment only | **Secret**; dedicated production migration connection, never a Vercel runtime value |
+| `AI_PROVIDER`                                                                  |          yes |             yes |                               yes | Non-secret provider selector                                                        |
+| `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL` |          yes |             yes |                               yes | Non-secret configuration; pin and record in releases                                |
+| `OPENAI_API_KEY`                                                               | local server |     server only |                       server only | **Secret**; never `NEXT_PUBLIC_*`                                                   |
+| `RAG_CORPUS_VERSION`                                                           |          yes |             yes |                               yes | Non-secret immutable manifest/version identifier                                    |
+| `SAFE_OPERATIONAL_LOGGING_ENABLED`                                             |          yes |             yes |                               yes | Non-secret fail-closed gate; required `true` in Production                          |
+| `APP_ENV`                                                                      |          yes |             yes |                               yes | Non-secret guard against cross-environment writes                                   |
+| `APP_ORIGIN`                                                                   |          yes |             yes |                               yes | Non-secret exact allowed origin                                                     |
+| `EMPLOYEE_LOOKUP_PEPPER`                                                       | local server |     server only |                       server only | **Secret**; keys employee-number lookup without storing raw values                  |
+| `AUTH_DUMMY_ALIAS`                                                             | local server |     server only |                       server only | **Secret**; fixed timing-defense identity, never browser-visible                    |
+| `CSRF_HMAC_KEY`                                                                | local server |     server only |                       server only | **Secret**; environment-specific session-bound CSRF signing key                     |
+| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                | local server |     server only |                       server only | **Secret**; hashes retry keys without retaining their raw values                    |
+| `AUTH_SIGN_IN_ENABLED`                                                         |          yes |             yes |                               yes | Non-secret fail-closed feature gate; enabled only after auth proof                  |
+| production backup database, Storage and destination credentials                |           no |              no |      protected operator host only | **Secret**; separate from runtime/migration credentials and prohibited in CI        |
+| production backup age recipient                                                |           no |              no |      protected operator host only | Public encryption recipient; private identity/key remains separately controlled     |
 
 The protected GitHub environment named `production-database` also owns three
 non-secret fail-closed variables: `PRODUCTION_MIGRATION_ENABLED=true`, the exact
@@ -122,8 +123,9 @@ JWT so RLS evaluates the user directly.
 4. Scope Vercel variables to Development, Preview, or Production explicitly. A
    changed variable affects only new builds; record which deployment contains
    it.
-5. Keep migration and backup credentials outside Vercel runtime unless the
-   application truly needs them.
+5. Keep migration and backup credentials outside Vercel runtime. Production
+   backup credentials are also prohibited in CI and developer environments; only
+   the protected operator host may receive them.
 6. Use GitHub environment protection for production migration secrets and
    require owner approval.
 7. Inventory owner, purpose, environment, creation date, last rotation, and

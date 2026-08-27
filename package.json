@@ -12,7 +12,7 @@
     "lint": "eslint --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run && npm run test:operations",
-    "test:operations": "node --test scripts/production-migration-guard.test.mjs scripts/verify-production-migration-history.test.mjs scripts/write-production-migration-evidence.test.mjs",
+    "test:operations": "node --test scripts/create-production-backup.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-production-migration-history.test.mjs scripts/write-production-migration-evidence.test.mjs",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "format": "prettier --write .",
@@ -28,6 +28,7 @@
     "db:types:generate": "node scripts/verify-database-types.mjs --write",
     "db:types:check": "node scripts/verify-database-types.mjs",
     "data:inventory:check": "node scripts/verify-production-data-inventory.mjs",
+    "backup:production": "node scripts/create-production-backup.mjs",
     "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations"
   },
   "dependencies": {

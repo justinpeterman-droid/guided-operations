@@ -362,8 +362,15 @@ Pause and report a blocker instead of guessing when work requires:
       workflow pinned to an exact commit, migration head, project, region, owner
       reference, reviewed dry-run, and backup evidence. The protected GitHub
       environment is not yet configured and no remote run has occurred.
-- [ ] Implement encrypted off-provider logical database backup.
-- [ ] Implement separate private-Storage inventory/object backup.
+- [x] Implement a fail-closed protected-operator tool that streams a full
+      logical database archive directly into public-key encryption, permits no
+      Production values in CI/local development, and writes only value-free
+      aggregate evidence. A hosted run, schedule, decryption, and restore remain
+      open.
+- [x] Implement private-Storage inventory/object backup that rejects public
+      buckets, encrypts every object under an opaque name, reconciles source
+      byte counts/checksums, and encrypts the detailed manifest. A hosted run
+      and restore remain open.
 - [x] Implement and locally pass a fictional database archive restore plus
       private-Storage API copy/checksum rehearsal with bounded value-free
       evidence and verified cleanup.

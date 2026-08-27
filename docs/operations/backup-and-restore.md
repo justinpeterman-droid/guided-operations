@@ -43,8 +43,9 @@ launch blocker unless explicitly accepted or resolved.
 
 ### Free-plan baseline
 
-1. Run a scheduled logical export using the current Supabase CLI `db dump`
-   workflow from a protected runner/operator host.
+1. Run a scheduled logical export from a dedicated protected operator host.
+   Production records are prohibited in GitHub Actions and every other CI
+   runner, so CI may test backup code only with fictional local data.
 2. Capture schema and data needed for recovery using commands validated against
    the current CLI version. Do not assume managed or internal schemas are
    included; verify Auth and migration-history coverage in the restore exercise.
@@ -55,6 +56,68 @@ launch blocker unless explicitly accepted or resolved.
 5. Restrict access and separate backup credentials from runtime credentials.
 6. Verify archive readability and checksum after upload.
 
+### Protected operator-host tool
+
+`npm run backup:production` implements the database and private-Storage export
+on a dedicated operator host. It has not been run against a hosted project and
+does not by itself close the backup or restore gates. The tool:
+
+- refuses non-Production use, loopback, the wrong project/region, missing TLS, a
+  missing owner reference, a disabled external gate, or an inexact typed
+  confirmation;
+- requires `pg_dump` and `age`, streams the database archive directly from
+  `pg_dump` into public-key encryption, and never writes a plaintext database
+  archive;
+- rejects public Storage buckets, recursively inventories every private object,
+  downloads each object through the authenticated Storage API, checks its byte
+  count and SHA-256, and writes only individually encrypted opaque filenames;
+- keeps object keys, bucket details, source checksums, and the project reference
+  only inside the encrypted manifest; and
+- writes a value-free evidence file containing aggregate counts, hashes, tool
+  versions, dates, and bounded references. An incomplete backup directory is
+  removed without touching the destination root.
+
+The destination must already exist outside the repository and contain this
+non-secret attestation file:
+
+```json
+{
+  "schema_version": 1,
+  "purpose": "guided-operations-production-backup",
+  "off_provider": true,
+  "encrypted_only": true,
+  "target_id": "OFF-PROVIDER-TARGET-001"
+}
+```
+
+The operator records no secret values and provides these values only through a
+protected process environment:
+
+| Name                                   | Purpose                                                                 |
+| -------------------------------------- | ----------------------------------------------------------------------- |
+| `APP_ENV=production`                   | Prevents use from Development, Preview, staging, or qualification       |
+| `PRODUCTION_BACKUP_ENABLED=true`       | External fail-closed operational gate                                   |
+| `SUPABASE_PROJECT_REF`                 | Exact 20-letter live project reference                                  |
+| `SUPABASE_PROJECT_REGION=us-east-1`    | Approved live region                                                    |
+| `PRODUCTION_BACKUP_DB_URL`             | Dedicated TLS-required logical-export connection                        |
+| `PRODUCTION_BACKUP_SUPABASE_URL`       | Exact live Supabase project origin                                      |
+| `PRODUCTION_BACKUP_STORAGE_KEY`        | Dedicated server-side private-Storage backup credential                 |
+| `PRODUCTION_BACKUP_DESTINATION`        | Absolute approved encrypted off-provider target                         |
+| `PRODUCTION_BACKUP_AGE_RECIPIENT`      | Public encryption recipient; the private identity stays separately held |
+| `PRODUCTION_BACKUP_APPROVAL_REFERENCE` | Bounded owner/change record reference; no names or record content       |
+| `PRODUCTION_BACKUP_EXPIRES_ON`         | Reviewed future expiry in `YYYY-MM-DD`                                  |
+| `PRODUCTION_BACKUP_CONFIRMATION`       | Exact `BACKUP PRODUCTION <project-ref>` confirmation                    |
+
+`PRODUCTION_BACKUP_PG_DUMP_PATH` and `PRODUCTION_BACKUP_AGE_PATH` may point to
+approved pinned executables. Database and Storage credentials are passed only to
+their required process/API call. The encryption child process receives a
+sanitized environment without application, database, Storage, or AI secrets.
+
+A production schedule, protected host, target access policy, recipient key
+custody, successful hosted backup, decryption, and isolated restore remain
+manual/external gates. Never test the command by supplying Production secrets in
+a developer shell, ticket, chat, screenshot, or CI variable.
+
 Supabase recommends regular logical exports for Free projects. Paid projects add
 managed daily database backups; Point-in-Time Recovery is a separate upgrade.
 Managed backup availability does not remove the need for Storage-object backup
@@ -62,8 +125,10 @@ or restore testing.
 
 ### Retention
 
-Until an owner-approved records policy exists, use a conservative technical
-schedule for non-operational qualification data:
+The owner-approved operational-record retention period is two years. Backup
+expiry must remain consistent with legal holds and the source-record deletion
+workflow; a backup may not silently outlive or prematurely defeat either. For
+fictional qualification data, use this conservative technical schedule:
 
 - seven daily logical backups;
 - four weekly backups;
@@ -71,8 +136,9 @@ schedule for non-operational qualification data:
 - pre-migration backups until the migration and next restore exercise are
   accepted.
 
-Do not apply this retention to future operational records without
-records-owner/legal approval.
+The ordinary schedule is not permission to remove a backup containing a held or
+otherwise preserved record. Backup expiry and deletion require the reconciled
+inventory and records-owner procedure in `real-data-governance.md`.
 
 ## Supabase Storage backup
 
