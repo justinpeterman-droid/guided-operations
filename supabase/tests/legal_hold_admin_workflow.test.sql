@@ -1,6 +1,6 @@
 begin;
 
-select plan(15);
+select plan(17);
 
 select ok(
   to_regprocedure('app_private.place_legal_hold(uuid,text,uuid,text)') is not null,
@@ -167,6 +167,26 @@ select throws_ok(
   $$,
   'Legal hold list limit must be between 1 and 200',
   'the private register rejects unbounded reads'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.list_legal_holds(
+      '71717171-7171-4171-8171-717171717171', false, null::integer
+    )
+  $$,
+  'Legal hold list limit must be between 1 and 200',
+  'the private register rejects a null limit instead of treating it as unbounded'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.list_legal_holds(
+      '71717171-7171-4171-8171-717171717171', null::boolean, 100
+    )
+  $$,
+  'Legal hold released-state flag is required',
+  'the private register rejects a null released-state filter'
 );
 
 select throws_ok(

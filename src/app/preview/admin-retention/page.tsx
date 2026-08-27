@@ -1,11 +1,6 @@
 import Link from "next/link";
 
-import { PlaceLegalHoldForm } from "@/app/admin/retention/place-legal-hold-form";
-import { ReleaseLegalHoldControl } from "@/app/admin/retention/release-legal-hold-control";
-
-const activeHoldId = "11111111-1111-4111-8111-111111111111";
-
-/** Fictional visual contract only; protected APIs still require a real admin. */
+/** Fictional visual contract only. Every control is deliberately inert. */
 export default function AdminRetentionPreviewPage() {
   return (
     <main className="reports-page">
@@ -34,7 +29,42 @@ export default function AdminRetentionPreviewPage() {
         </p>
       </section>
 
-      <PlaceLegalHoldForm />
+      <section
+        className="reports-list-section"
+        aria-labelledby="preview-place-hold-title"
+      >
+        <h2 id="preview-place-hold-title">Place a legal hold</h2>
+        <p>
+          This disabled example shows the information an administrator will use.
+          It cannot send a request or change a record.
+        </p>
+        <form className="account-session-confirm">
+          <label htmlFor="preview-legal-hold-scope">Record type</label>
+          <select id="preview-legal-hold-scope" disabled>
+            <option>Incident</option>
+          </select>
+          <label htmlFor="preview-legal-hold-scope-id">Target record ID</label>
+          <input
+            id="preview-legal-hold-scope-id"
+            disabled
+            placeholder="00000000-0000-4000-8000-000000000000"
+            type="text"
+          />
+          <label htmlFor="preview-legal-hold-authority">
+            Authority reference
+          </label>
+          <input
+            id="preview-legal-hold-authority"
+            disabled
+            placeholder="FICTIONAL-HOLD-001"
+            type="text"
+          />
+          <button disabled type="button">
+            Confirm legal hold
+          </button>
+          <p className="account-session-message">Preview only — disabled</p>
+        </form>
+      </section>
 
       <section
         className="reports-list-section"
@@ -52,7 +82,9 @@ export default function AdminRetentionPreviewPage() {
               <p>Authority: FICTIONAL-HOLD-001</p>
               <p>Placed Aug 27, 2026, 3:00 AM UTC</p>
             </div>
-            <ReleaseLegalHoldControl holdId={activeHoldId} />
+            <button disabled type="button">
+              Release hold
+            </button>
           </article>
           <article className="report-list-item" role="listitem">
             <div>
