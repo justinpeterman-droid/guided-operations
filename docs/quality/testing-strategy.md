@@ -109,10 +109,24 @@ Run critical smoke tests on each preview and the fuller suite on the pinned
 release candidate. Re-run an authenticated smoke against the exact production
 deployment only after owner-authorized promotion.
 
+The guarded `npm run test:e2e:local-auth` qualification command is restricted to
+the fixed loopback Supabase ports and requires the exact local confirmation
+flag. It resets only that disposable local database, provisions unmistakably
+fictional administrator and officer accounts through the private lifecycle
+functions, exercises private password sign-in and the Count Sheet
+save/reopen/print/sign-out path, and resets the local database again. It must
+never be pointed at Preview, staging, or Production and is not a substitute for
+the later protected hosted-browser qualification.
+
 ## PostgreSQL, RLS, Auth, and Storage matrix
 
 Every protected table, view, RPC, and bucket needs an explicit matrix. At
 minimum test:
+
+`npm run db:lint` checks the application-owned `api`, `app_private`, and
+`public` schemas and fails on warnings. The bundled `extensions` schema is
+excluded because it contains provider-managed pgTAP helper functions used only
+by the database test runner; those helpers are not application code.
 
 | Actor/state                   | Expected checks                                                           |
 | ----------------------------- | ------------------------------------------------------------------------- |

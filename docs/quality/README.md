@@ -10,11 +10,14 @@ accessibility, recoverability, and explicit owner control.
 Web, database, and fictional recovery CI now exist and repeatedly pass on the
 production-readiness branch. Unit/component, pgTAP, secret/dependency, build,
 private-Storage negative, runtime-readiness, and local recovery controls cover
-important implementation slices. They do not prove a signed-in hosted browser
-flow, full accessibility/print parity, approved-corpus quality, off-provider
-hosted restore, monitoring/alerts, exact release qualification, or Production
-approval. Inspect the exact commit and retained evidence before citing a gate as
-passed.
+important implementation slices. A guarded, destructive-local-only browser
+runner is now implemented to create fictional staff through the private
+lifecycle and exercise the officer Count Sheet
+sign-in/save/reopen/print/sign-out path; executing and accepting that browser
+run and the protected hosted proof remain open. Existing evidence does not prove
+full accessibility/print parity, approved-corpus quality, off-provider hosted
+restore, monitoring/alerts, exact release qualification, or Production approval.
+Inspect the exact commit and retained evidence before citing a gate as passed.
 
 ## Documents
 

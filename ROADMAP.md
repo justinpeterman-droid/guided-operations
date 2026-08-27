@@ -223,8 +223,10 @@ open**
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap
 
-Status: **in progress; ADR-0003 security acceptance remains required before
-production login**
+Status: **private lifecycle, local password-provider configuration, and a
+guarded fictional officer browser runner are built; completing the browser run,
+hosted proof, and ADR-0003 security acceptance remain required before production
+login**
 
 ### Steps
 
