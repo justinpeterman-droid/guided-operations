@@ -25,6 +25,19 @@ vi.mock("@/server/retention/legal-hold", () => ({
       },
     ],
   }),
+  listRetentionReviewForCurrentSession: vi.fn().mockResolvedValue({
+    kind: "listed",
+    candidates: [
+      {
+        recordType: "incident",
+        recordId: "33333333-3333-4333-8333-333333333333",
+        archivedAt: "2024-01-01T03:00:00.000Z",
+        deletionEligibleAt: "2025-12-31T03:00:00.000Z",
+        activeLegalHold: true,
+        deletionReady: false,
+      },
+    ],
+  }),
 }));
 
 import AdminRetentionPage from "./page";
@@ -37,6 +50,10 @@ describe("AdminRetentionPage", () => {
       screen.getByRole("heading", { name: "Retention and legal holds" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/FICTIONAL-HOLD-001/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Two-year deletion review" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Protected by legal hold")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Confirm legal hold" }),
     ).toBeInTheDocument();

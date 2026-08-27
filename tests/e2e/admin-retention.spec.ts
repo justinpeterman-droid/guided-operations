@@ -22,6 +22,10 @@ test("shows the fictional legal-hold layout safely at desktop and mobile sizes",
   ).toBeVisible();
   await expect(page.getByText("Fictional training preview")).toBeVisible();
   await expect(
+    page.getByRole("heading", { name: "Two-year deletion review" }),
+  ).toBeVisible();
+  await expect(page.getByText("Protected by legal hold")).toBeVisible();
+  await expect(
     page.getByRole("button", { name: "Confirm legal hold" }),
   ).toBeDisabled();
   await expect(

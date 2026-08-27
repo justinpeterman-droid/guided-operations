@@ -4,7 +4,9 @@ import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   listLegalHoldsForCurrentSession,
+  listRetentionReviewForCurrentSession,
   type LegalHoldSummary,
+  type RetentionReviewSummary,
 } from "@/server/retention/legal-hold";
 import { createLegalHoldStore } from "@/server/retention/private-legal-hold-store";
 
@@ -14,9 +16,14 @@ import { ReleaseLegalHoldControl } from "./release-legal-hold-control";
 export const dynamic = "force-dynamic";
 
 export default async function AdminRetentionPage() {
-  const result = await loadLegalHolds();
-  if (result.kind === "denied") return <AccessRequired />;
-  if (result.kind === "unavailable") return <Unavailable />;
+  const [holdResult, reviewResult] = await Promise.all([
+    loadLegalHolds(),
+    loadRetentionReview(),
+  ]);
+  if (holdResult.kind === "denied" || reviewResult.kind === "denied")
+    return <AccessRequired />;
+  if (holdResult.kind === "unavailable" || reviewResult.kind === "unavailable")
+    return <Unavailable />;
 
   return (
     <main className="reports-page">
@@ -47,9 +54,72 @@ export default async function AdminRetentionPage() {
         </p>
       </section>
 
+      <RetentionReviewRegister candidates={reviewResult.candidates} />
       <PlaceLegalHoldForm />
-      <LegalHoldRegister holds={result.holds} />
+      <LegalHoldRegister holds={holdResult.holds} />
     </main>
+  );
+}
+
+export async function loadRetentionReview() {
+  try {
+    return await listRetentionReviewForCurrentSession(
+      await createSupabaseServerClient(),
+      createLegalHoldStore(),
+      { asOf: new Date().toISOString(), limit: 100 },
+    );
+  } catch {
+    return { kind: "unavailable" } as const;
+  }
+}
+
+function RetentionReviewRegister({
+  candidates,
+}: Readonly<{ candidates: readonly RetentionReviewSummary[] }>) {
+  return (
+    <section
+      className="reports-list-section"
+      aria-labelledby="retention-review-title"
+    >
+      <h2 id="retention-review-title">Two-year deletion review</h2>
+      <p>
+        These archived records reached their ordinary review date. This list
+        does not approve or perform deletion. Active legal holds always block
+        further action.
+      </p>
+      {candidates.length === 0 ? (
+        <div className="reports-empty-state">
+          <p>No records have reached the two-year review date.</p>
+        </div>
+      ) : (
+        <div className="reports-list" role="list">
+          {candidates.map((candidate) => (
+            <article
+              className="report-list-item"
+              key={`${candidate.recordType}:${candidate.recordId}`}
+              role="listitem"
+            >
+              <div>
+                <p className="eyebrow">{reviewLabel(candidate.recordType)}</p>
+                <h3>
+                  {candidate.activeLegalHold
+                    ? "Protected by legal hold"
+                    : "Eligible for records review"}
+                </h3>
+                <p>
+                  Target ID: <code>{candidate.recordId}</code>
+                </p>
+                <p>Archived {formatTime(candidate.archivedAt)}</p>
+                <p>Review date {formatTime(candidate.deletionEligibleAt)}</p>
+              </div>
+              <span className="report-status">
+                {candidate.activeLegalHold ? "Hold active" : "Review only"}
+              </span>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -125,6 +195,14 @@ function scopeLabel(scopeType: LegalHoldSummary["scopeType"]): string {
   }[scopeType];
 }
 
+function reviewLabel(recordType: RetentionReviewSummary["recordType"]): string {
+  return {
+    incident: "Archived incident",
+    report: "Archived report",
+    paperwork_record: "Archived paperwork record",
+  }[recordType];
+}
+
 function formatTime(value: string): string {
   return new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium",
@@ -162,7 +240,7 @@ function Unavailable() {
       >
         <p className="eyebrow">Records controls unavailable</p>
         <h1 id="retention-unavailable-title">
-          The legal-hold register cannot load right now.
+          Records controls cannot load right now.
         </h1>
         <p>No legal hold has been changed.</p>
         <Link className="reports-home-link" href="/admin">

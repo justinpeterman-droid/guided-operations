@@ -20,6 +20,12 @@ export const LEGAL_HOLD_SCOPE_TYPES = [
 
 export type LegalHoldScopeType = (typeof LEGAL_HOLD_SCOPE_TYPES)[number];
 
+export const RETENTION_REVIEW_RECORD_TYPES = [
+  "incident",
+  "report",
+  "paperwork_record",
+] as const;
+
 const authorityReferenceSchema = z
   .string()
   .min(3)
@@ -55,6 +61,21 @@ const holdSummarySchema = z
 
 export type LegalHoldSummary = z.infer<typeof holdSummarySchema>;
 
+const retentionReviewSummarySchema = z
+  .object({
+    recordType: z.enum(RETENTION_REVIEW_RECORD_TYPES),
+    recordId: z.string().uuid(),
+    archivedAt: z.iso.datetime({ offset: true }),
+    deletionEligibleAt: z.iso.datetime({ offset: true }),
+    activeLegalHold: z.boolean(),
+    deletionReady: z.boolean(),
+  })
+  .strict();
+
+export type RetentionReviewSummary = z.infer<
+  typeof retentionReviewSummarySchema
+>;
+
 export type LegalHoldStore = Readonly<{
   place(
     actorAuthUserId: string,
@@ -68,6 +89,10 @@ export type LegalHoldStore = Readonly<{
   list(
     actorAuthUserId: string,
     options: Readonly<{ includeReleased: boolean; limit: number }>,
+  ): Promise<unknown>;
+  listRetentionReview(
+    actorAuthUserId: string,
+    options: Readonly<{ asOf: string; limit: number }>,
   ): Promise<unknown>;
 }>;
 
@@ -153,6 +178,46 @@ export async function listLegalHoldsForCurrentSession(
       .safeParse(await store.list(session.account.authUserId, options));
     return parsed.success
       ? { kind: "listed", holds: parsed.data }
+      : { kind: "unavailable" };
+  } catch {
+    return { kind: "unavailable" };
+  }
+}
+
+export type ListRetentionReviewResult =
+  | Readonly<{
+      kind: "listed";
+      candidates: readonly RetentionReviewSummary[];
+    }>
+  | Readonly<{ kind: "denied" }>
+  | Readonly<{ kind: "unavailable" }>;
+
+/** Lists records that reached the two-year review date; it grants no deletion authority. */
+export async function listRetentionReviewForCurrentSession(
+  client: CurrentSessionClient,
+  store: LegalHoldStore,
+  options: Readonly<{ asOf: string; limit: number }>,
+): Promise<ListRetentionReviewResult> {
+  const session = await authorizeCurrentSession(client, {
+    requiredRole: "administrator",
+  });
+  if (!session.allowed) return { kind: "denied" };
+  if (
+    !z.iso.datetime({ offset: true }).safeParse(options.asOf).success ||
+    !Number.isInteger(options.limit) ||
+    options.limit < 1 ||
+    options.limit > 200
+  )
+    return { kind: "unavailable" };
+
+  try {
+    const parsed = z
+      .array(retentionReviewSummarySchema)
+      .safeParse(
+        await store.listRetentionReview(session.account.authUserId, options),
+      );
+    return parsed.success
+      ? { kind: "listed", candidates: parsed.data }
       : { kind: "unavailable" };
   } catch {
     return { kind: "unavailable" };

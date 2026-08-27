@@ -404,8 +404,9 @@ and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 ## Phase 6 — administration and operational controls
 
 Status: **account/audit/health controls, purpose-bound legal-hold operation,
-redacted core telemetry, and local recovery are implemented; controlled
-deletion, hosted monitoring, alerts, budgets, and exercises remain open**
+bounded two-year review, redacted core telemetry, and local recovery are
+implemented; controlled deletion, hosted monitoring, alerts, budgets, and
+exercises remain open**
 
 ### Steps
 
@@ -435,9 +436,10 @@ deletion, hosted monitoring, alerts, budgets, and exercises remain open**
    the database. Keep classification separate from deletion authority, and
    require protected admin workflow plus backup-aware evidence before any
    destructive cleanup. The protected `/admin/retention` register now places and
-   releases validated holds through separate one-time step-up purposes; it
-   exposes no deletion action. Backup-aware deletion and hosted evidence remain
-   open.
+   releases validated holds through separate one-time step-up purposes and shows
+   a bounded same-facility list after the two-year review date. Held records
+   stay visible but blocked. The page exposes no deletion action. Backup-aware
+   approval, deletion execution, and hosted evidence remain open.
 9. Set provider budgets and circuit breakers. A provider limit must create an
    honest degraded state, not fabricated output or partial silent saves.
 10. Exercise credential rotation, dependency update, incident response,

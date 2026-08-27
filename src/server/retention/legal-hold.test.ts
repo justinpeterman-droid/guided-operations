@@ -9,6 +9,7 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 
 import {
   listLegalHoldsForCurrentSession,
+  listRetentionReviewForCurrentSession,
   placeLegalHold,
   releaseLegalHold,
   type LegalHoldStore,
@@ -31,6 +32,16 @@ function store(): LegalHoldStore {
         createdAt: "2026-08-27T03:00:00.000Z",
         releasedAt: null,
         releaseAuthorityReference: null,
+      },
+    ]),
+    listRetentionReview: vi.fn().mockResolvedValue([
+      {
+        recordType: "incident",
+        recordId: scopeId,
+        archivedAt: "2024-01-01T03:00:00.000Z",
+        deletionEligibleAt: "2025-12-31T03:00:00.000Z",
+        activeLegalHold: false,
+        deletionReady: true,
       },
     ]),
   };
@@ -133,5 +144,60 @@ describe("legal hold operations", () => {
 
     expect(result).toEqual({ kind: "denied" });
     expect(legalHoldStore.list).not.toHaveBeenCalled();
+  });
+
+  it("lists the bounded two-year review queue only for a current administrator", async () => {
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: true,
+      account: { authUserId: actorId },
+    } as never);
+    const legalHoldStore = store();
+    const options = { asOf: "2026-08-27T03:00:00.000Z", limit: 100 };
+
+    const result = await listRetentionReviewForCurrentSession(
+      {} as never,
+      legalHoldStore,
+      options,
+    );
+
+    expect(result).toMatchObject({ kind: "listed" });
+    expect(legalHoldStore.listRetentionReview).toHaveBeenCalledWith(
+      actorId,
+      options,
+    );
+  });
+
+  it("fails closed before querying an invalid review window", async () => {
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: true,
+      account: { authUserId: actorId },
+    } as never);
+    const legalHoldStore = store();
+
+    const result = await listRetentionReviewForCurrentSession(
+      {} as never,
+      legalHoldStore,
+      { asOf: "not-a-time", limit: 100 },
+    );
+
+    expect(result).toEqual({ kind: "unavailable" });
+    expect(legalHoldStore.listRetentionReview).not.toHaveBeenCalled();
+  });
+
+  it("does not expose the review queue to a non-administrator", async () => {
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: false,
+      reason: "wrong_role",
+    } as never);
+    const legalHoldStore = store();
+
+    const result = await listRetentionReviewForCurrentSession(
+      {} as never,
+      legalHoldStore,
+      { asOf: "2026-08-27T03:00:00.000Z", limit: 100 },
+    );
+
+    expect(result).toEqual({ kind: "denied" });
+    expect(legalHoldStore.listRetentionReview).not.toHaveBeenCalled();
   });
 });

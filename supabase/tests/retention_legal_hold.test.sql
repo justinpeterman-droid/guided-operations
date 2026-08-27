@@ -1,6 +1,6 @@
 begin;
 
-select plan(20);
+select plan(26);
 
 select has_table('app_private', 'legal_holds', 'private legal holds exist');
 select has_column(
@@ -46,6 +46,25 @@ select ok(
       'execute'
     ),
   'Data API roles cannot invoke private hold mutations'
+);
+select ok(
+  to_regprocedure(
+    'app_private.list_retention_review_candidates(uuid,timestamptz,integer)'
+  ) is not null,
+  'the private administrator retention-review routine exists'
+);
+select ok(
+  not has_function_privilege(
+    'authenticated',
+    'app_private.list_retention_review_candidates(uuid,timestamptz,integer)',
+    'execute'
+  )
+    and not has_function_privilege(
+      'service_role',
+      'app_private.list_retention_review_candidates(uuid,timestamptz,integer)',
+      'execute'
+    ),
+  'Data API roles cannot invoke the retention-review routine'
 );
 
 insert into auth.users (id, email)
@@ -190,6 +209,20 @@ select is(
   'eligible archived records are classified without deleting them'
 );
 
+select is(
+  (
+    select count(*)::integer
+    from app_private.list_retention_review_candidates(
+      '91919191-9191-4191-8191-919191919191',
+      timestamptz '2026-01-10 00:00:00+00',
+      100
+    )
+    where deletion_ready
+  ),
+  3,
+  'the current administrator sees the bounded same-facility review queue'
+);
+
 select lives_ok(
   $$
     select set_config(
@@ -233,6 +266,44 @@ select is(
   ),
   0,
   'an active hold overrides ordinary deletion eligibility'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from app_private.list_retention_review_candidates(
+      '91919191-9191-4191-8191-919191919191',
+      timestamptz '2026-01-10 00:00:00+00',
+      100
+    )
+    where active_legal_hold and not deletion_ready
+  ),
+  3,
+  'held records remain visible for review but never appear deletion ready'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.list_retention_review_candidates(
+      '91919191-9191-4191-8191-919191919191',
+      null::timestamptz,
+      100
+    )
+  $$,
+  'Retention review time must not be null or in the future',
+  'the review routine rejects a null classification time'
+);
+
+select throws_ok(
+  $$
+    select * from app_private.list_retention_review_candidates(
+      '91919191-9191-4191-8191-919191919191',
+      timestamptz '2026-01-10 00:00:00+00',
+      null::integer
+    )
+  $$,
+  'Retention review limit must be between 1 and 200',
+  'the review routine rejects a null limit'
 );
 
 select throws_ok(

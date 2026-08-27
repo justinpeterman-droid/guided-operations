@@ -39,7 +39,12 @@ jobs are configured. Entries with a pending `release_status` or
   deletion authority or deletes anything.
 - Private legal-hold records validate their target and facility, are audited,
   and remain immutable after release. No Data API role can read or change them
-  directly, and no public hold-management endpoint exists yet.
+  directly. Protected administrator routes use current-role, origin, CSRF, and
+  purpose-bound step-up checks for placement and release.
+- The protected administrator retention page shows a bounded same-facility
+  review list only after the two-year date. Held records remain visible but
+  blocked. Classification grants no deletion authority, and no deletion action
+  or automatic cleanup path is exposed.
 - Backups remain protected until every included source record is deletion
   eligible and any hold has cleared.
 

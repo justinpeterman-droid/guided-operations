@@ -31,6 +31,31 @@ export default function AdminRetentionPreviewPage() {
 
       <section
         className="reports-list-section"
+        aria-labelledby="preview-retention-review-title"
+      >
+        <h2 id="preview-retention-review-title">Two-year deletion review</h2>
+        <p>
+          Fictional example only. This read-only list cannot approve or perform
+          deletion.
+        </p>
+        <div className="reports-list" role="list">
+          <article className="report-list-item" role="listitem">
+            <div>
+              <p className="eyebrow">Archived incident</p>
+              <h3>Protected by legal hold</h3>
+              <p>
+                Target ID: <code>44444444-4444-4444-8444-444444444444</code>
+              </p>
+              <p>Archived Jan 1, 2024, 3:00 AM UTC</p>
+              <p>Review date Dec 31, 2025, 3:00 AM UTC</p>
+            </div>
+            <span className="report-status">Hold active</span>
+          </article>
+        </div>
+      </section>
+
+      <section
+        className="reports-list-section"
         aria-labelledby="preview-place-hold-title"
       >
         <h2 id="preview-place-hold-title">Place a legal hold</h2>
