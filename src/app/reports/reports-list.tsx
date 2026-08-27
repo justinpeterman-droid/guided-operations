@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
+import { getReportTypeDefinition } from "@/features/incidents/report-types";
 import type { ReportSummary } from "@/server/incidents/list-reports";
 
 export type AuthorizedIncidentSummary = Readonly<{
@@ -85,7 +86,7 @@ export function ReportsList({
                 <tr key={report.reportId}>
                   <th scope="row">
                     <Link href={`/reports/${report.reportId}`}>
-                      {report.reportType}
+                      {getReportTypeDefinition(report.reportType).label}
                     </Link>
                   </th>
                   <td>

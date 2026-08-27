@@ -4,6 +4,10 @@ import { z } from "zod";
 
 import { generatedReportDraftSchema } from "@/features/incidents/generated-report-draft";
 import {
+  reportTypeSchema,
+  type ReportType,
+} from "@/features/incidents/report-types";
+import {
   authorizeCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
@@ -14,7 +18,7 @@ const candidateRowsSchema = z.array(
       candidate_id: z.uuid(),
       incident_id: z.uuid(),
       source_incident_revision_id: z.uuid(),
-      report_type: z.string().min(1).max(100),
+      report_type: reportTypeSchema,
       source_fact_ids: z.array(z.uuid()).min(1).max(300),
       paragraphs: generatedReportDraftSchema.shape.paragraphs,
       created_at: z.iso.datetime({ offset: true }),
@@ -36,7 +40,7 @@ export type ReportDraftCandidate = Readonly<{
   candidateId: string;
   incidentId: string;
   sourceIncidentRevisionId: string;
-  reportType: string;
+  reportType: ReportType;
   sourceFactIds: readonly string[];
   paragraphs: readonly {
     text: string;

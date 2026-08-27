@@ -83,10 +83,13 @@ Already present:
 - strict provider output with paragraph-to-fact IDs;
 - explicit officer review before finalization;
 - authorized report list, history, restore, and print-request audit;
-- the versioned `bmu-house-style-v1` generation profile;
+- the versioned `bmu-house-style-v2` generation profile;
 - deterministic rejection of legacy blocking errors for ADC/rank/time format,
   invented numeric facts, placeholders, clinical wording, prohibited closers,
-  supervisor first-person wording, and missing disciplinary closing language.
+  missing first-person perspective, supervisor first-person wording, and missing
+  disciplinary closing language;
+- one controlled report package—first person, supervisor summary, cover letter,
+  and disciplinary—enforced by the request, service, read, and database layers;
 - a nine-category, source-commit-bound checklist candidate with typed answer
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
@@ -99,11 +102,13 @@ Still required for parity:
 - implement category proposal/confirmation and structured extraction review;
 - operationally review every recovered question, option, dependency, required
   slot, report type, and paperwork mapping against the current source forms;
-- implement per-officer relationship selection and perspective validation;
+- implement per-officer relationship selection; the report-type perspective
+  boundary is now enforced, but one incident still needs explicit reporting-
+  officer/preparer relationships;
 - implement required auto-content and the approved 005/409 output mapping;
 - approve the source DOCX/form revisions and qualify print/export fidelity;
-- add exact opening, first-reference, self-reference, quote, attribution, and
-  combined-action validation where the confirmed schema provides enough data;
+- add exact opening, first-reference, quote, attribution, and combined-action
+  validation where the confirmed schema provides enough data;
 - complete browser acceptance for edit, comparison, history, restore, and
   explicit-revision export.
 

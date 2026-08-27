@@ -36,7 +36,7 @@ describe("ReportsList", () => {
             reportId: "report-one",
             incidentNumber: "F-002",
             incidentName: "Fictional training two",
-            reportType: "fictional-exercise-report",
+            reportType: "cover_letter",
             status: "draft",
             currentRevisionNumber: 1,
             updatedAt: "2026-08-26T12:00:00Z",
@@ -46,14 +46,15 @@ describe("ReportsList", () => {
     );
     await user.type(
       screen.getByLabelText("Search your authorized reports"),
-      "exercise",
+      "F-002",
     );
     expect(screen.getAllByText("Fictional training two")).toHaveLength(2);
     expect(
       screen.queryByText("Fictional training one"),
     ).not.toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "fictional-exercise-report" }),
-    ).toHaveAttribute("href", "/reports/report-one");
+    expect(screen.getByRole("link", { name: "Cover letter" })).toHaveAttribute(
+      "href",
+      "/reports/report-one",
+    );
   });
 });

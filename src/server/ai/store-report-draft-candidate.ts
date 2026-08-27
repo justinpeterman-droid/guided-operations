@@ -6,6 +6,7 @@ import { z } from "zod";
 
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
+import { reportTypeSchema } from "@/features/incidents/report-types";
 import type { Json } from "@/lib/supabase/database.generated";
 import {
   authorizeCurrentSession,
@@ -16,7 +17,7 @@ const requestSchema = z.object({
   source: z.object({
     incidentId: z.uuid(),
     sourceIncidentRevisionId: z.uuid(),
-    reportType: z.string().trim().min(1).max(100),
+    reportType: reportTypeSchema,
     confirmedFacts: z
       .array(z.object({ id: z.uuid() }).passthrough())
       .min(1)

@@ -3,11 +3,12 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { storeReportDraftCandidateForCurrentSession } from "./store-report-draft-candidate";
+import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
 
-const source = {
+const source: ReportDraftSource = {
   incidentId: "11111111-1111-4111-8111-111111111111",
   sourceIncidentRevisionId: "22222222-2222-4222-8222-222222222222",
-  reportType: "fictional-training-report",
+  reportType: "cover_letter",
   confirmedFacts: [
     {
       id: "33333333-3333-4333-8333-333333333333",
@@ -102,5 +103,22 @@ describe("storeReportDraftCandidateForCurrentSession", () => {
       "store_report_draft_candidate",
       expect.anything(),
     );
+  });
+
+  it("rejects an invented report type before session or storage work", async () => {
+    const sessionClient = client();
+    await expect(
+      storeReportDraftCandidateForCurrentSession(
+        {
+          source: { ...source, reportType: "invented_report" } as never,
+          draft,
+          providerKey: "fictional-provider-v1",
+          idempotencyKey: "fictional-retry-key-1234",
+        },
+        sessionClient,
+        "a-32-byte-fixture-idempotency-hmac-key",
+      ),
+    ).resolves.toEqual({ kind: "denied" });
+    expect(sessionClient.rpc).not.toHaveBeenCalled();
   });
 });

@@ -150,7 +150,7 @@ describe("report draft contract", () => {
     schemaVersion: INCIDENT_SCHEMA_VERSION,
     incidentId: "44444444-4444-4444-8444-444444444444",
     sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
-    reportType: "incident_report",
+    reportType: "cover_letter",
     confirmedFactIds: [confirmedFactId],
   };
 
@@ -169,6 +169,15 @@ describe("report draft contract", () => {
       reportDraftRequestSchema.safeParse({
         ...draftRequest,
         narrative: "Unreviewed content must not enter through this request.",
+      }).success,
+    ).toBe(false);
+  });
+
+  it("rejects report types outside the approved report package", () => {
+    expect(
+      reportDraftRequestSchema.safeParse({
+        ...draftRequest,
+        reportType: "invented_report_type",
       }).success,
     ).toBe(false);
   });

@@ -3,6 +3,7 @@ import {
   type ReportDraftRequest,
   type ReviewedFact,
 } from "./schema";
+import type { ReportType } from "./report-types";
 
 export class ReportDraftSourceError extends Error {
   constructor(message: string) {
@@ -21,7 +22,7 @@ export type ConfirmedReportFact = {
 export type ReportDraftSource = {
   incidentId: string;
   sourceIncidentRevisionId: string;
-  reportType: string;
+  reportType: ReportType;
   confirmedFacts: ConfirmedReportFact[];
 };
 

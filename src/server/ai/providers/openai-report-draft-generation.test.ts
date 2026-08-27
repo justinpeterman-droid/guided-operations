@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 
 import { createOpenAiReportDraftGenerationProvider } from "./openai-report-draft-generation";
 import { REPORT_WRITING_RULE_PROFILE } from "@/features/incidents/report-writing-rules";
+import type { ReportDraftGenerationRequest } from "../contracts";
 
 const environment = {
   OPENAI_API_KEY: "x".repeat(20),
@@ -13,11 +14,11 @@ const release = vi.fn().mockResolvedValue(undefined);
 const budgetGuard = {
   reserve: vi.fn().mockResolvedValue({ release, providerTimeoutMs: 85_000 }),
 };
-const request = {
+const request: ReportDraftGenerationRequest = {
   source: {
     incidentId: "11111111-1111-4111-8111-111111111111",
     sourceIncidentRevisionId: "22222222-2222-4222-8222-222222222222",
-    reportType: "incident_report",
+    reportType: "cover_letter",
     confirmedFacts: [
       {
         id: "33333333-3333-4333-8333-333333333333",

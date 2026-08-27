@@ -3,6 +3,11 @@ import "server-only";
 import { z } from "zod";
 
 import {
+  reportTypeSchema,
+  type ReportType,
+} from "@/features/incidents/report-types";
+
+import {
   authorizeCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
@@ -12,7 +17,7 @@ const reportRowsSchema = z.array(
     .object({
       report_id: z.uuid(),
       incident_id: z.uuid(),
-      report_type: z.string().min(1).max(100),
+      report_type: reportTypeSchema,
       status: z.enum(["draft", "in_review", "complete", "archived"]),
       revision_number: z.number().int().positive(),
       report_revision_id: z.uuid(),
@@ -36,7 +41,7 @@ export type GetReportSessionClient = CurrentSessionClient & ReportReadRpcClient;
 export type AuthorizedReport = Readonly<{
   reportId: string;
   incidentId: string;
-  reportType: string;
+  reportType: ReportType;
   status: "draft" | "in_review" | "complete" | "archived";
   revisionNumber: number;
   reportRevisionId: string;

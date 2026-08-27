@@ -3,6 +3,7 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { createReportDraftWorkflow } from "./report-draft-workflow";
+import type { ReportDraftRequest } from "@/features/incidents/schema";
 
 const accountRow = {
   auth_user_id: "11111111-1111-4111-8111-111111111111",
@@ -35,11 +36,11 @@ const source = {
     },
   ],
 };
-const request = {
+const request: ReportDraftRequest = {
   schemaVersion: 1 as const,
   incidentId: source.incident_id,
   sourceIncidentRevisionId: source.incident_revision_id,
-  reportType: "fictional-training-report",
+  reportType: "cover_letter",
   confirmedFactIds: [source.reviewed_facts[0].id],
 };
 

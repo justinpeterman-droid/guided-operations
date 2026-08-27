@@ -8,7 +8,7 @@ const row = {
   candidate_id: "11111111-1111-4111-8111-111111111111",
   incident_id: "22222222-2222-4222-8222-222222222222",
   source_incident_revision_id: "33333333-3333-4333-8333-333333333333",
-  report_type: "fictional-training-report",
+  report_type: "cover_letter",
   source_fact_ids: ["44444444-4444-4444-8444-444444444444"],
   paragraphs: [
     {
@@ -68,5 +68,14 @@ describe("getReportDraftCandidateForCurrentSession", () => {
     await expect(
       getReportDraftCandidateForCurrentSession(row.candidate_id, client([])),
     ).resolves.toEqual({ kind: "not_found" });
+  });
+
+  it("fails closed on a stored candidate outside the controlled package", async () => {
+    await expect(
+      getReportDraftCandidateForCurrentSession(
+        row.candidate_id,
+        client([{ ...row, report_type: "invented_report" }]),
+      ),
+    ).resolves.toEqual({ kind: "unavailable" });
   });
 });

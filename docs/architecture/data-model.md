@@ -136,6 +136,12 @@ Unique (incident_id, revision_number). A trigger rejects update/delete.
 Unique active relationship per report/account. This table supports explicit
 future collaboration without broadening facility tenancy.
 
+Both `app_private.reports` and immutable review-only draft candidates accept
+only `first_person`, `supervisor_summary`, `cover_letter`, or `disciplinary`.
+Migration application fails rather than silently coercing an older unsupported
+type. The application repeats this closed-set validation at every public and
+server-read boundary so malformed storage does not become trusted content.
+
 ### app_private.report_revisions
 
 Immutable snapshot:

@@ -1,5 +1,7 @@
 import { z } from "zod";
 
+import type { ReportType } from "./report-types";
+
 export const REPORT_CHECKLIST_DEFINITION_KEY = "bmu-legacy-candidate";
 export const REPORT_CHECKLIST_DEFINITION_VERSION = 1;
 export const REPORT_CHECKLIST_SOURCE_COMMIT =
@@ -49,7 +51,7 @@ export type ReportChecklistCategory = Readonly<{
   label: string;
   requiredSlots: readonly string[];
   requiredForms: readonly string[];
-  reportTypes: readonly string[];
+  reportTypes: readonly ReportType[];
   questions: readonly ReportChecklistQuestion[];
 }>;
 

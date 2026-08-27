@@ -4,11 +4,12 @@ vi.mock("server-only", () => ({}));
 
 import { createReportDraftService } from "./report-draft-service";
 import { AiBudgetCircuitOpenError } from "./ai-request-budget";
+import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
 
-const source = {
+const source: ReportDraftSource = {
   incidentId: "11111111-1111-4111-8111-111111111111",
   sourceIncidentRevisionId: "22222222-2222-4222-8222-222222222222",
-  reportType: "incident_report",
+  reportType: "cover_letter",
   confirmedFacts: [
     {
       id: "33333333-3333-4333-8333-333333333333",

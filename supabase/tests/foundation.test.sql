@@ -1,6 +1,6 @@
 begin;
 
-select plan(187);
+select plan(188);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -646,12 +646,33 @@ select lives_ok(
     values (
       '77777777-7777-4777-8777-777777777777',
       '55555555-5555-4555-8555-555555555555',
-      'fictional_training_report',
+      'first_person',
       '33333333-3333-4333-8333-333333333333',
       '33333333-3333-4333-8333-333333333333'
     );
   $$,
   'a fictional report starts with revision head zero'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.reports (
+      id,
+      incident_id,
+      report_type,
+      reporting_account_id,
+      prepared_by_account_id
+    )
+    values (
+      '76767676-7676-4676-8676-767676767676',
+      '55555555-5555-4555-8555-555555555555',
+      'invented_report_type',
+      '33333333-3333-4333-8333-333333333333',
+      '33333333-3333-4333-8333-333333333333'
+    );
+  $$,
+  'new row for relation "reports" violates check constraint "reports_report_type_controlled_check"',
+  'the database rejects a report outside the controlled report package'
 );
 
 select throws_ok(
@@ -987,7 +1008,7 @@ select lives_ok(
     select api.store_report_draft_candidate(
       current_setting('app.test.incident_id')::uuid,
       current_setting('app.test.revision_id')::uuid,
-      'fictional-training-report',
+      'first_person',
       array['13131313-1313-4131-8131-131313131313']::uuid[],
       '[{"text":"Fictional candidate paragraph.","sourceFactIds":["13131313-1313-4131-8131-131313131313"]}]'::jsonb,
       'fictional-provider-v1',
@@ -1266,7 +1287,7 @@ select throws_ok(
     select api.store_report_draft_candidate(
       current_setting('app.test.incident_id')::uuid,
       current_setting('app.test.revision_id')::uuid,
-      'fictional-training-report',
+      'first_person',
       array['77777777-7777-4777-8777-777777777777']::uuid[],
       '[{"text":"Fictional invalid paragraph.","sourceFactIds":["77777777-7777-4777-8777-777777777777"]}]'::jsonb,
       'fictional-provider-v1', repeat('9', 64), repeat('a', 64)

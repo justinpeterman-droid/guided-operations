@@ -11,7 +11,7 @@ const factTwo = "22222222-2222-4222-8222-222222222222";
 const source: ReportDraftSource = {
   incidentId: "33333333-3333-4333-8333-333333333333",
   sourceIncidentRevisionId: "44444444-4444-4444-8444-444444444444",
-  reportType: "incident-report",
+  reportType: "cover_letter",
   confirmedFacts: [
     {
       id: factOne,
@@ -151,5 +151,50 @@ describe("validateGeneratedReportDraft", () => {
         { ...source, reportType: "disciplinary" },
       ),
     ).toThrow("RW-013");
+  });
+
+  it("requires a first-person report to use first-person perspective", () => {
+    expect(() =>
+      validateGeneratedReportDraft(
+        {
+          paragraphs: [
+            {
+              text: "The reporting officer reviewed the event.",
+              sourceFactIds: [factOne],
+            },
+          ],
+        },
+        { ...source, reportType: "first_person" },
+      ),
+    ).toThrow("RW-034");
+
+    expect(() =>
+      validateGeneratedReportDraft(
+        {
+          paragraphs: [
+            {
+              text: 'The inmate stated, "I left."',
+              sourceFactIds: [factOne],
+            },
+          ],
+        },
+        { ...source, reportType: "first_person" },
+      ),
+    ).toThrow("RW-034");
+
+    const candidate = {
+      paragraphs: [
+        {
+          text: "I reviewed the event.",
+          sourceFactIds: [factOne],
+        },
+      ],
+    };
+    expect(
+      validateGeneratedReportDraft(candidate, {
+        ...source,
+        reportType: "first_person",
+      }),
+    ).toEqual(candidate);
   });
 });

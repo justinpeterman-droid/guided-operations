@@ -15,7 +15,7 @@ const account = {
 const row = {
   report_id: "33333333-3333-4333-8333-333333333333",
   incident_id: "44444444-4444-4444-8444-444444444444",
-  report_type: "fictional-training-report",
+  report_type: "cover_letter",
   status: "draft",
   revision_number: 1,
   report_revision_id: "55555555-5555-4555-8555-555555555555",
@@ -70,6 +70,15 @@ describe("getReportForCurrentSession", () => {
   it("fails closed on malformed database output", async () => {
     await expect(
       getReportForCurrentSession(row.report_id, client([{ report_id: "bad" }])),
+    ).resolves.toEqual({ kind: "unavailable" });
+  });
+
+  it("fails closed when storage returns a report outside the controlled package", async () => {
+    await expect(
+      getReportForCurrentSession(
+        row.report_id,
+        client([{ ...row, report_type: "invented_report" }]),
+      ),
     ).resolves.toEqual({ kind: "unavailable" });
   });
 });

@@ -16,7 +16,7 @@ const row = {
   report_id: "33333333-3333-4333-8333-333333333333",
   incident_number: "F-REPORT-001",
   incident_name: "Fictional report scenario",
-  report_type: "fictional-training-report",
+  report_type: "cover_letter",
   status: "draft",
   current_revision_number: 1,
   updated_at: "2026-08-26T12:00:00Z",
@@ -85,6 +85,15 @@ describe("listReportsForCurrentSession", () => {
     await expect(
       listReportsForCurrentSession(
         client({ reports: [{ report_id: "bad" }] }),
+        50,
+      ),
+    ).resolves.toEqual({ kind: "unavailable" });
+  });
+
+  it("fails closed when storage returns a report outside the controlled package", async () => {
+    await expect(
+      listReportsForCurrentSession(
+        client({ reports: [{ ...row, report_type: "invented_report" }] }),
         50,
       ),
     ).resolves.toEqual({ kind: "unavailable" });

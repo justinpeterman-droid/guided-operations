@@ -173,6 +173,13 @@ the provider output against those facts, and stores an immutable candidate
 before returning only an opaque candidate ID. It is not a final-report endpoint
 and it never returns generated narrative or source facts in the response.
 
+`reportType` is a closed value: `first_person`, `supervisor_summary`,
+`cover_letter`, or `disciplinary`. The same set is enforced at the request,
+generation-source, candidate-read/write, report-read/list, and database-table
+boundaries. A first-person candidate must contain first-person perspective; a
+supervisor summary rejects first-person prose outside quotations. An unknown
+report type fails closed instead of becoming an unreviewed new workflow.
+
 The implemented `POST /api/web/v1/report-drafts/{candidateId}/finalize` is a
 separate versioned, private, no-store boundary. It requires the same current
 account, same-origin, session-CSRF, closed-JSON, and bounded-retry protections,

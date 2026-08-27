@@ -8,6 +8,7 @@ import {
   type GeneratedReportDraft,
 } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
+import { reportTypeSchema } from "@/features/incidents/report-types";
 
 import type { ReportDraftGenerationProvider } from "./contracts";
 import { AiBudgetCircuitOpenError } from "./ai-request-budget";
@@ -15,7 +16,7 @@ import { AiBudgetCircuitOpenError } from "./ai-request-budget";
 const sourceSchema = z.object({
   incidentId: z.uuid(),
   sourceIncidentRevisionId: z.uuid(),
-  reportType: z.string().trim().min(1).max(100),
+  reportType: reportTypeSchema,
   confirmedFacts: z
     .array(
       z.object({

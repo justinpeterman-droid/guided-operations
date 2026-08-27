@@ -1,4 +1,6 @@
-export const REPORT_WRITING_RULE_PROFILE = "bmu-house-style-v1";
+import type { ReportType } from "./report-types";
+
+export const REPORT_WRITING_RULE_PROFILE = "bmu-house-style-v2";
 
 export const REPORT_WRITING_INSTRUCTIONS = [
   "Apply the BMU house-style profile to the review draft.",
@@ -9,6 +11,7 @@ export const REPORT_WRITING_INSTRUCTIONS = [
   "Use lowercase 'inmate' before a name in the middle of a sentence.",
   "Use objective chronological language and do not add a statement closer such as 'End of report.'",
   "Do not add clinical injury, diagnosis, evaluator, or treatment detail.",
+  "A first-person report must use the reporting officer's first-person perspective.",
   "A supervisor summary stays in third person outside verbatim quotations.",
   "A disciplinary report includes the 'Due to the above stated facts' charging sentence and 'pending DCR' only when supported by confirmed charge facts.",
   "Never output bracketed placeholders. Missing information remains outside the generated prose for officer review.",
@@ -24,6 +27,7 @@ export type ReportWritingRuleId =
   | "RW-030"
   | "RW-031"
   | "RW-033"
+  | "RW-034"
   | "RW-035";
 
 type DraftForRuleValidation = Readonly<{
@@ -34,7 +38,7 @@ type DraftForRuleValidation = Readonly<{
 }>;
 
 type SourceForRuleValidation = Readonly<{
-  reportType: string;
+  reportType: ReportType;
   confirmedFacts: readonly Readonly<{
     id: string;
     value: string;
@@ -134,6 +138,14 @@ export function findBlockingReportWritingRule(
       !narrative.includes("pending dcr")
     )
       return "RW-013";
+  }
+
+  if (reportType === "first_person") {
+    const narrative = draft.paragraphs
+      .map((paragraph) => paragraph.text)
+      .join("\n")
+      .replaceAll(/"[^"]*"|“[^”]*”/gu, "");
+    if (!/\b(?:I|me|my)\b/u.test(narrative)) return "RW-034";
   }
 
   return null;

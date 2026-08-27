@@ -5,6 +5,7 @@ import {
   validateReportChecklistAnswers,
   type ReportChecklistAnswer,
 } from "./report-assistant-checklist";
+import { reportTypeSchema } from "./report-types";
 
 export const INCIDENT_SCHEMA_VERSION = 1;
 
@@ -145,7 +146,7 @@ export const reportDraftRequestSchema = z
     schemaVersion: z.literal(INCIDENT_SCHEMA_VERSION),
     incidentId: opaqueIdSchema,
     sourceIncidentRevisionId: opaqueIdSchema,
-    reportType: nonEmptyText(100),
+    reportType: reportTypeSchema,
     confirmedFactIds: z.array(opaqueIdSchema).min(1).max(300),
   })
   .strict()
