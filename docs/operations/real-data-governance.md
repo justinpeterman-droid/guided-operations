@@ -36,6 +36,10 @@ provider settings and deletion execution remain separate release gates.
   suspends deletion for the affected scope.
 - Before deletion, record the scope, authority, hold check, deletion job,
   completion evidence, and backup-expiry date without retaining record bodies.
+- The database calculates the earliest ordinary deletion-review date for
+  archived incidents, reports, and paperwork. A private, audited legal hold
+  overrides that date. Classification is not deletion authority, and the
+  application exposes no automatic deletion path.
 - The two-year period applies to database rows, private Storage artifacts,
   exports, indexes, caches, and backups. Backups may expire naturally only after
   their included data is eligible for deletion and no hold applies.

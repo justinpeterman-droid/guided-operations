@@ -1,7 +1,7 @@
 # Data Model
 
-**Status:** Target logical model; an initial locked foundation migration exists
-locally
+**Status:** Target logical model with a locked local migration chain, private
+operational record history, and retention/legal-hold foundations
 
 ## Schema boundaries
 
@@ -151,6 +151,24 @@ Immutable snapshot:
 Restore copies a selected snapshot into a new revision. Recovery output may be
 stored as non-current history but never promoted implicitly.
 
+### app_private.legal_holds and retention classification
+
+- Archived incident, report, and paperwork heads expose a database-derived
+  `deletion_eligible_at` exactly 730 days after the UTC archival instant.
+- Archival occurs at or after the final revision. Eligibility is a review date,
+  not permission to delete.
+- A private legal-hold row records facility, validated scope/target, bounded
+  authority reference, actor, placement time, and one immutable release
+  transition.
+- Facility holds protect all current record types in that facility. Incident
+  holds also protect child reports. Direct incident, report, paperwork, policy,
+  staff, and account scopes are validated against the facility boundary.
+- The private `record_retention_status` routine classifies archived operational
+  heads without deleting data. Data API roles have no direct table or function
+  access, and no public hold-management or cleanup RPC exists yet.
+- Protected administrator step-up, backup-aware deletion approval, Storage
+  reconciliation, deletion execution, and hosted evidence remain required.
+
 ## Forms and packets
 
 ### app_private.form_templates
@@ -201,6 +219,9 @@ reviewed structure, user-entered payload, server-calculated reconciliation, and
 safe provenance; revision inserts advance the current head serially. Direct
 table access is denied, so later server APIs must enforce the shift-shared
 relationship before invoking a purpose-specific mutation.
+
+Archived paperwork heads use the same 730-day deletion-review clock and
+legal-hold override as incident/report records.
 
 The former duplicate operational_paperwork tables are not a second target
 domain. Import reconciliation is described below and in

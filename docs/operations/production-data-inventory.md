@@ -33,6 +33,13 @@ jobs are configured. Entries with a pending `release_status` or
   retained accountability record.
 - A legal hold or incident preservation decision overrides normal deletion for
   every hold-eligible source and all copies containing it.
+- Archived incident, report, and paperwork heads receive a database-derived
+  deletion-review date 730 days after archival. Archival must occur at or after
+  the final revision. The date only makes a record reviewable; it never grants
+  deletion authority or deletes anything.
+- Private legal-hold records validate their target and facility, are audited,
+  and remain immutable after release. No Data API role can read or change them
+  directly, and no public hold-management endpoint exists yet.
 - Backups remain protected until every included source record is deletion
   eligible and any hold has cleared.
 

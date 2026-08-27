@@ -211,12 +211,16 @@ reintroduce Google hosting.
 - Corpus source versions follow records-owner retention and legal-hold rules.
 - Derived text/vectors may be regenerated only while original bytes,
   configuration, and provenance remain available.
-- Exports have an explicit short retention unless records policy requires more.
+- Controlled Production exports follow the approved two-year record rule;
+  fictional Preview/local artifacts remain short-lived and contain no real data.
 - Quarantine and abandoned upload intents expire quickly after review.
 - Database backups do not include Storage bytes; back up objects and metadata
   separately and test cross-reconciliation.
 - Deletion is a two-step authorized lifecycle operation with object/database
   reconciliation. No broad recursive delete is part of application code.
+- A database eligibility date or released hold never grants Storage deletion
+  authority. The job must recheck active holds and reconcile every included
+  database row, object, export, and backup before an owner-approved cleanup.
 
 ## Required tests
 

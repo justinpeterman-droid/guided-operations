@@ -49,6 +49,11 @@
       "duration_days": 730,
       "trigger": "included_record_deletion_eligibility",
       "legal_hold": true
+    },
+    "legal-hold-lifecycle": {
+      "duration_days": 730,
+      "trigger": "released_at",
+      "legal_hold": true
     }
   },
   "stores": [
@@ -283,6 +288,20 @@
       "retention_profile": "source-supersession-two-years",
       "real_data_boundary": "production_only",
       "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:legal_holds",
+      "kind": "database_table",
+      "locator": "app_private.legal_holds",
+      "data_classes": [
+        "retention_control",
+        "authority_reference",
+        "security_audit_metadata"
+      ],
+      "purpose": "Legal-hold placement and release evidence that overrides ordinary deletion eligibility",
+      "retention_profile": "legal-hold-lifecycle",
+      "real_data_boundary": "production_only",
+      "deletion_status": "release-evidence-immutable-deletion-procedure-required"
     },
     {
       "id": "storage:generated-exports",

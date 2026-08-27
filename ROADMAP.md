@@ -430,10 +430,14 @@ remain open**
    Storage bucket, Auth/AI/log/browser/non-production/support surface, and
    backup copy. Treat hosted configuration, deletion, and reconciliation as
    release evidence, not repository assumptions.
-8. Set provider budgets and circuit breakers. A provider limit must create an
+8. Encode the ordinary two-year deletion-review clock and legal-hold override in
+   the database. Keep classification separate from deletion authority, and
+   require protected admin workflow plus backup-aware evidence before any
+   destructive cleanup.
+9. Set provider budgets and circuit breakers. A provider limit must create an
    honest degraded state, not fabricated output or partial silent saves.
-9. Exercise credential rotation, dependency update, incident response,
-   application rollback, and feature-disable procedures.
+10. Exercise credential rotation, dependency update, incident response,
+    application rollback, and feature-disable procedures.
 
 ### Exit evidence
 
