@@ -120,4 +120,51 @@ describe("POST /api/web/v1/report-drafts/[candidateId]/finalize", () => {
     expect(validateReportFinalizationEndpointRequest).not.toHaveBeenCalled();
     expect(finalizeReportDraftForCurrentSession).not.toHaveBeenCalled();
   });
+
+  it("returns a non-retryable forbidden response for a database authorization denial", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
+    vi.mocked(validateReportFinalizationEndpointRequest).mockResolvedValue({
+      ok: true,
+      narrative: "Fictional human-reviewed final narrative.",
+      reviewedByOfficer: true,
+      idempotencyKey: "fictional-finalize-retry-key-1234",
+    });
+    vi.mocked(finalizeReportDraftForCurrentSession).mockResolvedValue({
+      kind: "denied",
+    });
+
+    const response = await POST(new Request("https://example.test"), {
+      params: Promise.resolve({ candidateId }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "request_not_allowed" },
+    });
+  });
+
+  it("returns a conflict when the incident changed after draft generation", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
+    vi.mocked(validateReportFinalizationEndpointRequest).mockResolvedValue({
+      ok: true,
+      narrative: "Fictional human-reviewed final narrative.",
+      reviewedByOfficer: true,
+      idempotencyKey: "fictional-finalize-retry-key-1234",
+    });
+    vi.mocked(finalizeReportDraftForCurrentSession).mockResolvedValue({
+      kind: "conflict",
+    });
+
+    const response = await POST(new Request("https://example.test"), {
+      params: Promise.resolve({ candidateId }),
+    });
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "revision_conflict" },
+    });
+  });
 });

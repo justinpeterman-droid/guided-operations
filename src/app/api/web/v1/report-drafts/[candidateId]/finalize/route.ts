@@ -55,11 +55,11 @@ export async function POST(
         },
         { status: 201, headers: HEADERS },
       );
-    return error(
-      result.kind === "denied" ? 403 : 503,
-      result.kind === "denied" ? "request_not_allowed" : "service_unavailable",
-      requestId,
-    );
+    if (result.kind === "denied")
+      return error(403, "request_not_allowed", requestId);
+    if (result.kind === "conflict")
+      return error(409, "revision_conflict", requestId);
+    return error(503, "service_unavailable", requestId);
   } catch {
     return error(503, "service_unavailable", requestId);
   }

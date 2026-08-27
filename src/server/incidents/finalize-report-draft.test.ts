@@ -10,7 +10,7 @@ const command = {
   idempotencyKey: "fictional-finalize-retry-key-1234",
   reviewedByOfficer: true as const,
 };
-function client() {
+function client(finalizeErrorCode?: string) {
   const account = {
     auth_user_id: "22222222-2222-4222-8222-222222222222",
     facility_id: "33333333-3333-4333-8333-333333333333",
@@ -32,10 +32,18 @@ function client() {
         error: null,
       }),
     },
-    rpc: vi.fn(async (name: string) =>
-      name === "current_account"
-        ? { data: [account], error: null }
-        : { data: "55555555-5555-4555-8555-555555555555", error: null },
+    rpc: vi.fn(
+      async (
+        name: string,
+      ): Promise<Readonly<{ data: unknown; error: unknown | null }>> =>
+        name === "current_account"
+          ? { data: [account], error: null }
+          : finalizeErrorCode
+            ? { data: null, error: { code: finalizeErrorCode } }
+            : {
+                data: "55555555-5555-4555-8555-555555555555",
+                error: null,
+              },
     ),
   };
 }
@@ -75,5 +83,29 @@ describe("finalizeReportDraftForCurrentSession", () => {
       "finalize_report_draft_candidate",
       expect.anything(),
     );
+  });
+
+  it("treats a database authorization denial as a denied request", async () => {
+    const sessionClient = client("42501");
+
+    await expect(
+      finalizeReportDraftForCurrentSession(
+        command,
+        sessionClient,
+        "a-32-byte-fixture-idempotency-hmac-key",
+      ),
+    ).resolves.toEqual({ kind: "denied" });
+  });
+
+  it("treats stale incident facts as a finalization conflict", async () => {
+    const sessionClient = client("40001");
+
+    await expect(
+      finalizeReportDraftForCurrentSession(
+        command,
+        sessionClient,
+        "a-32-byte-fixture-idempotency-hmac-key",
+      ),
+    ).resolves.toEqual({ kind: "conflict" });
   });
 });

@@ -222,6 +222,14 @@ editor. It marks the report `complete` and returns only an opaque report ID. It
 does not accept AI output as a final report and it does not let the finalization
 request replace the reporter, facility, or source revision.
 
+The database permits finalization only by the candidate's active selected
+reporting officer or an active same-facility administrator. A different preparer
+or reporting officer receives `403 request_not_allowed`. If the incident
+revision changed after candidate generation, a new finalization is rejected with
+`409 revision_conflict` so the draft must be regenerated and reviewed again. An
+exact retry of an already successful request remains idempotent and returns the
+existing report result.
+
 The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
 RPC rather than a browser table query. It returns only the current immutable
 revision to an active report collaborator or active same-facility administrator;

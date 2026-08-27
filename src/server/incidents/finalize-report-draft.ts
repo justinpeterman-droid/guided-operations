@@ -36,7 +36,17 @@ export type FinalizeReportSessionClient = CurrentSessionClient &
 export type FinalizeReportResult =
   | Readonly<{ kind: "finalized"; reportId: string }>
   | Readonly<{ kind: "denied" }>
+  | Readonly<{ kind: "conflict" }>
   | Readonly<{ kind: "unavailable" }>;
+
+function hasRpcErrorCode(error: unknown, code: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    error.code === code
+  );
+}
 
 function digest(value: string, key: string, purpose: string): string {
   return createHmac("sha256", key)
@@ -75,6 +85,8 @@ export async function finalizeReportDraftForCurrentSession(
         "report.finalize.request",
       ),
     });
+    if (hasRpcErrorCode(result.error, "42501")) return { kind: "denied" };
+    if (hasRpcErrorCode(result.error, "40001")) return { kind: "conflict" };
     return !result.error && typeof result.data === "string"
       ? { kind: "finalized", reportId: result.data }
       : { kind: "unavailable" };
