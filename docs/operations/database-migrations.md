@@ -112,6 +112,32 @@ A remote reset is permitted only for the explicitly disposable non-production
 project, with target verification and owner/operator awareness. Never run
 `supabase db reset --linked` against production.
 
+### Shared non-production history reconciliation
+
+If a migration was applied through a provider API that generated its own
+timestamp, the shared non-production history can contain the correct migration
+name and SQL lineage under a different version than the repository. Do not
+blindly run `migration repair`, reset the project, or reapply the SQL.
+
+1. Prove the target is the intended non-production project and contains only
+   fictional or empty data.
+2. Compare the complete ordered local and remote migration inventories.
+3. Confirm each mismatched item has the same name, relative order, affected
+   objects, function behavior, grants, and RLS boundary. Record any metadata or
+   schema drift separately.
+4. When the shared version is the established version and changing the local
+   filename does not reorder migrations, rename the repository migration to that
+   shared version. Do not alter its SQL.
+5. Correct any proven schema or metadata drift with a new forward migration; do
+   not hide it by editing shared SQL or migration history.
+6. Rebuild from zero, rerun lint/pgTAP/types/inventory checks, verify that the
+   remote history is now an exact repository prefix, and then run a linked
+   dry-run before any apply.
+
+This reconciliation path is limited to the shared non-production environment.
+Production history must already be an exact prefix of the approved candidate and
+may be changed only by the protected production workflow.
+
 ## Production sequence
 
 **AUTOMATED:** CI proves replay and compatibility. **OWNER:** approves the exact

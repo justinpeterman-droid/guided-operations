@@ -123,6 +123,15 @@ Pause and report a blocker instead of guessing when work requires:
       explicit Production sign-in without exposing missing names or values.
 - [x] Verify readiness locally and in a protected Preview (`94dfd61`,
       `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`).
+- [x] Reconcile the empty hosted non-production migration inventory without
+      changing the hosted database. On 2026-08-27 the 10 hosted migrations were
+      confirmed as the exact ordered prefix of the 57 repository migrations
+      after four repository filenames were aligned to their already-shared
+      versions. See
+      [`non-production-migration-reconciliation.md`](non-production-migration-reconciliation.md).
+- [ ] Rebuild and qualify the reconciled migration set, run a linked dry-run,
+      and apply the pending additive migrations only through the recorded
+      non-production approval path.
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,
       focus, and protection boundaries.
 
@@ -470,11 +479,17 @@ Pause and report a blocker instead of guessing when work requires:
 
 ## Immediate next actions
 
-1. Run the local database gate with Docker Desktop.
-2. Add secret/dependency scanning and readiness/environment validation.
-3. Open the Phase 0/1 pull request and keep it merge-ready.
-4. Build and evaluate the disposable authentication alias spike.
-5. Implement the identity schema, authorization matrix, and negative tests.
-6. Implement the sign-in/session/bootstrap vertical slice.
-7. Begin incident/report parity work while corpus custody is resolved
-   externally.
+1. Rebuild the timestamp-reconciled migration set from zero and rerun exact-head
+   web, database, and recovery CI.
+2. Run a read-only linked non-production migration dry-run and review its exact
+   pending list before any hosted apply.
+3. Apply the approved additive set to the empty non-production project, then
+   create fictional Officer and Administrator qualification accounts.
+4. Run hosted Auth, RLS, Storage, browser, accessibility, responsive, print, and
+   degraded-provider qualification; remove the fictional accounts and data when
+   evidence is retained.
+5. Ingest the approved corpus only after its private manifest and provider-use
+   controls pass, then run citation, refusal, and injection evaluation.
+6. Freeze an exact candidate and complete the isolated Production setup, restore
+   rehearsal, promotion, smoke tests, monitoring window, rollback test, and
+   final owner acceptance.
