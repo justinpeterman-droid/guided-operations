@@ -202,6 +202,12 @@ Pause and report a blocker instead of guessing when work requires:
       non-production approval path.
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,
       focus, and protection boundaries.
+  - [x] The exact local Production build passes all 26 database-independent
+        fictional browser checks: automated WCAG A/AA, keyboard focus, reduced
+        motion, mobile layouts, forms/report/policy previews, Count Sheet
+        calculation/print markers, protected route denial, and console/asset
+        checks. The repeatable command is `npm run test:e2e:preview`; hosted
+        manual rendering and authenticated officer/admin checks remain open.
 
 ### Phase 1 exit
 

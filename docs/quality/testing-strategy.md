@@ -12,29 +12,35 @@ under the controls in
 The command names below are target coverage contracts. They are not proof that
 separate scripts or CI jobs currently exist. The repository currently groups
 unit/component tests under npm test and also exposes npm run check, npm run
-test:e2e, npm run db:test, and npm run test:eval; inspect package.json for the
-current source of truth. The synthetic evaluation command runs in Web quality CI
-with fictional passages and deterministic providers. The guarded authenticated
-browser command also runs in its own CI lane against isolated local Supabase and
-fictional qualification identities. Neither lane replaces the private
-approved-corpus or later hosted qualification. As coverage matures, package
-scripts and CI must use the same underlying commands so local and automated
-results are comparable.
+test:e2e, npm run test:e2e:preview, npm run test:e2e:local-auth, npm run
+db:test, and npm run test:eval; inspect package.json for the current source of
+truth. `test:e2e:preview` runs only the public fictional Preview, accessibility,
+mobile, and print-safety checks and does not require a database.
+`test:e2e:local-auth` is the guarded officer/administrator workflow and requires
+the exact isolated local Supabase target. The synthetic evaluation command runs
+in Web quality CI with fictional passages and deterministic providers. The
+guarded authenticated browser command also runs in its own CI lane against
+isolated local Supabase and fictional qualification identities. Neither lane
+replaces the private approved-corpus or later hosted qualification. As coverage
+matures, package scripts and CI must use the same underlying commands so local
+and automated results are comparable.
 
-| Target           | Purpose                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| lint             | static linting                                                                                 |
-| typecheck        | TypeScript checking without emitting                                                           |
-| test:unit        | pure domain and utility tests                                                                  |
-| test:component   | isolated UI behavior                                                                           |
-| test:integration | Next.js/server adapter and local Supabase integration                                          |
-| test:db          | migrations, constraints, RLS, Auth, and Storage policy tests against local PostgreSQL/Supabase |
-| test:e2e         | authenticated browser workflows                                                                |
-| test:visual      | reviewed visual snapshots                                                                      |
-| test:print       | print/PDF layout and content assertions                                                        |
-| test:a11y        | automated accessibility checks                                                                 |
-| test:eval        | synthetic AI/RAG evaluation                                                                    |
-| build            | production build                                                                               |
+| Target              | Purpose                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| lint                | static linting                                                                                 |
+| typecheck           | TypeScript checking without emitting                                                           |
+| test:unit           | pure domain and utility tests                                                                  |
+| test:component      | isolated UI behavior                                                                           |
+| test:integration    | Next.js/server adapter and local Supabase integration                                          |
+| test:db             | migrations, constraints, RLS, Auth, and Storage policy tests against local PostgreSQL/Supabase |
+| test:e2e:preview    | public fictional Preview, accessibility, responsive, and print-safety checks                   |
+| test:e2e            | complete browser set; requires the same environment as every selected test                     |
+| test:e2e:local-auth | guarded authenticated officer/administrator workflows against isolated local Supabase          |
+| test:visual         | reviewed visual snapshots                                                                      |
+| test:print          | print/PDF layout and content assertions                                                        |
+| test:a11y           | automated accessibility checks                                                                 |
+| test:eval           | synthetic AI/RAG evaluation                                                                    |
+| build               | production build                                                                               |
 
 CI must fail explicitly when a required target is absent. It must not silently
 skip a lane because a service, browser, corpus, or credential is unavailable.

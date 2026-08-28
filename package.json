@@ -16,6 +16,7 @@
     "test:watch": "vitest",
     "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts",
     "test:e2e": "playwright test",
+    "test:e2e:preview": "playwright test tests/e2e/admin-paperwork-packages.spec.ts tests/e2e/admin-retention.spec.ts tests/e2e/accessibility.spec.ts tests/e2e/count-sheet.spec.ts tests/e2e/forms-library.spec.ts tests/e2e/foundation.spec.ts tests/e2e/workspace-command-center.spec.ts tests/e2e/report-print.spec.ts",
     "test:e2e:local-auth": "node scripts/run-local-authenticated-browser-qualification.mjs --confirm-local-guided-operations",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
