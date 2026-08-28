@@ -35,10 +35,13 @@ No checklist item may be marked complete without dated evidence identifying the
 environment, commit/deployment, actor, command or dashboard observation, result,
 and retained artifact location.
 
-See the dated [`2026-08-28 local candidate`](2026-08-28-local-candidate.md) for
-the latest exact-commit CI evidence and the
+See the dated
+[`2026-08-28 hosted readiness refresh`](2026-08-28-hosted-readiness-refresh.md)
+for the latest read-only provider evidence, the
+[`2026-08-28 local candidate`](2026-08-28-local-candidate.md) for the latest
+exact-commit CI evidence, and the
 [`2026-08-27 command-center requalification`](2026-08-27-command-center-requalification.md)
-for the latest provider evidence and explicit limitations.
+for the preceding provider evidence and explicit limitations.
 
 ## Control labels
 
@@ -53,6 +56,7 @@ for the latest provider evidence and explicit limitations.
 
 | Document                                                                                       | Purpose                                                                                                                 |
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [`2026-08-28-hosted-readiness-refresh.md`](2026-08-28-hosted-readiness-refresh.md)             | Current read-only Vercel access, Supabase migration, advisor, and Production-isolation evidence.                        |
 | [`2026-08-28-local-candidate.md`](2026-08-28-local-candidate.md)                               | Exact-commit local/CI qualification evidence and the hosted, content, manual, owner, and promotion limits.              |
 | [`2026-08-27-command-center-requalification.md`](2026-08-27-command-center-requalification.md) | Exact candidate, CI, protected-Preview, Development database, and Production-isolation evidence.                        |
 | [`production-execution-checklist.md`](production-execution-checklist.md)                       | Evidence-backed execution tracker for the gated path from foundation to isolated live Production.                       |

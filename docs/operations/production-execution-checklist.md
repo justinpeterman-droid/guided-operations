@@ -164,6 +164,14 @@ Pause and report a blocker instead of guessing when work requires:
       after four repository filenames were aligned to their already-shared
       versions. See
       [`non-production-migration-reconciliation.md`](non-production-migration-reconciliation.md).
+- [x] Refresh the read-only hosted inventory on 2026-08-28: Development is
+      healthy in `us-east-1` at 62 ordered migrations through
+      `20260827120000_enforce_report_finalization_authority`; the repository has
+      70 migrations, so eight remain pending and unapplied. The provider's 28
+      authenticated security-definer warnings were catalog-checked for empty
+      search paths, denied anonymous/elevated-role execution, private-helper
+      isolation, and reviewed session-authorization anchors. See
+      [`2026-08-28-hosted-readiness-refresh.md`](2026-08-28-hosted-readiness-refresh.md).
 - [ ] Rebuild and qualify the reconciled migration set, run a linked dry-run,
       and apply the pending additive migrations only through the recorded
       non-production approval path.
