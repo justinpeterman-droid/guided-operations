@@ -56,15 +56,16 @@ configured. Those remain live-environment qualification gates.
 
 ## Signals and checks
 
-| Area     | Minimum signal                                                                                                     | Qualification                                                                  |
-| -------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Web      | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke          |
-| Auth     | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event             |
-| Database | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                              |
-| Storage  | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                       |
-| RAG/AI   | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version               | Synthetic continuous checks; secure real-corpus qualification before promotion |
-| Recovery | age and checksum of latest database and Storage backup; last restore drill result                                  | Separate database and object evidence                                          |
-| Security | dependency/secret scan, authorization test, unexpected public asset check                                          | Blocking alerts for confirmed exposure                                         |
+| Area      | Minimum signal                                                                                                     | Qualification                                                                  |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| Web       | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke          |
+| Auth      | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event             |
+| Retention | legal-hold placement/release and deletion approval/execution outcome and duration                                  | No target IDs, administrator IDs, proof tokens, authority or backup references |
+| Database  | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                              |
+| Storage   | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                       |
+| RAG/AI    | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version               | Synthetic continuous checks; secure real-corpus qualification before promotion |
+| Recovery  | age and checksum of latest database and Storage backup; last restore drill result                                  | Separate database and object evidence                                          |
+| Security  | dependency/secret scan, authorization test, unexpected public asset check                                          | Blocking alerts for confirmed exposure                                         |
 
 ## Alert policy
 

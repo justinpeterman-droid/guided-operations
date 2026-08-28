@@ -548,9 +548,12 @@ Pause and report a blocker instead of guessing when work requires:
       personal passcode change, and forced temporary-passcode change now return
       matching opaque request correlation and emit content-free outcome/duration
       events with explicit tests that passcodes and account/session identifiers
-      have no event field. Hosted sinks, remaining administrator/retention/
-      Storage/DB signals, access/retention, alerts, and delivery tests remain
-      open.
+      have no event field. Legal-hold placement/release and controlled-deletion
+      approval/execution now return the same opaque correlation and emit only
+      outcome/duration metadata; target IDs, administrator IDs, proof tokens,
+      authority references, and backup references/digests have no event field.
+      Hosted sinks, remaining administrator/Storage/DB signals,
+      access/retention, alerts, and delivery tests remain open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion

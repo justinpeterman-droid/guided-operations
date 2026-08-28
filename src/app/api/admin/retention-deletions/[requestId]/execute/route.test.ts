@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -13,6 +14,9 @@ vi.mock("@/server/auth/current-session", () => ({
 }));
 vi.mock("@/server/auth/private-admin-step-up-store", () => ({
   createAdminStepUpStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
 }));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
@@ -35,6 +39,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createAdminActionAuthorization } from "@/server/auth/authorize-admin-action";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 import { executeRetentionDeletion } from "@/server/retention/retention-deletion";
@@ -96,6 +101,7 @@ describe("POST /api/admin/retention-deletions/:requestId/execute", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(executeRetentionDeletion).toHaveBeenCalledWith(
       { requestId, confirmRecordId: recordId },
       expect.any(Object),
@@ -106,6 +112,21 @@ describe("POST /api/admin/retention-deletions/:requestId/execute", () => {
       expect.any(Object),
       expect.any(Object),
     );
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.retention_deletion_execute",
+        outcome: "completed",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
+    const serializedEvents = JSON.stringify(
+      vi.mocked(writeSafeOperationalEvent).mock.calls,
+    );
+    expect(serializedEvents).not.toContain(requestId);
+    expect(serializedEvents).not.toContain(recordId);
+    expect(serializedEvents).not.toContain("x".repeat(43));
   });
 
   it("does not start execution for an untrusted request", async () => {
@@ -120,5 +141,12 @@ describe("POST /api/admin/retention-deletions/:requestId/execute", () => {
 
     expect(response.status).toBe(403);
     expect(executeRetentionDeletion).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.retention_deletion_execute",
+        outcome: "request_not_allowed",
+        status_code: 403,
+      }),
+    );
   });
 });

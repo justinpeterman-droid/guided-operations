@@ -12,6 +12,10 @@ const safeIdentifierSchema = z
 const safeOperationalEventInputSchema = z
   .object({
     event_name: z.enum([
+      "admin.legal_hold_place",
+      "admin.legal_hold_release",
+      "admin.retention_deletion_approve",
+      "admin.retention_deletion_execute",
       "auth.passcode_change",
       "auth.sign_in",
       "auth.sign_out",
@@ -25,16 +29,20 @@ const safeOperationalEventInputSchema = z
     ]),
     outcome: z.enum([
       "answered",
+      "approved",
       "authentication_required",
       "changed",
+      "completed",
       "conflict",
       "insufficient_evidence",
       "integrity_failed",
       "invalid_suggestion",
       "not_found",
       "provider_unavailable",
+      "placed",
       "request_not_allowed",
       "reviewed",
+      "released",
       "service_unavailable",
       "sign_in_failed",
       "signed_in",

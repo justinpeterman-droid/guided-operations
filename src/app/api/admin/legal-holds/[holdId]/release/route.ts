@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -6,6 +8,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createAdminActionAuthorization } from "@/server/auth/authorize-admin-action";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 import { releaseLegalHold } from "@/server/retention/legal-hold";
@@ -28,6 +35,22 @@ export async function POST(
   request: Request,
   context: Readonly<{ params: Promise<Readonly<{ holdId: string }>> }>,
 ): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.legal_hold_release",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [{ holdId }, environment, runtimeEnvironment, client] =
       await Promise.all([
@@ -36,11 +59,13 @@ export async function POST(
         getRuntimeEnvironment(),
         createSupabaseServerClient(),
       ]);
-    if (!z.string().uuid().safeParse(holdId).success) return invalid();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (!z.string().uuid().safeParse(holdId).success)
+      return observe(invalid(), "validation_rejected");
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return denied();
+    if (!session.allowed) return observe(denied(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -49,10 +74,10 @@ export async function POST(
         environment.CSRF_HMAC_KEY,
       )
     )
-      return forbidden();
+      return observe(forbidden(), "request_not_allowed");
 
     const parsed = inputSchema.safeParse(await request.json());
-    if (!parsed.success) return invalid();
+    if (!parsed.success) return observe(invalid(), "validation_rejected");
     const result = await releaseLegalHold(
       { holdId, authorityReference: parsed.data.authorityReference },
       {
@@ -73,11 +98,17 @@ export async function POST(
       },
     );
     if (result.status === "released")
-      return Response.json({ data: { status: "released" } }, { headers });
-    if (result.status === "invalid_input") return invalid();
-    return result.status === "denied" ? denied() : unavailable();
+      return observe(
+        Response.json({ data: { status: "released" } }, { headers }),
+        "released",
+      );
+    if (result.status === "invalid_input")
+      return observe(invalid(), "validation_rejected");
+    return result.status === "denied"
+      ? observe(denied(), "authentication_required")
+      : observe(unavailable(), "service_unavailable");
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 

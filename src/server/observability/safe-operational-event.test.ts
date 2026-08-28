@@ -181,4 +181,37 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records retention outcomes without target, proof, or backup data", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "admin.retention_deletion_execute",
+        outcome: "completed",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 200,
+        duration_ms: 14,
+        environment: "production",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-28T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "admin.retention_deletion_execute",
+      outcome: "completed",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "admin_user_id",
+        "record_id",
+        "legal_hold_id",
+        "authority_reference",
+        "step_up_token",
+        "backup_reference",
+        "backup_manifest_sha256",
+      ]),
+    );
+  });
 });

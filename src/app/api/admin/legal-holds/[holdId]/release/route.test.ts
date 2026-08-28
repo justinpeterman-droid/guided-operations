@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -13,6 +14,9 @@ vi.mock("@/server/auth/current-session", () => ({
 }));
 vi.mock("@/server/auth/private-admin-step-up-store", () => ({
   createAdminStepUpStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
 }));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
@@ -30,6 +34,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createAdminActionAuthorization } from "@/server/auth/authorize-admin-action";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 import { releaseLegalHold } from "@/server/retention/legal-hold";
@@ -84,6 +89,7 @@ describe("POST /api/admin/legal-holds/[holdId]/release", () => {
     );
 
     expect(response.status).toBe(200);
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(releaseLegalHold).toHaveBeenCalledWith(
       { holdId, authorityReference: "FICTIONAL-RELEASE-001" },
       expect.any(Object),
@@ -94,6 +100,18 @@ describe("POST /api/admin/legal-holds/[holdId]/release", () => {
       expect.any(Object),
       expect.any(Object),
     );
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.legal_hold_release",
+        outcome: "released",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
+    expect(
+      JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
+    ).not.toContain(holdId);
   });
 
   it("rejects a malformed hold ID before authorization", async () => {
@@ -106,5 +124,12 @@ describe("POST /api/admin/legal-holds/[holdId]/release", () => {
 
     expect(response.status).toBe(400);
     expect(releaseLegalHold).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.legal_hold_release",
+        outcome: "validation_rejected",
+        status_code: 400,
+      }),
+    );
   });
 });

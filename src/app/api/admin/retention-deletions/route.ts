@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -6,6 +8,11 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createAdminActionAuthorization } from "@/server/auth/authorize-admin-action";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 import { createRetentionDeletionStore } from "@/server/retention/private-retention-deletion-store";
@@ -32,16 +39,33 @@ const inputSchema = z
 
 /** Records one backup-aware approval; it never deletes records or objects. */
 export async function POST(request: Request): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.retention_deletion_approve",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return denied();
+    if (!session.allowed) return observe(denied(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -50,10 +74,10 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     )
-      return forbidden();
+      return observe(forbidden(), "request_not_allowed");
 
     const parsed = inputSchema.safeParse(await request.json());
-    if (!parsed.success) return invalid();
+    if (!parsed.success) return observe(invalid(), "validation_rejected");
     const result = await approveRetentionDeletion(
       {
         recordType: parsed.data.recordType,
@@ -83,14 +107,20 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
     if (result.status === "approved")
-      return Response.json(
-        { data: { status: "approved", requestId: result.requestId } },
-        { headers },
+      return observe(
+        Response.json(
+          { data: { status: "approved", requestId: result.requestId } },
+          { headers },
+        ),
+        "approved",
       );
-    if (result.status === "invalid_input") return invalid();
-    return result.status === "denied" ? denied() : unavailable();
+    if (result.status === "invalid_input")
+      return observe(invalid(), "validation_rejected");
+    return result.status === "denied"
+      ? observe(denied(), "authentication_required")
+      : observe(unavailable(), "service_unavailable");
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 
