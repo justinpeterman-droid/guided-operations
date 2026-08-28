@@ -1,6 +1,6 @@
 import "server-only";
 
-import { randomBytes, randomUUID } from "node:crypto";
+import { randomUUID } from "node:crypto";
 
 import {
   isAllowedEmployeeNumber,
@@ -8,10 +8,7 @@ import {
 } from "@/features/auth/credentials";
 
 import { createEmployeeLookupDigest } from "./employee-sign-in";
-
-const TEMPORARY_PASSCODE_ALPHABET =
-  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-const TEMPORARY_PASSCODE_LENGTH = 20;
+import { createTemporaryPasscode } from "./temporary-passcode";
 
 export type FirstAdminBootstrapInput = Readonly<{
   employeeNumber: string;
@@ -62,15 +59,6 @@ export type FirstAdminBootstrapDependencies = Readonly<{
 
 export type FirstAdminBootstrapResult =
   { status: "activated" } | { status: "failed" };
-
-function createTemporaryPasscode(): string {
-  const bytes = randomBytes(TEMPORARY_PASSCODE_LENGTH);
-  return Array.from(
-    bytes,
-    (value) =>
-      TEMPORARY_PASSCODE_ALPHABET[value % TEMPORARY_PASSCODE_ALPHABET.length],
-  ).join("");
-}
 
 function createInternalAlias(): string {
   return `go-${randomUUID()}@auth.invalid`;

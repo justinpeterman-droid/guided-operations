@@ -112,6 +112,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
     page.getByRole("link", { name: /Chain of Custody/ }),
   ).toHaveCount(0);
 
+  await page.goto("/admin");
   await page.getByRole("link", { name: "View accounts" }).click();
   await expect(
     page.getByRole("heading", { name: "Accounts and roster" }),

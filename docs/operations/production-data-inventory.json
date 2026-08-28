@@ -310,6 +310,22 @@
       "deletion_status": "procedure-required"
     },
     {
+      "id": "db:daily_paperwork_template_packages",
+      "kind": "database_table",
+      "locator": "app_private.daily_paperwork_template_packages",
+      "data_classes": [
+        "restricted_form_definition",
+        "source_integrity",
+        "rights_metadata",
+        "account_identity",
+        "security_audit_metadata"
+      ],
+      "purpose": "Append-only approval, version, source-integrity, and rollback metadata for each six-definition Daily Paperwork package",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
       "id": "db:form_templates",
       "kind": "database_table",
       "locator": "app_private.form_templates",

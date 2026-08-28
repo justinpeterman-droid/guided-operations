@@ -38,7 +38,9 @@ describe("resetAccountPasscode", () => {
     );
     expect(setup.passwordResetter.updatePassword).toHaveBeenCalledWith(
       targetAuthUserId,
-      expect.stringMatching(/^.{20}$/),
+      expect.stringMatching(
+        /^(?=.*[A-Za-z])(?=.*[0-9])[A-HJ-NP-Za-km-z2-9]{20}$/,
+      ),
     );
   });
 

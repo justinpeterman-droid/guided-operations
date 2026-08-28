@@ -1,14 +1,9 @@
 import "server-only";
 
-import { randomBytes } from "node:crypto";
-
 import { z } from "zod";
 
 import type { AdminActionAuthorization } from "./authorize-admin-action";
-
-const TEMPORARY_PASSCODE_ALPHABET =
-  "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789";
-const TEMPORARY_PASSCODE_LENGTH = 20;
+import { createTemporaryPasscode } from "./temporary-passcode";
 const inputSchema = z.object({ targetAuthUserId: z.string().uuid() }).strict();
 
 export type AccountPasscodeResetStore = Readonly<{
@@ -22,15 +17,6 @@ export type AccountPasscodeResetStore = Readonly<{
 export type AuthPasswordResetter = Readonly<{
   updatePassword(authUserId: string, passcode: string): Promise<boolean>;
 }>;
-
-function createTemporaryPasscode(): string {
-  const bytes = randomBytes(TEMPORARY_PASSCODE_LENGTH);
-  return Array.from(
-    bytes,
-    (value) =>
-      TEMPORARY_PASSCODE_ALPHABET[value % TEMPORARY_PASSCODE_ALPHABET.length],
-  ).join("");
-}
 
 /** Creates one expiring reset credential after a purpose-bound admin proof. */
 export async function resetAccountPasscode(
