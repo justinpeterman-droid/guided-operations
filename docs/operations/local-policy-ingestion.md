@@ -43,20 +43,23 @@ Open PowerShell in the repository and run:
 
 ```powershell
 cd "C:\Users\justi\OneDrive\Documents\New project\guided-operations\tools\policy-ingestion"
+uv python install 3.12
 uv venv --python 3.12
-Set-ExecutionPolicy -Scope Process Bypass
-.\.venv\Scripts\Activate.ps1
-uv pip install --upgrade pip
-uv pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
-uv pip install -e ".[mineru,import]"
-mineru-models-download
+uv pip install --python .\.venv\Scripts\python.exe torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
+uv pip install --python .\.venv\Scripts\python.exe -e ".[mineru,import]"
+.\.venv\Scripts\mineru-models-download.exe --source huggingface --model_type all
+[Environment]::SetEnvironmentVariable("MINERU_MODEL_SOURCE", "local", "User")
 ```
 
-The model downloader is interactive and writes the selected local model paths to
-the user MinerU configuration. Select a local model source available from your
-network. Then verify CUDA:
+The downloader writes the local pipeline and VLM model paths to the user's
+MinerU configuration. The user-level environment setting makes later PowerShell
+windows use those downloaded models instead of cloud OCR. Open a new PowerShell
+window, activate the isolated environment, and verify CUDA:
 
 ```powershell
+cd "C:\Users\justi\OneDrive\Documents\New project\guided-operations\tools\policy-ingestion"
+Set-ExecutionPolicy -Scope Process Bypass
+.\.venv\Scripts\Activate.ps1
 $env:MINERU_MODEL_SOURCE = "local"
 python -c "import torch; print(torch.cuda.is_available()); print(torch.cuda.get_device_name(0))"
 mineru --version
@@ -210,6 +213,8 @@ MinerU artifacts locally. Never paste extracted text into an issue or chat.
   physical-page provenance.
 - Tables are retained in normalized page/chunk text and MinerU layout artifacts,
   but complex table fidelity requires human QA.
-- The current tool prepares lexical chunks only. Embedding generation, measured
-  hybrid rank fusion, collection-filtered retrieval RPC changes, QA approval,
-  and atomic activation are separate release gates.
+- The current tool prepares lexical chunks only. The application and reviewed
+  database RPC can search every canonical collection or filter to one exact
+  collection, and each returned citation includes that collection. Embedding
+  generation, measured hybrid rank fusion, QA approval, and atomic activation
+  are separate release gates.

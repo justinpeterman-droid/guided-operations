@@ -130,6 +130,62 @@ describe("PolicyExpert", () => {
     });
   });
 
+  it("can limit a question to one policy collection", async () => {
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrfToken: "csrf-token" }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              outcome: {
+                kind: "insufficient_evidence",
+                answer: {
+                  status: "insufficient_evidence",
+                  answer: "No fictional evidence is available.",
+                  citations: [],
+                  limitations: ["Check the fictional source."],
+                },
+              },
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    const user = userEvent.setup();
+    render(<PolicyExpert />);
+
+    await user.selectOptions(
+      screen.getByLabelText("Search collection"),
+      "BMU Post Orders",
+    );
+    await user.type(
+      screen.getByLabelText("Policy question"),
+      "What does the fictional post order require?",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Find cited guidance" }),
+    );
+
+    expect(fetch).toHaveBeenNthCalledWith(2, "/api/web/v1/policy-answer", {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "x-csrf-token": "csrf-token",
+      },
+      body: JSON.stringify({
+        question: "What does the fictional post order require?",
+        history: [],
+        collections: ["BMU Post Orders"],
+      }),
+    });
+  });
+
   it("links every cited answer to its authorized immutable source PDF", async () => {
     const documentVersionId = "22222222-2222-4222-8222-222222222222";
     vi.spyOn(globalThis, "fetch")
@@ -157,6 +213,7 @@ describe("PolicyExpert", () => {
                       title: "Fictional Review Policy",
                       versionLabel: "Version 1",
                       sourceSha256: "a".repeat(64),
+                      collection: "BMU policies",
                       pageStart: 4,
                       pageEnd: 4,
                       sectionPath: "Review",
@@ -190,5 +247,6 @@ describe("PolicyExpert", () => {
     );
     expect(sourceLink).toHaveAttribute("target", "_blank");
     expect(screen.getByText("Page 4")).toBeInTheDocument();
+    expect(screen.getAllByText("BMU policies")).toHaveLength(2);
   });
 });

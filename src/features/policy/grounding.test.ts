@@ -14,6 +14,7 @@ const citation = {
   title: "Fictional Training Policy 101",
   versionLabel: "training-v1",
   sourceSha256: "a".repeat(64),
+  collection: "BMU policies" as const,
   pageStart: 4,
   pageEnd: 5,
   sectionPath: "Fictional procedure",

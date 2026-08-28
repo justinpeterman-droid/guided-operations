@@ -15,6 +15,7 @@ const citation: SourceCitation = {
   title: "Fictional Training Policy 101",
   versionLabel: "training-v1",
   sourceSha256: "a".repeat(64),
+  collection: "BMU policies",
   pageStart: 4,
   pageEnd: 5,
   sectionPath: "Fictional procedure",
@@ -120,6 +121,22 @@ describe("policy answer service", () => {
     expect(retrieve).toHaveBeenCalledWith(
       expect.objectContaining({ question: request.question }),
     );
+  });
+
+  it("keeps an explicit collection scope on the retrieval request", async () => {
+    const { service, retrieve } = createService();
+
+    await service.answer({
+      ...request,
+      collections: ["BMU Post Orders"],
+    });
+
+    expect(retrieve).toHaveBeenCalledWith({
+      ...request,
+      maximumPassages: 8,
+      approvedDocumentVersionIds: undefined,
+      collections: ["BMU Post Orders"],
+    });
   });
 
   it("fails closed when a provider alters a retrieved source label", async () => {

@@ -61,6 +61,66 @@ describe("policy answer endpoint validation", () => {
     ).resolves.toEqual({ ok: true, question: "What about weekends?", history });
   });
 
+  it("accepts only the three canonical policy collections", async () => {
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+    const request = new Request("https://app.example.test/api", {
+      method: "POST",
+      headers: {
+        origin: "https://app.example.test",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        question: "Compare the fictional requirements.",
+        collections: ["BMU policies", "SD"],
+      }),
+    });
+
+    await expect(
+      validatePolicyAnswerEndpointRequest(
+        request,
+        "https://app.example.test",
+        "11111111-1111-4111-8111-111111111111",
+        "k".repeat(32),
+      ),
+    ).resolves.toEqual({
+      ok: true,
+      question: "Compare the fictional requirements.",
+      history: [],
+      collections: ["BMU policies", "SD"],
+    });
+  });
+
+  it("rejects empty or unknown policy collection filters", async () => {
+    vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
+
+    for (const collections of [[], ["Unknown collection"]]) {
+      const request = new Request("https://app.example.test/api", {
+        method: "POST",
+        headers: {
+          origin: "https://app.example.test",
+          "content-type": "application/json",
+        },
+        body: JSON.stringify({
+          question: "What does the fictional policy require?",
+          collections,
+        }),
+      });
+
+      await expect(
+        validatePolicyAnswerEndpointRequest(
+          request,
+          "https://app.example.test",
+          "11111111-1111-4111-8111-111111111111",
+          "k".repeat(32),
+        ),
+      ).resolves.toEqual({
+        ok: false,
+        status: 400,
+        code: "invalid_request",
+      });
+    }
+  });
+
   it("rejects oversized conversation history", async () => {
     vi.mocked(hasValidSessionCsrfRequest).mockReturnValue(true);
     const request = new Request("https://app.example.test/api", {

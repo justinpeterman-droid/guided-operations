@@ -2824,16 +2824,20 @@ a:focus-visible {
   font-weight: 700;
 }
 
-.policy-question-form textarea {
+.policy-question-form textarea,
+.policy-question-form select {
   width: 100%;
-  min-height: 130px;
   padding: 15px;
   color: var(--gow-ink);
   background: #fff;
   border: 1px solid #9cb1c3;
   border-radius: var(--gow-radius-control);
-  resize: vertical;
   line-height: 1.5;
+}
+
+.policy-question-form textarea {
+  min-height: 130px;
+  resize: vertical;
 }
 
 .policy-question-form button {
@@ -2848,7 +2852,8 @@ a:focus-visible {
 }
 
 .policy-question-form button:disabled,
-.policy-question-form textarea:disabled {
+.policy-question-form textarea:disabled,
+.policy-question-form select:disabled {
   cursor: wait;
   opacity: 0.65;
 }
@@ -2900,7 +2905,7 @@ a:focus-visible {
 
 .policy-citations li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto auto;
   gap: 16px;
   align-items: center;
   padding: 13px 15px;

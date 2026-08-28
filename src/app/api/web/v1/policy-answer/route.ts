@@ -85,6 +85,9 @@ export async function POST(request: Request): Promise<Response> {
       facilityId: session.account.facilityId,
       question: validation.question,
       history: validation.history,
+      ...(validation.collections
+        ? { collections: validation.collections }
+        : {}),
     });
 
     if (outcome.kind === "answer" || outcome.kind === "insufficient_evidence") {

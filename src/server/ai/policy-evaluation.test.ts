@@ -18,6 +18,7 @@ const citationOne: SourceCitation = {
   title: "Synthetic Training Policy One",
   versionLabel: "synthetic-v1",
   sourceSha256: "a".repeat(64),
+  collection: "BMU policies",
   pageStart: 1,
   pageEnd: 1,
   sectionPath: "Synthetic procedure",
@@ -32,6 +33,7 @@ const citationTwo: SourceCitation = {
   stableKey: "synthetic-policy-two",
   title: "Synthetic Training Policy Two",
   sourceSha256: "b".repeat(64),
+  collection: "SD",
 };
 
 function suite() {

@@ -403,7 +403,9 @@ signed-in workflow pass in the guarded fictional browser lane**
 
 ## Phase 5 — policy corpus and grounded assistance
 
-Status: **retrieval and provenance code are implemented; real corpus migration
+Status: **the resumable local MinerU, provenance, collection-aware lexical
+retrieval, and citation code are implemented and pass fictional local tests;
+real corpus review/import, embeddings, hybrid qualification, hosted migration,
 and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 
 ### Steps

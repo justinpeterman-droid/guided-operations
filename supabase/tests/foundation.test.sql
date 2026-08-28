@@ -1,6 +1,6 @@
 begin;
 
-select plan(207);
+select plan(214);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1836,6 +1836,25 @@ select ok(
   'only authenticated users can execute version-filtered policy retrieval'
 );
 
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.retrieve_policy_passages_v3(text, integer, uuid[], text[])',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.retrieve_policy_passages_v3(text, integer, uuid[], text[])',
+    'execute'
+  )
+  and not has_function_privilege(
+    'service_role',
+    'api.retrieve_policy_passages_v3(text, integer, uuid[], text[])',
+    'execute'
+  ),
+  'only authenticated users can execute collection-filtered policy retrieval'
+);
+
 select lives_ok(
   $$
     insert into app_private.policy_documents (
@@ -1976,6 +1995,20 @@ select is(
   'version filtering cannot bypass the missing-account denial'
 );
 
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v3(
+      'fictional procedure',
+      8,
+      null,
+      array['BMU policies']::text[]
+    )
+  ),
+  0,
+  'collection filtering cannot bypass the missing-account denial'
+);
+
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
 
 select set_config('request.jwt.claims', '{}', true);
@@ -2060,6 +2093,43 @@ select is(
   'an explicit version filter cannot return a different version'
 );
 
+select is(
+  (
+    select collection
+    from api.retrieve_policy_passages_v3('fictional procedure', 8, null, null)
+  ),
+  'BMU policies',
+  'collection-aware retrieval returns the immutable registered collection'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v3(
+      'fictional procedure',
+      8,
+      null,
+      array['BMU policies']::text[]
+    )
+  ),
+  1,
+  'an exact collection filter returns its authorized passage'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v3(
+      'fictional procedure',
+      8,
+      null,
+      array['SD']::text[]
+    )
+  ),
+  0,
+  'a collection filter excludes passages from other collections'
+);
+
 select throws_ok(
   $$
     select *
@@ -2071,6 +2141,34 @@ select throws_ok(
   $$,
   'Invalid approved policy version filter',
   'an empty approved-version filter is rejected instead of widened'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v3(
+      'fictional procedure',
+      8,
+      null,
+      array[]::text[]
+    );
+  $$,
+  'Invalid policy collection filter',
+  'an empty collection filter is rejected instead of widened'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v3(
+      'fictional procedure',
+      8,
+      null,
+      array['Unknown collection']::text[]
+    );
+  $$,
+  'Invalid policy collection filter',
+  'an unknown collection filter is rejected'
 );
 
 reset role;

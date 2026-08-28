@@ -46,6 +46,7 @@ const answerJsonSchema = {
           "title",
           "versionLabel",
           "sourceSha256",
+          "collection",
           "pageStart",
           "pageEnd",
           "sectionPath",
@@ -59,6 +60,10 @@ const answerJsonSchema = {
           title: { type: "string" },
           versionLabel: { type: "string" },
           sourceSha256: { type: "string" },
+          collection: {
+            type: "string",
+            enum: ["BMU policies", "BMU Post Orders", "SD"],
+          },
           pageStart: { type: ["integer", "null"] },
           pageEnd: { type: ["integer", "null"] },
           sectionPath: { type: ["string", "null"] },

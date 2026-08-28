@@ -2,6 +2,12 @@ import { z } from "zod";
 
 const sha256Schema = z.string().regex(/^[a-f0-9]{64}$/);
 
+export const policyCollectionSchema = z.enum([
+  "BMU policies",
+  "BMU Post Orders",
+  "SD",
+]);
+
 export const sourceCitationSchema = z
   .object({
     documentId: z.uuid(),
@@ -11,6 +17,7 @@ export const sourceCitationSchema = z
     title: z.string().min(1).max(300),
     versionLabel: z.string().min(1).max(120),
     sourceSha256: sha256Schema,
+    collection: policyCollectionSchema,
     pageStart: z.number().int().positive().nullable(),
     pageEnd: z.number().int().positive().nullable(),
     sectionPath: z.string().min(1).max(300).nullable(),
@@ -74,6 +81,7 @@ export const groundedPolicyAnswerSchema = z
   });
 
 export type SourceCitation = z.infer<typeof sourceCitationSchema>;
+export type PolicyCollection = z.infer<typeof policyCollectionSchema>;
 export type GroundedPolicyAnswer = z.infer<typeof groundedPolicyAnswerSchema>;
 
 export class GroundedPolicyAnswerError extends Error {
@@ -112,6 +120,7 @@ export function validateGroundedPolicyAnswer(
       citation.title !== retrieved.title ||
       citation.versionLabel !== retrieved.versionLabel ||
       citation.sourceSha256 !== retrieved.sourceSha256 ||
+      citation.collection !== retrieved.collection ||
       citation.pageStart !== retrieved.pageStart ||
       citation.pageEnd !== retrieved.pageEnd ||
       citation.sectionPath !== retrieved.sectionPath ||

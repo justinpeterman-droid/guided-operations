@@ -1,6 +1,9 @@
 import "server-only";
 
-import type { SourceCitation } from "@/features/policy/grounding";
+import type {
+  PolicyCollection,
+  SourceCitation,
+} from "@/features/policy/grounding";
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftGenerationSource } from "@/features/incidents/report-draft-source";
 import type { IncidentFactExtractionRequest } from "@/features/incidents/incident-fact-extraction";
@@ -15,6 +18,7 @@ export interface PolicyRetrievalRequest {
   question: string;
   maximumPassages: number;
   approvedDocumentVersionIds?: string[];
+  collections?: PolicyCollection[];
 }
 
 export interface PolicyRetrievalProvider {

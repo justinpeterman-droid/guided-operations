@@ -515,11 +515,18 @@ Pause and report a blocker instead of guessing when work requires:
       never use the Supabase secret credential. Local database and route
       negative tests pass; real corpus import and hosted browser proof remain
       open.
-- [ ] Build versioned extraction/OCR, page maps, chunks/hashes, full-text index,
-      embeddings, and vector index.
+- [x] Implement the resumable local MinerU extraction/OCR, page maps,
+      deterministic chunks/hashes, local Supabase import, and full-text-indexed
+      lexical retrieval foundation. It preserves the three canonical
+      collections, supports all-collection and one-collection search, and keeps
+      imports awaiting review. No real source was processed or activated.
+- [ ] Generate approved embeddings, select and measure the vector index, and
+      qualify deterministic hybrid rank fusion on the accepted corpus.
 - [x] Implement separate provider-neutral retrieval and generation adapters,
       including database-enforced approved-version filtering for bounded
-      evaluation and catalog requests.
+      evaluation and catalog requests. Collection filtering now stays inside the
+      same database authorization boundary and every citation preserves its
+      registered collection.
 - [ ] Pin model/embedding IDs, timeouts, payload limits, retries, cost caps, and
       redacted errors.
 - [ ] Review OpenAI project data controls/retention and keep API data sharing

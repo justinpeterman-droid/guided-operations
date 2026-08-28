@@ -566,6 +566,15 @@ checkpoint, and private direct database-import foundation. No hosted migration,
 real source upload, extraction, corpus acceptance, or production cutover has
 occurred.
 
+Forward migration `20260828200000_add_collection_filtered_policy_retrieval.sql`
+adds the reviewed collection-aware lexical RPC. It keeps session/facility,
+rights, current-version, ready-run, approved-page, and approved-chunk checks in
+the database; rejects empty or unknown collection filters; and returns the
+immutable collection in each passage. The server citation contract now validates
+that collection and Policy Expert can search all collections or one exact
+collection. This remains local fictional-data proof until hosted migration,
+corpus QA, and release gates are completed.
+
 | Stage                      | Work                                                                                        | Exit gate                                                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
 | R0 — Discovery             | Export legacy provider inventory; reconcile 292 names; identify source bytes and owners     | Every entry is matched, missing, extra, or explicitly unresolved; export SHA-256 and custodian sign-off recorded |

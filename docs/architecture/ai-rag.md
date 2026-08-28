@@ -155,12 +155,15 @@ reranking are evaluated choices. Do not copy a generic HNSW configuration
 without measuring the actual corpus.
 
 The current provider-neutral retrieval adapter uses the reviewed lexical RPC as
-the first bounded implementation. When an evaluation or future catalog flow
-supplies an explicit document-version set, the database applies that filter
-inside the same account, facility, rights, current-version, ingestion-QA, page,
-and chunk authorization boundary. An empty or oversized version filter is
-rejected instead of being widened. Semantic retrieval and measured rank fusion
-remain separate qualification work.
+the first bounded implementation. It searches all three canonical collections by
+default and accepts an optional exact collection scope. The database returns the
+registered collection with every passage and applies collection and explicit
+document-version filters inside the same account, facility, rights,
+current-version, ingestion-QA, page, and chunk authorization boundary. Empty,
+unknown, or oversized filters are rejected instead of being widened. The Policy
+Expert interface can search all approved policies or one collection and shows
+collection provenance beside each citation. Semantic retrieval and measured rank
+fusion remain separate qualification work.
 
 ## Grounded answer generation
 
@@ -178,8 +181,8 @@ sections. It directs the model to:
 Post-generation validation:
 
 - every citation ID exists in the supplied context;
-- every citation's document, version, checksum, page/section, and excerpt
-  exactly match the retrieved immutable passage;
+- every citation's document, version, collection, checksum, page/section, and
+  excerpt exactly match the retrieved immutable passage;
 - cited source/version is active or explicitly historical;
 - quoted spans, if any, are bounded and actually present;
 - material claims meet the configured citation/support threshold;

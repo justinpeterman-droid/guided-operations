@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   GroundedPolicyAnswerError,
   type GroundedPolicyAnswer,
+  type PolicyCollection,
   validateGroundedPolicyAnswer,
 } from "@/features/policy/grounding";
 
@@ -29,6 +30,7 @@ export type PolicyAnswerRequest = Readonly<{
   question: string;
   history?: readonly Readonly<{ question: string }>[];
   approvedDocumentVersionIds?: readonly string[];
+  collections?: readonly PolicyCollection[];
 }>;
 
 export type PolicyAnswerServiceOptions = Readonly<{
@@ -116,6 +118,9 @@ export function createPolicyAnswerService(
           approvedDocumentVersionIds: request.approvedDocumentVersionIds
             ? [...request.approvedDocumentVersionIds]
             : undefined,
+          ...(request.collections
+            ? { collections: [...request.collections] }
+            : {}),
         });
       } catch {
         return { kind: "provider_unavailable", reasonCode: "retrieval_failed" };

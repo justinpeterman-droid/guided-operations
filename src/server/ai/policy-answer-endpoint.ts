@@ -2,6 +2,10 @@ import "server-only";
 
 import { z } from "zod";
 
+import {
+  policyCollectionSchema,
+  type PolicyCollection,
+} from "@/features/policy/grounding";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
 const requestSchema = z
@@ -13,6 +17,7 @@ const requestSchema = z
       )
       .max(6)
       .default([]),
+    collections: z.array(policyCollectionSchema).min(1).max(3).optional(),
   })
   .strict();
 
@@ -21,6 +26,7 @@ export type PolicyAnswerEndpointValidation =
       ok: true;
       question: string;
       history: readonly Readonly<{ question: string }>[];
+      collections?: readonly PolicyCollection[];
     }>
   | Readonly<{
       ok: false;
@@ -52,6 +58,9 @@ export async function validatePolicyAnswerEndpointRequest(
           ok: true,
           question: parsed.data.question,
           history: parsed.data.history,
+          ...(parsed.data.collections
+            ? { collections: parsed.data.collections }
+            : {}),
         }
       : { ok: false, status: 400, code: "invalid_request" };
   } catch {

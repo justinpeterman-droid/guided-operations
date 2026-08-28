@@ -2,6 +2,8 @@ import "server-only";
 
 import { z } from "zod";
 
+import { policyCollectionSchema } from "@/features/policy/grounding";
+
 import type {
   PolicyRetrievalProvider,
   PolicyRetrievalRequest,
@@ -19,6 +21,7 @@ const rowsSchema = z
         title: z.string().min(1).max(300),
         version_label: z.string().min(1).max(120),
         source_sha256: z.string().regex(/^[a-f0-9]{64}$/),
+        collection: policyCollectionSchema,
         page_start: z.number().int().positive().nullable(),
         page_end: z.number().int().positive().nullable(),
         section_path: z.string().min(1).max(300).nullable(),
@@ -31,11 +34,12 @@ const rowsSchema = z
 
 export type PolicyRetrievalRpcClient = Readonly<{
   rpc(
-    functionName: "retrieve_policy_passages_v2",
+    functionName: "retrieve_policy_passages_v3",
     arguments_: Readonly<{
       p_question: string;
       p_limit?: number;
       p_approved_document_version_ids?: string[];
+      p_collections?: string[];
     }>,
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
@@ -49,12 +53,12 @@ export function createSupabasePolicyRetrievalProvider(
   client: PolicyRetrievalRpcClient,
 ): PolicyRetrievalProvider {
   return {
-    providerKey: "supabase-lexical-v1",
+    providerKey: "supabase-lexical-v2",
     async retrieve(
       request: PolicyRetrievalRequest,
     ): Promise<RetrievedPolicyPassage[]> {
       try {
-        const result = await client.rpc("retrieve_policy_passages_v2", {
+        const result = await client.rpc("retrieve_policy_passages_v3", {
           p_question: request.question,
           p_limit: request.maximumPassages,
           ...(request.approvedDocumentVersionIds?.length
@@ -63,6 +67,9 @@ export function createSupabasePolicyRetrievalProvider(
                   ...request.approvedDocumentVersionIds,
                 ],
               }
+            : {}),
+          ...(request.collections?.length
+            ? { p_collections: [...request.collections] }
             : {}),
         });
         if (result.error) return [];
@@ -81,6 +88,7 @@ export function createSupabasePolicyRetrievalProvider(
             title: row.title,
             versionLabel: row.version_label,
             sourceSha256: row.source_sha256,
+            collection: row.collection,
             pageStart: row.page_start,
             pageEnd: row.page_end,
             sectionPath: row.section_path,

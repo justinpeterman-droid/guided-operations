@@ -3,10 +3,14 @@
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
-import type { GroundedPolicyAnswer } from "@/features/policy/grounding";
+import type {
+  GroundedPolicyAnswer,
+  PolicyCollection,
+} from "@/features/policy/grounding";
 import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 
 type SubmissionState = "idle" | "submitting" | "failed";
+type CollectionScope = "all" | PolicyCollection;
 
 type AnswerOutcome =
   | { kind: "answer" | "insufficient_evidence"; answer: GroundedPolicyAnswer }
@@ -37,6 +41,8 @@ async function getCsrfToken(): Promise<string> {
 
 export function PolicyExpert() {
   const [question, setQuestion] = useState("");
+  const [collectionScope, setCollectionScope] =
+    useState<CollectionScope>("all");
   const [state, setState] = useState<SubmissionState>("idle");
   const [conversation, setConversation] = useState<ConversationEntry[]>([]);
 
@@ -57,6 +63,9 @@ export function PolicyExpert() {
           history: conversation.slice(-6).map((entry) => ({
             question: entry.question,
           })),
+          ...(collectionScope === "all"
+            ? {}
+            : { collections: [collectionScope] }),
         }),
       });
       const data: unknown = await response.json();
@@ -126,6 +135,20 @@ export function PolicyExpert() {
           </div>
 
           <form className="policy-question-form" onSubmit={submit}>
+            <label htmlFor="policy-collection">Search collection</label>
+            <select
+              disabled={submitting}
+              id="policy-collection"
+              onChange={(event) =>
+                setCollectionScope(event.target.value as CollectionScope)
+              }
+              value={collectionScope}
+            >
+              <option value="all">All approved policies</option>
+              <option value="BMU policies">BMU policies</option>
+              <option value="BMU Post Orders">BMU Post Orders</option>
+              <option value="SD">SD</option>
+            </select>
             <label htmlFor="policy-question">Policy question</label>
             <textarea
               disabled={submitting}
@@ -204,6 +227,7 @@ function PolicyAnswer({
           {outcome.answer.citations.map((citation) => (
             <li key={citation.chunkId}>
               <strong>{citation.title}</strong>
+              <span>{citation.collection}</span>
               <span>{citation.versionLabel}</span>
               <span>
                 {citation.pageStart
