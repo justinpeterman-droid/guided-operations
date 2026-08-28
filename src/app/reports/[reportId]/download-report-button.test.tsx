@@ -17,7 +17,7 @@ describe("DownloadReportButton", () => {
         Response.json({ csrfToken: "fictional-csrf-token" }),
       )
       .mockResolvedValueOnce(
-        new Response(new Blob(["fictional-docx"]), {
+        new Response("fictional-docx", {
           status: 200,
           headers: {
             "content-type":
