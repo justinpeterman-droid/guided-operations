@@ -18,6 +18,14 @@ const playwrightCli = resolve(
   "test",
   "cli.js",
 );
+const nextCli = resolve(
+  repositoryRoot,
+  "node_modules",
+  "next",
+  "dist",
+  "bin",
+  "next",
+);
 const vitestCli = resolve(
   repositoryRoot,
   "node_modules",
@@ -108,6 +116,7 @@ if (target) {
     OPENAI_POLICY_MODEL: "fictional-local-disabled-model",
     OPENAI_REPORT_DRAFT_MODEL: "fictional-local-disabled-model",
     PLAYWRIGHT_PORT: "3109",
+    PLAYWRIGHT_USE_PRODUCTION_SERVER: "true",
     RAG_CORPUS_VERSION: "fictional-local-empty-v1",
     SAFE_OPERATIONAL_LOGGING_ENABLED: "false",
     SUPABASE_DB_URL: target.databaseUrl,
@@ -118,6 +127,12 @@ if (target) {
   let testStatus = 1;
   let cleanupStatus = 1;
   try {
+    const buildResult = command(nextCli, ["build"], {
+      env: qualificationEnvironment,
+    });
+    if (buildResult.status !== 0) {
+      throw new Error("The production-style browser build failed.");
+    }
     resetLocalDatabase();
     const sessionResult = command(
       vitestCli,
