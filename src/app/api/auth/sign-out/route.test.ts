@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -7,6 +8,9 @@ vi.mock("@/lib/supabase/server", () => ({
 }));
 vi.mock("@/server/auth/current-session", () => ({
   authorizeCurrentSession: vi.fn(),
+}));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
 }));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
@@ -21,6 +25,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -64,6 +69,13 @@ describe("POST /api/auth/sign-out", () => {
 
     expect(response.status).toBe(401);
     expect(client.auth.signOut).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_out",
+        outcome: "authentication_required",
+        status_code: 401,
+      }),
+    );
   });
 
   it("rejects a request without both same-origin and session-CSRF proof", async () => {
@@ -90,11 +102,21 @@ describe("POST /api/auth/sign-out", () => {
     expect(client.auth.signOut).toHaveBeenCalledWith({ scope: "local" });
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(response.headers.get("set-cookie")).toContain("go-csrf=;");
     expect(response.headers.get("set-cookie")).toContain("go-csrf-digest=;");
     expect(response.headers.get("set-cookie")).toContain("go-auth-device=;");
     await expect(response.json()).resolves.toEqual({
       data: { status: "signed_out" },
     });
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_out",
+        outcome: "signed_out",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
   });
 });

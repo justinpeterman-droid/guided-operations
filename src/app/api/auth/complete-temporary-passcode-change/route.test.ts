@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -13,6 +14,9 @@ vi.mock("@/server/auth/current-session", () => ({
 }));
 vi.mock("@/server/auth/private-passcode-change-store", () => ({
   createTemporaryPasscodeChangeStore: vi.fn(() => ({})),
+}));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
 }));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
@@ -30,6 +34,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { completeTemporaryPasscodeChange } from "@/server/auth/complete-temporary-passcode-change";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 import {
@@ -92,10 +97,20 @@ describe("POST /api/auth/complete-temporary-passcode-change", () => {
       allowForcedPasscodeChange: true,
     });
     expect(response.status).toBe(200);
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(response.headers.get("set-cookie")).toContain("go-csrf=;");
     await expect(response.json()).resolves.toEqual({
       data: { status: "passcode_changed" },
     });
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.temporary_passcode_change",
+        outcome: "changed",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
   });
 
   it("does not invoke the completion service when current authorization is absent", async () => {
@@ -165,5 +180,13 @@ describe("POST /api/auth/complete-temporary-passcode-change", () => {
     );
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe(`${origin}/login`);
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.temporary_passcode_change",
+        outcome: "changed",
+        status_code: 303,
+      }),
+    );
   });
 });

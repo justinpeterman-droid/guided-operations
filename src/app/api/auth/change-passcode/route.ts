@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -12,6 +14,11 @@ import {
 } from "@/server/auth/supabase-auth-adapters";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
+import {
   CSRF_DIGEST_COOKIE,
   CSRF_TOKEN_COOKIE,
   hasValidSessionCsrfRequest,
@@ -24,14 +31,32 @@ const headers = { "Cache-Control": "private, no-store" };
 
 /** Changes the current account's personal passcode after fresh verification. */
 export async function POST(request: Request): Promise<Response> {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "auth.passcode_change",
+      outcome,
+      request_id: requestId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
     const session = await authorizeCurrentSession(client);
-    if (!session.allowed) return authenticationRequired();
+    if (!session.allowed)
+      return observe(authenticationRequired(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -40,7 +65,7 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     )
-      return requestNotAllowed();
+      return observe(requestNotAllowed(), "request_not_allowed");
 
     const result = await changePersonalPasscode(
       await request.json(),
@@ -53,8 +78,10 @@ export async function POST(request: Request): Promise<Response> {
         store: createPersonalPasscodeChangeStore(),
       },
     );
-    if (result === "invalid_input") return invalidInput();
-    if (result !== "changed") return unavailable();
+    if (result === "invalid_input")
+      return observe(invalidInput(), "validation_rejected");
+    if (result !== "changed")
+      return observe(unavailable(), "service_unavailable");
 
     const response = NextResponse.json(
       { data: { status: "passcode_changed" } },
@@ -63,9 +90,9 @@ export async function POST(request: Request): Promise<Response> {
     response.cookies.delete(CSRF_TOKEN_COOKIE);
     response.cookies.delete(CSRF_DIGEST_COOKIE);
     response.cookies.delete("go-auth-device");
-    return response;
+    return observe(response, "changed");
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 

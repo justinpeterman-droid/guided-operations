@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { NextResponse } from "next/server";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -7,6 +9,11 @@ import { completeTemporaryPasscodeChange } from "@/server/auth/complete-temporar
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createTemporaryPasscodeChangeStore } from "@/server/auth/private-passcode-change-store";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import {
   CSRF_DIGEST_COOKIE,
   CSRF_TOKEN_COOKIE,
@@ -22,17 +29,34 @@ const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
 
 /** Completes only an already-authorized, forced temporary-passcode session. */
 export async function POST(request: Request): Promise<Response> {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "auth.temporary_passcode_change",
+      outcome,
+      request_id: requestId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
     const session = await authorizeCurrentSession(client, {
       allowForcedPasscodeChange: true,
     });
     if (!session.allowed || !session.account.mustChangePasscode) {
-      return authenticationRequired();
+      return observe(authenticationRequired(), "authentication_required");
     }
 
     const isNativeFormSubmission = request.headers
@@ -58,7 +82,7 @@ export async function POST(request: Request): Promise<Response> {
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !csrfValid
     ) {
-      return requestNotAllowed();
+      return observe(requestNotAllowed(), "request_not_allowed");
     }
 
     const input: unknown = isNativeFormSubmission
@@ -77,13 +101,19 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
     if (result.status === "invalid_input")
-      return isNativeFormSubmission
-        ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "passcode")
-        : invalidInput();
+      return observe(
+        isNativeFormSubmission
+          ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "passcode")
+          : invalidInput(),
+        "validation_rejected",
+      );
     if (result.status !== "completed")
-      return isNativeFormSubmission
-        ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "unavailable")
-        : unavailable();
+      return observe(
+        isNativeFormSubmission
+          ? accountRedirect(runtimeEnvironment.APP_ORIGIN, "unavailable")
+          : unavailable(),
+        "service_unavailable",
+      );
 
     const response = NextResponse.json(
       { data: { status: "passcode_changed" } },
@@ -92,11 +122,14 @@ export async function POST(request: Request): Promise<Response> {
     response.cookies.delete(CSRF_TOKEN_COOKIE);
     response.cookies.delete(CSRF_DIGEST_COOKIE);
     response.cookies.delete("go-auth-device");
-    return isNativeFormSubmission
-      ? completedRedirect(runtimeEnvironment.APP_ORIGIN, response)
-      : response;
+    return observe(
+      isNativeFormSubmission
+        ? completedRedirect(runtimeEnvironment.APP_ORIGIN, response)
+        : response,
+      "changed",
+    );
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 

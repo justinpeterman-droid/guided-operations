@@ -12,7 +12,11 @@ const safeIdentifierSchema = z
 const safeOperationalEventInputSchema = z
   .object({
     event_name: z.enum([
+      "auth.passcode_change",
       "auth.sign_in",
+      "auth.sign_out",
+      "auth.sign_out_all",
+      "auth.temporary_passcode_change",
       "daily_paperwork_package.request",
       "incident_fact_extraction.request",
       "policy_answer.request",
@@ -22,6 +26,7 @@ const safeOperationalEventInputSchema = z
     outcome: z.enum([
       "answered",
       "authentication_required",
+      "changed",
       "conflict",
       "insufficient_evidence",
       "integrity_failed",
@@ -34,6 +39,8 @@ const safeOperationalEventInputSchema = z
       "sign_in_failed",
       "signed_in",
       "served",
+      "signed_out",
+      "signed_out_everywhere",
       "storage_unavailable",
       "stored",
       "suggested",

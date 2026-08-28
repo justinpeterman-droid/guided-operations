@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -18,6 +19,9 @@ vi.mock("@/server/auth/supabase-auth-adapters", () => ({
   createSupabaseAccountPasscodeVerifier: vi.fn(() => ({})),
   createSupabaseAuthPasswordResetter: vi.fn(() => ({})),
 }));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
+}));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
 }));
@@ -32,6 +36,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { changePersonalPasscode } from "@/server/auth/change-personal-passcode";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -90,7 +95,21 @@ describe("POST /api/auth/change-passcode", () => {
       expect.any(Object),
     );
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(response.headers.get("set-cookie")).toContain("go-csrf=;");
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.passcode_change",
+        outcome: "changed",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        duration_ms: expect.any(Number),
+        environment: "preview",
+      }),
+    );
+    expect(
+      JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
+    ).not.toContain(body.currentPasscode);
     await expect(response.json()).resolves.toEqual({
       data: { status: "passcode_changed" },
     });
@@ -107,5 +126,12 @@ describe("POST /api/auth/change-passcode", () => {
 
     expect(response.status).toBe(403);
     expect(changePersonalPasscode).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.passcode_change",
+        outcome: "request_not_allowed",
+        status_code: 403,
+      }),
+    );
   });
 });

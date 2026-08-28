@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -10,6 +11,9 @@ vi.mock("@/server/auth/current-session", () => ({
 }));
 vi.mock("@/server/auth/personal-session-revocation-store", () => ({
   createPersonalSessionRevocationStore: vi.fn(),
+}));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
 }));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
@@ -25,6 +29,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createPersonalSessionRevocationStore } from "@/server/auth/personal-session-revocation-store";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -109,6 +114,13 @@ describe("POST /api/auth/sign-out-all", () => {
     expect(response.status).toBe(503);
     expect(revocationStore.completeAll).not.toHaveBeenCalled();
     expect(client.auth.signOut).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_out_all",
+        outcome: "service_unavailable",
+        status_code: 503,
+      }),
+    );
   });
 
   it("does not seal the intermediate generation when provider revocation fails", async () => {
@@ -165,11 +177,21 @@ describe("POST /api/auth/sign-out-all", () => {
     );
     expect(response.status).toBe(200);
     expect(response.headers.get("Cache-Control")).toBe("private, no-store");
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
     expect(response.headers.get("set-cookie")).toContain("go-csrf=;");
     expect(response.headers.get("set-cookie")).toContain("go-csrf-digest=;");
     expect(response.headers.get("set-cookie")).toContain("go-auth-device=;");
     await expect(response.json()).resolves.toEqual({
       data: { status: "signed_out_everywhere" },
     });
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "auth.sign_out_all",
+        outcome: "signed_out_everywhere",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
   });
 });

@@ -151,4 +151,34 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records authentication lifecycle outcomes without account or credential data", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "auth.passcode_change",
+        outcome: "changed",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 200,
+        duration_ms: 9,
+        environment: "production",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-28T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "auth.passcode_change",
+      outcome: "changed",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "auth_user_id",
+        "employee_number",
+        "passcode",
+        "session_id",
+      ]),
+    );
+  });
 });

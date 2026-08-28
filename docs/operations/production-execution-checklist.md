@@ -544,8 +544,13 @@ Pause and report a blocker instead of guessing when work requires:
       and administrator Daily Paperwork package operations also emit
       content-free status and duration events; the package route returns
       matching request correlation without source filenames, metadata, bodies,
-      package digests, or administrator identity. Hosted sinks, the remaining
-      route signals, retention/access, alerts, and delivery tests remain open.
+      package digests, or administrator identity. Local sign-out, sign-out-all,
+      personal passcode change, and forced temporary-passcode change now return
+      matching opaque request correlation and emit content-free outcome/duration
+      events with explicit tests that passcodes and account/session identifiers
+      have no event field. Hosted sinks, remaining administrator/retention/
+      Storage/DB signals, access/retention, alerts, and delivery tests remain
+      open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion
