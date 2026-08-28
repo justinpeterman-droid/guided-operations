@@ -108,6 +108,11 @@ Pause and report a blocker instead of guessing when work requires:
       (`33181418441`) are green for exact commit `277c942` on 2026-08-28 after
       extending the same fail-closed protection and two-browser proof to
       personal passcode replacement.
+- [x] Confirm Web quality (`33189510880`), Database quality (`33189510822`),
+      Recovery rehearsal (`33189510855`), and Production-style Authenticated
+      browser quality (`33189510850`) are green for exact commit `9a01c92` on
+      2026-08-28. The dated local-candidate record keeps hosted, corpus, manual,
+      owner, and promotion gates open.
 
 ### Phase 0 exit
 
@@ -516,11 +521,16 @@ Pause and report a blocker instead of guessing when work requires:
       Production watch to one exact artifact. Real records remain private and no
       hosted release has been verified.
 - [ ] Pass web/database CI on the exact commit.
+  - [x] Current pre-release branch commit `9a01c92` passed Web quality
+        (`33189510880`) and Database quality (`33189510822`). Re-run and bind
+        the evidence after the release candidate is frozen.
 - [ ] Pass Auth/RLS/Storage negative and revoked-session tests.
 - [ ] Pass authenticated fictional browser, accessibility, screen-reader,
       responsive, reduced-motion, visual, print, and degraded-provider checks.
       The guarded fictional officer/admin workflow lane is automated; the
       remaining specialized and hosted checks stay open.
+  - [x] Current pre-release branch commit `9a01c92` passed the Production-style
+        guarded fictional browser lane (`33189510850`).
   - [x] Local automated accessibility checks cover WCAG 2.0/2.1 A and AA plus
         WCAG 2.2 AA, browser/page/request errors, visible keyboard focus, a
         390-by-844 mobile viewport, horizontal overflow, and reduced motion.

@@ -145,7 +145,13 @@ and bounded fail-closed token-hook behavior. At commit `277c942`, that
 qualification additionally replaces the fictional officer's personal passcode,
 proves the other active browser is denied, and signs in again with the
 replacement credential. Database tests prove an overlapping change is rejected
-and the intermediate token generation cannot receive application authority.
+and the intermediate token generation cannot receive application authority. At
+commit `9a01c92`, the lane first builds the Next.js application and serves the
+built output with the Production-style server instead of relying on the
+development server. Run `33189510850` passed the complete guarded flow,
+including the automated accessibility sweep and the final administrator account
+lifecycle checks. Web quality (`33189510880`), Database quality (`33189510822`),
+and Recovery rehearsal (`33189510855`) also passed on that exact commit.
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 

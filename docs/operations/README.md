@@ -6,14 +6,16 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 ## Current status
 
 - Application hosting configured: **authoritative Git-connected Vercel project
-  and protected Previews verified; current signed-in candidate qualification
+  and protected Previews verified; current signed-in candidate passed local/CI
+  Production-style qualification but protected hosted qualification remains
   incomplete**
 - Supabase projects configured: **fictional Development project healthy at the
   previously verified 62-migration hosted head with one fictional administrator
   pending personal passcode change; newer repository migrations remain local/CI
   candidates, with no operational data and no isolated Production project**
-- CI/release automation configured: **GitHub web, database, and fictional
-  recovery workflows pass; production promotion remains manual and gated**
+- CI/release automation configured: **GitHub web, database, fictional recovery,
+  and Production-style authenticated browser workflows pass for exact commit
+  `9a01c92`; production promotion remains manual and gated**
 - Backups and restore exercise: **local fictional database-plus-Storage
   rehearsal implemented; encrypted off-provider and isolated hosted restore not
   established**
@@ -33,7 +35,8 @@ No checklist item may be marked complete without dated evidence identifying the
 environment, commit/deployment, actor, command or dashboard observation, result,
 and retained artifact location.
 
-See the dated
+See the dated [`2026-08-28 local candidate`](2026-08-28-local-candidate.md) for
+the latest exact-commit CI evidence and the
 [`2026-08-27 command-center requalification`](2026-08-27-command-center-requalification.md)
 for the latest provider evidence and explicit limitations.
 
@@ -50,6 +53,7 @@ for the latest provider evidence and explicit limitations.
 
 | Document                                                                                       | Purpose                                                                                                                 |
 | ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [`2026-08-28-local-candidate.md`](2026-08-28-local-candidate.md)                               | Exact-commit local/CI qualification evidence and the hosted, content, manual, owner, and promotion limits.              |
 | [`2026-08-27-command-center-requalification.md`](2026-08-27-command-center-requalification.md) | Exact candidate, CI, protected-Preview, Development database, and Production-isolation evidence.                        |
 | [`production-execution-checklist.md`](production-execution-checklist.md)                       | Evidence-backed execution tracker for the gated path from foundation to isolated live Production.                       |
 | [`non-production-migration-reconciliation.md`](non-production-migration-reconciliation.md)     | Evidence and stop conditions for aligning shared non-production migration history without changing the hosted database. |
