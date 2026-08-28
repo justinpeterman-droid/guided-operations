@@ -136,7 +136,12 @@ the generic sign-in failure (`33173353133`). At commit `571493c`, the guarded
 lane additionally created a dedicated fictional timing-defense identity and
 proved that known-wrong and unknown employee sign-ins return the same public
 failure and no-store policy with no more than a 300 ms median response-time
-difference in isolated local CI (`33176099890`).
+difference in isolated local CI (`33176099890`). At commit `a045a43`, the same
+lane signs one fictional officer into two separate browser contexts, performs
+**Sign out everywhere** in the first, proves the second is immediately denied on
+a protected page, and proves the credential can establish a fresh session
+afterward. The database suite separately proves the two-phase authority changes
+and bounded fail-closed token-hook behavior.
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 

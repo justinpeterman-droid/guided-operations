@@ -116,6 +116,10 @@ payload, signed URL, nor AI answer is an authority.
   event.
 - Session refresh, rotation, expiry, logout-all, disabled-account behavior, and
   credential-change revocation require integration tests.
+- Global sign-out advances the account authority before contacting the Auth
+  provider, denies token issuance during a bounded reconciliation window, and
+  advances authority again before clearing that window. The route must not claim
+  success unless provider revocation and the final database seal both succeed.
 - Administrative or destructive actions require a recent, purpose-bound step-up
   check. The step-up artifact is short-lived and single-use.
 

@@ -99,6 +99,10 @@ Pause and report a blocker instead of guessing when work requires:
       Recovery rehearsal (`33176099780`), and Authenticated browser quality
       (`33176099890`) are green for exact commit `571493c` on 2026-08-28 after
       adding known/unknown sign-in resistance qualification.
+- [x] Confirm Web quality (`33179879484`), Database quality (`33179879491`),
+      Recovery rehearsal (`33179879596`), and Authenticated browser quality
+      (`33179879481`) are green for exact commit `a045a43` on 2026-08-28 after
+      adding two-phase global session revocation and two-browser denial proof.
 
 ### Phase 0 exit
 
@@ -204,6 +208,11 @@ Pause and report a blocker instead of guessing when work requires:
       forced-change completion is implemented and passes a clean local
       replay/lint/146-pgTAP test suite on the pending commit; hosted Preview
       browser verification and the remaining lifecycle paths are still required.
+  - [x] Local database, route, and two-browser tests prove logout-all advances
+        application authority before provider revocation, denies tokens during a
+        bounded reconciliation window, seals the result afterward, and
+        immediately denies a second active browser (`a045a43`). Hosted expiry
+        and provider-failure qualification remain open.
 - [ ] Implement CSRF/origin checks and authenticated `no-store` behavior.
 - [ ] Implement server authorization plus operation-specific RLS/Storage rules.
 - [ ] Implement protected first-admin bootstrap with generated temporary secret,

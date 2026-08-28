@@ -98,6 +98,15 @@ sessions as far as the provider supports. Because access JWTs can remain valid
 until expiry, the BFF checks current account status/auth_version on every
 sensitive request rather than relying solely on token age.
 
+Logout-all uses a two-phase database/provider/database sequence. The first
+database phase advances `auth_version` and opens a ten-minute fail-closed
+reconciliation window in which the Auth token hook emits no usable application
+authority. After provider-wide revocation succeeds, the final database phase
+advances `auth_version` again and closes the window. This prevents a concurrent
+refresh from creating a session that survives a reported successful global
+sign-out. A provider or final-database failure remains fail closed during the
+bounded window and must not be reported as success.
+
 The last active administrator cannot be demoted or disabled. First-admin
 bootstrap is allowed only when no application account exists, uses a
 transaction-level advisory lock, generates the temporary secret inside the

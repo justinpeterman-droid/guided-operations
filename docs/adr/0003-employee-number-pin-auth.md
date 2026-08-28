@@ -247,10 +247,18 @@ sign-out route. That route rechecks the current account, exact origin, and CSRF
 proof before ending only the current provider session and clearing the private
 device and CSRF cookies. A separate same-origin, CSRF-protected sign-out-all
 route now revokes the authenticated account's provider sessions globally and
-clears those local safety cookies. Focused route and browser-component tests
-cover the local sign-out success, failed, and denied cases; focused route tests
-cover global revocation success and denied cases. Reset, disabled-account, and
-role-change revocation proof remain separate acceptance requirements.
+clears those local safety cookies. Global sign-out first advances the account's
+application authority and opens a bounded fail-closed token-reconciliation
+window, then performs provider-wide revocation, advances authority again, and
+closes the window. It does not report success unless both provider revocation
+and the final database seal succeed. Focused route and browser-component tests
+cover local sign-out success, failed, and denied cases; database and route tests
+cover global-revocation ordering, concurrent refresh protection, failure paths,
+and denied cases. A fictional two-browser qualification proves one browser can
+sign out every device, the second browser is immediately denied, and the
+credential can establish a new session afterward. Hosted expiry/provider
+failure, reset, disabled-account, and role-change revocation proof remain
+separate acceptance requirements.
 
 ## Encrypted session evidence — 2026-08-27
 
@@ -274,9 +282,10 @@ chunks removed, and is denied on the next protected request. Public signup
 remains disabled. No real identity or operational data is used.
 
 This closes the local alias-in-cookie finding and preserves employee-number
-sign-in and RLS identity. It does not close the separate hosted gates for
-recovery/email configuration, expiry, global revocation, disabled/reset/role
-invalidation, multi-device behavior, or protected-Preview qualification.
+sign-in and RLS identity. Local isolated database and fictional browser evidence
+also cover immediate multi-device logout-all revocation. It does not close the
+separate hosted gates for recovery/email configuration, expiry, provider
+failure, disabled/reset/role invalidation, or protected-Preview qualification.
 
 ## Threat model — 2026-08-25
 

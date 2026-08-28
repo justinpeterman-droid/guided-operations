@@ -74,7 +74,7 @@ The hosted details and limitations are recorded in
 
 1. The fictional Development Supabase project remains at the previously verified
    62-migration head and has one active fictional administrator. The repository
-   now has six additional forward migrations, through `20260827135000`, that
+   now has seven additional forward migrations, through `20260828143000`, that
    have not been applied to the hosted project. The owner must complete the
    fictional administrator's temporary-passcode change before the protected
    workflow can create a fictional officer. A separate isolated live Supabase
@@ -83,8 +83,8 @@ The hosted details and limitations are recorded in
    alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
    Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
    still required for recovery/email configuration, expiry, timing bounds,
-   revoked-session behavior, direct RLS/API/Storage negatives, and full
-   officer/admin browser flows.
+   revoked-session/provider-failure behavior, direct RLS/API/Storage negatives,
+   and full officer/admin browser flows.
 3. The core report path is locally browser-qualified with fictional data for
    explicit category confirmation, per-note-line fact confirmation/exclusion,
    officer edit/finalize/correction, bounded stale-conflict recovery,
@@ -271,7 +271,8 @@ required before production login**
    rotation, expiry, logout, logout-all, reset revocation, disabled-account
    checks, safe redirects, CSRF/origin checks, and `no-store` behavior for
    authenticated pages. The encrypted cookie, local rotation/logout, CSRF, and
-   no-store portions are implemented; hosted expiry/revocation remains.
+   no-store portions and local two-browser global revocation are implemented;
+   hosted expiry/provider-failure revocation remains.
 8. Implement default-deny operation-specific RLS/Storage policies and server
    authorization for officer, administrator, disabled, missing-identity,
    cross-user, and cross-role cases.
