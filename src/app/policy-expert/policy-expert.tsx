@@ -19,6 +19,7 @@ type ConversationEntry = Readonly<{
 
 async function getCsrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
+    cache: "no-store",
     credentials: "same-origin",
   });
   if (!response.ok) throw new Error("CSRF token unavailable");
@@ -206,9 +207,20 @@ function PolicyAnswer({
               <span>{citation.versionLabel}</span>
               <span>
                 {citation.pageStart
-                  ? `Pages ${citation.pageStart}${citation.pageEnd && citation.pageEnd !== citation.pageStart ? `–${citation.pageEnd}` : ""}`
+                  ? citation.pageEnd && citation.pageEnd !== citation.pageStart
+                    ? `Pages ${citation.pageStart}–${citation.pageEnd}`
+                    : `Page ${citation.pageStart}`
                   : citation.sectionPath}
               </span>
+              <Link
+                aria-label={`Open ${citation.title} source PDF in a new tab`}
+                className="policy-source-link"
+                href={`/api/web/v1/policy-sources/${citation.documentVersionId}`}
+                rel="noopener noreferrer"
+                target="_blank"
+              >
+                Open source PDF
+              </Link>
             </li>
           ))}
         </ol>

@@ -2844,7 +2844,7 @@ a:focus-visible {
 
 .policy-citations li {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-columns: minmax(0, 1fr) auto auto auto;
   gap: 16px;
   align-items: center;
   padding: 13px 15px;
@@ -2855,6 +2855,16 @@ a:focus-visible {
 }
 
 .policy-citations strong {
+  color: var(--gow-navy-900);
+}
+
+.policy-source-link {
+  color: var(--gow-blue);
+  font-weight: 800;
+  text-underline-offset: 3px;
+}
+
+.policy-source-link:hover {
   color: var(--gow-navy-900);
 }
 

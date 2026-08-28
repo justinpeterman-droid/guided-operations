@@ -449,8 +449,11 @@ Pause and report a blocker instead of guessing when work requires:
       redacted errors.
 - [ ] Review OpenAI project data controls/retention and keep API data sharing
       disabled.
-- [ ] Implement Policy Expert and full reader with immutable source/version/page
-      citations and insufficient-evidence behavior.
+- [x] Implement Policy Expert and the protected full-source reader with
+      immutable source/version/page citations and insufficient-evidence
+      behavior. Each visible citation opens the authorized, checksum-verified
+      immutable PDF through the same-session private reader; approved real
+      corpus and hosted evaluation remain open.
 - [ ] Pass custodian-approved retrieval, citation, conflict/supersession,
       abstention, prompt-injection, invented-fact, access, latency, and cost
       evaluations.
@@ -471,9 +474,13 @@ Pause and report a blocker instead of guessing when work requires:
 
 ## Phase 6 — administration and operational controls
 
-- [ ] Implement account/staff, incident, paperwork, audit, and health admin
-      surfaces.
-- [ ] Enforce fresh purpose-bound step-up for high-impact actions.
+- [x] Implement account/staff, incident, paperwork, audit, and health admin
+      surfaces. The shared incident/report workspace applies administrator
+      cross-officer authority; dedicated protected pages cover accounts, Daily
+      Paperwork, redacted audit, retention, and system health.
+- [x] Enforce fresh purpose-bound step-up for high-impact actions. Account
+      lifecycle, legal-hold, and retention-deletion routes consume short-lived,
+      same-administrator, single-use proofs bound to the exact action.
 - [ ] Review allowlisted audit metadata and representative failure logs.
 - [ ] Measure DOCX/PDF/OCR/ingestion workload duration and failures.
 - [ ] Decide ADR-0005 from measurements.
