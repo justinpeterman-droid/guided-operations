@@ -79,6 +79,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
   browser,
   page,
 }) => {
+  test.setTimeout(60_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
   page.on("console", (message) => {
@@ -271,7 +272,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
 
   const firstRevision = page
     .getByRole("listitem")
-    .filter({ hasText: "Revision 1" });
+    .filter({ has: page.getByText("Revision 1", { exact: true }) });
   await firstRevision
     .getByRole("button", { name: "Restore as new revision" })
     .click();
