@@ -408,6 +408,22 @@ Pause and report a blocker instead of guessing when work requires:
         enforces exact filenames/kinds, bounded closed schemas, blank equipment
         identifiers, unique codes, and value-free SHA-256/byte-count evidence.
         It has no hosted write path and uses only fictional unit-test content.
+  - [x] Complete the scoped Production import threat model. It requires a
+        Production-only route, exact package and mapped-definition digests,
+        pinned mapper version, purpose-bound single-use approval, atomic six-row
+        registration, value-free evidence, readback, and append-only rollback.
+        Implementation and hosted qualification remain open.
+  - [x] Implement the protected code path without importing source bodies: a
+        pinned source-to-renderer mapper, digest-bound package manifest,
+        Production-only review/register routes, exact-package administrator
+        step-up, private append-only package registry, atomic six-template
+        registration, concurrency/idempotency controls, and fictional tests. The
+        administrator UI, PostgreSQL replay, hosted qualification, owner
+        fidelity review, and real Production import remain open.
+  - [x] Complete a security diff review of that implementation and fix both
+        confirmed issues: require a pre-parse multipart length bound, and prove
+        every rollback definition exactly matches its referenced immutable
+        package. Local database execution remains open while Docker is stopped.
 - [x] Implement the generic protected Daily Paperwork open, save, immutable
       history, exact restore, stale-write protection, and audited-print engine.
 - [ ] Import and map all six approved Daily Paperwork definitions and prove

@@ -173,9 +173,18 @@ files together, exact kind-to-filename binding, closed bounded JSON contracts,
 unique codes, blank source equipment identifiers, and SHA-256 evidence. It
 returns only kind, byte count, and hash for operational evidence. It performs no
 database write and never makes the private definition bodies eligible for logs,
-CI artifacts, or Preview fixtures. Registration remains disabled until the
-protected Production import, approval, and rollback path is implemented and
-qualified.
+CI artifacts, or Preview fixtures. A protected implementation now binds the
+exact source and mapped digests to a pinned mapper version, one Production-only
+administrator approval, and one atomic append-only six-template transaction. It
+remains unused: no administrator UI is connected, no real package has been
+imported, and PostgreSQL/hosted/owner fidelity qualification remains mandatory.
+
+The source-backed security design for that path is recorded in
+[`docs/security/daily-paperwork-production-import-threat-model.md`](../security/daily-paperwork-production-import-threat-model.md).
+It records the package manifest, pinned source-to-renderer mapper,
+purpose-specific approval, atomic registration, exact append-only rollback, and
+remaining hosted qualification controls that must pass before source bodies are
+accepted.
 
 These definitions require schema validation, operational-owner review,
 source/revision verification, rights review, and fictional-data scanning before

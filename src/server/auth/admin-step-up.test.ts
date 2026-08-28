@@ -55,6 +55,8 @@ describe("issueAdminStepUp", () => {
       "retention.release_legal_hold",
       "retention.approve_deletion",
       "retention.execute_deletion",
+      "paperwork.template_import",
+      "paperwork.template_rollback",
       "system.destructive_cleanup",
     ]);
   });
