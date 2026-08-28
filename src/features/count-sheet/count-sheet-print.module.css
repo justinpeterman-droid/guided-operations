@@ -37,6 +37,7 @@
   .printLayout :global(.count-sheet-table-wrap td) {
     min-width: 0;
     padding: 2px;
+    overflow-wrap: anywhere;
   }
 
   .printLayout :global(.count-sheet-table-wrap th:first-child),
