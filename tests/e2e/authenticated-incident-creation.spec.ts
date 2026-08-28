@@ -56,6 +56,7 @@ test("an officer confirms the category and every proposed fact before saving", a
   test.setTimeout(60_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
+  const expectedUnavailableResponses: number[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
@@ -64,6 +65,14 @@ test("an officer confirms the category and every proposed fact before saving", a
     const failure = request.failure()?.errorText ?? "unknown network failure";
     if (!failure.includes("ERR_ABORTED")) {
       failedRequests.push(`${request.url()}: ${failure}`);
+    }
+  });
+  page.on("response", (response) => {
+    if (
+      response.url().endsWith("/api/web/v1/incident-fact-proposals") &&
+      response.status() === 503
+    ) {
+      expectedUnavailableResponses.push(response.status());
     }
   });
 
@@ -84,6 +93,14 @@ test("an officer confirms the category and every proposed fact before saving", a
     .fill(
       "Fictional first source fact.\nFictional line that must stay out of reports.",
     );
+  await page
+    .getByRole("button", { name: "Suggest category and facts" })
+    .click();
+  await expect(
+    page.getByText(
+      "AI suggestions are unavailable. You can continue with manual line-by-line review.",
+    ),
+  ).toBeVisible();
   await expect(
     page.getByRole("heading", { name: "Proposed category" }),
   ).toBeVisible();
@@ -150,6 +167,13 @@ test("an officer confirms the category and every proposed fact before saving", a
   expect(facts).toContain("Fictional first source fact.");
   expect(facts).not.toContain("Fictional line that must stay out of reports.");
   expect(facts).toContain("Fictional missing detail.");
-  expect(browserErrors).toEqual([]);
+  expect(expectedUnavailableResponses).toEqual([503]);
+  expect(
+    browserErrors.filter(
+      (message) =>
+        message !==
+        "Failed to load resource: the server responded with a status of 503 (Service Unavailable)",
+    ),
+  ).toEqual([]);
   expect(failedRequests).toEqual([]);
 });

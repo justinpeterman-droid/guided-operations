@@ -115,14 +115,18 @@ Already present:
   one-note-line/one-proposal fact review with exact visible source text,
   confirm/exclude decisions, edit re-confirmation, and separate provenance for
   an officer-edited confirmed fact.
+- a protected provider-neutral suggestion route that uses a bounded AI budget,
+  strict non-stored/tool-free output, allowlisted categories, and
+  server-restored source-line provenance. Invalid or unavailable AI cannot block
+  the manual review path or confirm any value.
 
 Still required for parity:
 
 - approve the exact nine-category candidate and its charge/form selection rules
   before changing its status or permitting it in Production;
-- replace the deterministic note-line proposal foundation with the qualified
-  provider-neutral structured extraction result while preserving the same
-  officer confirmation, exclusion, edit, and provenance gates;
+- qualify the provider-neutral structured extraction boundary against the pinned
+  model and approved fictional evaluation set, then approve provider data
+  controls before any operational note is sent;
 - operationally review every recovered question, option, dependency, required
   slot, report type, and paperwork mapping against the current source forms;
 - implement required auto-content and the approved 005/409 output mapping;

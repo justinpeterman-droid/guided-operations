@@ -1,7 +1,9 @@
 import { z } from "zod";
 
 const nonEmptyText = (maximum: number) => z.string().trim().min(1).max(maximum);
-const proposalKeySchema = z.string().regex(/^field-note-line-[1-9][0-9]{0,3}$/);
+const proposalKeySchema = z
+  .string()
+  .regex(/^field-note-line-[1-9][0-9]{0,3}(?:-fact-[1-9][0-9]{0,2})?$/);
 
 export const fieldNoteFactReviewSchema = z
   .object({
@@ -19,6 +21,22 @@ export type FieldNoteFactProposal = Readonly<{
   sourceText: string;
   value: string;
 }>;
+
+export function isSupportedFactProposalSet(
+  proposals: readonly FieldNoteFactProposal[],
+): boolean {
+  return (
+    proposals.length > 0 &&
+    proposals.length <= 200 &&
+    proposals.every(
+      ({ sourceText, value }) =>
+        sourceText.trim().length > 0 &&
+        sourceText.trim().length <= 8_000 &&
+        value.trim().length > 0 &&
+        value.trim().length <= 8_000,
+    )
+  );
+}
 
 /**
  * Builds a deliberately conservative review list. One non-empty officer note
@@ -101,21 +119,22 @@ export function buildReviewedFieldNoteFacts(
       throw new Error("A confirmed fact requires a reporting officer scope.");
     }
 
-    let sourceNoteId = input.sourceNoteId;
+    const sourceNoteIds = [input.sourceNoteId];
     if (review.value !== review.sourceText) {
-      sourceNoteId = input.idFactory();
+      const officerReviewNoteId = input.idFactory();
       reviewNotes.push({
-        id: sourceNoteId,
+        id: officerReviewNoteId,
         text: `Officer-reviewed fact based on ${review.key}\n${review.value}`,
         recordedAt: input.recordedAt,
       });
+      sourceNoteIds.push(officerReviewNoteId);
     }
     reviewedFacts.push({
       id: input.idFactory(),
-      field: `Officer-confirmed fact ${review.key.replace("field-note-line-", "")}`,
+      field: `Officer-confirmed fact ${reviewedFacts.length + 1}`,
       state: "confirmed",
       value: review.value,
-      sourceNoteIds: [sourceNoteId],
+      sourceNoteIds,
       reportingStaffMemberIds,
     });
   }

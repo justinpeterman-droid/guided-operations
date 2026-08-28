@@ -2,7 +2,8 @@
 
 - **Status:** Target design
 - **Initial provider:** OpenAI through a provider-neutral adapter
-- **Approved real content:** Policy/reference corpus only
+- **Real operational content:** Production only after provider data controls,
+  model evaluation, and release gates are approved
 
 ## Purpose and boundary
 
@@ -14,6 +15,16 @@ gate.
 
 The browser never contacts a model provider. Next.js or the optional worker
 calls provider adapters after authentication and authorization.
+
+The incident extraction adapter is now implemented behind a protected Next.js
+route. It sends bounded source lines and controlled category definitions through
+the existing report-assistance budget operation, uses `store: false`, supplies
+no tools, and requires strict structured output. Domain validation rejects an
+unknown category or invented source-line key and restores exact source text on
+the server. The result is only a browser review suggestion: it is not persisted,
+confirmed, or used by report generation until the officer separately confirms
+it. A deterministic manual review remains available when generation is off or
+fails.
 
 ## Provider-neutral interfaces
 

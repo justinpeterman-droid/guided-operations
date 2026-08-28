@@ -15,9 +15,11 @@ import {
 } from "@/features/incidents/report-assistant-checklist";
 import {
   buildReviewedFieldNoteFacts,
+  isSupportedFactProposalSet,
   proposeFactsFromFieldNotes,
   type FieldNoteFactProposal,
 } from "@/features/incidents/field-note-fact-review";
+import { incidentFactExtractionResultSchema } from "@/features/incidents/incident-fact-extraction";
 import type {
   IncidentStaffRelationship,
   IncidentStaffRelationshipType,
@@ -27,6 +29,7 @@ import { INCIDENT_SCHEMA_VERSION } from "@/features/incidents/schema";
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type SaveState = "idle" | "saving" | "failed" | "saved";
 type StaffLoadState = "loading" | "failed" | "loaded";
+type ExtractionState = "idle" | "loading" | "suggested" | "unavailable";
 type StaffSelectionItem = Readonly<{
   staffMemberId: string;
   displayName: string;
@@ -82,6 +85,8 @@ export function NewIncidentWorkspace() {
   const [factProposals, setFactProposals] = useState<
     readonly FactProposalReview[]
   >([]);
+  const [extractionState, setExtractionState] =
+    useState<ExtractionState>("idle");
   const [unknown, setUnknown] = useState("");
   const [checklistAnswers, setChecklistAnswers] = useState<
     Record<string, ReportChecklistAnswer>
@@ -125,6 +130,21 @@ export function NewIncidentWorkspace() {
     answerList,
   );
   const checklistReview = validateReportChecklistAnswers(category, answerList);
+  const deterministicFactProposals = useMemo(
+    () => proposeFactsFromFieldNotes(notes),
+    [notes],
+  );
+  const factSourceSupported = isSupportedFactProposalSet(
+    deterministicFactProposals,
+  );
+  const readyForSuggestions = Boolean(
+    incidentNumber.trim() &&
+    incidentName.trim() &&
+    occurredAt &&
+    location.trim() &&
+    notes.trim() &&
+    factSourceSupported,
+  );
   const readyForFactReview = Boolean(
     incidentNumber.trim() &&
     incidentName.trim() &&
@@ -220,18 +240,63 @@ export function NewIncidentWorkspace() {
   }
 
   function beginFactReview() {
-    const proposals = proposeFactsFromFieldNotes(notes);
+    const proposals = factProposals.length
+      ? factProposals
+      : deterministicFactProposals.map((proposal) => ({
+          ...proposal,
+          decision: "pending" as const,
+        }));
     if (!categoryDefinition || !proposals.length || proposals.length > 200) {
       return;
     }
     setCategoryConfirmed(true);
-    setFactProposals(
-      proposals.map((proposal) => ({ ...proposal, decision: "pending" })),
-    );
+    setFactProposals(proposals);
     setFactReportingScopes({});
     setReportsReviewed(false);
     setSaveState("idle");
     setStep(3);
+  }
+
+  async function suggestCategoryAndFacts() {
+    if (!readyForSuggestions) return;
+    setExtractionState("loading");
+    setCategoryConfirmed(false);
+    setFactProposals([]);
+    try {
+      const token = await csrfToken();
+      const response = await fetch("/api/web/v1/incident-fact-proposals", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": token,
+        },
+        body: JSON.stringify({ notes: notes.trim() }),
+      });
+      const body: unknown = await response.json();
+      const dataCandidate =
+        body && typeof body === "object" && "data" in body
+          ? body.data
+          : undefined;
+      const result =
+        incidentFactExtractionResultSchema.safeParse(dataCandidate);
+      if (!response.ok || !result.success) {
+        throw new Error("suggestion unavailable");
+      }
+      setCategory(result.data.categoryKey);
+      setFactProposals(
+        result.data.proposals.map((proposal) => ({
+          ...proposal,
+          decision: "pending" as const,
+        })),
+      );
+      setFactReportingScopes({});
+      setReportsReviewed(false);
+      setSaveState("idle");
+      setExtractionState("suggested");
+    } catch {
+      setExtractionState("unavailable");
+    }
   }
 
   function updateFactProposal(
@@ -631,6 +696,7 @@ export function NewIncidentWorkspace() {
                       setCategory(event.target.value);
                       setCategoryConfirmed(false);
                       setFactProposals([]);
+                      setExtractionState("idle");
                       setChecklistAnswers({});
                       setFactReportingScopes({});
                       setReportsReviewed(false);
@@ -653,12 +719,38 @@ export function NewIncidentWorkspace() {
                       setNotes(event.target.value);
                       setCategoryConfirmed(false);
                       setFactProposals([]);
+                      setExtractionState("idle");
                       setFactReportingScopes({});
                       setReportsReviewed(false);
                     }}
                   />
                 </label>
               </div>
+              <div className="incident-review-actions">
+                <button
+                  disabled={
+                    !readyForSuggestions || extractionState === "loading"
+                  }
+                  onClick={suggestCategoryAndFacts}
+                  type="button"
+                >
+                  {extractionState === "loading"
+                    ? "Getting AI suggestions…"
+                    : "Suggest category and facts"}
+                </button>
+              </div>
+              {extractionState === "suggested" ? (
+                <p className="incident-status" role="status">
+                  AI suggestions are ready. Confirm the category, then review
+                  every fact one at a time.
+                </p>
+              ) : null}
+              {extractionState === "unavailable" ? (
+                <p className="incident-status" role="status">
+                  AI suggestions are unavailable. You can continue with manual
+                  line-by-line review.
+                </p>
+              ) : null}
               {categoryDefinition ? (
                 <section className="incident-review" aria-live="polite">
                   <h2>Proposed category</h2>
@@ -675,19 +767,24 @@ export function NewIncidentWorkspace() {
               </p>
               <button
                 className="incident-primary"
-                disabled={
-                  !readyForFactReview ||
-                  proposeFactsFromFieldNotes(notes).length > 200
-                }
+                disabled={!readyForFactReview || !factSourceSupported}
                 onClick={beginFactReview}
                 type="button"
               >
                 Confirm category and review facts
               </button>
-              {proposeFactsFromFieldNotes(notes).length > 200 ? (
+              {deterministicFactProposals.length > 200 ? (
                 <p className="incident-status" role="alert">
                   Field notes have more than 200 non-empty lines. Combine
                   related lines before continuing; nothing has been discarded.
+                </p>
+              ) : null}
+              {deterministicFactProposals.some(
+                ({ sourceText }) => sourceText.length > 8_000,
+              ) ? (
+                <p className="incident-status" role="alert">
+                  One field-note line is longer than 8,000 characters. Shorten
+                  that line before continuing; nothing has been discarded.
                 </p>
               ) : null}
             </>

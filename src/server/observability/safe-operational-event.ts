@@ -13,6 +13,7 @@ const safeOperationalEventInputSchema = z
   .object({
     event_name: z.enum([
       "auth.sign_in",
+      "incident_fact_extraction.request",
       "policy_answer.request",
       "policy_source.read",
       "report_draft.request",
@@ -22,6 +23,7 @@ const safeOperationalEventInputSchema = z
       "authentication_required",
       "insufficient_evidence",
       "integrity_failed",
+      "invalid_suggestion",
       "not_found",
       "provider_unavailable",
       "request_not_allowed",
@@ -31,6 +33,7 @@ const safeOperationalEventInputSchema = z
       "served",
       "storage_unavailable",
       "stored",
+      "suggested",
       "validation_rejected",
     ]),
     reason_code: z
@@ -40,6 +43,7 @@ const safeOperationalEventInputSchema = z
         "generation_failed",
         "generation_disabled",
         "invalid_output",
+        "invalid_source",
         "persistence_failed",
         "retrieval_failed",
         "unhandled_failure",

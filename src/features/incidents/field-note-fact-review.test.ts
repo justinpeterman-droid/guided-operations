@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   buildReviewedFieldNoteFacts,
+  isSupportedFactProposalSet,
   proposeFactsFromFieldNotes,
 } from "./field-note-fact-review";
 
@@ -23,6 +24,12 @@ describe("field note fact review", () => {
         value: "Fictional second fact.",
       },
     ]);
+  });
+
+  it("blocks oversized source lines instead of silently truncating them", () => {
+    expect(
+      isSupportedFactProposalSet(proposeFactsFromFieldNotes("x".repeat(8_001))),
+    ).toBe(false);
   });
 
   it("keeps excluded lines out and records an officer edit as a new source note", () => {
@@ -61,7 +68,7 @@ describe("field note fact review", () => {
       expect.objectContaining({
         id: "id-2",
         value: "Fictional officer-confirmed wording.",
-        sourceNoteIds: ["id-1"],
+        sourceNoteIds: ["source-note", "id-1"],
         reportingStaffMemberIds: ["fictional-officer"],
       }),
     ]);

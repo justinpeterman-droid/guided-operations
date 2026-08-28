@@ -1,10 +1,108 @@
-import { fireEvent, render, screen, within } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { NewIncidentWorkspace } from "./new-incident-workspace";
 
+afterEach(() => {
+  cleanup();
+  vi.restoreAllMocks();
+});
+
 describe("NewIncidentWorkspace", () => {
+  it("keeps AI category and fact suggestions pending for officer review", async () => {
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              staff: [
+                {
+                  staffMemberId: "11111111-1111-4111-8111-111111111111",
+                  displayName: "Fictional Officer",
+                  employeeNumberHint: "11",
+                  shiftCode: "A",
+                  isCurrentAccount: true,
+                },
+              ],
+            },
+          }),
+          { status: 200 },
+        ),
+      )
+      .mockResolvedValueOnce(
+        new Response(JSON.stringify({ csrfToken: "csrf-token" }), {
+          status: 200,
+        }),
+      )
+      .mockResolvedValueOnce(
+        new Response(
+          JSON.stringify({
+            data: {
+              categoryKey: "incident_no_disciplinary",
+              proposals: [
+                {
+                  key: "field-note-line-1-fact-1",
+                  sourceText: "Fictional raw training note.",
+                  value: "Fictional structured training fact.",
+                },
+              ],
+            },
+          }),
+          { status: 200 },
+        ),
+      );
+    const user = userEvent.setup();
+    render(<NewIncidentWorkspace />);
+
+    await user.click(
+      await screen.findByRole("button", {
+        name: "Confirm officer relationships",
+      }),
+    );
+    await user.type(screen.getByLabelText("Incident number"), "FICTIONAL-102");
+    await user.type(screen.getByLabelText("Incident name"), "AI training");
+    fireEvent.change(screen.getByLabelText("Date and time occurred"), {
+      target: { value: "2026-08-27T13:00" },
+    });
+    await user.type(screen.getByLabelText("Location"), "Training room");
+    await user.type(
+      screen.getByLabelText("Your field notes"),
+      "Fictional raw training note.",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Suggest category and facts" }),
+    );
+
+    expect(await screen.findByText(/AI suggestions are ready/)).toBeVisible();
+    expect(screen.getByLabelText("Incident category")).toHaveValue(
+      "incident_no_disciplinary",
+    );
+    await user.click(
+      screen.getByRole("button", {
+        name: "Confirm category and review facts",
+      }),
+    );
+    expect(
+      screen.getByDisplayValue("Fictional structured training fact."),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Confirm fact" }),
+    ).toHaveAttribute("aria-pressed", "false");
+    expect(fetch).toHaveBeenNthCalledWith(
+      3,
+      "/api/web/v1/incident-fact-proposals",
+      expect.objectContaining({ method: "POST", credentials: "same-origin" }),
+    );
+  });
+
   it("keeps missing information explicit through review before a protected save", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")

@@ -3,6 +3,7 @@ import "server-only";
 import type { SourceCitation } from "@/features/policy/grounding";
 import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftGenerationSource } from "@/features/incidents/report-draft-source";
+import type { IncidentFactExtractionRequest } from "@/features/incidents/incident-fact-extraction";
 
 export interface RetrievedPolicyPassage {
   citation: SourceCitation;
@@ -54,4 +55,10 @@ export interface ReportDraftGenerationProvider {
   generate(
     request: ReportDraftGenerationRequest,
   ): Promise<GeneratedReportDraft>;
+}
+
+export interface IncidentFactExtractionProvider {
+  readonly providerKey: string;
+  /** Untrusted provider output; the service restores provenance and validates it. */
+  generate(request: IncidentFactExtractionRequest): Promise<unknown>;
 }

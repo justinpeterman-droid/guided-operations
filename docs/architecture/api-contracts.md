@@ -159,14 +159,22 @@ rejects this candidate marker until the operational owner approves the exact
 definition version. Removing the marker does not claim checklist completion.
 
 Before the browser submits that contract, the incident workspace treats the
-selected category as a proposal that the officer must explicitly confirm. Each
-non-empty source-note line becomes one unchanged, bounded review proposal. The
-officer must confirm or exclude every proposal; editing a proposal resets its
-decision, and a confirmed edit adds a separate officer-review note so the
-original field note is never silently rewritten. Only confirmed proposals enter
-`reviewedFacts`. This deterministic client review is the safe front-half
-foundation, not the future model extraction API or proof of a server-persisted
-workflow transition.
+selected category as a proposal that the officer must explicitly confirm. The
+protected `POST /api/web/v1/incident-fact-proposals` route accepts only bounded
+notes after current-session, same-origin, and session-CSRF checks. Its
+server-only provider adapter uses non-stored, tool-free strict structured output
+and the shared per-account/global AI circuit breaker. The service accepts only
+an allowlisted category and facts tied to real source-line keys; it restores the
+exact source text itself instead of trusting provider-supplied provenance. It
+returns review suggestions only and does not create, update, or confirm an
+incident.
+
+The officer must confirm or exclude every proposal. Editing a proposal resets
+its decision, and a confirmed AI rewrite or officer edit adds a separate
+officer-review note while retaining the original field note as provenance. Only
+confirmed proposals enter `reviewedFacts`. When AI is disabled, unavailable, or
+invalid, the unchanged one-proposal-per-note-line manual path remains usable.
+Neither path is proof of a server-persisted resumable workflow transition.
 
 The server-only `api.get_incident_revision` RPC is the corresponding narrow read
 primitive for an immutable revision. It returns the incident identifiers,

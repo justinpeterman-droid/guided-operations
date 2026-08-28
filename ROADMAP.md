@@ -89,10 +89,13 @@ The hosted details and limitations are recorded in
    explicit category confirmation, per-note-line fact confirmation/exclusion,
    officer edit/finalize/correction, bounded stale-conflict recovery,
    append-only history/restore, audited print, and same-facility administrator
-   visibility. The remaining officer product work is qualified model-backed
-   structured extraction, approved gap rules, the complete draft-generation
-   flow; supported export; Forms Library and Count Sheet acceptance; hosted
-   proof; and owner acceptance.
+   visibility. A protected, provider-neutral model boundary now returns only
+   review suggestions: an allowed category plus source-line-bound facts. The
+   officer must still confirm the category and every fact, and the manual path
+   remains available when AI is disabled. Remaining work includes model and
+   operational-data evaluation, approved gap rules, the complete
+   draft-generation flow; supported export; Forms Library and Count Sheet
+   acceptance; hosted proof; and owner acceptance.
 4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
 5. The approved corpus has not passed retrieval, citation, refusal,
