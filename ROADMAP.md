@@ -300,7 +300,9 @@ required before production login**
 Status: **implementation in progress; the protected incident-to-draft path now
 enforces per-officer fact selection and connects to the review screen; a generic
 exact-version reviewed-report Word download exists, while approved 005/409
-output, full browser qualification, and owner acceptance remain open**
+output, protected hosted qualification, manual accessibility/visual review, and
+owner acceptance remain open. The guarded local officer/administrator browser
+lane passes in pull-request CI with fictional data**
 
 ### Steps
 
@@ -356,8 +358,10 @@ and audited current-revision print workflow are implemented locally. The
 workflow includes closed server-owned schemas, repeating rows, stale-session
 denial, optimistic conflict protection, idempotent writes, redacted print audit,
 and fail-closed quarantine/retirement handling. Approved source import,
-source-specific screen/print fidelity, hosted migration, accessibility/browser
-qualification, and owner acceptance remain open**
+source-specific screen/print fidelity, hosted migration, manual accessibility
+review, protected hosted qualification, and owner acceptance remain open. The
+generic Count Sheet mobile/print-fit and signed-in workflow pass in the guarded
+fictional browser lane**
 
 ### Steps
 

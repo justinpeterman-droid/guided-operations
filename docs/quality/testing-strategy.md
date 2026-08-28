@@ -124,6 +124,12 @@ database between roles and again after qualification. The Authenticated browser
 quality workflow starts the fixed local Supabase stack before invoking this same
 guarded command. It must never be pointed at Preview, staging, or Production and
 is not a substitute for the later protected hosted-browser qualification.
+State-changing authenticated specifications run once with one worker after a
+fresh reset; CI retries are disabled for those specifications so a failure is
+not hidden by retrying against already-mutated test state. On 2026-08-28 the
+guarded lane passed at commit `49f6413` after completing public mobile/print,
+officer Count Sheet, report/revision/Word-download, incident creation, sign-out,
+and administrator workflows with fictional data.
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 

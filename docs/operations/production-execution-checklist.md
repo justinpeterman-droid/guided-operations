@@ -75,14 +75,22 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add automated tracked-secret scanning and high-severity production
       dependency review.
 - [ ] Review Dependabot updates individually.
-- [ ] Confirm no secret, real operational data, restricted corpus content,
-      provider metadata, or generated build output is tracked.
-- [ ] Record the temporary manual repository controls necessitated by the
+- [x] Confirm no secret, real operational data, restricted corpus content,
+      provider-link metadata, browser artifact, generated document/archive, or
+      generated build output is tracked. The tracked-secret scanner and
+      tracked-file inventory passed at `49f6413` on 2026-08-28.
+- [x] Record the temporary manual repository controls necessitated by the
       current private-repository plan: pull request, green checks, review,
-      no-force-push, and release record.
+      no-force-push, and release record. PR #1 remains open from
+      `codex/production-readiness` to `main`; branch pushes are allowed, but
+      merge, deployment, hosted migration, and promotion remain separate owner
+      gates.
 - [x] Open a narrow pull request for Phase 0/1 foundation work: PR #1.
 - [x] Confirm exact-commit Web quality CI is green for `9c6248f`; no review or
       inline comments were present at the 2026-08-25 check.
+- [x] Confirm Web quality (`33172294619`), Database quality (`33172294839`),
+      Recovery rehearsal (`33172294635`), and Authenticated browser quality
+      (`33172294904`) are green for exact commit `49f6413` on 2026-08-28.
 
 ### Phase 0 exit
 
@@ -91,7 +99,7 @@ Pause and report a blocker instead of guessing when work requires:
       no database-source delta.
 - [ ] Documentation and hosted state agree.
 - [x] Security/dependency scanning is active in Web quality CI.
-- [ ] Repository-control path is recorded.
+- [x] Repository-control path is recorded.
 
 ## Phase 1 — connected non-production environment
 
@@ -217,10 +225,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Add local anonymous and authenticated negative tests proving both private
       Storage buckets deny listing, insertion, alteration, and direct deletion.
       Elevated-key qualification and hosted Storage evidence remain pending.
-- [ ] Pass real-browser login/session/revocation/bootstrap tests with fictional
-      qualification identities. The guarded local officer/admin browser lane is
-      now automated in pull-request CI; explicit revocation/bootstrap ceremony
-      coverage and hosted qualification remain open.
+- [x] Pass guarded local real-browser sign-in, officer Count Sheet,
+      incident/report, output, sign-out, and administrator lifecycle workflows
+      with fictional qualification identities in pull-request CI (`49f6413`, run
+      `33172294904`).
+- [ ] Complete explicit browser revocation/bootstrap-ceremony coverage and
+      protected hosted qualification without alias leakage.
 
 ### Phase 2 exit
 
@@ -274,6 +284,11 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Implement deterministic explicit-version reviewed-report DOCX plus
       current-version browser print. Keep official 005/409 output open until the
       source form and mapping are approved and fidelity-qualified.
+- [x] Pass the guarded fictional local officer/administrator browser flow for
+      incident creation, per-officer fact selection, draft review/finalization,
+      stale-write recovery, revision restore, exact-version Word downloads,
+      print audit, administrator cross-officer review, and sign-out (`49f6413`,
+      run `33172294904`).
 - [ ] Pass domain, contract, PostgreSQL, RLS, concurrency, idempotency,
       report-safety, browser, accessibility, visual, print, and export checks.
 - [ ] Record owner workflow/output acceptance.
@@ -291,7 +306,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Implement Count Sheet saved-revision review and append-only restore.
 - [x] Record redacted, idempotent audit metadata before protected Count Sheet
       print requests.
-- [ ] Complete Count Sheet print qualification and supported export.
+- [x] Pass the automated Count Sheet desktop calculation, keyboard, reduced-
+      motion mobile, print marker/fit, assigned-shift save/reopen/history/
+      restore, and audited-print browser checks with fictional data (`49f6413`,
+      run `33172294904`).
+- [ ] Complete owner-reviewed physical print qualification and supported Count
+      Sheet export.
 - [ ] Review every source definition for provenance, rights, revision, schema,
       and fictional-data safety before import.
 - [x] Implement the generic protected Daily Paperwork open, save, immutable
