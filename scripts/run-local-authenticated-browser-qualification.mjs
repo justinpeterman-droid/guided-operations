@@ -141,6 +141,22 @@ if (target) {
       throw new Error("The sign-in resistance qualification failed.");
     }
     resetLocalDatabase();
+    const sessionRevocationResult = command(
+      playwrightCli,
+      [
+        "test",
+        "tests/e2e/authenticated-session-revocation.spec.ts",
+        "--workers=1",
+        "--retries=0",
+      ],
+      { env: qualificationEnvironment },
+    );
+    if (sessionRevocationResult.status !== 0) {
+      throw new Error(
+        "The multi-device session revocation qualification failed.",
+      );
+    }
+    resetLocalDatabase();
     const publicBrowserResult = command(
       playwrightCli,
       ["test", ...publicBrowserQualificationSpecs],

@@ -4,6 +4,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { createPersonalSessionRevocationStore } from "@/server/auth/personal-session-revocation-store";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import {
   CSRF_DIGEST_COOKIE,
@@ -17,8 +18,8 @@ export const runtime = "nodejs";
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
 
 /**
- * Revokes provider sessions for the current account only after proving the
- * current session, exact same-origin request, and session-bound CSRF token.
+ * Advances application session authority and revokes provider refresh sessions
+ * only after proving the current session, exact origin, and session-bound CSRF.
  */
 export async function POST(request: Request): Promise<Response> {
   try {
@@ -41,8 +42,17 @@ export async function POST(request: Request): Promise<Response> {
       return requestNotAllowed();
     }
 
+    const revocationStore = createPersonalSessionRevocationStore();
+    const intermediateAuthVersion = await revocationStore.beginAll(
+      session.account.authUserId,
+      session.account.authVersion,
+    );
     const { error } = await client.auth.signOut({ scope: "global" });
     if (error) return unavailable();
+    await revocationStore.completeAll(
+      session.account.authUserId,
+      intermediateAuthVersion,
+    );
 
     const response = NextResponse.json(
       { data: { status: "signed_out_everywhere" } },
