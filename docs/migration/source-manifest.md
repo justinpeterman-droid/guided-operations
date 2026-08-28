@@ -131,6 +131,52 @@ Potentially reusable definitions include:
 - `templates/report_style_guide.md`
 - `templates/005_template_v3.docx`
 
+### Daily Paperwork definition evidence
+
+The six Daily Paperwork definitions were read directly from the pinned canonical
+commit, not from the dirty legacy checkout. The Git blob identifiers and sizes
+below bind the migration review to the exact old-app definitions without copying
+their operational field bodies into this repository.
+
+| Definition                 | Canonical path                                       | Git blob                                   | Bytes | Target handling                                                                  |
+| -------------------------- | ---------------------------------------------------- | ------------------------------------------ | ----: | -------------------------------------------------------------------------------- |
+| Shift Assignment Roster    | `templates/paperwork/daily/assignment_roster.json`   | `d9c6310182b34ae270a7d67ab423a0b97cc33138` | 4,646 | Private Production template import; requires specialized staff-reference rules.  |
+| Uniform Inspection Log     | `templates/paperwork/daily/uniform_inspection.json`  | `1b23e3266fee6fe0a11f7db9d37924ec46a06607` |   770 | Private Production template import; derive rows from the approved roster.        |
+| Walk-Through Detector Test | `templates/paperwork/daily/metal_detector_test.json` | `de5467eacd431b79c9a20c826c8adcd9869e2b90` |   942 | Private Production template import; keep equipment identifiers blank by default. |
+| Perimeter Check List       | `templates/paperwork/daily/perimeter_check.json`     | `dbca9382ffa36c09dd8e391ed6faa01ae5e4f16f` | 6,853 | Private Production template import; preserve reviewed source order.              |
+| Random Searches Log        | `templates/paperwork/daily/random_search_log.json`   | `6242316432d31e4b332ea525c7f07551842b3828` |   529 | Private Production template import; use stable staff references.                 |
+| Handheld Detector Sign-Out | `templates/paperwork/daily/detector_sign_out.json`   | `71fda1a2fd24ceb7f793a6ee7a1fda422101c9d8` |   405 | Private Production template import; use stable staff references.                 |
+
+The pinned definitions contain structure, controlled values, source ordering,
+and print orientation. The audit found no completed staff identity, employee
+number, historical entry, or populated equipment identifier in these six blobs.
+They do contain facility-specific operational structure, so the current
+real-data boundary prohibits copying the bodies into Git, local fixtures, CI,
+Preview, screenshots, or logs. Acquisition, SHA-256 verification, approval, and
+registration must occur only through the future protected Production
+template-import workflow.
+
+The owner-confirmed shift meanings are:
+
+- A and B: day shift;
+- C and D: night shift;
+- U: five-day week;
+- F: five-day week field.
+
+This provenance review authorizes continued implementation against the pinned
+shape. It does not replace the records owner's final source-revision, rights,
+screen/print fidelity, and Production import acceptance.
+
+The server-only package boundary in
+`src/server/paperwork/daily-paperwork-source-package.ts` now requires all six
+files together, exact kind-to-filename binding, closed bounded JSON contracts,
+unique codes, blank source equipment identifiers, and SHA-256 evidence. It
+returns only kind, byte count, and hash for operational evidence. It performs no
+database write and never makes the private definition bodies eligible for logs,
+CI artifacts, or Preview fixtures. Registration remains disabled until the
+protected Production import, approval, and rollback path is implemented and
+qualified.
+
 These definitions require schema validation, operational-owner review,
 source/revision verification, rights review, and fictional-data scanning before
 import. A filename such as “official,” a template in Git, or old test coverage

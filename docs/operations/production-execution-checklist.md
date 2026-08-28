@@ -396,6 +396,18 @@ Pause and report a blocker instead of guessing when work requires:
       Sheet export.
 - [ ] Review every source definition for provenance, rights, revision, schema,
       and fictional-data safety before import.
+  - [x] Pin all six sanitized old-app definitions to the canonical legacy
+        commit, exact Git blobs, and byte sizes; confirm that those blobs
+        contain no completed staff identities, employee numbers, historical
+        entries, or populated equipment identifiers; and record the approved
+        A/B, C/D, U, and F shift meanings.
+  - [ ] Acquire and verify the source bodies only inside isolated Production,
+        compute SHA-256, record source-revision/rights approval, and register
+        them through a protected template-import workflow.
+  - [x] Add a server-only all-six-or-nothing source-package validator that
+        enforces exact filenames/kinds, bounded closed schemas, blank equipment
+        identifiers, unique codes, and value-free SHA-256/byte-count evidence.
+        It has no hosted write path and uses only fictional unit-test content.
 - [x] Implement the generic protected Daily Paperwork open, save, immutable
       history, exact restore, stale-write protection, and audited-print engine.
 - [ ] Import and map all six approved Daily Paperwork definitions and prove
