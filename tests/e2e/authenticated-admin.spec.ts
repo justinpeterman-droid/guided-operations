@@ -214,6 +214,10 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await lockedOfficerCard
     .getByRole("button", { name: "Confirm unlock" })
     .click();
+  await expect(lockedOfficerCard.getByText("Unlocked")).toBeVisible({
+    timeout: 15_000,
+  });
+  await page.reload();
   await expect(
     lockedOfficerCard.getByText(/Officer · active · shift D/),
   ).toBeVisible();
