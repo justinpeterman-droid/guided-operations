@@ -61,7 +61,6 @@ export async function changePersonalPasscode(
     normalizedEmployeeNumber,
     dependencies.employeeLookupHmacKey,
   );
-  let prepared = false;
   try {
     const [currentPasscodeAccepted, identityAccepted] = await Promise.all([
       dependencies.verifier.verify(authUserId, parsed.data.currentPasscode),
@@ -69,26 +68,30 @@ export async function changePersonalPasscode(
     ]);
     if (!currentPasscodeAccepted || !identityAccepted) return "invalid_input";
     await dependencies.store.prepare(authUserId, employeeLookupDigest);
-    prepared = true;
-    if (
-      !(await dependencies.updater.updatePassword(
+
+    let passwordUpdated = false;
+    try {
+      passwordUpdated = await dependencies.updater.updatePassword(
         authUserId,
         parsed.data.newPasscode,
-      ))
-    )
-      return "failed";
+      );
+    } catch {
+      // Provider-wide sign-out is still attempted below. The database keeps
+      // token issuance fail closed during its bounded reconciliation window.
+    }
+
+    let providerRevoked = false;
+    try {
+      const { error } = await client.auth.signOut({ scope: "global" });
+      providerRevoked = error === null;
+    } catch {
+      // Do not seal or claim success when provider revocation is unavailable.
+    }
+    if (!passwordUpdated || !providerRevoked) return "failed";
+
     await dependencies.store.record(authUserId, employeeLookupDigest);
     return "changed";
   } catch {
     return "failed";
-  } finally {
-    if (prepared) {
-      try {
-        await client.auth.signOut({ scope: "global" });
-      } catch {
-        // auth_version was advanced before the provider call, so stale app
-        // sessions remain denied even when provider-wide sign-out is down.
-      }
-    }
   }
 }

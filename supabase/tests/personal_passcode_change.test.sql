@@ -1,6 +1,6 @@
 begin;
 
-select plan(12);
+select plan(17);
 
 select lives_ok(
   $$
@@ -47,6 +47,33 @@ select is(
   'preparation advances auth_version before the provider update'
 );
 
+select ok(
+  (select session_revocation_pending_until > statement_timestamp()
+   from app_private.user_accounts
+   where auth_user_id = 'aaaaaaaa-0000-4000-8000-000000000041'),
+  'preparation opens a bounded session-revocation reconciliation window'
+);
+
+select is(
+  app_private.custom_access_token_hook(
+    jsonb_build_object(
+      'user_id', 'aaaaaaaa-0000-4000-8000-000000000041',
+      'claims', jsonb_build_object('app_metadata', '{}'::jsonb)
+    )
+  ) #>> '{claims,app_metadata,auth_version}',
+  '0',
+  'a concurrent refresh receives no application authority while the passcode change is pending'
+);
+
+select throws_ok(
+  $$ select app_private.prepare_personal_passcode_change(
+    'aaaaaaaa-0000-4000-8000-000000000041', repeat('e', 64)
+  ) $$,
+  '55000',
+  'Session revocation is already pending',
+  'a second passcode change cannot overlap the pending provider operation'
+);
+
 select is(
   (select metadata->>'outcome' from app_private.audit_events
    where event_type = 'account.passcode.change.prepared'
@@ -65,8 +92,26 @@ select lives_ok(
 select is(
   (select auth_version from app_private.user_accounts
    where auth_user_id = 'aaaaaaaa-0000-4000-8000-000000000041'),
-  4,
-  'completion does not create a second session-version change'
+  5,
+  'completion seals the intermediate session generation'
+);
+
+select is(
+  (select session_revocation_pending_until from app_private.user_accounts
+   where auth_user_id = 'aaaaaaaa-0000-4000-8000-000000000041'),
+  null::timestamptz,
+  'completion closes the session-revocation reconciliation window'
+);
+
+select is(
+  app_private.custom_access_token_hook(
+    jsonb_build_object(
+      'user_id', 'aaaaaaaa-0000-4000-8000-000000000041',
+      'claims', jsonb_build_object('app_metadata', '{}'::jsonb)
+    )
+  ) #>> '{claims,app_metadata,auth_version}',
+  '5',
+  'a fresh sign-in receives the sealed application authority'
 );
 
 select is(

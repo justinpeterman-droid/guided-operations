@@ -54,6 +54,9 @@ describe("changePersonalPasscode", () => {
       expect.stringMatching(/^[a-f0-9]{64}$/),
     );
     expect(client.auth.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(client.auth.signOut.mock.invocationCallOrder[0]).toBeLessThan(
+      dependencies.store.record.mock.invocationCallOrder[0]!,
+    );
   });
 
   it("rejects a wrong current credential or employee identity before updating", async () => {
@@ -90,5 +93,31 @@ describe("changePersonalPasscode", () => {
     ).resolves.toBe("failed");
 
     expect(client.auth.signOut).toHaveBeenCalledWith({ scope: "global" });
+  });
+
+  it("does not seal or claim success when provider-wide revocation fails", async () => {
+    const { client, dependencies } = setup();
+    client.auth.signOut.mockResolvedValue({ error: new Error("unavailable") });
+
+    await expect(
+      changePersonalPasscode(input, authUserId, client, dependencies),
+    ).resolves.toBe("failed");
+
+    expect(dependencies.store.prepare).toHaveBeenCalled();
+    expect(dependencies.store.record).not.toHaveBeenCalled();
+  });
+
+  it("still attempts provider-wide revocation when the password update throws", async () => {
+    const { client, dependencies } = setup();
+    dependencies.updater.updatePassword.mockRejectedValue(
+      new Error("unavailable"),
+    );
+
+    await expect(
+      changePersonalPasscode(input, authUserId, client, dependencies),
+    ).resolves.toBe("failed");
+
+    expect(client.auth.signOut).toHaveBeenCalledWith({ scope: "global" });
+    expect(dependencies.store.record).not.toHaveBeenCalled();
   });
 });
