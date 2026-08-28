@@ -216,7 +216,11 @@ export function WorkspaceCommandCenter() {
                 </li>
               ))}
             </ul>
-            <Link className="command-center-history-link" href="/reports">
+            <Link
+              className="command-center-history-link"
+              href="/reports"
+              prefetch={false}
+            >
               View report history <ArrowIcon />
             </Link>
           </section>
@@ -246,7 +250,7 @@ export function WorkspaceCommandCenter() {
         <ul>
           {allTools.map((tool) => (
             <li key={tool.label}>
-              <Link href={tool.href}>
+              <Link href={tool.href} prefetch={tool.href !== "/reports"}>
                 <span className="command-center-tool-icon">
                   <CommandIcon name={tool.icon} />
                 </span>
