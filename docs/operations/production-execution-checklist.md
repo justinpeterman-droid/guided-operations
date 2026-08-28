@@ -218,7 +218,9 @@ Pause and report a blocker instead of guessing when work requires:
       Storage buckets deny listing, insertion, alteration, and direct deletion.
       Elevated-key qualification and hosted Storage evidence remain pending.
 - [ ] Pass real-browser login/session/revocation/bootstrap tests with fictional
-      qualification identities.
+      qualification identities. The guarded local officer/admin browser lane is
+      now automated in pull-request CI; explicit revocation/bootstrap ceremony
+      coverage and hosted qualification remain open.
 
 ### Phase 2 exit
 
@@ -457,6 +459,8 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Pass Auth/RLS/Storage negative and revoked-session tests.
 - [ ] Pass authenticated fictional browser, accessibility, screen-reader,
       responsive, reduced-motion, visual, print, and degraded-provider checks.
+      The guarded fictional officer/admin workflow lane is automated; the
+      remaining specialized and hosted checks stay open.
 - [ ] Pass approved-corpus retrieval/citation/refusal/injection evaluations.
 - [ ] Verify monitoring, alerts, budgets, backups, restore, and rollback.
 - [ ] Confirm no unresolved critical/high security issue.

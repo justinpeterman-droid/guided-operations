@@ -14,10 +14,12 @@ separate scripts or CI jobs currently exist. The repository currently groups
 unit/component tests under npm test and also exposes npm run check, npm run
 test:e2e, npm run db:test, and npm run test:eval; inspect package.json for the
 current source of truth. The synthetic evaluation command runs in Web quality CI
-with fictional passages and deterministic providers. It does not replace the
-private approved-corpus qualification. As coverage matures, package scripts and
-CI must use the same underlying commands so local and automated results are
-comparable.
+with fictional passages and deterministic providers. The guarded authenticated
+browser command also runs in its own CI lane against isolated local Supabase and
+fictional qualification identities. Neither lane replaces the private
+approved-corpus or later hosted qualification. As coverage matures, package
+scripts and CI must use the same underlying commands so local and automated
+results are comparable.
 
 | Target           | Purpose                                                                                        |
 | ---------------- | ---------------------------------------------------------------------------------------------- |
@@ -116,10 +118,12 @@ The guarded `npm run test:e2e:local-auth` qualification command is restricted to
 the fixed loopback Supabase ports and requires the exact local confirmation
 flag. It resets only that disposable local database, provisions unmistakably
 fictional administrator and officer accounts through the private lifecycle
-functions, exercises private password sign-in and the Count Sheet
-save/reopen/print/sign-out path, and resets the local database again. It must
-never be pointed at Preview, staging, or Production and is not a substitute for
-the later protected hosted-browser qualification.
+functions, exercises private password sign-in plus officer report, incident,
+Count Sheet, output, sign-out, and administrator workflows, and resets the local
+database between roles and again after qualification. The Authenticated browser
+quality workflow starts the fixed local Supabase stack before invoking this same
+guarded command. It must never be pointed at Preview, staging, or Production and
+is not a substitute for the later protected hosted-browser qualification.
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 
