@@ -153,8 +153,8 @@ number, historical entry, or populated equipment identifier in these six blobs.
 They do contain facility-specific operational structure, so the current
 real-data boundary prohibits copying the bodies into Git, local fixtures, CI,
 Preview, screenshots, or logs. Acquisition, SHA-256 verification, approval, and
-registration must occur only through the future protected Production
-template-import workflow.
+registration must occur only through the protected Production template-import
+workflow after its database and hosted release gates pass.
 
 The owner-confirmed shift meanings are:
 
@@ -176,8 +176,10 @@ database write and never makes the private definition bodies eligible for logs,
 CI artifacts, or Preview fixtures. A protected implementation now binds the
 exact source and mapped digests to a pinned mapper version, one Production-only
 administrator approval, and one atomic append-only six-template transaction. It
-remains unused: no administrator UI is connected, no real package has been
-imported, and PostgreSQL/hosted/owner fidelity qualification remains mandatory.
+remains unused: a local Production-only administrator review/register screen is
+connected to value-free package history and exact package-bound approval, but no
+real package has been imported, rollback selection UI remains open, and
+PostgreSQL/hosted/owner fidelity qualification remains mandatory.
 
 The source-backed security design for that path is recorded in
 [`docs/security/daily-paperwork-production-import-threat-model.md`](../security/daily-paperwork-production-import-threat-model.md).

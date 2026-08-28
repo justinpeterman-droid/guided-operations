@@ -74,7 +74,7 @@ The hosted details and limitations are recorded in
 
 1. The fictional Development Supabase project remains at the previously verified
    62-migration head and has one active fictional administrator. The repository
-   now has eight additional forward migrations, through `20260828150000`, that
+   now has nine additional forward migrations, through `20260828151000`, that
    have not been applied to the hosted project. The owner must complete the
    fictional administrator's temporary-passcode change before the protected
    workflow can create a fictional officer. A separate isolated live Supabase
@@ -356,13 +356,16 @@ honest-availability Forms Library foundation are implemented. The six-form
 administrator Daily Paperwork catalog and private, append-only, source-bound
 template registry plus generic protected open/edit/save/history/exact-restore
 and audited current-revision print workflow are implemented locally. The
+Production-only package-review and registration screen is implemented locally;
+it automatically binds review to the current package, shows only value-free
+history, and requires a fresh package-bound administrator passcode proof. The
 workflow includes closed server-owned schemas, repeating rows, stale-session
 denial, optimistic conflict protection, idempotent writes, redacted print audit,
 and fail-closed quarantine/retirement handling. Approved source import,
-source-specific screen/print fidelity, hosted migration, manual accessibility
-review, protected hosted qualification, and owner acceptance remain open. The
-generic Count Sheet mobile/print-fit and signed-in workflow pass in the guarded
-fictional browser lane**
+source-specific screen/print fidelity, rollback selection UI, PostgreSQL replay,
+hosted migration, manual accessibility review, protected hosted qualification,
+and owner acceptance remain open. The generic Count Sheet mobile/print-fit and
+signed-in workflow pass in the guarded fictional browser lane**
 
 ### Steps
 

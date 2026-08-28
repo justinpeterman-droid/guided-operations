@@ -3,6 +3,7 @@ import Link from "next/link";
 import { DailyPaperworkCatalog } from "@/features/daily-paperwork/daily-paperwork-catalog";
 import type { ShiftCode } from "@/features/daily-paperwork/catalog";
 import { resolveDailyPaperworkSelection } from "@/features/daily-paperwork/selection";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listDailyPaperworkStatusForCurrentSession } from "@/server/paperwork/list-daily-paperwork-status";
 
@@ -25,6 +26,7 @@ export default async function DailyPaperworkPage({
 
   return (
     <DailyPaperworkCatalog
+      canManagePackages={getRuntimeEnvironment().APP_ENV === "production"}
       forms={result.forms}
       shiftCode={selection.shiftCode}
       workDate={selection.workDate}

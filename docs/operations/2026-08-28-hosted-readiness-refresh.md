@@ -48,8 +48,8 @@ connected to the intended environment.
 - The project is `ACTIVE_HEALTHY`, uses PostgreSQL 17, and is in `us-east-1`.
 - Hosted migration history contains 62 ordered migrations through
   `20260827120000_enforce_report_finalization_authority`.
-- The repository contains 70 migrations through
-  `20260828150000_harden_personal_passcode_revocation`; eight additive
+- The repository contains 71 migrations through
+  `20260828151000_add_daily_paperwork_template_packages`; nine additive
   migrations remain unapplied to Development.
 - No separately named or isolated Guided Operations Production project exists in
   the connected organization.

@@ -10,8 +10,9 @@ boundary. Their bodies must never be copied into Git, local development, CI,
 Preview, staging, screenshots, telemetry, or support artifacts
 (`docs/migration/source-manifest.md:150`).
 
-The current code implements the protected server-side foundation but does
-**not** yet expose an administrator page or authorize a real import:
+The current code implements the protected server-side foundation and a
+Production-only administrator package page, but it does **not** authorize a real
+import or hosted release:
 
 - a server-only, in-memory package validator that requires all six files,
   validates bounded closed JSON structures, and calculates SHA-256 digests
@@ -23,7 +24,10 @@ The current code implements the protected server-side foundation but does
   routes, and an atomic private package-registration migration
   (`src/server/paperwork/daily-paperwork-template-mapper.ts:1`;
   `src/app/api/admin/daily-paperwork-template-package/route.ts:1`;
-  `supabase/migrations/20260828151000_add_daily_paperwork_template_packages.sql:1`).
+  `supabase/migrations/20260828151000_add_daily_paperwork_template_packages.sql:1`);
+- a Production-only administrator page that reviews and registers an exact
+  six-file package and displays value-free package history
+  (`src/app/admin/paperwork/daily/packages/page.tsx:1`).
 
 The intended workflow is:
 
@@ -50,7 +54,7 @@ The intended workflow is:
 
 | Component                     | Responsibility                                                                                                                                       | Evidence                                                                                                                                                                                |
 | ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Production admin browser      | Select exactly six source files, review value-free evidence, confirm rights/revision/effective date, and perform step-up                             | Planned surface; server routes exist but no page is connected                                                                                                                           |
+| Production admin browser      | Select exactly six source files, review value-free evidence, confirm rights/revision/effective date, and perform step-up                             | Production-only protected page at `src/app/admin/paperwork/daily/packages/page.tsx:1`; inert fictional preview at `src/app/preview/admin-paperwork-packages/page.tsx:1`                 |
 | Next.js import endpoint       | Reauthorize, enforce Production, origin/CSRF, request size, exact file set, step-up, safe errors, and no-store responses                             | `src/app/api/admin/daily-paperwork-template-package/route.ts:1`; `src/app/api/admin/daily-paperwork-template-step-up/route.ts:1`                                                        |
 | Package validator             | Fatal UTF-8/JSON parsing, filename-kind binding, strict schemas, byte bounds, unique kinds/codes, blank runtime identifiers, and SHA-256             | `src/server/paperwork/daily-paperwork-source-package.ts:12`; `src/server/paperwork/daily-paperwork-source-package.ts:258`; `src/server/paperwork/daily-paperwork-source-package.ts:299` |
 | Pinned definition mapper      | Convert each source contract into the separate database `structure` and `field_schema` rendering contracts and bind that mapping version to approval | `src/server/paperwork/daily-paperwork-template-mapper.ts:1`; `src/server/paperwork/daily-paperwork-import-manifest.ts:1`                                                                |
@@ -150,9 +154,12 @@ flowchart LR
 - The six pinned blobs contain no completed staff identity, employee number,
   historical entry, or populated equipment identifier, but their operational
   structure is still restricted (`docs/migration/source-manifest.md:150`).
-- Production-only review, package-bound step-up, atomic registration, and exact
-  append-only rollback code now exist, but no administrator UI, hosted
-  migration, real import, or activation approval exists.
+- Production-only review, package-bound step-up, atomic registration, exact
+  append-only rollback, and an administrator review/register UI now exist
+  locally. The UI derives the expected current package from private value-free
+  history and freezes the reviewed inputs before passcode confirmation, but
+  rollback selection UI, hosted migration, real import, and activation approval
+  do not exist.
 - The pinned mapper keeps the kind-specific source schemas separate from the
   renderer's `structure` and `field_schema` contracts, and the package digest
   binds the mapper version and both source and mapped digests.

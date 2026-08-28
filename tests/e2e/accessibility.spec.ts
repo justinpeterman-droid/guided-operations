@@ -13,6 +13,7 @@ const routes = [
   "/preview/count-sheet",
   "/preview/admin",
   "/preview/admin-retention",
+  "/preview/admin-paperwork-packages",
 ] as const;
 
 type AccessibilityViolation = Readonly<{

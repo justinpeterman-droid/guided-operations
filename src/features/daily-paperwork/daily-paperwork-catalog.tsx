@@ -13,10 +13,12 @@ export function DailyPaperworkCatalog({
   forms,
   workDate,
   shiftCode,
+  canManagePackages = false,
 }: Readonly<{
   forms: readonly DailyPaperworkStatus[];
   workDate: string;
   shiftCode: ShiftCode;
+  canManagePackages?: boolean;
 }>) {
   return (
     <main className="reports-page daily-paperwork-page">
@@ -46,6 +48,14 @@ export function DailyPaperworkCatalog({
           form details are loaded only when their source has been reviewed and
           approved.
         </p>
+        {canManagePackages ? (
+          <Link
+            className="reports-home-link"
+            href="/admin/paperwork/daily/packages"
+          >
+            Manage approved form packages
+          </Link>
+        ) : null}
       </section>
 
       <form className="daily-paperwork-filter" method="get">

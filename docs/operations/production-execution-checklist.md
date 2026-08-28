@@ -417,9 +417,15 @@ Pause and report a blocker instead of guessing when work requires:
         pinned source-to-renderer mapper, digest-bound package manifest,
         Production-only review/register routes, exact-package administrator
         step-up, private append-only package registry, atomic six-template
-        registration, concurrency/idempotency controls, and fictional tests. The
-        administrator UI, PostgreSQL replay, hosted qualification, owner
-        fidelity review, and real Production import remain open.
+        registration, concurrency/idempotency controls, and fictional tests.
+  - [x] Add the Production-only administrator package screen with automatic
+        current-package concurrency binding, exact six-file review, frozen
+        review inputs, package-bound passcode confirmation, value-free history,
+        and an inert fictional visual preview. Rollback selection UI remains
+        open.
+  - [ ] Replay the package migration and pgTAP suite in PostgreSQL, then
+        complete hosted qualification, owner fidelity review, and the real
+        Production import under separate authorization.
   - [x] Complete a security diff review of that implementation and fix both
         confirmed issues: require a pre-parse multipart length bound, and prove
         every rollback definition exactly matches its referenced immutable
