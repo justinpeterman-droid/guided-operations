@@ -13,6 +13,11 @@ import {
   type ReportChecklistAnswer,
   type ReportChecklistQuestion,
 } from "@/features/incidents/report-assistant-checklist";
+import {
+  buildReviewedFieldNoteFacts,
+  proposeFactsFromFieldNotes,
+  type FieldNoteFactProposal,
+} from "@/features/incidents/field-note-fact-review";
 import type {
   IncidentStaffRelationship,
   IncidentStaffRelationshipType,
@@ -29,10 +34,11 @@ type StaffSelectionItem = Readonly<{
   shiftCode: "A" | "B" | "C" | "D" | "U" | "F" | null;
   isCurrentAccount: boolean;
 }>;
+type FactProposalReview = FieldNoteFactProposal &
+  Readonly<{ decision: "pending" | "confirmed" | "excluded" }>;
 
 const INCIDENT_DATE_SCOPE_KEY = "incident-date-time";
 const LOCATION_SCOPE_KEY = "location";
-const MANUAL_FACT_SCOPE_KEY = "manual-confirmed-fact";
 const checklistScopeKey = (questionId: string) =>
   `report-checklist:${questionId}`;
 
@@ -71,8 +77,11 @@ export function NewIncidentWorkspace() {
   const [occurredAt, setOccurredAt] = useState("");
   const [location, setLocation] = useState("");
   const [category, setCategory] = useState("");
+  const [categoryConfirmed, setCategoryConfirmed] = useState(false);
   const [notes, setNotes] = useState("");
-  const [fact, setFact] = useState("");
+  const [factProposals, setFactProposals] = useState<
+    readonly FactProposalReview[]
+  >([]);
   const [unknown, setUnknown] = useState("");
   const [checklistAnswers, setChecklistAnswers] = useState<
     Record<string, ReportChecklistAnswer>
@@ -124,20 +133,26 @@ export function NewIncidentWorkspace() {
     categoryDefinition &&
     notes.trim(),
   );
-  const manualReviewedItems = [
-    ...(fact.trim()
-      ? [{ state: "confirmed" as const, text: fact.trim() }]
-      : []),
-    ...(unknown.trim()
-      ? [{ state: "unknown" as const, text: unknown.trim() }]
-      : []),
-  ];
+  const confirmedFactProposals = factProposals.filter(
+    (proposal) =>
+      proposal.decision === "confirmed" && proposal.value.trim().length > 0,
+  );
+  const factReviewComplete =
+    factProposals.length > 0 &&
+    factProposals.length <= 200 &&
+    factProposals.every(
+      (proposal) =>
+        proposal.decision !== "pending" &&
+        (proposal.decision !== "confirmed" || proposal.value.trim()),
+    ) &&
+    (confirmedFactProposals.length > 0 || Boolean(unknown.trim()));
   const confirmedFactScopeItems = [
     { key: INCIDENT_DATE_SCOPE_KEY, label: "Incident date and time" },
     { key: LOCATION_SCOPE_KEY, label: "Location" },
-    ...(fact.trim()
-      ? [{ key: MANUAL_FACT_SCOPE_KEY, label: "Officer-confirmed fact" }]
-      : []),
+    ...confirmedFactProposals.map((proposal, index) => ({
+      key: proposal.key,
+      label: `Officer-confirmed fact ${index + 1}`,
+    })),
     ...answerList.flatMap((answer) => {
       if (answer.state !== "answered") return [];
       const question = applicableQuestions.find(
@@ -197,10 +212,46 @@ export function NewIncidentWorkspace() {
   function canOpenStep(candidate: Step): boolean {
     if (candidate === 1) return true;
     if (candidate === 2) return officerConfirmed;
-    if (candidate === 3) return officerConfirmed && readyForFactReview;
-    if (candidate === 4) return manualReviewedItems.length > 0;
+    if (candidate === 3)
+      return officerConfirmed && readyForFactReview && categoryConfirmed;
+    if (candidate === 4) return factReviewComplete;
     if (candidate === 5) return checklistReview.complete;
     return checklistReview.complete && reportsReviewed;
+  }
+
+  function beginFactReview() {
+    const proposals = proposeFactsFromFieldNotes(notes);
+    if (!categoryDefinition || !proposals.length || proposals.length > 200) {
+      return;
+    }
+    setCategoryConfirmed(true);
+    setFactProposals(
+      proposals.map((proposal) => ({ ...proposal, decision: "pending" })),
+    );
+    setFactReportingScopes({});
+    setReportsReviewed(false);
+    setSaveState("idle");
+    setStep(3);
+  }
+
+  function updateFactProposal(
+    key: string,
+    update: Readonly<Partial<Pick<FactProposalReview, "value" | "decision">>>,
+  ) {
+    setFactProposals((current) =>
+      current.map((proposal) =>
+        proposal.key === key
+          ? {
+              ...proposal,
+              ...update,
+              ...(update.value === undefined ? {} : { decision: "pending" }),
+            }
+          : proposal,
+      ),
+    );
+    setFactReportingScopes({});
+    setReportsReviewed(false);
+    setSaveState("idle");
   }
 
   function setChecklistAnswer(answer: ReportChecklistAnswer) {
@@ -270,7 +321,7 @@ export function NewIncidentWorkspace() {
     event.preventDefault();
     if (
       !readyForFactReview ||
-      !manualReviewedItems.length ||
+      !factReviewComplete ||
       !checklistReview.complete ||
       !factReportingScopesComplete
     )
@@ -294,6 +345,25 @@ export function NewIncidentWorkspace() {
           ]),
         ),
       });
+      const reviewedFieldNotes = buildReviewedFieldNoteFacts({
+        reviews: factProposals
+          .filter(({ decision }) => decision !== "pending")
+          .map(({ key, sourceText, value, decision }) => ({
+            key,
+            sourceText,
+            value,
+            decision,
+          })),
+        sourceNoteId: noteId,
+        recordedAt,
+        idFactory: () => crypto.randomUUID(),
+        reportingStaffMemberIdsByProposalKey: Object.fromEntries(
+          confirmedFactProposals.map((proposal) => [
+            proposal.key,
+            reportingScopeFor(proposal.key),
+          ]),
+        ),
+      });
       const body = {
         staffRelationships,
         revision: {
@@ -309,6 +379,7 @@ export function NewIncidentWorkspace() {
               text: `Officer-entered incident metadata\nOccurred at: ${occurredAtIso}\nLocation: ${location.trim()}`,
               recordedAt,
             },
+            ...reviewedFieldNotes.reviewNotes,
             ...checklist.fieldNotes,
           ],
           reviewedFacts: [
@@ -330,25 +401,17 @@ export function NewIncidentWorkspace() {
               sourceNoteIds: [metadataNoteId],
               reportingStaffMemberIds: reportingScopeFor(LOCATION_SCOPE_KEY),
             },
-            ...manualReviewedItems.map((item) =>
-              item.state === "confirmed"
-                ? {
-                    id: crypto.randomUUID(),
-                    field: "Officer-confirmed fact",
-                    state: "confirmed" as const,
-                    value: item.text,
-                    sourceNoteIds: [noteId],
-                    reportingStaffMemberIds: reportingScopeFor(
-                      MANUAL_FACT_SCOPE_KEY,
-                    ),
-                  }
-                : {
+            ...reviewedFieldNotes.reviewedFacts,
+            ...(unknown.trim()
+              ? [
+                  {
                     id: crypto.randomUUID(),
                     field: "Information not yet known",
                     state: "unknown" as const,
-                    reason: item.text,
+                    reason: unknown.trim(),
                   },
-            ),
+                ]
+              : []),
             ...checklist.reviewedFacts,
           ],
         },
@@ -566,6 +629,8 @@ export function NewIncidentWorkspace() {
                     value={category}
                     onChange={(event) => {
                       setCategory(event.target.value);
+                      setCategoryConfirmed(false);
+                      setFactProposals([]);
                       setChecklistAnswers({});
                       setFactReportingScopes({});
                       setReportsReviewed(false);
@@ -584,10 +649,25 @@ export function NewIncidentWorkspace() {
                   <textarea
                     required
                     value={notes}
-                    onChange={(event) => setNotes(event.target.value)}
+                    onChange={(event) => {
+                      setNotes(event.target.value);
+                      setCategoryConfirmed(false);
+                      setFactProposals([]);
+                      setFactReportingScopes({});
+                      setReportsReviewed(false);
+                    }}
                   />
                 </label>
               </div>
+              {categoryDefinition ? (
+                <section className="incident-review" aria-live="polite">
+                  <h2>Proposed category</h2>
+                  <p>
+                    <strong>{categoryDefinition.label}</strong>. Confirm this
+                    category before any note can become an approved fact.
+                  </p>
+                </section>
+              ) : null}
               <p className="incident-guidance">
                 This recovered checklist is a Preview candidate. It remains
                 blocked from Production until its operational owner approves the
@@ -595,28 +675,71 @@ export function NewIncidentWorkspace() {
               </p>
               <button
                 className="incident-primary"
-                disabled={!readyForFactReview}
-                onClick={() => setStep(3)}
+                disabled={
+                  !readyForFactReview ||
+                  proposeFactsFromFieldNotes(notes).length > 200
+                }
+                onClick={beginFactReview}
                 type="button"
               >
-                Continue to fact review
+                Confirm category and review facts
               </button>
+              {proposeFactsFromFieldNotes(notes).length > 200 ? (
+                <p className="incident-status" role="alert">
+                  Field notes have more than 200 non-empty lines. Combine
+                  related lines before continuing; nothing has been discarded.
+                </p>
+              ) : null}
             </>
           ) : null}
           {step === 3 ? (
             <>
-              <label className="incident-fact">
-                Confirmed fact
-                <textarea
-                  value={fact}
-                  onChange={(event) => {
-                    setFact(event.target.value);
-                    setFactReportingScopes({});
-                    setReportsReviewed(false);
-                  }}
-                  placeholder="Only a fact supported by your notes"
-                />
-              </label>
+              <p className="incident-guidance">
+                Each note line is only a proposal. Compare it with the source,
+                then confirm it or keep it out of every report.
+              </p>
+              {factProposals.map((proposal, index) => (
+                <section className="incident-fact-proposal" key={proposal.key}>
+                  <h2>Proposed fact {index + 1}</h2>
+                  <p className="incident-source-label">Source note</p>
+                  <blockquote>{proposal.sourceText}</blockquote>
+                  <label className="incident-fact">
+                    Fact {index + 1} for reports
+                    <textarea
+                      value={proposal.value}
+                      onChange={(event) =>
+                        updateFactProposal(proposal.key, {
+                          value: event.target.value,
+                        })
+                      }
+                    />
+                  </label>
+                  <div className="incident-review-actions">
+                    <button
+                      aria-pressed={proposal.decision === "confirmed"}
+                      onClick={() =>
+                        updateFactProposal(proposal.key, {
+                          decision: "confirmed",
+                        })
+                      }
+                      type="button"
+                    >
+                      Confirm fact
+                    </button>
+                    <button
+                      aria-pressed={proposal.decision === "excluded"}
+                      onClick={() =>
+                        updateFactProposal(proposal.key, {
+                          decision: "excluded",
+                        })
+                      }
+                      type="button"
+                    >
+                      Do not use
+                    </button>
+                  </div>
+                </section>
+              ))}
               <label className="incident-fact">
                 Information not yet known
                 <textarea
@@ -627,7 +750,7 @@ export function NewIncidentWorkspace() {
               </label>
               <button
                 className="incident-primary"
-                disabled={!manualReviewedItems.length}
+                disabled={!factReviewComplete}
                 onClick={() => setStep(4)}
                 type="button"
               >
@@ -674,8 +797,9 @@ export function NewIncidentWorkspace() {
                   {incidentName || "No incident name"}
                 </p>
                 <p>
-                  {manualReviewedItems.length} manually reviewed item
-                  {manualReviewedItems.length === 1 ? "" : "s"} and{" "}
+                  {confirmedFactProposals.length} confirmed note fact
+                  {confirmedFactProposals.length === 1 ? "" : "s"}
+                  {unknown.trim() ? " plus one explicit unknown" : ""} and{" "}
                   {answerList.length} checklist answer
                   {answerList.length === 1 ? "" : "s"}. Saving creates an
                   immutable first revision.
@@ -772,7 +896,7 @@ export function NewIncidentWorkspace() {
                 disabled={
                   saveState === "saving" ||
                   !readyForFactReview ||
-                  !manualReviewedItems.length ||
+                  !factReviewComplete ||
                   !checklistReview.complete ||
                   !factReportingScopesComplete
                 }
@@ -800,9 +924,14 @@ export function NewIncidentWorkspace() {
           <ul>
             <li>Checklist status: {REPORT_CHECKLIST_APPROVAL_STATUS}</li>
             <li>
-              {manualReviewedItems.some((item) => item.state === "unknown")
+              {unknown.trim()
                 ? "Unknown information is recorded."
                 : "No manual unknowns recorded yet."}
+            </li>
+            <li>
+              {categoryConfirmed
+                ? "The officer confirmed the proposed category."
+                : "The proposed category is not confirmed."}
             </li>
             <li>
               {checklistReview.complete

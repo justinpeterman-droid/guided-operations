@@ -61,12 +61,13 @@ describe("NewIncidentWorkspace", () => {
       "Fictional observed note.",
     );
     await user.click(
-      screen.getByRole("button", { name: "Continue to fact review" }),
+      screen.getByRole("button", {
+        name: "Confirm category and review facts",
+      }),
     );
-    await user.type(
-      screen.getByLabelText("Confirmed fact"),
-      "Fictional fact supported by notes.",
-    );
+    expect(screen.getByText("Source note")).toBeVisible();
+    expect(screen.getByDisplayValue("Fictional observed note.")).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Confirm fact" }));
     await user.type(
       screen.getByLabelText("Information not yet known"),
       "Fictional missing detail.",
@@ -153,6 +154,11 @@ describe("NewIncidentWorkspace", () => {
     );
     expect(savedBody.revision.reviewedFacts).toEqual(
       expect.arrayContaining([
+        expect.objectContaining({
+          field: "Officer-confirmed fact 1",
+          state: "confirmed",
+          value: "Fictional observed note.",
+        }),
         expect.objectContaining({
           field: expect.stringContaining(
             "[report-checklist:bmu-legacy-candidate@1:medical_disposition]",

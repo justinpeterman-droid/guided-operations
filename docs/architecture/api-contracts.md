@@ -158,6 +158,16 @@ facts; Unknown and Not applicable remain explicit limited states. Production
 rejects this candidate marker until the operational owner approves the exact
 definition version. Removing the marker does not claim checklist completion.
 
+Before the browser submits that contract, the incident workspace treats the
+selected category as a proposal that the officer must explicitly confirm. Each
+non-empty source-note line becomes one unchanged, bounded review proposal. The
+officer must confirm or exclude every proposal; editing a proposal resets its
+decision, and a confirmed edit adds a separate officer-review note so the
+original field note is never silently rewritten. Only confirmed proposals enter
+`reviewedFacts`. This deterministic client review is the safe front-half
+foundation, not the future model extraction API or proof of a server-persisted
+workflow transition.
+
 The server-only `api.get_incident_revision` RPC is the corresponding narrow read
 primitive for an immutable revision. It returns the incident identifiers,
 revision identity/version, and reviewed facts—but never field notes, facility

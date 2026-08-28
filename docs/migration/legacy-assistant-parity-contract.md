@@ -111,12 +111,18 @@ Already present:
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
   Preview-only enforcement while operational approval remains pending.
+- explicit officer confirmation of the selected category plus conservative
+  one-note-line/one-proposal fact review with exact visible source text,
+  confirm/exclude decisions, edit re-confirmation, and separate provenance for
+  an officer-edited confirmed fact.
 
 Still required for parity:
 
 - approve the exact nine-category candidate and its charge/form selection rules
   before changing its status or permitting it in Production;
-- implement category proposal/confirmation and structured extraction review;
+- replace the deterministic note-line proposal foundation with the qualified
+  provider-neutral structured extraction result while preserving the same
+  officer confirmation, exclusion, edit, and provenance gates;
 - operationally review every recovered question, option, dependency, required
   slot, report type, and paperwork mapping against the current source forms;
 - implement required auto-content and the approved 005/409 output mapping;

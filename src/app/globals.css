@@ -2578,6 +2578,54 @@ a:focus-visible {
 .incident-fact {
   margin-top: 26px;
 }
+.incident-fact-proposal {
+  margin-top: 24px;
+  padding: 22px;
+  background: #fff;
+  border: 1px solid #cbdbe6;
+  border-radius: var(--gow-radius-card);
+}
+.incident-fact-proposal h2 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+.incident-source-label {
+  margin: 18px 0 6px;
+  color: var(--gow-muted);
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.incident-fact-proposal blockquote {
+  margin: 0;
+  padding: 14px 16px;
+  color: var(--gow-navy-900);
+  background: #f5f9fc;
+  border-left: 4px solid #6d97a8;
+  line-height: 1.55;
+}
+.incident-review-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 16px;
+}
+.incident-review-actions button {
+  min-height: 42px;
+  padding: 0 16px;
+  color: var(--gow-navy-900);
+  background: #fff;
+  border: 1px solid #9cb2c0;
+  border-radius: var(--gow-radius-control);
+  font: inherit;
+  font-weight: 750;
+}
+.incident-review-actions button[aria-pressed="true"] {
+  color: #fff;
+  background: #176f72;
+  border-color: #176f72;
+}
 .incident-review {
   margin-top: 32px;
   padding: 22px;

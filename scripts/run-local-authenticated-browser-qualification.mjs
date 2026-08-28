@@ -160,6 +160,21 @@ if (target) {
       );
     }
     resetLocalDatabase();
+    const incidentCreationResult = command(
+      playwrightCli,
+      [
+        "test",
+        "tests/e2e/authenticated-incident-creation.spec.ts",
+        "--workers=1",
+      ],
+      { env: qualificationEnvironment },
+    );
+    if (incidentCreationResult.status !== 0) {
+      throw new Error(
+        "The authenticated incident creation qualification failed.",
+      );
+    }
+    resetLocalDatabase();
     const adminResult = command(
       playwrightCli,
       ["test", "tests/e2e/authenticated-admin.spec.ts", "--workers=1"],

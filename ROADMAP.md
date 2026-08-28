@@ -85,13 +85,14 @@ The hosted details and limitations are recorded in
    still required for recovery/email configuration, expiry, timing bounds,
    revoked-session behavior, direct RLS/API/Storage negatives, and full
    officer/admin browser flows.
-3. The core report review path is locally browser-qualified with fictional data:
+3. The core report path is locally browser-qualified with fictional data for
+   explicit category confirmation, per-note-line fact confirmation/exclusion,
    officer edit/finalize/correction, bounded stale-conflict recovery,
    append-only history/restore, audited print, and same-facility administrator
-   visibility. The remaining officer product work is the complete incident
-   creation, extraction, confirmed-fact/gap, and draft-generation flow;
-   supported export; Forms Library and Count Sheet acceptance; hosted proof; and
-   owner acceptance.
+   visibility. The remaining officer product work is qualified model-backed
+   structured extraction, approved gap rules, the complete draft-generation
+   flow; supported export; Forms Library and Count Sheet acceptance; hosted
+   proof; and owner acceptance.
 4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
 5. The approved corpus has not passed retrieval, citation, refusal,

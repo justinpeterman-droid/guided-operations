@@ -169,6 +169,13 @@ AI results remain proposals until a user reviews and saves them. Job completion
 records source revision, prompt/model/config versions, and validation result.
 Stale base revisions cannot become current.
 
+The current incident UI establishes the human-review side of this boundary
+without calling a model: it proposes unchanged non-empty note lines, displays
+their exact source, requires confirm/exclude decisions, and resets confirmation
+after an edit. A provider-backed extraction adapter must later produce bounded
+typed proposals for this same review gate; it may not bypass it or overwrite the
+officer's source note.
+
 ## Prompt-injection and data controls
 
 - Corpus content, file metadata, user questions, and model output are untrusted.
