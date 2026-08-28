@@ -77,6 +77,18 @@ export async function createLocalQualificationAccounts(): Promise<LocalQualifica
       );
     }
 
+    const dummyAlias = requiredEnvironment("AUTH_DUMMY_ALIAS");
+    const dummyUser = await adminClient.auth.admin.createUser({
+      email: dummyAlias,
+      password: `FictionalDummyOnly9!${randomUUID()}`,
+      email_confirm: true,
+    });
+    if (dummyUser.error || !dummyUser.data.user?.id) {
+      throw new Error(
+        "The fictional local timing-defense identity could not be created.",
+      );
+    }
+
     const adminAlias = `go-e2e-admin-${randomUUID()}@auth.invalid`;
     const adminUser = await adminClient.auth.admin.createUser({
       email: adminAlias,

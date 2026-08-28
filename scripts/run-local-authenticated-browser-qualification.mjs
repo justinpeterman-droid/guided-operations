@@ -127,6 +127,20 @@ if (target) {
       throw new Error("The encrypted local session integration check failed.");
     }
     resetLocalDatabase();
+    const signInResistanceResult = command(
+      playwrightCli,
+      [
+        "test",
+        "tests/e2e/authenticated-sign-in-resistance.spec.ts",
+        "--workers=1",
+        "--retries=0",
+      ],
+      { env: qualificationEnvironment },
+    );
+    if (signInResistanceResult.status !== 0) {
+      throw new Error("The sign-in resistance qualification failed.");
+    }
+    resetLocalDatabase();
     const publicBrowserResult = command(
       playwrightCli,
       ["test", ...publicBrowserQualificationSpecs],
