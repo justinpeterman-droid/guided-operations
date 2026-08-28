@@ -84,9 +84,13 @@ test("known-wrong and unknown employees receive the same bounded response", asyn
   for (const attempt of [...knownAttempts, ...unknownAttempts]) {
     expect(attempt.status).toBe(401);
     expect(attempt.body).toEqual(genericFailure);
-    expect(attempt.cacheControl).toBe("no-store");
+    expect(attempt.cacheControl).toMatch(/(?:^|,\s*)no-store(?:,|$)/);
     expect(attempt.elapsedMs).toBeLessThan(3_000);
   }
+
+  expect(
+    new Set(knownAttempts.map(({ cacheControl }) => cacheControl)),
+  ).toEqual(new Set(unknownAttempts.map(({ cacheControl }) => cacheControl)));
 
   const knownMedian = median(knownAttempts.map(({ elapsedMs }) => elapsedMs));
   const unknownMedian = median(
