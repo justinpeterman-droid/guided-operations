@@ -93,6 +93,30 @@ export type Database = {
           work_date: string
         }[]
       }
+      get_daily_paperwork_revision_v2: {
+        Args: { p_record_id: string; p_revision_number: number }
+        Returns: {
+          capabilities: string[]
+          created_at: string
+          current_revision_number: number
+          field_schema: Json
+          payload: Json
+          print_orientation: string
+          reason: string
+          record_id: string
+          restored_from_revision_number: number
+          revision_number: number
+          shift_code: string
+          source_revision: string
+          source_sha256: string
+          structure: Json
+          template_code: string
+          template_id: string
+          template_version: number
+          validation: Json
+          work_date: string
+        }[]
+      }
       get_daily_paperwork_template: {
         Args: { p_template_id: string; p_work_date: string }
         Returns: {
@@ -121,6 +145,33 @@ export type Database = {
           template_id: string
           title: string
           version: number
+        }[]
+      }
+      get_daily_paperwork_v2: {
+        Args: {
+          p_shift_code: string
+          p_template_code: string
+          p_work_date: string
+        }
+        Returns: {
+          capabilities: string[]
+          controlling_template_id: string
+          current_revision_number: number
+          editable: boolean
+          field_schema: Json
+          payload: Json
+          print_orientation: string
+          reason: string
+          record_id: string
+          saved_at: string
+          source_revision: string
+          source_sha256: string
+          structure: Json
+          template_code: string
+          template_id: string
+          template_version: number
+          title: string
+          validation: Json
         }[]
       }
       get_incident_report_workspace: {
@@ -242,6 +293,18 @@ export type Database = {
           work_date: string
         }[]
       }
+      list_daily_paperwork_revisions_v2: {
+        Args: { p_record_id: string }
+        Returns: {
+          created_at: string
+          is_current: boolean
+          reason: string
+          restored_from_revision_number: number
+          revision_number: number
+          source_revision: string
+          template_version: number
+        }[]
+      }
       list_daily_paperwork_status: {
         Args: { p_shift_code: string; p_work_date: string }
         Returns: {
@@ -331,6 +394,16 @@ export type Database = {
         }
         Returns: string
       }
+      record_daily_paperwork_print_v2: {
+        Args: {
+          p_idempotency_key_digest: string
+          p_record_id: string
+          p_request_digest: string
+          p_request_id: string
+          p_revision_number: number
+        }
+        Returns: string
+      }
       record_report_print: {
         Args: {
           p_idempotency_key_digest: string
@@ -342,6 +415,17 @@ export type Database = {
         Returns: string
       }
       restore_count_sheet_revision: {
+        Args: {
+          p_base_revision_number: number
+          p_idempotency_key_digest: string
+          p_reason: string
+          p_record_id: string
+          p_request_digest: string
+          p_restore_revision_number: number
+        }
+        Returns: number
+      }
+      restore_daily_paperwork_revision_v2: {
         Args: {
           p_base_revision_number: number
           p_idempotency_key_digest: string
@@ -409,6 +493,22 @@ export type Database = {
           p_reason: string
           p_request_digest: string
           p_structure: Json
+          p_work_date: string
+        }
+        Returns: {
+          record_id: string
+          revision_number: number
+        }[]
+      }
+      save_daily_paperwork_v2: {
+        Args: {
+          p_base_revision_number: number
+          p_idempotency_key_digest: string
+          p_payload: Json
+          p_reason: string
+          p_request_digest: string
+          p_shift_code: string
+          p_template_code: string
           p_work_date: string
         }
         Returns: {

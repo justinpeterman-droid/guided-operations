@@ -40,7 +40,7 @@ describe("DailyPaperworkCatalog", () => {
     }
   });
 
-  it("does not claim editing or printing is ready", () => {
+  it("links only configured forms to the protected editor", () => {
     render(
       <DailyPaperworkCatalog
         forms={forms}
@@ -51,9 +51,15 @@ describe("DailyPaperworkCatalog", () => {
 
     expect(screen.getByText("Approved source loaded")).toBeInTheDocument();
     expect(
-      screen.getByText("The editor and printing are still being tested."),
+      screen.getByText("The protected editor is ready for this form."),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button", { name: /print/i })).toBeNull();
-    expect(screen.queryByRole("link", { name: /open/i })).toBeNull();
+    expect(
+      screen.getByRole("link", { name: "Open blank form" }),
+    ).toHaveAttribute(
+      "href",
+      "/admin/paperwork/daily/assignment_roster?workDate=2026-08-27&shiftCode=A",
+    );
+    expect(screen.getAllByRole("link", { name: /open/i })).toHaveLength(1);
   });
 });

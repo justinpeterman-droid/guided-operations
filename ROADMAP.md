@@ -337,10 +337,13 @@ Status: **Count Sheet protected load/save/reopen/revision review/restore,
 redacted current-revision print-request audit, and a protected
 honest-availability Forms Library foundation are implemented. The six-form
 administrator Daily Paperwork catalog and private, append-only, source-bound
-template registry are implemented locally, including stale-session denial and
-fail-closed quarantine/retirement handling; approved source import,
-edit/save/history/print flows, hosted migration, fidelity qualification, and
-owner acceptance remain open**
+template registry plus generic protected open/edit/save/history/exact-restore
+and audited current-revision print workflow are implemented locally. The
+workflow includes closed server-owned schemas, repeating rows, stale-session
+denial, optimistic conflict protection, idempotent writes, redacted print audit,
+and fail-closed quarantine/retirement handling. Approved source import,
+source-specific screen/print fidelity, hosted migration, accessibility/browser
+qualification, and owner acceptance remain open**
 
 ### Steps
 
@@ -351,8 +354,9 @@ owner acceptance remain open**
 2. Import only reviewed form definitions from the pinned predecessor source.
    Validate source revision, rights, schema, and fictional-data safety before
    copying each template.
-3. Implement Daily Paperwork storage/UI/print flows, then the approved Monthly
-   packet catalog.
+3. Import the six approved Daily Paperwork definitions into the implemented
+   protected workflow, qualify each screen and print against its reference, then
+   build the approved Monthly packet catalog.
 4. Extend the protected Forms Library foundation with search/selection,
    capability labels, paper-accurate preview, eligible download, controlled
    editable fields, N/A behavior, and packet actions as approved definitions

@@ -37,6 +37,7 @@ test("an officer cannot open administrator pages", async ({ page }) => {
     "/admin/audit",
     "/admin/health",
     "/admin/paperwork/daily",
+    "/admin/paperwork/daily/assignment_roster?workDate=2026-08-27&shiftCode=A",
     "/admin/retention",
   ]) {
     await page.goto(path);
@@ -234,7 +235,8 @@ test("a fictional administrator uses the protected roster and status pages", asy
     page.getByRole("heading", { name: /F · Five-day week field/ }),
   ).toBeVisible();
   await expect(page.locator(".daily-paperwork-grid article")).toHaveCount(6);
-  await expect(page.getByText("Waiting for approved source")).toHaveCount(6);
+  await expect(page.getByText("Waiting for approved source")).toHaveCount(5);
+  await expect(page.getByText("Approved source loaded")).toHaveCount(1);
   await expect(page.getByRole("button", { name: /print/i })).toHaveCount(0);
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
@@ -244,6 +246,41 @@ test("a fictional administrator uses the protected roster and status pages", asy
     page.getByRole("heading", { name: "Handheld Metal Detector Sign-Out" }),
   ).toBeVisible();
   await page.setViewportSize({ width: 1280, height: 720 });
+
+  await page.getByRole("link", { name: "Open blank form" }).click();
+  await expect(
+    page.getByRole("heading", {
+      name: "Fictional Training Assignment Roster",
+    }),
+  ).toBeVisible();
+  await page
+    .getByLabel("Fictional supervisor")
+    .fill("Fictional Qualification Supervisor");
+  await page.getByRole("button", { name: "Add row" }).click();
+  await page.getByLabel("Fictional post").fill("Training Post 1");
+  await page.getByLabel("Status").selectOption("Ready");
+  await page.getByRole("button", { name: "Save new revision" }).click();
+  await expect(page.getByText(/Saved as revision 1/)).toBeVisible();
+
+  await page
+    .getByLabel("Fictional supervisor")
+    .fill("Fictional Qualification Supervisor Updated");
+  await page.getByRole("button", { name: "Save new revision" }).click();
+  await expect(page.getByText(/Saved as revision 2/)).toBeVisible();
+
+  const firstRevision = page
+    .getByRole("listitem")
+    .filter({ hasText: "Revision 1" });
+  await firstRevision
+    .getByRole("button", { name: "Restore as new revision" })
+    .click();
+  await expect(page.getByText(/Saved revision 3 loaded/)).toBeVisible();
+
+  await page.evaluate(() => {
+    window.print = () => undefined;
+  });
+  await page.getByRole("button", { name: "Print saved form" }).click();
+  await expect(page.getByText(/Print request recorded/)).toBeVisible();
 
   await page.goto("/admin/retention");
   await expect(

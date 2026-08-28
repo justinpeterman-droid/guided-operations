@@ -383,6 +383,196 @@ paths:
           $ref: "#/components/responses/InvalidRequest"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork:
+    get:
+      summary: Open one administrator-only Daily Paperwork form
+      operationId: getDailyPaperwork
+      security:
+        - cookieSession: []
+      parameters:
+        - in: query
+          name: kind
+          required: true
+          schema:
+            $ref: "#/components/schemas/DailyPaperworkKind"
+        - in: query
+          name: work_date
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: shift_code
+          required: true
+          schema:
+            type: string
+            enum: [A, B, C, D, U, F]
+      responses:
+        "200":
+          description:
+            Exact current revision or a server-derived blank approved form.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPaperworkLoadedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      summary: Create or append an administrator-only Daily Paperwork revision
+      operationId: saveDailyPaperwork
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyPaperworkSaveInput"
+      responses:
+        "201":
+          description: One immutable revision was appended.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPaperworkSavedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "423":
+          description: The historical template lineage is read-only.
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/revisions:
+    get:
+      summary:
+        List or inspect administrator-authorized Daily Paperwork revisions
+      operationId: getDailyPaperworkRevisions
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: revision_number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description:
+            Bounded revision summaries or one exact historical snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/restore:
+    post:
+      summary: Restore exact Daily Paperwork history as a new revision
+      operationId: restoreDailyPaperworkRevision
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetRestoreInput"
+      responses:
+        "201":
+          description: The prior exact snapshot was appended as a new revision.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetRestoredResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/print:
+    post:
+      summary:
+        Record a request to print the current saved Daily Paperwork revision
+      operationId: recordDailyPaperworkPrintRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetPrintInput"
+      responses:
+        "201":
+          description: A redacted current-revision print request was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetPrintRecordedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
 components:
   securitySchemes:
     cookieSession:
@@ -440,6 +630,152 @@ components:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
   schemas:
+    DailyPaperworkKind:
+      type: string
+      enum:
+        - assignment_roster
+        - uniform_inspection
+        - metal_detector_test
+        - perimeter_check
+        - random_search_log
+        - detector_sign_out
+    DailyPaperworkPayload:
+      type: object
+      additionalProperties: false
+      required: [schema_version, fields, tables]
+      properties:
+        schema_version:
+          type: integer
+          const: 1
+        fields:
+          type: object
+          additionalProperties:
+            type: [string, integer, boolean, "null"]
+        tables:
+          type: object
+          additionalProperties:
+            type: array
+            maxItems: 500
+            items:
+              type: object
+              additionalProperties:
+                type: [string, integer, boolean, "null"]
+    DailyPaperworkLoadedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          description:
+            Exact private template metadata, bounded field schema, values, and
+            immutable head metadata. The response is administrator-only and
+            private/no-store.
+          required:
+            - kind
+            - title
+            - workDate
+            - shiftCode
+            - templateId
+            - templateVersion
+            - sourceRevision
+            - printOrientation
+            - capabilities
+            - structure
+            - fieldSchema
+            - editable
+            - recordId
+            - currentRevisionNumber
+            - payload
+          properties:
+            kind:
+              $ref: "#/components/schemas/DailyPaperworkKind"
+            title:
+              type: string
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            templateId:
+              type: string
+              format: uuid
+            templateVersion:
+              type: integer
+              minimum: 1
+            sourceRevision:
+              type: string
+            printOrientation:
+              type: string
+              enum: [portrait, landscape]
+            capabilities:
+              type: array
+              items:
+                type: string
+                enum: [screen, print, pdf]
+            structure:
+              type: object
+            fieldSchema:
+              type: object
+            editable:
+              type: boolean
+            recordId:
+              type: [string, "null"]
+              format: uuid
+            currentRevisionNumber:
+              type: integer
+              minimum: 0
+            payload:
+              $ref: "#/components/schemas/DailyPaperworkPayload"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    DailyPaperworkSaveInput:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - workDate
+        - shiftCode
+        - baseRevisionNumber
+        - payload
+        - reason
+      properties:
+        kind:
+          $ref: "#/components/schemas/DailyPaperworkKind"
+        workDate:
+          type: string
+          format: date
+        shiftCode:
+          type: string
+          enum: [A, B, C, D, U, F]
+        baseRevisionNumber:
+          type: integer
+          minimum: 0
+        payload:
+          $ref: "#/components/schemas/DailyPaperworkPayload"
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    DailyPaperworkSavedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recordId, revisionNumber]
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            revisionNumber:
+              type: integer
+              minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
     ReportPrintInput:
       type: object
       additionalProperties: false

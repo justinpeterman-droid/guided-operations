@@ -290,7 +290,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Complete Count Sheet print qualification and supported export.
 - [ ] Review every source definition for provenance, rights, revision, schema,
       and fictional-data safety before import.
-- [ ] Implement approved Daily Paperwork flows.
+- [x] Implement the generic protected Daily Paperwork open, save, immutable
+      history, exact restore, stale-write protection, and audited-print engine.
+- [ ] Import and map all six approved Daily Paperwork definitions and prove
+      screen/print fidelity against the owner-approved references.
 - [ ] Implement approved Monthly packet catalog.
 - [ ] Implement Forms Library selection, capabilities, paper preview, eligible
       download, controlled fields, N/A behavior, and packet actions.

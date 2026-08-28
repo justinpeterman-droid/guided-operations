@@ -248,7 +248,12 @@ also require the JWT security version to match the current account, so a stale
 administrator session cannot read a definition directly through the Data API.
 For a given work date, the highest applicable version controls the template
 lineage even when that version is quarantined or retired; an older approved
-version cannot become usable again after a withdrawal marker takes effect.
+version cannot become usable again after a withdrawal marker takes effect. New
+template versions must pass a bounded private definition contract before insert.
+The contract supports scalar text, integer, boolean, date, time, and
+approved-choice fields plus bounded repeating tables. Payloads must contain the
+exact declared keys and types; validation counts are derived by the database and
+contain no entered values.
 
 ### app_private.incident_packet_items
 
@@ -286,16 +291,21 @@ Records hold kind/date/shift/current head. Revisions hold the immutable reviewed
 definition and editor provenance. Every Daily Paperwork revision must reference
 the exact approved, same-facility template version that matches its date, kind,
 structure, and controlling lineage version; Count Sheet revisions cannot attach
-a Daily Paperwork template. A partial unique index enforces the approved daily
-uniqueness rule for active records.
+a Daily Paperwork template. Normal saves always use the controlling template
+selected inside the database. Exact historical restore is append-only and may
+preserve an older or retired template only when the new snapshot equals one
+prior revision's structure, payload, validation, and template identity. A
+partial unique index enforces the approved daily uniqueness rule for active
+records.
 
-The initial implemented kind is `count_sheet`. Its active record is unique by
-facility, work date, and the approved shift code (`A`, `B`, `C`, `D`, `U`, or
-`F`). The record stores no mutable form values. Each revision snapshots the
-reviewed structure, user-entered payload, server-calculated reconciliation, and
-safe provenance; revision inserts advance the current head serially. Direct
-table access is denied, so later server APIs must enforce the shift-shared
-relationship before invoking a purpose-specific mutation.
+The Count Sheet and generic six-kind Daily Paperwork workflow are implemented.
+Each active record is unique by facility, work date, and the approved shift code
+(`A`, `B`, `C`, `D`, `U`, or `F`). The record stores no mutable form values.
+Each revision snapshots the reviewed structure, user-entered payload,
+server-calculated validation, and safe provenance; revision inserts advance the
+current head serially. Count Sheets remain assigned-shift shared. Daily
+Paperwork is administrator-only and same-facility. Direct table access remains
+denied.
 
 Archived paperwork heads use the same 730-day deletion-review clock and
 legal-hold override as incident/report records.

@@ -93,7 +93,11 @@ export function DailyPaperworkCatalog({
                   </div>
                 </div>
                 <p>{catalogItem?.purpose}</p>
-                <PaperworkState form={form} />
+                <PaperworkState
+                  form={form}
+                  shiftCode={shiftCode}
+                  workDate={workDate}
+                />
               </article>
             );
           })}
@@ -103,7 +107,15 @@ export function DailyPaperworkCatalog({
   );
 }
 
-function PaperworkState({ form }: Readonly<{ form: DailyPaperworkStatus }>) {
+function PaperworkState({
+  form,
+  workDate,
+  shiftCode,
+}: Readonly<{
+  form: DailyPaperworkStatus;
+  workDate: string;
+  shiftCode: ShiftCode;
+}>) {
   if (!form.configured) {
     return (
       <div className="daily-paperwork-state is-waiting">
@@ -118,6 +130,11 @@ function PaperworkState({ form }: Readonly<{ form: DailyPaperworkStatus }>) {
       <div className="daily-paperwork-state is-loaded">
         <strong>Saved work found</strong>
         <span>Current saved version: {form.currentRevisionNumber}</span>
+        <Link
+          href={`/admin/paperwork/daily/${form.kind}?workDate=${encodeURIComponent(workDate)}&shiftCode=${shiftCode}`}
+        >
+          Open saved form
+        </Link>
       </div>
     );
   }
@@ -125,7 +142,12 @@ function PaperworkState({ form }: Readonly<{ form: DailyPaperworkStatus }>) {
   return (
     <div className="daily-paperwork-state is-loaded">
       <strong>Approved source loaded</strong>
-      <span>The editor and printing are still being tested.</span>
+      <span>The protected editor is ready for this form.</span>
+      <Link
+        href={`/admin/paperwork/daily/${form.kind}?workDate=${encodeURIComponent(workDate)}&shiftCode=${shiftCode}`}
+      >
+        Open blank form
+      </Link>
     </div>
   );
 }

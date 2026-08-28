@@ -310,7 +310,9 @@ distinct.
 - Complete Forms Library and add-to-incident flow.
 - Complete NCU Days Count entry, reconciliation, persistence, history, and
   landscape print.
-- Complete all six Daily Paperwork editors/prints with revision-safe autosave.
+- Map all six approved Daily Paperwork definitions into the implemented generic
+  revision engine; qualify source-order screen/print output and decide whether
+  bounded autosave is required in addition to the protected manual save.
 - Complete four Monthly Paperwork templates after deciding print-only vs.
   persisted edit contracts.
 - Keep Weekly Paperwork honestly unconfigured until approved templates exist.

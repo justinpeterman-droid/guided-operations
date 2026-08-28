@@ -383,6 +383,38 @@ action, request correlation, actor, and facility; it never stores Count Sheet
 values. The event records a request and does not falsely claim the user
 completed a physical or PDF print.
 
+The administrator-only Daily Paperwork browser boundary is
+`GET/POST /api/web/v1/daily-paperwork`. A read requires a current administrator
+session and a closed form kind, work date, and shift selection. The database
+returns either the controlling approved private template with a derived blank
+payload or the exact current immutable saved revision. A historical revision
+whose lineage was retired remains reviewable but is marked read-only. Responses
+are private and `no-store`.
+
+A Daily Paperwork save requires same-origin CSRF, a bounded retry key, the
+current base revision, a reason, and values matching the private server-owned
+field schema. The browser cannot submit facility, account, template ID,
+structure, validation results, or source metadata. The database selects the
+controlling template, revalidates every scalar and repeating row, derives
+content-free validation counts, and appends exactly one revision. A stale base
+returns `409 revision_conflict`; a retired or replaced source is not silently
+reassigned.
+
+`GET /api/web/v1/daily-paperwork/{recordId}/revisions` returns at most 100
+content-free revision summaries. Adding `revision_number` returns one exact
+historical payload together with its immutable private template version.
+`POST /api/web/v1/daily-paperwork/{recordId}/restore` copies an exact prior
+snapshot into a new revision after administrator, CSRF, idempotency, and base
+revision checks. This is the only path that may preserve a withdrawn historical
+template, and its database trigger verifies byte-equivalent structure, values,
+validation, and template identity.
+
+`POST /api/web/v1/daily-paperwork/{recordId}/print` accepts only the current
+saved revision of a template approved for printing. It writes one idempotent
+`daily_paperwork.print.requested` event before the browser print dialog opens.
+The event includes only kind, revision and template version, opaque record and
+request IDs, actor, and facility; form values never enter audit metadata.
+
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.
 

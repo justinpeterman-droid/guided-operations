@@ -113,6 +113,81 @@ export async function createLocalQualificationAccounts(): Promise<LocalQualifica
         ${adminDigest}
       )
     `;
+    const fictionalDailyStructure = {
+      schema_version: 1,
+      layout: "fictional-browser-qualification-only",
+    };
+    const fictionalDailySchema = {
+      schema_version: 1,
+      fields: [
+        {
+          key: "supervisor",
+          label: "Fictional supervisor",
+          type: "text",
+          required: true,
+          max_length: 100,
+        },
+        {
+          key: "completed",
+          label: "Completed",
+          type: "boolean",
+          required: false,
+        },
+      ],
+      tables: [
+        {
+          key: "entries",
+          label: "Fictional assignment entries",
+          min_rows: 0,
+          max_rows: 4,
+          columns: [
+            {
+              key: "post",
+              label: "Fictional post",
+              type: "text",
+              required: true,
+              max_length: 80,
+            },
+            {
+              key: "status",
+              label: "Status",
+              type: "select",
+              required: true,
+              options: ["Ready", "Needs review"],
+            },
+          ],
+        },
+      ],
+    };
+    const [templateValidation] = await sql<
+      ReadonlyArray<{ schema_valid: boolean; structure_version: string | null }>
+    >`
+      select
+        app_private.valid_daily_paperwork_field_schema(
+          ${sql.json(fictionalDailySchema)}::jsonb
+        ) as schema_valid,
+        ${sql.json(fictionalDailyStructure)}::jsonb ->> 'schema_version' as structure_version
+    `;
+    if (!templateValidation?.schema_valid)
+      throw new Error("The fictional Daily Paperwork field schema is invalid.");
+    if (templateValidation.structure_version !== "1")
+      throw new Error("The fictional Daily Paperwork structure is invalid.");
+    await sql`
+      insert into app_private.form_templates (
+        facility_id, template_code, title, version, source_authority,
+        source_revision, source_sha256, rights_status, print_orientation,
+        capabilities, structure, field_schema, active_from, approved_at,
+        approved_by_account_id
+      )
+      select facility.id, 'assignment_roster',
+        'Fictional Training Assignment Roster', 1,
+        'Fictional Browser Qualification', 'FICTIONAL-E2E-V1',
+        ${"a".repeat(64)}, 'approved_internal_use', 'landscape',
+        array['screen', 'print']::text[], ${sql.json(fictionalDailyStructure)}::jsonb,
+        ${sql.json(fictionalDailySchema)}::jsonb, date '2026-01-01',
+        statement_timestamp(), ${adminUserId}::uuid
+      from app_private.facilities as facility
+    `;
 
     const officerAlias = `go-e2e-officer-${randomUUID()}@auth.invalid`;
     const officerUser = await adminClient.auth.admin.createUser({

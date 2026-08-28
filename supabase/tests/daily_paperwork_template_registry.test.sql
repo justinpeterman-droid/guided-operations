@@ -190,7 +190,7 @@ select
   'landscape',
   array['screen', 'print']::text[],
   '{"schema_version":1,"fictional_training_definition":true}'::jsonb,
-  '{"type":"object","fictional_training_schema":true}'::jsonb,
+  '{"schema_version":1,"fields":[{"key":"supervisor_note","label":"Fictional supervisor note","type":"text","required":false,"max_length":200}],"tables":[]}'::jsonb,
   date '2026-01-01',
   timestamptz '2026-01-01T00:00:00Z',
   '71000000-0000-4000-8000-000000000001'
@@ -331,7 +331,9 @@ select throws_ok(
       facility.id, 'uniform_inspection', 'Fictional duplicate capability', 1,
       'Fictional Records Owner', 'FICTIONAL-TRAINING-V1', repeat('d', 64),
       'approved_internal_use', 'landscape', array['screen', 'screen']::text[],
-      '{}'::jsonb, '{}'::jsonb, date '2026-01-01',
+      '{"schema_version":1}'::jsonb,
+      '{"schema_version":1,"fields":[{"key":"supervisor_note","label":"Fictional supervisor note","type":"text","required":false,"max_length":200}],"tables":[]}'::jsonb,
+      date '2026-01-01',
       timestamptz '2026-01-01T00:00:00Z',
       '71000000-0000-4000-8000-000000000001'
     from app_private.facilities as facility
@@ -351,7 +353,9 @@ select throws_ok(
       facility.id, 'uniform_inspection', 'Fictional unapproved template', 2,
       'Fictional Records Owner', 'FICTIONAL-TRAINING-V2', repeat('e', 64),
       'approved_internal_use', 'landscape', array['screen']::text[],
-      '{}'::jsonb, '{}'::jsonb, date '2026-01-01'
+      '{"schema_version":1}'::jsonb,
+      '{"schema_version":1,"fields":[{"key":"supervisor_note","label":"Fictional supervisor note","type":"text","required":false,"max_length":200}],"tables":[]}'::jsonb,
+      date '2026-01-01'
     from app_private.facilities as facility
   $$,
   'new row for relation "form_templates" violates check constraint "form_templates_approval_check"',
@@ -443,8 +447,12 @@ select lives_ok(
       '71000000-0000-4000-8000-000000000001',
       'Fictional approved-template test',
       '{"schema_version":1,"fictional_training_definition":true}'::jsonb,
-      '{"schema_version":1,"fictional_training_values":true}'::jsonb,
-      '{}'::jsonb, '{}'::jsonb,
+      '{"schema_version":1,"fields":{"supervisor_note":"Fictional training entry"},"tables":{}}'::jsonb,
+      app_private.calculate_daily_paperwork_validation(
+        '{"schema_version":1,"fields":[{"key":"supervisor_note","label":"Fictional supervisor note","type":"text","required":false,"max_length":200}],"tables":[]}'::jsonb,
+        '{"schema_version":1,"fields":{"supervisor_note":"Fictional training entry"},"tables":{}}'::jsonb
+      ),
+      '{}'::jsonb,
       '73000000-0000-4000-8000-000000000001'
     )
   $$,
@@ -537,8 +545,8 @@ select
   'retired',
   'landscape',
   array['screen', 'print']::text[],
-  '{"schema_version":2,"fictional_retirement_marker":true}'::jsonb,
-  '{"type":"object","fictional_retirement_marker":true}'::jsonb,
+  '{"schema_version":1,"fictional_retirement_marker":true}'::jsonb,
+  '{"schema_version":1,"fields":[{"key":"retired_note","label":"Fictional retired note","type":"text","required":false,"max_length":200}],"tables":[]}'::jsonb,
   date '2027-01-01'
 from app_private.facilities as facility;
 
