@@ -64,7 +64,12 @@ for (const route of routes) {
       if (message.type() === "error") browserErrors.push(message.text());
     });
     page.on("pageerror", (error) => browserErrors.push(error.message));
-    page.on("requestfailed", (request) => failedRequests.push(request.url()));
+    page.on("requestfailed", (request) => {
+      const failure = request.failure()?.errorText ?? "unknown network failure";
+      if (!failure.includes("ERR_ABORTED")) {
+        failedRequests.push(`${request.url()}: ${failure}`);
+      }
+    });
 
     await page.goto(route);
     await page.waitForLoadState("networkidle");
