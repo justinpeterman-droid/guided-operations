@@ -141,7 +141,11 @@ lane signs one fictional officer into two separate browser contexts, performs
 **Sign out everywhere** in the first, proves the second is immediately denied on
 a protected page, and proves the credential can establish a fresh session
 afterward. The database suite separately proves the two-phase authority changes
-and bounded fail-closed token-hook behavior.
+and bounded fail-closed token-hook behavior. At commit `277c942`, that
+qualification additionally replaces the fictional officer's personal passcode,
+proves the other active browser is denied, and signs in again with the
+replacement credential. Database tests prove an overlapping change is rejected
+and the intermediate token generation cannot receive application authority.
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 

@@ -120,6 +120,10 @@ payload, signed URL, nor AI answer is an authority.
   provider, denies token issuance during a bounded reconciliation window, and
   advances authority again before clearing that window. The route must not claim
   success unless provider revocation and the final database seal both succeed.
+- Personal passcode replacement uses the same bounded reconciliation window. It
+  updates the provider credential and revokes provider sessions before the
+  database seals the new application authority; a partial failure remains fail
+  closed and is never reported as a completed change.
 - Administrative or destructive actions require a recent, purpose-bound step-up
   check. The step-up artifact is short-lived and single-use.
 

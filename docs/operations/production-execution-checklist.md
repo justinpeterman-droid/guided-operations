@@ -103,6 +103,11 @@ Pause and report a blocker instead of guessing when work requires:
       Recovery rehearsal (`33179879596`), and Authenticated browser quality
       (`33179879481`) are green for exact commit `a045a43` on 2026-08-28 after
       adding two-phase global session revocation and two-browser denial proof.
+- [x] Confirm Web quality (`33181418446`), Database quality (`33181418450`),
+      Recovery rehearsal (`33181418452`), and Authenticated browser quality
+      (`33181418441`) are green for exact commit `277c942` on 2026-08-28 after
+      extending the same fail-closed protection and two-browser proof to
+      personal passcode replacement.
 
 ### Phase 0 exit
 
@@ -213,6 +218,11 @@ Pause and report a blocker instead of guessing when work requires:
         bounded reconciliation window, seals the result afterward, and
         immediately denies a second active browser (`a045a43`). Hosted expiry
         and provider-failure qualification remain open.
+  - [x] Personal passcode replacement uses the same bounded fail-closed token
+        window, rejects overlapping changes, and seals authority only after the
+        credential update and provider revocation both succeed. A fictional
+        two-browser run proves the other session is denied and the replacement
+        credential signs in (`277c942`, run `33181418441`).
 - [ ] Implement CSRF/origin checks and authenticated `no-store` behavior.
 - [ ] Implement server authorization plus operation-specific RLS/Storage rules.
 - [ ] Implement protected first-admin bootstrap with generated temporary secret,

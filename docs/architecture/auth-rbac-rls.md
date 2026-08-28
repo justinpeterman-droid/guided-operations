@@ -107,6 +107,11 @@ refresh from creating a session that survives a reported successful global
 sign-out. A provider or final-database failure remains fail closed during the
 bounded window and must not be reported as success.
 
+Personal passcode replacement uses the same window. The password update and
+provider-wide session revocation must both succeed before the final database
+phase advances authority and closes the window. Overlapping passcode changes are
+rejected while reconciliation is pending.
+
 The last active administrator cannot be demoted or disabled. First-admin
 bootstrap is allowed only when no application account exists, uses a
 transaction-level advisory lock, generates the temporary secret inside the

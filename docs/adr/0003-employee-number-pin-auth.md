@@ -260,6 +260,13 @@ credential can establish a new session afterward. Hosted expiry/provider
 failure, reset, disabled-account, and role-change revocation proof remain
 separate acceptance requirements.
 
+Personal passcode replacement now uses the same bounded fail-closed window. It
+updates the provider password, revokes provider sessions, and only then seals
+the new application authority. It rejects an overlapping change and does not
+report success when the password update, provider revocation, or final database
+seal fails. The same two-browser qualification proves the other active browser
+is denied and the replacement credential can establish a fresh session.
+
 ## Encrypted session evidence — 2026-08-27
 
 Supabase requires the synthetic email-like alias in the Auth access-token
