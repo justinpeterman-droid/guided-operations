@@ -113,6 +113,13 @@ Pause and report a blocker instead of guessing when work requires:
       browser quality (`33189510850`) are green for exact commit `9a01c92` on
       2026-08-28. The dated local-candidate record keeps hosted, corpus, manual,
       owner, and promotion gates open.
+- [x] Re-run the complete non-database local web gate for the
+      readiness-observability working tree based on `3caaca7`: formatting,
+      ESLint, TypeScript, 210 Vitest files/655 tests, 52 operations tests, and
+      the optimized Next.js 16.3.2 Production build pass. Tracked-secret and
+      production-dependency scans are clean; the scoped security diff review has
+      no reportable finding. Database, recovery, hosted browser, corpus, manual,
+      owner, and promotion gates remain open.
 
 ### Phase 0 exit
 
@@ -142,6 +149,13 @@ Pause and report a blocker instead of guessing when work requires:
       `READY` Preview for exact commit `06848a1`. Authenticated status checks
       for liveness, readiness, login, officer, and administrator routes return
       `200`; manual browser rendering remains open.
+- [x] Verify the later exact-commit fictional Preview for `3caaca7` on
+      2026-08-28. Vercel deployment `dpl_9zr7qxEPBgDcFBbiEnd9XZostBoe` is
+      `READY`, targets Preview in `iad1`, retains the protected branch alias,
+      returns `200` for `/`, and returns only
+      `{"service":"guided-operations-web","status":"ready"}` from
+      `/api/health/ready`. This is Preview evidence only; it creates no live
+      account and authorizes no real data.
 - [ ] Confirm the authoritative Vercel project contains only correctly scoped
       public Preview/Production values. Preview matches fictional Development,
       but the two Production-scoped Supabase server entries also match
@@ -162,6 +176,11 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Extend readiness to validate the complete runtime variable contract,
       pinned AI/corpus identifiers, purpose-separated security keys, and
       explicit Production sign-in without exposing missing names or values.
+- [x] Add the content-free `health.readiness` event behind the fail-closed safe
+      logging gate. It records only a fixed outcome, opaque request ID, status,
+      bounded duration, environment, and approved deployment metadata; tests
+      reject provider URLs, keys, project IDs, connection/configuration errors,
+      and arbitrary provider error text.
 - [x] Verify readiness locally and in a protected Preview (`94dfd61`,
       `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`).
 - [x] Reconcile the empty hosted non-production migration inventory without
@@ -173,7 +192,7 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Refresh the read-only hosted inventory on 2026-08-28: Development is
       healthy in `us-east-1` at 62 ordered migrations through
       `20260827120000_enforce_report_finalization_authority`; the repository has
-      70 migrations, so eight remain pending and unapplied. The provider's 28
+      71 migrations, so nine remain pending and unapplied. The provider's 28
       authenticated security-definer warnings were catalog-checked for empty
       search paths, denied anonymous/elevated-role execution, private-helper
       isolation, and reviewed session-authorization anchors. See
@@ -559,12 +578,17 @@ Pause and report a blocker instead of guessing when work requires:
       endpoints now return separate matching correlation and emit only a
       content-free issued/denied/failure outcome; administrator identity,
       session IDs, passcodes, purpose proofs, action targets, and package
-      digests have no event field. Hosted sinks, Storage/DB signals,
-      access/retention, alerts, and delivery tests remain open.
+      digests have no event field. The public readiness route now emits a
+      content-free success/unavailable event with no provider/configuration
+      details after complete environment validation. Hosted sinks, Storage/DB
+      signals, access/retention, alerts, and delivery tests remain open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion
       automation, and evidence reconciliation remain open.
+- [x] Bound local Supabase subprocess checks to 15 seconds so a failed Docker
+      engine reports the existing closed readiness gate instead of freezing the
+      operator session. This does not replace the required database replay.
 - [x] Encode a 730-day post-archive deletion-review date for operational record
       heads and a private, target-validated, audited legal-hold model. Protected
       `/admin/retention` placement and release require separate same-session,

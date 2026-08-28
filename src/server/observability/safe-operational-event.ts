@@ -29,6 +29,7 @@ const safeOperationalEventInputSchema = z
       "auth.sign_out_all",
       "auth.temporary_passcode_change",
       "daily_paperwork_package.request",
+      "health.readiness",
       "incident_fact_extraction.request",
       "policy_answer.request",
       "policy_source.read",

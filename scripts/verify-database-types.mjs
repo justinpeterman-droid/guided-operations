@@ -13,17 +13,20 @@ const localCliPath = resolve(
   "node_modules/supabase/dist/supabase.js",
 );
 const arguments_ = ["gen", "types", "typescript", "--local", "--schema", "api"];
+const localCommandTimeoutMs = 15_000;
 
 const generated = existsSync(localCliPath)
   ? spawnSync(process.execPath, [localCliPath, ...arguments_], {
       cwd: repositoryRoot,
       encoding: "utf8",
       maxBuffer: 4 * 1024 * 1024,
+      timeout: localCommandTimeoutMs,
     })
   : spawnSync("supabase", arguments_, {
       cwd: repositoryRoot,
       encoding: "utf8",
       maxBuffer: 4 * 1024 * 1024,
+      timeout: localCommandTimeoutMs,
     });
 
 if (generated.error || generated.status !== 0 || !generated.stdout) {

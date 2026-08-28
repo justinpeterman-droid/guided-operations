@@ -32,8 +32,8 @@ before activation.
 
 ## Implemented application boundary
 
-The sign-in, local sign-out, sign-out-all, personal passcode-change, forced
-temporary-passcode-change, policy-answer, report-draft, policy-source,
+The readiness, sign-in, local sign-out, sign-out-all, personal passcode-change,
+forced temporary-passcode-change, policy-answer, report-draft, policy-source,
 incident-fact, Daily Paperwork package, administrator account/retention
 lifecycle, and administrator step-up endpoints now emit a strict JSON event only
 when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only a fixed
@@ -41,13 +41,22 @@ operation, bounded outcome/reason code, random request ID, status, duration,
 environment, deployment/build identifiers, and the policy route's bounded
 citation count and corpus version. Every newly observed authentication lifecycle
 response returns the same opaque random ID in `X-Request-Id`; the Daily
-Paperwork package route also returns it in response metadata. These events
-record no employee number, account/user/session identifier, passcode, cookie,
-source filename, source metadata, package digest, administrator identity,
-form/report content, or arbitrary error text. Sign-in intentionally records no
-account-existence reason. Tests reject extra prompt, response, report,
-credential, personnel, and operational-source fields and prove that passcode
-values never enter the event call.
+Paperwork package route also returns it in response metadata. A readiness event
+records only `completed` or `service_unavailable`, the opaque request ID, HTTP
+status, bounded duration, environment, timestamp, and approved deployment/build
+metadata. It never records the Supabase URL or key, a provider response or
+error, missing-variable details, connection information, or a project
+identifier. If the runtime environment itself cannot be validated, readiness
+still fails closed with the generic `not_ready` response and emits no custom
+event.
+
+These events record no employee number, account/user/session identifier,
+passcode, cookie, source filename, source metadata, package digest,
+administrator identity, form/report content, or arbitrary error text. Sign-in
+intentionally records no account-existence reason. Tests reject extra prompt,
+response, report, credential, personnel, operational-source, provider, and
+configuration fields and prove that passcode and provider-error values never
+enter the event call.
 
 Production readiness fails while this gate is off. Telemetry delivery failure
 does not change the user's application response. This implements the

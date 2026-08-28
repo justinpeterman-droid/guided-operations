@@ -74,5 +74,5 @@ export function assertApplicationEnvironmentReadiness(
     throw new Error("Security keys must be unique per purpose.");
   }
 
-  return { publicSupabase };
+  return { publicSupabase, runtime };
 }

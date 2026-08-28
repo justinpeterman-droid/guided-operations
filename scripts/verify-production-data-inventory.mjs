@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 import postgres from "postgres";
 
 const projectRoot = process.cwd();
+const localCommandTimeoutMs = 15_000;
 const inventoryPath = resolve(
   projectRoot,
   "docs/operations/production-data-inventory.json",
@@ -184,6 +185,7 @@ function readLocalSupabaseStatus() {
       encoding: "utf8",
       windowsHide: true,
       maxBuffer: 2 * 1024 * 1024,
+      timeout: localCommandTimeoutMs,
     },
   );
   if (result.error || result.status !== 0) {

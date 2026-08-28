@@ -23,6 +23,13 @@ data.
   `/api/health/live`, `/api/health/ready`, `/login`, `/home`, `/reports`,
   `/policy-expert`, `/admin`, and `/admin/accounts`. The bounded readiness body
   is `{"service":"guided-operations-web","status":"ready"}`.
+- A later read-only check confirmed exact commit `3caaca7` at Vercel deployment
+  `dpl_9zr7qxEPBgDcFBbiEnd9XZostBoe`. It is `READY`, targets Preview, runs its
+  functions in `iad1`, and retains the protected branch alias
+  `guided-operations-git-codex-producti-c58718-justinpeterman-3079.vercel.app`.
+  Authenticated CLI requests returned `200` for `/` and the same bounded
+  readiness body. This is fictional Preview evidence, not Production promotion,
+  live account creation, or real-data authorization.
 - Environment-name inventory, without reading values, shows the full expected
   Development/Preview runtime contract. Production has only `SUPABASE_DB_URL`
   and `SUPABASE_SECRET_KEY`; it is intentionally incomplete and must not be used
@@ -89,9 +96,17 @@ boundary.
 
 Commit `06848a1` added the provider-advisor boundary test and this evidence. All
 four GitHub workflows failed before a runner or any workflow step started; the
-job records contain no steps and show runner ID zero. A single Database quality
-retry failed the same way. This is not evidence of a test failure, but the
-commit remains unqualified until the workflows actually execute.
+job records contain no steps and show runner ID zero. The last exact branch
+commit for which all four workflows actually ran and passed is `0f3f72b7` at
+16:34 UTC on 2026-08-28. Beginning with the next branch commit, every Web,
+Database, Recovery, and Authenticated-browser workflow has failed in about four
+seconds without a runner, including all four runs for current pushed commit
+`3caaca7`. No workflow file changed between the green and zero-step commits.
+GitHub's public service status was operational during the refresh. This proves
+the latest red checks are an external GitHub Actions runner/allocation/account
+gate rather than an executed code-test failure; the exact account-side reason is
+not yet independently readable with the current token permissions. The release
+gate remains open until the workflows actually execute and pass.
 
 A local fallback was also attempted. Docker Desktop 4.81 failed before engine
 startup while initializing its optional Model Runner socket, so the local
@@ -99,12 +114,22 @@ Supabase stack could not run. No database, Storage object, hosted setting, or
 application data was changed. Do not replace the required executable CI/local
 proof with the read-only hosted catalog query.
 
-Commit `907f386` did pass the complete non-database local web gate using the
-pinned repository tools: formatting, ESLint, TypeScript, 196 Vitest files and
-603 tests passed with one intentionally skipped file/test, all 52 operations
-tests passed, and the optimized Next.js 16.3.2 Production build completed. This
-narrows the current infrastructure gap to database, recovery, authenticated
-browser CI, and manual visual qualification; it does not close those gates.
+The later readiness-observability working tree based on `3caaca7` passed the
+complete non-database local web gate: formatting, ESLint, TypeScript, 210 Vitest
+files and 655 tests passed with one intentionally skipped file/test, all 52
+operations tests passed, and the optimized Next.js 16.3.2 Production build
+completed. The tracked-secret scan found no pattern and the production
+dependency audit found no vulnerability. A dedicated six-file security diff
+review found no reportable issue in the generic health response or content-free
+readiness event. The database-type and production-data-inventory checks now stop
+after 15 seconds and report the unavailable local stack instead of hanging; they
+remain failed gates until Docker and local Supabase are healthy.
+
+Commit `907f386` did pass the then-current complete non-database local web gate
+using the pinned repository tools. Later local candidate evidence supersedes
+those counts and is recorded in the production execution checklist. Local
+success narrows the infrastructure gap but does not replace database, recovery,
+authenticated-browser CI, or manual visual qualification.
 
 The connected Supabase organization is on the Free plan, and the Vercel project
 is on Hobby. The existing plan/protection/availability/backup decision therefore
@@ -118,7 +143,7 @@ The following gates remain open:
 1. complete a protected-Preview browser inspection and correct the intentionally
    incomplete Production environment only under the Production configuration
    gate;
-2. replay and qualify the eight pending migrations before any approved
+2. replay and qualify the nine pending migrations before any approved
    Development apply;
 3. create and configure a separate isolated Production Supabase project under
    exact owner authorization;

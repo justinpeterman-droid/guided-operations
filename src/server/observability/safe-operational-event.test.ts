@@ -249,4 +249,35 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records readiness without configuration, provider, or credential details", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "health.readiness",
+        outcome: "service_unavailable",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 503,
+        duration_ms: 8,
+        environment: "production",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-28T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "health.readiness",
+      outcome: "service_unavailable",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "database_url",
+        "provider_url",
+        "publishable_key",
+        "configuration_error",
+        "project_id",
+      ]),
+    );
+  });
 });

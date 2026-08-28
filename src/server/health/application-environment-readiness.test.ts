@@ -40,6 +40,10 @@ describe("application environment readiness", () => {
         NEXT_PUBLIC_SUPABASE_URL: "https://fictional-project.supabase.co",
         NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "fictional-publishable-key",
       },
+      runtime: {
+        APP_ENV: "preview",
+        APP_ORIGIN: "https://fictional-preview.example.test",
+      },
     });
   });
 
