@@ -524,7 +524,11 @@ Pause and report a blocker instead of guessing when work requires:
       signals.
 - [x] Implement a strict allowlisted operational-event boundary for sign-in and
       the core policy-answer and report-draft routes, with content-leakage tests
-      and a fail-closed Production readiness gate. Hosted sinks, the remaining
+      and a fail-closed Production readiness gate. Policy-source, incident-fact,
+      and administrator Daily Paperwork package operations also emit
+      content-free status and duration events; the package route returns
+      matching request correlation without source filenames, metadata, bodies,
+      package digests, or administrator identity. Hosted sinks, the remaining
       route signals, retention/access, alerts, and delivery tests remain open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,

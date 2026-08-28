@@ -21,12 +21,16 @@ vi.mock("@/server/security/request-origin", () => ({
 vi.mock("@/server/security/session-csrf", () => ({
   hasValidSessionCsrfRequest: vi.fn(),
 }));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
+}));
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { runDailyPaperworkTemplatePackageCommand } from "@/server/paperwork/daily-paperwork-template-package-command";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -103,9 +107,22 @@ describe("POST /api/admin/daily-paperwork-template-package", () => {
   it("does not exist in Preview even for a valid request", async () => {
     mockEnvironment("preview");
     const response = await POST(request());
+    const responseRequestId = response.headers.get("x-request-id");
     expect(response.status).toBe(404);
+    expect(responseRequestId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    );
     expect(authorizeCurrentSession).not.toHaveBeenCalled();
     expect(runDailyPaperworkTemplatePackageCommand).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "daily_paperwork_package.request",
+        outcome: "not_found",
+        request_id: responseRequestId,
+        status_code: 404,
+        environment: "preview",
+      }),
+    );
   });
 
   it("reviews a bounded six-file package only after admin, origin, and CSRF checks", async () => {
@@ -123,8 +140,12 @@ describe("POST /api/admin/daily-paperwork-template-package", () => {
     } as never);
 
     const response = await POST(request());
+    const responseRequestId = response.headers.get("x-request-id");
     expect(response.status).toBe(200);
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(responseRequestId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    );
     expect(runDailyPaperworkTemplatePackageCommand).toHaveBeenCalledOnce();
     const command = vi.mocked(runDailyPaperworkTemplatePackageCommand).mock
       .calls[0][0];
@@ -137,7 +158,17 @@ describe("POST /api/admin/daily-paperwork-template-package", () => {
           sourceCount: 6,
         },
       },
+      meta: { request_id: responseRequestId, api_version: "web-v1" },
     });
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "daily_paperwork_package.request",
+        outcome: "reviewed",
+        request_id: responseRequestId,
+        status_code: 200,
+        environment: "production",
+      }),
+    );
   });
 
   it("rejects cross-site requests before reading the private files", async () => {
@@ -147,6 +178,12 @@ describe("POST /api/admin/daily-paperwork-template-package", () => {
     const response = await POST(request());
     expect(response.status).toBe(403);
     expect(runDailyPaperworkTemplatePackageCommand).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        outcome: "request_not_allowed",
+        status_code: 403,
+      }),
+    );
   });
 
   it("rejects missing or oversized request lengths before reading the body", async () => {

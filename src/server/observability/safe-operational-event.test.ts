@@ -120,4 +120,35 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records package review without source or administrator data", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "daily_paperwork_package.request",
+        outcome: "reviewed",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 200,
+        duration_ms: 18,
+        environment: "production",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-28T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "daily_paperwork_package.request",
+      outcome: "reviewed",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "administrator_id",
+        "filename",
+        "package_digest",
+        "source_authority",
+        "source_revision",
+      ]),
+    );
+  });
 });

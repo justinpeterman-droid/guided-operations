@@ -13,6 +13,7 @@ const safeOperationalEventInputSchema = z
   .object({
     event_name: z.enum([
       "auth.sign_in",
+      "daily_paperwork_package.request",
       "incident_fact_extraction.request",
       "policy_answer.request",
       "policy_source.read",
@@ -21,12 +22,14 @@ const safeOperationalEventInputSchema = z
     outcome: z.enum([
       "answered",
       "authentication_required",
+      "conflict",
       "insufficient_evidence",
       "integrity_failed",
       "invalid_suggestion",
       "not_found",
       "provider_unavailable",
       "request_not_allowed",
+      "reviewed",
       "service_unavailable",
       "sign_in_failed",
       "signed_in",

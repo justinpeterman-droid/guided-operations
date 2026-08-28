@@ -1,17 +1,26 @@
+import { randomUUID } from "node:crypto";
+
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
-import { getRuntimeEnvironment } from "@/lib/env/runtime";
+import {
+  getRuntimeEnvironment,
+  type RuntimeEnvironment,
+} from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { runDailyPaperworkTemplatePackageCommand } from "@/server/paperwork/daily-paperwork-template-package-command";
 import type { DailyPaperworkSourceFile } from "@/server/paperwork/daily-paperwork-source-package";
 import { createDailyPaperworkTemplatePackageStore } from "@/server/paperwork/private-daily-paperwork-template-package-store";
+import {
+  writeSafeOperationalEvent,
+  type SafeOperationalEventInput,
+} from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
+const API_VERSION = "web-v1";
 const MAX_MULTIPART_BYTES = 2_000_000;
 const MAX_SOURCE_BYTES = 1_536_000;
 
@@ -20,18 +29,39 @@ const MAX_SOURCE_BYTES = 1_536_000;
  * route intentionally does not exist outside the isolated Production runtime.
  */
 export async function POST(request: Request): Promise<Response> {
+  const requestId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: RuntimeEnvironment["APP_ENV"] | undefined;
+
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
-    if (runtimeEnvironment.APP_ENV !== "production") return notFound();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (runtimeEnvironment.APP_ENV !== "production")
+      return observedResponse(notFound(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "not_found",
+        request_id: requestId,
+        status_code: 404,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
 
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return authenticationRequired();
+    if (!session.allowed)
+      return observedResponse(authenticationRequired(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "authentication_required",
+        request_id: requestId,
+        status_code: 401,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -40,12 +70,35 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     )
-      return requestNotAllowed();
+      return observedResponse(requestNotAllowed(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "request_not_allowed",
+        request_id: requestId,
+        status_code: 403,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
 
-    if (!hasAllowedMultipartHeaders(request.headers)) return invalidPackage();
+    if (!hasAllowedMultipartHeaders(request.headers))
+      return observedResponse(invalidPackage(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "validation_rejected",
+        request_id: requestId,
+        status_code: 400,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
     const form = await request.formData();
     const files = await readSourceFiles(form);
-    if (!files) return invalidPackage();
+    if (!files)
+      return observedResponse(invalidPackage(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "validation_rejected",
+        request_id: requestId,
+        status_code: 400,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
 
     const result = await runDailyPaperworkTemplatePackageCommand(
       {
@@ -72,25 +125,84 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
 
-    if (result.status === "invalid") return invalidPackage();
-    if (result.status === "conflict") return conflict();
-    if (result.status === "unavailable") return unavailable();
+    if (result.status === "invalid")
+      return observedResponse(invalidPackage(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "validation_rejected",
+        request_id: requestId,
+        status_code: 400,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
+    if (result.status === "conflict")
+      return observedResponse(conflict(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "conflict",
+        request_id: requestId,
+        status_code: 409,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
+    if (result.status === "unavailable")
+      return observedResponse(unavailable(requestId), {
+        event_name: "daily_paperwork_package.request",
+        outcome: "service_unavailable",
+        request_id: requestId,
+        status_code: 503,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
+      });
     if (result.status === "reviewed")
-      return Response.json(
-        { data: { evidence: result.evidence } },
-        { headers: NO_STORE_HEADERS },
-      );
-    return Response.json(
-      {
-        data: {
-          packageId: result.packageId,
-          evidence: result.evidence,
+      return observedResponse(
+        Response.json(
+          {
+            data: { evidence: result.evidence },
+            meta: { request_id: requestId, api_version: API_VERSION },
+          },
+          { headers: responseHeaders(requestId) },
+        ),
+        {
+          event_name: "daily_paperwork_package.request",
+          outcome: "reviewed",
+          request_id: requestId,
+          status_code: 200,
+          duration_ms: boundedDuration(startedAt),
+          environment: appEnvironment,
         },
+      );
+    return observedResponse(
+      Response.json(
+        {
+          data: {
+            packageId: result.packageId,
+            evidence: result.evidence,
+          },
+          meta: { request_id: requestId, api_version: API_VERSION },
+        },
+        { status: 201, headers: responseHeaders(requestId) },
+      ),
+      {
+        event_name: "daily_paperwork_package.request",
+        outcome: "stored",
+        request_id: requestId,
+        status_code: 201,
+        duration_ms: boundedDuration(startedAt),
+        environment: appEnvironment,
       },
-      { status: 201, headers: NO_STORE_HEADERS },
     );
   } catch {
-    return unavailable();
+    const response = unavailable(requestId);
+    return appEnvironment
+      ? observedResponse(response, {
+          event_name: "daily_paperwork_package.request",
+          outcome: "service_unavailable",
+          reason_code: "unhandled_failure",
+          request_id: requestId,
+          status_code: 503,
+          duration_ms: boundedDuration(startedAt),
+          environment: appEnvironment,
+        })
+      : response;
   }
 }
 
@@ -133,44 +245,59 @@ function nullableValue(form: FormData, name: string): string | null {
   return value(form, name).trim() || null;
 }
 
-function notFound(): Response {
+function boundedDuration(startedAt: number): number {
+  return Math.min(3_600_000, Math.max(0, Date.now() - startedAt));
+}
+
+function observedResponse(
+  response: Response,
+  event: SafeOperationalEventInput,
+): Response {
+  writeSafeOperationalEvent(event);
+  return response;
+}
+
+function responseHeaders(requestId: string): HeadersInit {
+  return {
+    "Cache-Control": "private, no-store",
+    "X-Request-Id": requestId,
+  };
+}
+
+function errorResponse(
+  status: number,
+  code: string,
+  requestId: string,
+): Response {
   return Response.json(
-    { error: "not_found" },
-    { status: 404, headers: NO_STORE_HEADERS },
+    {
+      error: code,
+      meta: { request_id: requestId, api_version: API_VERSION },
+    },
+    { status, headers: responseHeaders(requestId) },
   );
 }
 
-function authenticationRequired(): Response {
-  return Response.json(
-    { error: "authentication_required" },
-    { status: 401, headers: NO_STORE_HEADERS },
-  );
+function notFound(requestId: string): Response {
+  return errorResponse(404, "not_found", requestId);
 }
 
-function requestNotAllowed(): Response {
-  return Response.json(
-    { error: "request_not_allowed" },
-    { status: 403, headers: NO_STORE_HEADERS },
-  );
+function authenticationRequired(requestId: string): Response {
+  return errorResponse(401, "authentication_required", requestId);
 }
 
-function invalidPackage(): Response {
-  return Response.json(
-    { error: "invalid_template_package" },
-    { status: 400, headers: NO_STORE_HEADERS },
-  );
+function requestNotAllowed(requestId: string): Response {
+  return errorResponse(403, "request_not_allowed", requestId);
 }
 
-function conflict(): Response {
-  return Response.json(
-    { error: "template_package_changed" },
-    { status: 409, headers: NO_STORE_HEADERS },
-  );
+function invalidPackage(requestId: string): Response {
+  return errorResponse(400, "invalid_template_package", requestId);
 }
 
-function unavailable(): Response {
-  return Response.json(
-    { error: "service_unavailable" },
-    { status: 503, headers: NO_STORE_HEADERS },
-  );
+function conflict(requestId: string): Response {
+  return errorResponse(409, "template_package_changed", requestId);
+}
+
+function unavailable(requestId: string): Response {
+  return errorResponse(503, "service_unavailable", requestId);
 }
