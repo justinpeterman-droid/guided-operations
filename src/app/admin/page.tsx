@@ -51,6 +51,16 @@ export default async function AdminPage() {
         <article>
           <span aria-hidden="true">1</span>
           <div>
+            <h2>Daily Paperwork</h2>
+            <p>Choose a date and shift, then review the six protected forms.</p>
+          </div>
+          <Link className="reports-home-link" href="/admin/paperwork/daily">
+            View Daily Paperwork
+          </Link>
+        </article>
+        <article>
+          <span aria-hidden="true">2</span>
+          <div>
             <h2>Roster and accounts</h2>
             <p>View the protected account list and prepare safe changes.</p>
           </div>
@@ -59,7 +69,7 @@ export default async function AdminPage() {
           </Link>
         </article>
         <article>
-          <span aria-hidden="true">2</span>
+          <span aria-hidden="true">3</span>
           <div>
             <h2>Audit and health</h2>
             <p>Review safe activity and live service readiness.</p>
@@ -74,7 +84,7 @@ export default async function AdminPage() {
           </div>
         </article>
         <article>
-          <span aria-hidden="true">3</span>
+          <span aria-hidden="true">4</span>
           <div>
             <h2>Retention and legal holds</h2>
             <p>

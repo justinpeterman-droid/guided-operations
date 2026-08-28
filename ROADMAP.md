@@ -335,8 +335,12 @@ open**
 
 Status: **Count Sheet protected load/save/reopen/revision review/restore,
 redacted current-revision print-request audit, and a protected
-honest-availability Forms Library foundation are implemented; print/export
-fidelity qualification, other approved forms, and owner acceptance remain open**
+honest-availability Forms Library foundation are implemented. The six-form
+administrator Daily Paperwork catalog and private, append-only, source-bound
+template registry are implemented locally, including stale-session denial and
+fail-closed quarantine/retirement handling; approved source import,
+edit/save/history/print flows, hosted migration, fidelity qualification, and
+owner acceptance remain open**
 
 ### Steps
 

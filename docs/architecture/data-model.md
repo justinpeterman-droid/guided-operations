@@ -237,8 +237,18 @@ stored as non-current history but never promoted implicitly.
 
 ### app_private.form_templates
 
-Template code, title, version, media type, Storage object ID/checksum, active
-range, field schema, scope, and physical/digital classification.
+Implemented for Daily Paperwork as an append-only private registry containing
+facility, template code/title/version, source authority and revision, source
+SHA-256, rights state, approved capabilities and print orientation, immutable
+structure and field schema, active range, and approval provenance. The table
+forces RLS, grants no Data API table access, and participates in the protected
+Production backup write freeze. Only bounded, administrator-authorized RPCs can
+list availability or retrieve one approved same-facility definition. Those RPCs
+also require the JWT security version to match the current account, so a stale
+administrator session cannot read a definition directly through the Data API.
+For a given work date, the highest applicable version controls the template
+lineage even when that version is quarantined or retired; an older approved
+version cannot become usable again after a withdrawal marker takes effect.
 
 ### app_private.incident_packet_items
 
@@ -273,8 +283,11 @@ Use one canonical pair:
 Supported kinds include count sheet, assignment roster, uniform inspection,
 metal detector test, perimeter check, random search log, and detector sign-out.
 Records hold kind/date/shift/current head. Revisions hold the immutable reviewed
-definition and editor provenance. A partial unique index enforces the approved
-daily uniqueness rule for active records.
+definition and editor provenance. Every Daily Paperwork revision must reference
+the exact approved, same-facility template version that matches its date, kind,
+structure, and controlling lineage version; Count Sheet revisions cannot attach
+a Daily Paperwork template. A partial unique index enforces the approved daily
+uniqueness rule for active records.
 
 The initial implemented kind is `count_sheet`. Its active record is unique by
 facility, work date, and the approved shift code (`A`, `B`, `C`, `D`, `U`, or

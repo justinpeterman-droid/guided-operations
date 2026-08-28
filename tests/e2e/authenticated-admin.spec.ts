@@ -36,6 +36,7 @@ test("an officer cannot open administrator pages", async ({ page }) => {
     "/admin/accounts",
     "/admin/audit",
     "/admin/health",
+    "/admin/paperwork/daily",
     "/admin/retention",
   ]) {
     await page.goto(path);
@@ -224,6 +225,25 @@ test("a fictional administrator uses the protected roster and status pages", asy
     page.getByRole("heading", { name: "System health" }),
   ).toBeVisible();
   await expect(page.getByText("Supabase connection")).toBeVisible();
+
+  await page.goto("/admin/paperwork/daily?workDate=2026-08-27&shiftCode=F");
+  await expect(
+    page.getByRole("heading", { name: "Daily Paperwork", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /F · Five-day week field/ }),
+  ).toBeVisible();
+  await expect(page.locator(".daily-paperwork-grid article")).toHaveCount(6);
+  await expect(page.getByText("Waiting for approved source")).toHaveCount(6);
+  await expect(page.getByRole("button", { name: /print/i })).toHaveCount(0);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("heading", { name: "Shift Assignment Roster" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Handheld Metal Detector Sign-Out" }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 720 });
 
   await page.goto("/admin/retention");
   await expect(
