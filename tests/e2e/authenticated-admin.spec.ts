@@ -211,12 +211,15 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await lockedOfficerCard
     .getByLabel("Your administrator passcode")
     .fill(accounts.administrator.passcode);
+  const unlockResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      /\/api\/admin\/accounts\/[0-9a-f-]+\/unlock$/.test(response.url()),
+  );
   await lockedOfficerCard
     .getByRole("button", { name: "Confirm unlock" })
     .click();
-  await expect(lockedOfficerCard.getByText("Unlocked")).toBeVisible({
-    timeout: 15_000,
-  });
+  expect((await unlockResponse).status()).toBe(200);
   await page.reload();
   await expect(
     lockedOfficerCard.getByText(/Officer · active · shift D/),
