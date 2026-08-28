@@ -78,13 +78,14 @@ select ok(
 select lives_ok(
   $$
     insert into app_private.policy_documents (
-      id, facility_id, stable_key, title, status
+      id, facility_id, stable_key, title, collection, status
     )
     select
       '10101010-1010-4010-8010-101010101010',
       facility.id,
       'fictional-provenance-policy',
       'Fictional Provenance Policy',
+      'BMU Post Orders',
       'approved'
     from app_private.facilities as facility
     limit 1;
@@ -133,19 +134,24 @@ select lives_ok(
 
     insert into app_private.policy_ingestion_runs (
       id, document_version_id, environment, source_sha256,
-      extraction_tool, extraction_version, extraction_config_sha256,
-      normalization_version, chunking_version, code_commit_sha,
+      collection, extraction_provider, extraction_tool, extraction_version,
+      extraction_config_sha256, normalization_version, chunking_version,
+      chunking_config_sha256, chunking_configuration, code_commit_sha,
       dependency_lock_sha256
     ) values (
       '30303030-3030-4030-8030-303030303030',
       '20202020-2020-4020-8020-202020202020',
       'ci',
       repeat('1', 64),
+      'BMU Post Orders',
+      'mineru',
       'fictional-parser',
       'fictional-v1',
       repeat('2', 64),
       'fictional-normalization-v1',
       'fictional-chunking-v1',
+      repeat('a', 64),
+      jsonb_build_object('max_pages', 2),
       repeat('3', 40),
       repeat('4', 64)
     );
@@ -226,18 +232,23 @@ select throws_ok(
   $$
     insert into app_private.policy_ingestion_runs (
       document_version_id, environment, source_sha256,
-      extraction_tool, extraction_version, extraction_config_sha256,
-      normalization_version, chunking_version, code_commit_sha,
+      collection, extraction_provider, extraction_tool, extraction_version,
+      extraction_config_sha256, normalization_version, chunking_version,
+      chunking_config_sha256, chunking_configuration, code_commit_sha,
       dependency_lock_sha256
     ) values (
       '20202020-2020-4020-8020-202020202020',
       'ci',
       repeat('8', 64),
+      'BMU Post Orders',
+      'mineru',
       'fictional-parser',
       'fictional-v1',
       repeat('2', 64),
       'fictional-normalization-v1',
       'fictional-chunking-v1',
+      repeat('a', 64),
+      jsonb_build_object('max_pages', 2),
       repeat('3', 40),
       repeat('4', 64)
     )

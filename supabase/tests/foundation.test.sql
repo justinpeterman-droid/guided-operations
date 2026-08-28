@@ -1839,13 +1839,14 @@ select ok(
 select lives_ok(
   $$
     insert into app_private.policy_documents (
-      id, facility_id, stable_key, title, status
+      id, facility_id, stable_key, title, collection, status
     )
     select
       'abababab-abab-4bab-8bab-abababababab',
       facility.id,
       'fictional-policy-101',
       'Fictional Training Policy 101',
+      'BMU policies',
       'approved'
     from app_private.facilities as facility
     limit 1;
@@ -1881,19 +1882,24 @@ select lives_ok(
 
     insert into app_private.policy_ingestion_runs (
       id, document_version_id, environment, source_sha256,
-      extraction_tool, extraction_version, extraction_config_sha256,
-      normalization_version, chunking_version, code_commit_sha,
+      collection, extraction_provider, extraction_tool, extraction_version,
+      extraction_config_sha256, normalization_version, chunking_version,
+      chunking_config_sha256, chunking_configuration, code_commit_sha,
       dependency_lock_sha256
     ) values (
       'dededede-dede-4ede-8ede-dededededede',
       'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
       'ci',
       repeat('a', 64),
+      'BMU policies',
+      'mineru',
       'fictional-parser',
       'fictional-v1',
       repeat('c', 64),
       'fictional-normalization-v1',
       'fictional-chunking-v1',
+      repeat('1', 64),
+      jsonb_build_object('max_pages', 2),
       repeat('d', 40),
       repeat('e', 64)
     );
