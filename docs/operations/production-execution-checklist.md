@@ -103,9 +103,14 @@ Pause and report a blocker instead of guessing when work requires:
       with disabled sign-in.
 - [x] Live foundation homepage and `/api/health/live` were browser/HTTP
       verified.
-- [ ] Confirm `iad1` function region in code/provider configuration.
+- [x] Confirm `iad1` function region in code/provider configuration. The
+      2026-08-27 command-center requalification verified the linked project and
+      latest protected Preview in `iad1`.
 - [ ] Confirm the authoritative Vercel project contains only correctly scoped
-      public Preview/Production values.
+      public Preview/Production values. Preview matches fictional Development,
+      but the two Production-scoped Supabase server entries also match
+      Development and must be removed under exact authorization before another
+      Production build.
 - [ ] Confirm the secondary non-authoritative Vercel project cannot receive
       production traffic or secrets.
 - [x] Verify public signup, manual linking, anonymous sign-in, email

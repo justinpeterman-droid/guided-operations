@@ -72,9 +72,11 @@ The hosted details and limitations are recorded in
 
 ## Current launch blockers
 
-1. The Development Supabase project does not have the newest forward migrations
-   or any hosted fictional officer/admin account. A separate isolated live
-   Supabase project is still required before release.
+1. The fictional Development Supabase project matches the repository's
+   62-migration head and has one active fictional administrator, but the owner
+   must complete its temporary-passcode change before the protected workflow can
+   create a fictional officer. A separate isolated live Supabase project is
+   still required before release.
 2. Authentication and authorization have local fictional proof for encrypted
    alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
    Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
@@ -109,6 +111,10 @@ The hosted details and limitations are recorded in
 11. Supabase Free projects can pause for low activity and require operator-run
     off-provider database and Storage backups. The owner must accept or remove
     those limitations before release.
+12. The two currently Production-scoped Supabase server entries match the
+    fictional Development project. They must be removed from the Production
+    scope under exact authorization, then replaced only with complete values for
+    the future isolated Production project.
 
 ## Delivery sequence
 
