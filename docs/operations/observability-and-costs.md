@@ -34,13 +34,14 @@ before activation.
 
 The sign-in, local sign-out, sign-out-all, personal passcode-change, forced
 temporary-passcode-change, policy-answer, report-draft, policy-source,
-incident-fact, and Daily Paperwork package endpoints now emit a strict JSON
-event only when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only
-a fixed operation, bounded outcome/reason code, random request ID, status,
-duration, environment, deployment/build identifiers, and the policy route's
-bounded citation count and corpus version. Every newly observed authentication
-lifecycle response returns the same opaque random ID in `X-Request-Id`; the
-Daily Paperwork package route also returns it in response metadata. These events
+incident-fact, Daily Paperwork package, administrator account/retention
+lifecycle, and administrator step-up endpoints now emit a strict JSON event only
+when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only a fixed
+operation, bounded outcome/reason code, random request ID, status, duration,
+environment, deployment/build identifiers, and the policy route's bounded
+citation count and corpus version. Every newly observed authentication lifecycle
+response returns the same opaque random ID in `X-Request-Id`; the Daily
+Paperwork package route also returns it in response metadata. These events
 record no employee number, account/user/session identifier, passcode, cookie,
 source filename, source metadata, package digest, administrator identity,
 form/report content, or arbitrary error text. Sign-in intentionally records no
@@ -56,17 +57,17 @@ configured. Those remain live-environment qualification gates.
 
 ## Signals and checks
 
-| Area      | Minimum signal                                                                                                     | Qualification                                                                  |
-| --------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
-| Web       | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke          |
-| Auth      | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event             |
-| Admin     | account create, role/shift change, disable, unlock, and passcode-reset outcome and duration                        | No administrator/target IDs, employee data, proof tokens, or handoff secrets   |
-| Retention | legal-hold placement/release and deletion approval/execution outcome and duration                                  | No target IDs, administrator IDs, proof tokens, authority or backup references |
-| Database  | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                              |
-| Storage   | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                       |
-| RAG/AI    | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version               | Synthetic continuous checks; secure real-corpus qualification before promotion |
-| Recovery  | age and checksum of latest database and Storage backup; last restore drill result                                  | Separate database and object evidence                                          |
-| Security  | dependency/secret scan, authorization test, unexpected public asset check                                          | Blocking alerts for confirmed exposure                                         |
+| Area      | Minimum signal                                                                                                     | Qualification                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Web       | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke                   |
+| Auth      | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event                      |
+| Admin     | step-up plus account create, role/shift change, disable, unlock, and passcode-reset outcome and duration           | No administrator/target IDs, employee data, passcodes, proof tokens, or handoff secrets |
+| Retention | legal-hold placement/release and deletion approval/execution outcome and duration                                  | No target IDs, administrator IDs, proof tokens, authority or backup references          |
+| Database  | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                                       |
+| Storage   | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                                |
+| RAG/AI    | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version               | Synthetic continuous checks; secure real-corpus qualification before promotion          |
+| Recovery  | age and checksum of latest database and Storage backup; last restore drill result                                  | Separate database and object evidence                                                   |
+| Security  | dependency/secret scan, authorization test, unexpected public asset check                                          | Blocking alerts for confirmed exposure                                                  |
 
 ## Alert policy
 

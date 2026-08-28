@@ -7,6 +7,7 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
 import { requestAdminStepUp } from "@/server/auth/request-admin-step-up";
 import { createSupabaseAdministratorPasscodeVerifier } from "@/server/auth/supabase-auth-adapters";
+import { createAdminStepUpObserver } from "@/server/observability/admin-step-up-observer";
 import { createDailyPaperworkTemplateStepUpTargetStore } from "@/server/paperwork/private-daily-paperwork-template-step-up-target-store";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
@@ -25,18 +26,28 @@ const requestSchema = z
 
 /** Issues one Production-only proof for one exact package import or rollback. */
 export async function POST(request: Request): Promise<Response> {
+  const observe = createAdminStepUpObserver();
+  let appEnvironment: "development" | "preview" | "production" | "test" =
+    "test";
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
-    if (runtimeEnvironment.APP_ENV !== "production") return notFound();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (runtimeEnvironment.APP_ENV !== "production")
+      return observe(notFound(), "not_found", appEnvironment);
 
     const currentSession = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!currentSession.allowed) return authenticationRequired();
+    if (!currentSession.allowed)
+      return observe(
+        authenticationRequired(),
+        "authentication_required",
+        appEnvironment,
+      );
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -45,10 +56,15 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     )
-      return requestNotAllowed();
+      return observe(
+        requestNotAllowed(),
+        "request_not_allowed",
+        appEnvironment,
+      );
 
     const parsed = requestSchema.safeParse(await request.json());
-    if (!parsed.success) return invalidInput();
+    if (!parsed.success)
+      return observe(invalidInput(), "validation_rejected", appEnvironment);
     const purpose =
       parsed.data.action === "rollback"
         ? "paperwork.template_rollback"
@@ -63,9 +79,16 @@ export async function POST(request: Request): Promise<Response> {
         hmacKey: environment.CSRF_HMAC_KEY,
       },
     );
-    if (result.status === "invalid_input") return invalidInput();
-    if (result.status === "denied") return authenticationRequired();
-    if (result.status !== "issued") return unavailable();
+    if (result.status === "invalid_input")
+      return observe(invalidInput(), "validation_rejected", appEnvironment);
+    if (result.status === "denied")
+      return observe(
+        authenticationRequired(),
+        "authentication_required",
+        appEnvironment,
+      );
+    if (result.status !== "issued")
+      return observe(unavailable(), "service_unavailable", appEnvironment);
     const bound = await createDailyPaperworkTemplateStepUpTargetStore().bind({
       authUserId: currentSession.account.authUserId,
       sessionId: currentSession.sessionId,
@@ -74,13 +97,18 @@ export async function POST(request: Request): Promise<Response> {
       requestId: result.requestId,
       packageDigest: parsed.data.packageDigest,
     });
-    if (!bound) return unavailable();
-    return Response.json(
-      { data: { requestId: result.requestId, token: result.token } },
-      { headers: NO_STORE_HEADERS },
+    if (!bound)
+      return observe(unavailable(), "service_unavailable", appEnvironment);
+    return observe(
+      Response.json(
+        { data: { requestId: result.requestId, token: result.token } },
+        { headers: NO_STORE_HEADERS },
+      ),
+      "issued",
+      appEnvironment,
     );
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable", appEnvironment);
   }
 }
 

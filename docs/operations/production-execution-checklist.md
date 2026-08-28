@@ -555,9 +555,12 @@ Pause and report a blocker instead of guessing when work requires:
       Account creation, role/shift changes, disablement, unlock, and passcode
       reset also return matching correlation and emit only outcome/duration;
       administrator/target IDs, employee data, role/shift values, proof tokens,
-      and temporary passcodes have no event field. Hosted sinks, remaining
-      administrator step-up/Storage/DB signals, access/retention, alerts, and
-      delivery tests remain open.
+      and temporary passcodes have no event field. All administrator step-up
+      endpoints now return separate matching correlation and emit only a
+      content-free issued/denied/failure outcome; administrator identity,
+      session IDs, passcodes, purpose proofs, action targets, and package
+      digests have no event field. Hosted sinks, Storage/DB signals,
+      access/retention, alerts, and delivery tests remain open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion

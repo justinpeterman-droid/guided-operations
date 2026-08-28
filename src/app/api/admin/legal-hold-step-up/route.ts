@@ -8,6 +8,7 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
 import { requestAdminStepUp } from "@/server/auth/request-admin-step-up";
 import { createSupabaseAdministratorPasscodeVerifier } from "@/server/auth/supabase-auth-adapters";
+import { createAdminStepUpObserver } from "@/server/observability/admin-step-up-observer";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -24,16 +25,21 @@ const inputSchema = z
 
 /** Issues a proof valid for exactly one legal-hold placement or release. */
 export async function POST(request: Request): Promise<Response> {
+  const observe = createAdminStepUpObserver();
+  let appEnvironment: "development" | "preview" | "production" | "test" =
+    "test";
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
     const current = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!current.allowed) return denied();
+    if (!current.allowed)
+      return observe(denied(), "authentication_required", appEnvironment);
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -42,10 +48,11 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     )
-      return forbidden();
+      return observe(forbidden(), "request_not_allowed", appEnvironment);
 
     const parsed = inputSchema.safeParse(await request.json());
-    if (!parsed.success) return invalid();
+    if (!parsed.success)
+      return observe(invalid(), "validation_rejected", appEnvironment);
     const purpose: AdminStepUpPurpose =
       parsed.data.action === "place"
         ? "retention.place_legal_hold"
@@ -61,14 +68,21 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
     if (result.status === "issued")
-      return Response.json(
-        { data: { requestId: result.requestId, token: result.token } },
-        { headers },
+      return observe(
+        Response.json(
+          { data: { requestId: result.requestId, token: result.token } },
+          { headers },
+        ),
+        "issued",
+        appEnvironment,
       );
-    if (result.status === "invalid_input") return invalid();
-    return result.status === "unavailable" ? unavailable() : denied();
+    if (result.status === "invalid_input")
+      return observe(invalid(), "validation_rejected", appEnvironment);
+    return result.status === "unavailable"
+      ? observe(unavailable(), "service_unavailable", appEnvironment)
+      : observe(denied(), "authentication_required", appEnvironment);
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable", appEnvironment);
   }
 }
 
