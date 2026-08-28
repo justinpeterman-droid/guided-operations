@@ -47,7 +47,7 @@ uv venv --python 3.12
 Set-ExecutionPolicy -Scope Process Bypass
 .\.venv\Scripts\Activate.ps1
 uv pip install --upgrade pip
-uv pip install torch==2.12.1 torchvision==0.27.1 --index-url https://download.pytorch.org/whl/cu126
+uv pip install torch==2.8.0 torchvision==0.23.0 --index-url https://download.pytorch.org/whl/cu126
 uv pip install -e ".[mineru,import]"
 mineru-models-download
 ```
