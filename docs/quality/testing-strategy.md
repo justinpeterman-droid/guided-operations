@@ -132,7 +132,11 @@ officer Count Sheet, report/revision/Word-download, incident creation, sign-out,
 and administrator workflows with fictional data. At commit `d821926` the same
 lane also proved that an administrator disabling the fictional officer removes
 that officer's already-authenticated access and rejects the old credential with
-the generic sign-in failure (`33173353133`).
+the generic sign-in failure (`33173353133`). At commit `571493c`, the guarded
+lane additionally created a dedicated fictional timing-defense identity and
+proved that known-wrong and unknown employee sign-ins return the same public
+failure and no-store policy with no more than a 300 ms median response-time
+difference in isolated local CI (`33176099890`).
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 

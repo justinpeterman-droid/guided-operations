@@ -95,6 +95,10 @@ Pause and report a blocker instead of guessing when work requires:
       Recovery rehearsal (`33173353168`), and Authenticated browser quality
       (`33173353133`) are green for exact commit `d821926` on 2026-08-28 after
       adding disabled-account session revocation coverage.
+- [x] Confirm Web quality (`33176099761`), Database quality (`33176099774`),
+      Recovery rehearsal (`33176099780`), and Authenticated browser quality
+      (`33176099890`) are green for exact commit `571493c` on 2026-08-28 after
+      adding known/unknown sign-in resistance qualification.
 
 ### Phase 0 exit
 
@@ -222,7 +226,10 @@ Pause and report a blocker instead of guessing when work requires:
       purpose-bound admin step-up, plus personal passcode and session controls.
       Local service, route, UI, and database tests exist; hosted migration and
       real-browser qualification remain separate release gates below.
-- [ ] Pass known/unknown employee timing and enumeration tests.
+- [x] Pass a guarded local real-provider known/unknown employee enumeration and
+      timing test: both paths use password authentication, return the same 401
+      body and no-store policy, and keep median response-time difference within
+      the documented 300 ms local-CI bound (`571493c`, run `33176099890`).
 - [ ] Pass direct database
       anonymous/authenticated/cross-user/cross-role/disabled and elevated-key
       negative tests.
