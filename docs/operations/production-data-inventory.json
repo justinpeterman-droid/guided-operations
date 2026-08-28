@@ -310,6 +310,20 @@
       "deletion_status": "procedure-required"
     },
     {
+      "id": "db:form_templates",
+      "kind": "database_table",
+      "locator": "app_private.form_templates",
+      "data_classes": [
+        "restricted_form_definition",
+        "source_integrity",
+        "rights_metadata"
+      ],
+      "purpose": "Private approved source and version definitions for operational forms",
+      "retention_profile": "source-supersession-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
       "id": "db:paperwork_records",
       "kind": "database_table",
       "locator": "app_private.paperwork_records",
