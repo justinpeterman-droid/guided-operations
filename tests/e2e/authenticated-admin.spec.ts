@@ -101,6 +101,17 @@ test("a fictional administrator uses the protected roster and status pages", asy
     }),
   ).toBeVisible();
 
+  await page.goto("/forms");
+  await expect(
+    page.getByRole("link", { name: /Open Daily Paperwork/ }),
+  ).toHaveAttribute("href", "/admin/paperwork/daily");
+  await expect(
+    page.getByRole("heading", { name: "Chain of Custody" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Chain of Custody/ }),
+  ).toHaveCount(0);
+
   await page.getByRole("link", { name: "View accounts" }).click();
   await expect(
     page.getByRole("heading", { name: "Accounts and roster" }),

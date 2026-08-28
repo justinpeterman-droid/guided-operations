@@ -1,6 +1,12 @@
 import Link from "next/link";
 
 import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import {
+  chainOfCustodyGuidance,
+  countSheetCapabilities,
+  dailyPaperworkCapabilities,
+  unavailableForms,
+} from "@/features/forms-library/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
@@ -29,27 +35,34 @@ export default async function FormsPage() {
 
       <section className="forms-library-intro" aria-labelledby="forms-title">
         <p className="eyebrow">Approved paperwork</p>
-        <h1 id="forms-title">Use the right form, with the right limits.</h1>
+        <h1 id="forms-title">Find the right paperwork.</h1>
         <p>
-          Only reviewed forms appear as available. Paperwork that has not passed
-          source, records, and print review stays clearly unavailable.
+          Every item shows what you can do with it. Unapproved paperwork stays
+          unavailable, and official physical forms stay physical.
         </p>
       </section>
 
       <section className="forms-library-group" aria-labelledby="ready-title">
-        <h2 id="ready-title">Available now</h2>
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Working tools</p>
+            <h2 id="ready-title">Available now</h2>
+          </div>
+          <span className="forms-library-count">1 officer tool</span>
+        </div>
         <div className="forms-library-list">
           <article>
             <div>
-              <p className="eyebrow">Shift-shared · Saved revisions</p>
+              <p className="eyebrow">Reviewed Count Sheet structure</p>
               <h3>North Central Unit Count Sheet</h3>
               <p>
-                Enter the approved count structure, review the difference, save
-                corrections as new revisions, and inspect preserved history.
+                Work with your assigned shift, review the difference, and keep
+                every saved correction in history.
               </p>
+              <CapabilityList items={countSheetCapabilities} />
             </div>
             {access.shiftCode ? (
-              <Link href="/count-sheet">
+              <Link className="forms-library-action" href="/count-sheet">
                 Open Count Sheet <span aria-hidden="true">→</span>
               </Link>
             ) : (
@@ -59,40 +72,83 @@ export default async function FormsPage() {
         </div>
       </section>
 
-      <section className="forms-library-group" aria-labelledby="review-title">
-        <h2 id="review-title">Waiting for approved source forms</h2>
+      <section className="forms-library-group" aria-labelledby="admin-title">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Restricted by role</p>
+            <h2 id="admin-title">Administrator paperwork</h2>
+          </div>
+        </div>
         <div className="forms-library-list">
           <article>
             <div>
               <h3>Daily paperwork</h3>
               <p>
-                Each source form, current version, use, retention rule, and
-                print layout must be reviewed before it can appear here.
+                Open the protected six-form workspace. Each form stays locked
+                until its exact source package is reviewed and approved.
               </p>
+              <CapabilityList items={dailyPaperworkCapabilities} />
             </div>
-            <span className="forms-not-ready">Not ready yet</span>
-          </article>
-          <article>
-            <div>
-              <h3>Monthly packets</h3>
-              <p>
-                Packet contents and official output rules are still being
-                reconciled against the approved source.
-              </p>
-            </div>
-            <span className="forms-not-ready">Not ready yet</span>
+            {access.role === "administrator" ? (
+              <Link
+                className="forms-library-action"
+                href="/admin/paperwork/daily"
+              >
+                Open Daily Paperwork <span aria-hidden="true">→</span>
+              </Link>
+            ) : (
+              <span className="forms-not-ready">Administrator only</span>
+            )}
           </article>
         </div>
       </section>
 
-      <aside className="forms-library-warning" aria-labelledby="paper-title">
-        <p className="eyebrow">Paper-only work stays paper-only</p>
-        <h2 id="paper-title">A physical process is not a website form.</h2>
-        <p>
-          Physical-only workflows remain physical-only unless an approved
-          product and records decision changes that rule.
+      <section className="forms-library-group" aria-labelledby="physical-title">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Official paper process</p>
+            <h2 id="physical-title">Physical-only paperwork</h2>
+          </div>
+        </div>
+        <div className="forms-library-list forms-library-physical-list">
+          <article>
+            <div>
+              <h3>{chainOfCustodyGuidance.title}</h3>
+              <p>{chainOfCustodyGuidance.description}</p>
+              <CapabilityList items={chainOfCustodyGuidance.capabilities} />
+            </div>
+            <span className="forms-physical-only">Use official paper form</span>
+          </article>
+        </div>
+        <aside className="forms-library-warning">
+          This app does not create, save, print, or replace the official Chain
+          of Custody form.
+        </aside>
+      </section>
+
+      <section className="forms-library-group" aria-labelledby="waiting-title">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Not yet approved</p>
+            <h2 id="waiting-title">Coming later</h2>
+          </div>
+        </div>
+        <div className="forms-library-list">
+          {unavailableForms.map((item) => (
+            <article key={item.title}>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+              <span className="forms-not-ready">Not available</span>
+            </article>
+          ))}
+        </div>
+        <p className="forms-library-footnote">
+          Add-to-incident and packet-building actions will appear only after an
+          eligible digital form and its rules have been approved and tested.
         </p>
-      </aside>
+      </section>
     </main>
   );
 }
@@ -103,11 +159,25 @@ export async function loadFormsAccess() {
       await createSupabaseServerClient(),
     );
     return session.allowed
-      ? ({ kind: "authorized", shiftCode: session.account.shiftCode } as const)
+      ? ({
+          kind: "authorized",
+          role: session.account.role,
+          shiftCode: session.account.shiftCode,
+        } as const)
       : ({ kind: "denied" } as const);
   } catch {
     return { kind: "unavailable" } as const;
   }
+}
+
+function CapabilityList({ items }: Readonly<{ items: readonly string[] }>) {
+  return (
+    <ul className="forms-capability-list" aria-label="Capabilities">
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
+  );
 }
 
 function SignInRequired() {

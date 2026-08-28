@@ -445,7 +445,15 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Implement approved Monthly packet catalog.
 - [ ] Implement Forms Library selection, capabilities, paper preview, eligible
       download, controlled fields, N/A behavior, and packet actions.
-- [ ] Keep Chain of Custody and other physical-only work physical-only.
+  - [x] Add the protected role-aware capability catalog: assigned-shift Count
+        Sheet links only when usable, administrator Daily Paperwork links only
+        for administrators, and unfinished Monthly packets remain unavailable.
+  - [ ] Add approved digital-form source/revision details, eligible
+        add-to-incident, preview, controlled-field, N/A, download, and packet
+        assembly behavior after an eligible form source is approved.
+- [x] Keep Chain of Custody physical-only with obtain-and-hand-complete
+      guidance, no digital action, no replacement preview, and explicit
+      officer/admin and fictional desktop/mobile browser assertions.
 - [ ] Pass revision, concurrency, idempotency, authorization, RLS, browser,
       accessibility, print/PDF, and failure-state tests.
 - [ ] Record source/revision and records-owner disposition for every output.

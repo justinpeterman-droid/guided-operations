@@ -78,6 +78,21 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
     "go-auth-session",
   );
 
+  await page.goto("/forms");
+  await expect(
+    page.getByRole("heading", { name: "Find the right paperwork." }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Open Count Sheet/ }),
+  ).toHaveAttribute("href", "/count-sheet");
+  await expect(
+    page.getByRole("link", { name: /Open Daily Paperwork/ }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Chain of Custody" }),
+  ).toBeVisible();
+  await expect(page.getByText("No digital substitute")).toBeVisible();
+
   await page.goto("/count-sheet");
   await expect(
     page.getByRole("heading", { name: "North Central Unit Count Sheet" }),

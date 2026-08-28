@@ -1,34 +1,11 @@
 import Link from "next/link";
 
-const formGroups = [
-  {
-    title: "Available for training review",
-    items: [
-      {
-        name: "Count Sheet",
-        detail:
-          "A fictional, clearly marked practice version is ready to review and print. It does not become an official form.",
-        action: "Open Count Sheet",
-        href: "/preview/count-sheet",
-      },
-    ],
-  },
-  {
-    title: "Waiting for approved source forms",
-    items: [
-      {
-        name: "Daily paperwork",
-        detail:
-          "The screen and save rules will be built after each source form, its current version, and its use are reviewed.",
-      },
-      {
-        name: "Monthly packets",
-        detail:
-          "These will be added only after their print layout and record rules are approved.",
-      },
-    ],
-  },
-] as const;
+import {
+  chainOfCustodyGuidance,
+  countSheetCapabilities,
+  dailyPaperworkCapabilities,
+  unavailableForms,
+} from "@/features/forms-library/catalog";
 
 /**
  * Honest visual contract for the future Forms Library. It contains no copied
@@ -52,44 +29,114 @@ export default function FormsLibraryPreviewPage() {
 
       <section className="forms-library-intro" aria-labelledby="forms-title">
         <p className="eyebrow">Forms Library</p>
-        <h1 id="forms-title">Use the right form, with the right limits.</h1>
+        <h1 id="forms-title">Find the right paperwork.</h1>
         <p>
-          This library will help officers find approved paperwork without
-          pretending every paper process can be safely replaced by a website.
+          This fictional preview shows how the protected library separates
+          working tools, administrator paperwork, and official physical forms.
         </p>
       </section>
 
-      {formGroups.map((group) => (
-        <section className="forms-library-group" key={group.title}>
-          <h2>{group.title}</h2>
-          <div className="forms-library-list">
-            {group.items.map((item) => (
-              <article key={item.name}>
-                <div>
-                  <h3>{item.name}</h3>
-                  <p>{item.detail}</p>
-                </div>
-                {"href" in item ? (
-                  <Link href={item.href}>
-                    {item.action} <span aria-hidden="true">→</span>
-                  </Link>
-                ) : (
-                  <span className="forms-not-ready">Not ready yet</span>
-                )}
-              </article>
-            ))}
+      <section className="forms-library-group" aria-labelledby="preview-ready">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Working tool</p>
+            <h2 id="preview-ready">Available for training review</h2>
           </div>
-        </section>
-      ))}
+        </div>
+        <div className="forms-library-list">
+          <article>
+            <div>
+              <h3>North Central Unit Count Sheet</h3>
+              <p>
+                The fictional practice version demonstrates the approved
+                structure without creating an official record.
+              </p>
+              <CapabilityList items={countSheetCapabilities} />
+            </div>
+            <Link className="forms-library-action" href="/preview/count-sheet">
+              Open Count Sheet <span aria-hidden="true">→</span>
+            </Link>
+          </article>
+        </div>
+      </section>
 
-      <aside className="forms-library-warning" aria-labelledby="paper-title">
-        <p className="eyebrow">Paper-only work stays paper-only</p>
-        <h2 id="paper-title">Some work should not move into the app.</h2>
-        <p>
-          Physical-only workflows will remain clearly labeled. This site will
-          never turn them into a fake digital replacement.
-        </p>
-      </aside>
+      <section className="forms-library-group" aria-labelledby="preview-admin">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Restricted by role</p>
+            <h2 id="preview-admin">Administrator paperwork</h2>
+          </div>
+        </div>
+        <div className="forms-library-list">
+          <article>
+            <div>
+              <h3>Daily paperwork</h3>
+              <p>
+                The live app opens the protected six-form workspace only for a
+                verified administrator.
+              </p>
+              <CapabilityList items={dailyPaperworkCapabilities} />
+            </div>
+            <span className="forms-not-ready">Administrator only</span>
+          </article>
+        </div>
+      </section>
+
+      <section
+        className="forms-library-group"
+        aria-labelledby="preview-physical"
+      >
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Official paper process</p>
+            <h2 id="preview-physical">Physical-only paperwork</h2>
+          </div>
+        </div>
+        <div className="forms-library-list forms-library-physical-list">
+          <article>
+            <div>
+              <h3>{chainOfCustodyGuidance.title}</h3>
+              <p>{chainOfCustodyGuidance.description}</p>
+              <CapabilityList items={chainOfCustodyGuidance.capabilities} />
+            </div>
+            <span className="forms-physical-only">Use official paper form</span>
+          </article>
+        </div>
+        <aside className="forms-library-warning">
+          This app does not create, save, print, or replace the official Chain
+          of Custody form.
+        </aside>
+      </section>
+
+      <section className="forms-library-group" aria-labelledby="preview-later">
+        <div className="forms-library-section-heading">
+          <div>
+            <p className="eyebrow">Not yet approved</p>
+            <h2 id="preview-later">Coming later</h2>
+          </div>
+        </div>
+        <div className="forms-library-list">
+          {unavailableForms.map((item) => (
+            <article key={item.title}>
+              <div>
+                <h3>{item.title}</h3>
+                <p>{item.description}</p>
+              </div>
+              <span className="forms-not-ready">Not available</span>
+            </article>
+          ))}
+        </div>
+      </section>
     </main>
+  );
+}
+
+function CapabilityList({ items }: Readonly<{ items: readonly string[] }>) {
+  return (
+    <ul className="forms-capability-list" aria-label="Capabilities">
+      {items.map((item) => (
+        <li key={item}>{item}</li>
+      ))}
+    </ul>
   );
 }
