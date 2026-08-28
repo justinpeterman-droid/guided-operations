@@ -11,15 +11,35 @@ data.
 
 - The repository-local Vercel link names the `guided-operations` project in the
   previously recorded owner team.
-- The currently connected Vercel provider session can see the owner Hobby team,
-  but lists no projects in that team.
-- A direct read of the linked project returns `404 Not Found`.
+- The app-level Vercel connector can see the owner Hobby team but lists no
+  projects, and a direct connector read of the linked project returns
+  `404 Not Found`.
+- The official Vercel CLI 59.7.0 is authenticated as the expected owner and can
+  read the authoritative project. It confirms Next.js, Node.js 24.x, `iad1`,
+  Git-fork protection, and SSO protection for deployment URLs except custom
+  domains.
+- Git integration produced a `READY` protected Preview for exact commit
+  `06848a1`. Authenticated Preview checks return `200` for `/`,
+  `/api/health/live`, `/api/health/ready`, `/login`, `/home`, `/reports`,
+  `/policy-expert`, `/admin`, and `/admin/accounts`. The bounded readiness body
+  is `{"service":"guided-operations-web","status":"ready"}`.
+- Environment-name inventory, without reading values, shows the full expected
+  Development/Preview runtime contract. Production has only `SUPABASE_DB_URL`
+  and `SUPABASE_SECRET_KEY`; it is intentionally incomplete and must not be used
+  to build a Production candidate.
+- Independent unauthenticated HTTPS checks show that the canonical domain still
+  serves the historical foundation: `/` and `/api/health/live` return `200`,
+  while `/api/health/ready`, `/sign-in`, `/officer`, and `/admin` return `404`.
+  The liveness body remains the bounded
+  `{"service":"guided-operations-web","status":"ok"}` response.
 
-This is a current access/evidence failure, not proof that the historical project
-or deployment was deleted. Protected Preview and Production qualification must
-remain open until the provider connection can read the authoritative project,
-its environment-variable names and scopes, its deployments, and its protection
-settings without exposing secret values.
+The connector mismatch is an integration limitation rather than lost Vercel
+account access. The authenticated CLI supplies the current read-only evidence;
+no relink, deployment, environment change, or protection change was performed.
+
+The public status checks prove only that the old foundation still answers. They
+do not prove that the current candidate is deployed, protected, ready, or
+connected to the intended environment.
 
 ## Supabase evidence
 
@@ -65,12 +85,28 @@ privilege, search-path, private-helper, and authorization-anchor checks part of
 database qualification so a newly exposed routine cannot silently widen this
 boundary.
 
+## Current candidate qualification infrastructure
+
+Commit `06848a1` added the provider-advisor boundary test and this evidence. All
+four GitHub workflows failed before a runner or any workflow step started; the
+job records contain no steps and show runner ID zero. A single Database quality
+retry failed the same way. This is not evidence of a test failure, but the
+commit remains unqualified until the workflows actually execute.
+
+A local fallback was also attempted. Docker Desktop 4.81 failed before engine
+startup while initializing its optional Model Runner socket, so the local
+Supabase stack could not run. No database, Storage object, hosted setting, or
+application data was changed. Do not replace the required executable CI/local
+proof with the read-only hosted catalog query.
+
 ## Release effect
 
 The code candidate remains qualified only by local/CI fictional-data evidence.
 The following gates remain open:
 
-1. restore read access to the authoritative Vercel project;
+1. complete a protected-Preview browser inspection and correct the intentionally
+   incomplete Production environment only under the Production configuration
+   gate;
 2. replay and qualify the eight pending migrations before any approved
    Development apply;
 3. create and configure a separate isolated Production Supabase project under
