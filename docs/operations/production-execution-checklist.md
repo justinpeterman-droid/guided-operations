@@ -136,6 +136,12 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Confirm `iad1` function region in code/provider configuration. The
       2026-08-27 command-center requalification verified the linked project and
       latest protected Preview in `iad1`.
+- [x] Re-establish read-only provider proof on 2026-08-28 with Vercel CLI
+      59.7.0: the authenticated owner can inspect the authoritative project,
+      project settings, protection posture, environment names/scopes, and the
+      `READY` Preview for exact commit `06848a1`. Authenticated status checks
+      for liveness, readiness, login, officer, and administrator routes return
+      `200`; manual browser rendering remains open.
 - [ ] Confirm the authoritative Vercel project contains only correctly scoped
       public Preview/Production values. Preview matches fictional Development,
       but the two Production-scoped Supabase server entries also match

@@ -6,16 +6,20 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 ## Current status
 
 - Application hosting configured: **authoritative Git-connected Vercel project
-  and protected Previews verified; current signed-in candidate passed local/CI
-  Production-style qualification but protected hosted qualification remains
-  incomplete**
+  and protected Previews verified; the protected Preview for `06848a1` is
+  `READY` and its public, liveness, readiness, login, officer, and administrator
+  routes answer through authenticated Vercel checks, but the real-browser visual
+  review remains incomplete**
 - Supabase projects configured: **fictional Development project healthy at the
-  previously verified 62-migration hosted head with one fictional administrator
-  pending personal passcode change; newer repository migrations remain local/CI
-  candidates, with no operational data and no isolated Production project**
+  verified 62-migration hosted head with one fictional administrator pending
+  personal passcode change; eight repository migrations remain local/CI
+  candidates, the organization remains on Free, and no isolated Production
+  project exists**
 - CI/release automation configured: **GitHub web, database, fictional recovery,
-  and Production-style authenticated browser workflows pass for exact commit
-  `9a01c92`; production promotion remains manual and gated**
+  and Production-style authenticated browser workflows pass for exact code
+  commit `9a01c92`; commit `907f386` passes the complete local web gate, but
+  GitHub jobs currently fail before a runner or step starts and newer-head
+  database/recovery/browser CI remains unproven**
 - Backups and restore exercise: **local fictional database-plus-Storage
   rehearsal implemented; encrypted off-provider and isolated hosted restore not
   established**

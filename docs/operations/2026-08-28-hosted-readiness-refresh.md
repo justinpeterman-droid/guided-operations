@@ -99,6 +99,17 @@ Supabase stack could not run. No database, Storage object, hosted setting, or
 application data was changed. Do not replace the required executable CI/local
 proof with the read-only hosted catalog query.
 
+Commit `907f386` did pass the complete non-database local web gate using the
+pinned repository tools: formatting, ESLint, TypeScript, 196 Vitest files and
+603 tests passed with one intentionally skipped file/test, all 52 operations
+tests passed, and the optimized Next.js 16.3.2 Production build completed. This
+narrows the current infrastructure gap to database, recovery, authenticated
+browser CI, and manual visual qualification; it does not close those gates.
+
+The connected Supabase organization is on the Free plan, and the Vercel project
+is on Hobby. The existing plan/protection/availability/backup decision therefore
+remains a required owner gate before real-data Production.
+
 ## Release effect
 
 The code candidate remains qualified only by local/CI fictional-data evidence.

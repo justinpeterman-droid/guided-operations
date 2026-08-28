@@ -28,16 +28,21 @@ resource.
 
 ## Required before hosted development linkage
 
-- [ ] **OQ-001 — Provider login:** owner authenticates the Vercel and Supabase
-      CLIs/accounts. Tokens must stay in provider credential stores, not Git.
-- [ ] **OQ-002 — Vercel region:** Supabase `us-east-1` is approved and
-      provisioned. Confirm the aligned Vercel function region; the provisional
-      technical candidate remains `iad1`.
+- [x] **OQ-001 — Provider login:** the Vercel CLI and Supabase provider session
+      were independently authenticated to the expected owner accounts on
+      2026-08-28. Tokens remain in provider credential stores, not Git.
+- [x] **OQ-002 — Vercel region:** Supabase Development is provisioned in
+      `us-east-1`, and the authoritative Vercel project reports the aligned
+      `iad1` function region. Isolated Production must preserve this approved
+      regional pairing unless the owner records a replacement decision.
 - [ ] **OQ-003 — Facility label:** supply the non-sensitive facility display
       name and URL/domain naming preference. Do not add a real roster.
 - [ ] **OQ-004 — Plan eligibility:** confirm the intended invited-officer use
       continues to fit Vercel Hobby's personal/non-commercial terms and Supabase
-      Free limits; otherwise approve the needed plan before deployment.
+      Free limits; otherwise approve the needed plan before deployment. The
+      2026-08-28 provider refresh confirms the organization is still Supabase
+      Free and Vercel Hobby, so real-data availability, backup, support, and
+      Production-domain protection remain unresolved.
 
 ## Authentication implementation constraints
 
