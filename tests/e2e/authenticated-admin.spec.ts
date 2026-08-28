@@ -76,6 +76,7 @@ test("the last administrator cannot demote their own account", async ({
 });
 
 test("a fictional administrator uses the protected roster and status pages", async ({
+  browser,
   page,
 }) => {
   const browserErrors: string[] = [];
@@ -289,6 +290,47 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await expect(
     page.getByText("No records have reached the two-year review date."),
   ).toBeVisible();
+
+  const officerContext = await browser.newContext();
+  const officerPage = await officerContext.newPage();
+  await signIn(officerPage, accounts.officer);
+  await expect(officerPage).toHaveURL(/\/home$/);
+
+  await page.goto("/admin/accounts");
+  const activeOfficerCard = page.getByRole("listitem").filter({
+    has: page.getByRole("heading", {
+      name: "Fictional Qualification Officer",
+    }),
+  });
+  await activeOfficerCard
+    .getByRole("button", { name: "Disable account" })
+    .click();
+  await activeOfficerCard
+    .getByLabel("Your administrator passcode")
+    .fill(accounts.administrator.passcode);
+  await activeOfficerCard
+    .getByRole("button", { name: "Confirm disable" })
+    .click();
+  await expect(activeOfficerCard.getByText("Disabled")).toBeVisible();
+
+  await officerPage.goto("/home");
+  await expect(
+    officerPage.getByRole("heading", {
+      name: "Sign in to open your workspace.",
+    }),
+  ).toBeVisible();
+  await officerPage.goto("/login");
+  await officerPage
+    .getByLabel("Employee number")
+    .fill(accounts.officer.employeeNumber);
+  await officerPage.getByLabel("Passcode").fill(accounts.officer.passcode);
+  await officerPage.getByRole("button", { name: "Sign in" }).click();
+  await expect(
+    officerPage.getByText(
+      "We could not sign you in. Check your employee number and passcode, then try again.",
+    ),
+  ).toBeVisible();
+  await officerContext.close();
 
   await signOut(page);
   expect(browserErrors).toEqual([]);
