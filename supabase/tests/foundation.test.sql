@@ -1,6 +1,6 @@
 begin;
 
-select plan(206);
+select plan(207);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1329,7 +1329,25 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true);
 select lives_ok($$ select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional corrected narrative.','Fictional correction.',repeat('d',64),repeat('e',64)) $$,'an authorized owner appends an immutable report correction');
 reset role;
-select throws_ok($$ set local role authenticated; select set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true); select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64)); $$,'Report revision conflict','a stale report revision is rejected instead of overwriting the newer immutable revision');
+update app_private.report_access
+set revoked_at = statement_timestamp()
+where report_id = current_setting('app.test.report_id')::uuid
+  and account_id = '33333333-3333-4333-8333-333333333333'::uuid;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','33333333-3333-4333-8333-333333333333',true);
+select throws_ok(
+  $$ select api.append_report_revision(current_setting('app.test.report_id')::uuid,2,'Fictional administrator correction.','Fictional administrator reason.',repeat('4',64),repeat('5',64)) $$,
+  'Not authorized to revise this report',
+  'a same-facility administrator cannot revise an officer report without the future purpose-bound step-up workflow'
+);
+reset role;
+update app_private.report_access
+set revoked_at = null
+where report_id = current_setting('app.test.report_id')::uuid
+  and account_id = '33333333-3333-4333-8333-333333333333'::uuid;
+set local role authenticated;
+select set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true);
+select is((select api.append_report_revision(current_setting('app.test.report_id')::uuid,1,'Fictional stale narrative.','Fictional stale correction.',repeat('f',64),repeat('1',64))),0,'a stale report revision returns a bounded conflict without overwriting the newer immutable revision');
 
 reset role;
 select ok(

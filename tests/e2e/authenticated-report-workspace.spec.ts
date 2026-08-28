@@ -13,6 +13,7 @@ test.describe.configure({ mode: "serial" });
 
 let accounts: LocalQualificationAccounts;
 let incidentId: string;
+let candidateId: string;
 
 async function signIn(page: Page, credentials: LocalQualificationCredentials) {
   await page.goto("/login");
@@ -28,7 +29,10 @@ async function signOut(page: Page) {
   await page.waitForURL("**/login");
 }
 
-async function createFictionalIncident(): Promise<string> {
+async function createFictionalIncident(): Promise<{
+  incidentId: string;
+  candidateId: string;
+}> {
   const databaseUrl = process.env.SUPABASE_DB_URL;
   if (!databaseUrl)
     throw new Error("Missing local qualification database URL.");
@@ -151,8 +155,89 @@ async function createFictionalIncident(): Promise<string> {
           )
       `;
 
-      return incident.id;
+      const [candidate] = await transaction<ReadonlyArray<{ id: string }>>`
+        insert into app_private.report_draft_candidates (
+          incident_id,
+          source_incident_revision_id,
+          requested_by_account_id,
+          reporting_staff_member_id,
+          report_type,
+          source_fact_ids,
+          paragraphs,
+          provider_key
+        ) values (
+          ${incident.id}::uuid,
+          ${revision.id}::uuid,
+          ${officer.auth_user_id}::uuid,
+          ${officer.staff_member_id}::uuid,
+          'first_person',
+          ${[officerFactId]}::uuid[],
+          ${transaction.json([
+            {
+              text: "Fictional generated sentence for officer review.",
+              sourceFactIds: [officerFactId],
+            },
+          ])},
+          'fictional.local'
+        )
+        returning id
+      `;
+      if (!candidate)
+        throw new Error("Fictional report candidate was not created.");
+
+      return { incidentId: incident.id, candidateId: candidate.id };
     });
+  } finally {
+    await sql.end({ timeout: 5 });
+  }
+}
+
+async function appendFictionalCompetingRevision(
+  reportId: string,
+  narrative: string,
+): Promise<void> {
+  const databaseUrl = process.env.SUPABASE_DB_URL;
+  if (!databaseUrl)
+    throw new Error("Missing local qualification database URL.");
+  const sql = postgres(databaseUrl, {
+    max: 1,
+    prepare: false,
+    idle_timeout: 5,
+  });
+
+  try {
+    const [revision] = await sql<ReadonlyArray<{ revision_number: number }>>`
+      insert into app_private.report_revisions (
+        report_id,
+        revision_number,
+        editor_account_id,
+        source_incident_revision_id,
+        narrative,
+        reason,
+        schema_version,
+        provenance
+      )
+      select
+        report.id,
+        report.current_revision_number + 1,
+        report.reporting_account_id,
+        current_revision.source_incident_revision_id,
+        ${narrative},
+        'Fictional current correction.',
+        current_revision.schema_version,
+        jsonb_build_object(
+          'prior_revision_number',
+          report.current_revision_number
+        )
+      from app_private.reports as report
+      join app_private.report_revisions as current_revision
+        on current_revision.report_id = report.id
+        and current_revision.revision_number = report.current_revision_number
+      where report.id = ${reportId}::uuid
+      returning revision_number
+    `;
+    if (revision?.revision_number !== 3)
+      throw new Error("Fictional competing revision was not created.");
   } finally {
     await sql.end({ timeout: 5 });
   }
@@ -160,24 +245,37 @@ async function createFictionalIncident(): Promise<string> {
 
 test.beforeAll(async () => {
   accounts = await createLocalQualificationAccounts();
-  incidentId = await createFictionalIncident();
+  const qualification = await createFictionalIncident();
+  incidentId = qualification.incidentId;
+  candidateId = qualification.candidateId;
 });
 
 test("an officer and administrator can use the protected per-officer report workspace", async ({
   page,
 }) => {
+  test.setTimeout(60_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
-  page.on("console", (message) => {
-    if (message.type() === "error") browserErrors.push(message.text());
-  });
-  page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => {
-    const failure = request.failure()?.errorText ?? "unknown network failure";
-    if (!failure.includes("ERR_ABORTED")) {
-      failedRequests.push(`${request.url()}: ${failure}`);
-    }
-  });
+  let expectingRevisionConflict = false;
+  const trackBrowserFailures = (trackedPage: Page) => {
+    trackedPage.on("console", (message) => {
+      if (message.type() !== "error") return;
+      if (
+        expectingRevisionConflict &&
+        message.text().includes("409 (Conflict)")
+      )
+        return;
+      browserErrors.push(message.text());
+    });
+    trackedPage.on("pageerror", (error) => browserErrors.push(error.message));
+    trackedPage.on("requestfailed", (request) => {
+      const failure = request.failure()?.errorText ?? "unknown network failure";
+      if (!failure.includes("ERR_ABORTED")) {
+        failedRequests.push(`${request.url()}: ${failure}`);
+      }
+    });
+  };
+  trackBrowserFailures(page);
 
   await signIn(page, accounts.officer);
   await page.goto("/reports");
@@ -217,8 +315,143 @@ test("an officer and administrator can use the protected per-officer report work
     )
     .toBe(true);
 
+  const finalNarrative =
+    "Fictional officer-reviewed narrative created during local qualification.";
+  await page.goto(`/reports/drafts/${candidateId}`);
+  await expect(
+    page.getByRole("heading", { name: "Review every drafted statement." }),
+  ).toBeVisible();
+  await expect(
+    page
+      .getByRole("article")
+      .getByText("Fictional generated sentence for officer review."),
+  ).toBeVisible();
+  await page.getByLabel("Final narrative").fill(finalNarrative);
+  await page
+    .getByLabel(
+      "I reviewed this narrative and am submitting it as my own final report.",
+    )
+    .check();
+  await page.getByRole("button", { name: "Create final report" }).click();
+  await page.waitForURL(/\/reports\/[0-9a-f-]+$/);
+
+  const reportUrl = new URL(page.url());
+  const reportId = reportUrl.pathname.split("/").at(-1);
+  expect(reportId).toMatch(/^[0-9a-f-]{36}$/);
+  if (!reportId) throw new Error("Fictional report ID is missing.");
+  await expect(page.getByText("Revision 1 · first_person")).toBeVisible();
+  await expect(
+    page
+      .locator(
+        'article[aria-label="Final report narrative"] .draft-review-copy > p',
+      )
+      .filter({ hasText: finalNarrative }),
+  ).toBeVisible();
+
+  const firstCorrection =
+    "Fictional corrected narrative preserved as revision two.";
+  await page.getByLabel("Corrected narrative").fill(firstCorrection);
+  await page
+    .getByLabel("Correction reason")
+    .fill("Fictional wording correction.");
+  await page.getByRole("button", { name: "Create corrected revision" }).click();
+  await expect(page.getByText("Revision 2 · first_person")).toBeVisible();
+  await expect(
+    page
+      .locator(
+        'article[aria-label="Final report narrative"] .draft-review-copy > p',
+      )
+      .filter({ hasText: firstCorrection }),
+  ).toBeVisible();
+
+  const currentCorrection =
+    "Fictional current narrative preserved as revision three.";
+  await appendFictionalCompetingRevision(reportId, currentCorrection);
+
+  const staleCorrection =
+    "Fictional stale local work that must remain visible after conflict.";
+  await page.getByLabel("Corrected narrative").fill(staleCorrection);
+  await page
+    .getByLabel("Correction reason")
+    .fill("Fictional stale correction.");
+  const staleRevisionResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith(`/reports/${reportId}/revisions`),
+  );
+  expectingRevisionConflict = true;
+  await page.getByRole("button", { name: "Create corrected revision" }).click();
+  expect((await staleRevisionResponse).status()).toBe(409);
+  await expect(
+    page.getByText(/A newer revision was saved.*still here/),
+  ).toBeVisible();
+  await expect(page.getByLabel("Corrected narrative")).toHaveValue(
+    staleCorrection,
+  );
+  expectingRevisionConflict = false;
+  await page.reload();
+  await expect(page.getByText("Revision 3 · first_person")).toBeVisible();
+  await expect(
+    page
+      .locator(
+        'article[aria-label="Final report narrative"] .draft-review-copy > p',
+      )
+      .filter({ hasText: currentCorrection }),
+  ).toBeVisible();
+
+  const revisionOne = page
+    .getByRole("listitem")
+    .filter({ hasText: "Revision 1" });
+  await revisionOne
+    .getByRole("button", { name: "Restore this version" })
+    .click();
+  await page
+    .getByLabel("Restore reason")
+    .fill("Fictional recovery of the officer-reviewed version.");
+  await page.getByRole("button", { name: "Create restored revision" }).click();
+  await expect(page.getByText("Revision 4 · first_person")).toBeVisible();
+  await expect(
+    page
+      .locator(
+        'article[aria-label="Final report narrative"] .draft-review-copy > p',
+      )
+      .filter({ hasText: finalNarrative }),
+  ).toBeVisible();
+  await expect(page.getByText("Restored from revision 1.")).toBeVisible();
+
+  await page.evaluate(() => {
+    window.print = () => {
+      document.documentElement.dataset.reportPrintInvoked = "true";
+    };
+  });
+  await page.getByRole("button", { name: "Print current report" }).click();
+  await expect(
+    page.getByText(/Print request recorded.*Opening the browser print dialog/),
+  ).toBeVisible();
+  await expect
+    .poll(() => page.locator("html").getAttribute("data-report-print-invoked"))
+    .toBe("true");
+
   await signOut(page);
   await signIn(page, accounts.administrator);
+  await page.goto("/reports");
+  const completedReportRow = page
+    .getByRole("row")
+    .filter({ hasText: "F-WORKSPACE-001" })
+    .filter({ hasText: "First-person report" });
+  await expect(completedReportRow).toBeVisible();
+  await completedReportRow
+    .getByRole("link", { name: "First-person report" })
+    .click();
+  await expect(page).toHaveURL(`/reports/${reportId}`);
+  await expect(
+    page
+      .locator(
+        'article[aria-label="Final report narrative"] .draft-review-copy > p',
+      )
+      .filter({ hasText: finalNarrative }),
+  ).toBeVisible();
+
   await page.goto(`/incidents/${incidentId}`);
   await expect(
     page.getByRole("heading", {

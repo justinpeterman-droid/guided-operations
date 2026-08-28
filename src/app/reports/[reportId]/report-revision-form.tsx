@@ -66,6 +66,8 @@ export function ReportRevisionForm({
         setState("failed");
         return;
       }
+      setState("idle");
+      setReason("");
       router.refresh();
     } catch {
       setState("failed");

@@ -52,6 +52,10 @@ describe("ReportRevisionForm", () => {
       }),
     );
     expect(refresh).toHaveBeenCalledOnce();
+    expect(
+      screen.getByRole("button", { name: "Create corrected revision" }),
+    ).toBeDisabled();
+    expect(screen.getByLabelText("Correction reason")).toHaveValue("");
   });
 
   it("keeps the correction visible when a newer revision already exists", async () => {

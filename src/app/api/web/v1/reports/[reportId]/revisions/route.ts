@@ -32,7 +32,13 @@ export async function POST(
     );
     if (!v.ok) return err(v.status, v.code, id);
     const x = await appendReportRevisionForCurrentSession(
-      { reportId, ...v },
+      {
+        reportId,
+        baseRevisionNumber: v.baseRevisionNumber,
+        narrative: v.narrative,
+        reason: v.reason,
+        idempotencyKey: v.idempotencyKey,
+      },
       c,
       i.INCIDENT_IDEMPOTENCY_HMAC_KEY,
     );

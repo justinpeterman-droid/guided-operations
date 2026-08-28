@@ -38,6 +38,11 @@ const isRevisionConflict = (error: unknown) =>
   error !== null &&
   "code" in error &&
   error.code === "40001";
+const isAuthorizationDenied = (error: unknown) =>
+  typeof error === "object" &&
+  error !== null &&
+  "code" in error &&
+  error.code === "42501";
 export async function appendReportRevisionForCurrentSession(
   commandCandidate: unknown,
   client: AppendReportRevisionClient,
@@ -70,8 +75,10 @@ export async function appendReportRevisionForCurrentSession(
         "report.revise.request",
       ),
     });
-    if (!r.error && typeof r.data === "number")
+    if (!r.error && r.data === 0) return { kind: "conflict" as const };
+    if (!r.error && typeof r.data === "number" && r.data > 0)
       return { kind: "revised" as const, revisionNumber: r.data };
+    if (isAuthorizationDenied(r.error)) return { kind: "denied" as const };
     return isRevisionConflict(r.error)
       ? { kind: "conflict" as const }
       : { kind: "unavailable" as const };

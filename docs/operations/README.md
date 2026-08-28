@@ -8,10 +8,10 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 - Application hosting configured: **authoritative Git-connected Vercel project
   and protected Previews verified; current signed-in candidate qualification
   incomplete**
-- Supabase projects configured: **fictional Development project healthy with the
-  exact 62-migration repository head and one fictional administrator pending
-  personal passcode change; no operational data and no isolated Production
-  project**
+- Supabase projects configured: **fictional Development project healthy at the
+  previously verified 62-migration hosted head with one fictional administrator
+  pending personal passcode change; newer repository migrations remain local/CI
+  candidates, with no operational data and no isolated Production project**
 - CI/release automation configured: **GitHub web, database, and fictional
   recovery workflows pass; production promotion remains manual and gated**
 - Backups and restore exercise: **local fictional database-plus-Storage

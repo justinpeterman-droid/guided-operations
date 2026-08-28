@@ -68,8 +68,9 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
   expect(authCookies.every((cookie) => cookie.sameSite === "Lax")).toBe(true);
   expect(authCookies.every((cookie) => !cookie.secure)).toBe(true);
   const encryptedSession = authCookies.map((cookie) => cookie.value).join("");
-  expect(encryptedSession).toMatch(/^v1\./);
-  expect(encryptedSession).not.toContain("eyJ");
+  expect(encryptedSession).toMatch(
+    /^v1\.[A-Za-z0-9_-]{16}\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]{22}$/,
+  );
   expect(encryptedSession).not.toContain("access_token");
   expect(encryptedSession).not.toContain("refresh_token");
   expect(encryptedSession).not.toContain("@");

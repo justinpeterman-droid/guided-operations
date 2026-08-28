@@ -72,20 +72,26 @@ The hosted details and limitations are recorded in
 
 ## Current launch blockers
 
-1. The fictional Development Supabase project matches the repository's
-   62-migration head and has one active fictional administrator, but the owner
-   must complete its temporary-passcode change before the protected workflow can
-   create a fictional officer. A separate isolated live Supabase project is
-   still required before release.
+1. The fictional Development Supabase project remains at the previously verified
+   62-migration head and has one active fictional administrator. The repository
+   now has five additional locally qualified forward migrations, through
+   `20260827134000`, that have not been applied to the hosted project. The owner
+   must complete the fictional administrator's temporary-passcode change before
+   the protected workflow can create a fictional officer. A separate isolated
+   live Supabase project is still required before release.
 2. Authentication and authorization have local fictional proof for encrypted
    alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
    Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
    still required for recovery/email configuration, expiry, timing bounds,
    revoked-session behavior, direct RLS/API/Storage negatives, and full
    officer/admin browser flows.
-3. The officer product slice needs protected-browser completion and owner
-   acceptance, including the full report workflow, conflict/retry behavior,
-   supported print/export, Forms Library, and Count Sheet user experience.
+3. The core report review path is locally browser-qualified with fictional data:
+   officer edit/finalize/correction, bounded stale-conflict recovery,
+   append-only history/restore, audited print, and same-facility administrator
+   visibility. The remaining officer product work is the complete incident
+   creation, extraction, confirmed-fact/gap, and draft-generation flow;
+   supported export; Forms Library and Count Sheet acceptance; hosted proof; and
+   owner acceptance.
 4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
 5. The approved corpus has not passed retrieval, citation, refusal,

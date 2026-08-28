@@ -251,7 +251,9 @@ idempotency key. The caller must provide the revision number they reviewed; the
 database locks the report and rejects a stale base revision with
 `409 revision_conflict`. A successful request appends a new immutable revision
 and returns only its revision number. It never updates, removes, or exposes an
-earlier report revision.
+earlier report revision. Facility-wide administrator read access does not grant
+correction authority: until the purpose-bound administrator report-edit step-up
+workflow exists, only an active report collaborator may append a correction.
 
 The server-only `api.list_report_revisions` RPC returns a revision-history
 timeline—revision number, correction reason, timestamp, current marker, and

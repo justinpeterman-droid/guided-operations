@@ -81,6 +81,17 @@ describe("POST /api/web/v1/reports/[reportId]/revisions", () => {
       data: { revisionNumber: 2 },
       meta: { api_version: "web-v1", request_id: expect.any(String) },
     });
+    expect(appendReportRevisionForCurrentSession).toHaveBeenCalledWith(
+      {
+        reportId,
+        baseRevisionNumber: 1,
+        narrative: "Fictional corrected narrative.",
+        reason: "Fictional correction.",
+        idempotencyKey: "fictional-revision-retry-key-1234",
+      },
+      client,
+      "i".repeat(32),
+    );
   });
 
   it("reports a stale revision instead of masking it as an outage", async () => {
@@ -108,6 +119,34 @@ describe("POST /api/web/v1/reports/[reportId]/revisions", () => {
     expect(response.status).toBe(409);
     await expect(response.json()).resolves.toMatchObject({
       error: { code: "revision_conflict" },
+    });
+  });
+
+  it("returns a bounded denial when database report access is absent", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue({
+      allowed: true,
+      account: {},
+      sessionId: "33333333-3333-4333-8333-333333333333",
+    } as never);
+    vi.mocked(validateReportRevisionRequest).mockResolvedValue({
+      ok: true,
+      baseRevisionNumber: 2,
+      narrative: "Fictional denied correction.",
+      reason: "Fictional denied reason.",
+      idempotencyKey: "fictional-denied-retry-key-1234",
+    });
+    vi.mocked(appendReportRevisionForCurrentSession).mockResolvedValue({
+      kind: "denied",
+    });
+
+    const response = await POST(new Request("https://example.test"), {
+      params: Promise.resolve({ reportId }),
+    });
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toMatchObject({
+      error: { code: "request_not_allowed" },
     });
   });
 });
