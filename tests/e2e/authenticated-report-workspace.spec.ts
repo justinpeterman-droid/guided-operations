@@ -400,9 +400,9 @@ test("an officer and administrator can use the protected per-officer report work
       .filter({ hasText: currentCorrection }),
   ).toBeVisible();
 
-  const revisionOne = page
-    .getByRole("listitem")
-    .filter({ hasText: "Revision 1" });
+  const revisionOne = page.getByRole("listitem").filter({
+    has: page.getByText("Revision 1", { exact: true }),
+  });
   await revisionOne
     .getByRole("button", { name: "Restore this version" })
     .click();
@@ -441,9 +441,9 @@ test("an officer and administrator can use the protected per-officer report work
   expect(currentDownloadBytes.byteLength).toBeGreaterThan(1_000);
   await expect(page.getByText("Downloaded report revision 4.")).toBeVisible();
 
-  const historicalRevisionOne = page
-    .getByRole("listitem")
-    .filter({ hasText: "Revision 1" });
+  const historicalRevisionOne = page.getByRole("listitem").filter({
+    has: page.getByText("Revision 1", { exact: true }),
+  });
   const [historicalDownload, historicalDownloadResponse] = await Promise.all([
     page.waitForEvent("download"),
     page.waitForResponse(

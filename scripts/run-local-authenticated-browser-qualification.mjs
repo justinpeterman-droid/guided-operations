@@ -138,7 +138,12 @@ if (target) {
     resetLocalDatabase();
     const result = command(
       playwrightCli,
-      ["test", "tests/e2e/authenticated-count-sheet.spec.ts", "--workers=1"],
+      [
+        "test",
+        "tests/e2e/authenticated-count-sheet.spec.ts",
+        "--workers=1",
+        "--retries=0",
+      ],
       { env: qualificationEnvironment },
     );
     if (result.status !== 0) {
@@ -151,6 +156,7 @@ if (target) {
         "test",
         "tests/e2e/authenticated-report-workspace.spec.ts",
         "--workers=1",
+        "--retries=0",
       ],
       { env: qualificationEnvironment },
     );
@@ -166,6 +172,7 @@ if (target) {
         "test",
         "tests/e2e/authenticated-incident-creation.spec.ts",
         "--workers=1",
+        "--retries=0",
       ],
       { env: qualificationEnvironment },
     );
@@ -177,7 +184,12 @@ if (target) {
     resetLocalDatabase();
     const adminResult = command(
       playwrightCli,
-      ["test", "tests/e2e/authenticated-admin.spec.ts", "--workers=1"],
+      [
+        "test",
+        "tests/e2e/authenticated-admin.spec.ts",
+        "--workers=1",
+        "--retries=0",
+      ],
       { env: qualificationEnvironment },
     );
     testStatus = adminResult.status ?? 1;
