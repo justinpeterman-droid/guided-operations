@@ -69,4 +69,16 @@ describe("requestAdminStepUp", () => {
     ).resolves.toEqual({ status: "denied" });
     expect(d.verifier.verify).not.toHaveBeenCalled();
   });
+  it("rejects a passcode outside the accepted maximum before verification", async () => {
+    const d = deps();
+    await expect(
+      requestAdminStepUp(
+        client(),
+        "account.create",
+        { passcode: "A".repeat(65) },
+        d,
+      ),
+    ).resolves.toEqual({ status: "invalid_input" });
+    expect(d.verifier.verify).not.toHaveBeenCalled();
+  });
 });

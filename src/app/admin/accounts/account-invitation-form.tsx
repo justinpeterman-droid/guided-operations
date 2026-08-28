@@ -188,6 +188,7 @@ export function AccountInvitationForm() {
         <label htmlFor="new-employee-number">Employee number</label>
         <input
           id="new-employee-number"
+          maxLength={32}
           name="employeeNumber"
           required
           type="text"

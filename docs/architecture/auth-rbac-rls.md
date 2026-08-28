@@ -1,7 +1,9 @@
 # Authentication, RBAC, and RLS
 
-- **Status:** Target design with one unresolved implementation decision
-- **Critical decision:** ADR-0003 must be accepted before production login
+- **Status:** Accepted architecture with release qualification still open
+- **Accepted decision:** ADR-0003 uses the private server-only Supabase Auth
+  alias bridge. Production login remains gated on hosted security evidence,
+  administrator assurance, and owner acceptance of the exact release candidate.
 
 ## Required user experience
 
@@ -14,12 +16,13 @@ There is no email/phone entry, shared facility code, self-signup, or public
 recovery flow.
 
 “PIN-like” describes a fast, familiar interaction. It does not authorize a weak
-four-digit credential. The proposed floor is at least eight randomly resistant
-characters with an approved alphabet, common/sequence/employee-number checks,
-rate limiting, and system-generated temporary credentials. The final alphabet,
-length, admin MFA requirement, and lifecycle require owner/security approval.
+four-digit credential. Personal passcodes contain 8–64 printable non-space ASCII
+characters and retain common/sequence/employee-number checks, rate limiting, and
+system-generated temporary credentials. Employee numbers use the bounded
+NFKC/trim/uppercase contract in ADR-0003. Administrator MFA or an approved
+equivalent, hosted lifecycle proof, and owner usability acceptance remain open.
 
-## Why the implementation is proposed
+## Why the accepted implementation uses an alias bridge
 
 Hosted Supabase password sign-in natively accepts email+password or
 phone+password, not an arbitrary employee-number username. Pretending otherwise

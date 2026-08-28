@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import {
   GENERIC_SIGN_IN_FAILURE,
+  isAllowedEmployeeNumber,
+  MAXIMUM_EMPLOYEE_NUMBER_LENGTH,
+  MAXIMUM_PASSCODE_LENGTH,
   MINIMUM_PASSCODE_LENGTH,
   normalizeEmployeeNumber,
   validatePasscode,
@@ -14,6 +17,27 @@ describe("normalizeEmployeeNumber", () => {
 
   it("does not silently remove identifier punctuation", () => {
     expect(normalizeEmployeeNumber("ab-42/7")).toBe("AB-42/7");
+  });
+
+  it("accepts the bounded initial-facility identifier alphabet", () => {
+    for (const value of ["141432", "EMP-42", "AB_42/7", "A.042"]) {
+      expect(isAllowedEmployeeNumber(value)).toBe(true);
+    }
+    expect(MAXIMUM_EMPLOYEE_NUMBER_LENGTH).toBe(32);
+  });
+
+  it("rejects ambiguous, unbounded, or control-containing identifiers", () => {
+    for (const value of [
+      "AB",
+      "EMP 42",
+      "-EMP42",
+      "EMP42-",
+      "EMP\\42",
+      "EMP\n42",
+      "A".repeat(33),
+    ]) {
+      expect(isAllowedEmployeeNumber(value)).toBe(false);
+    }
   });
 });
 
@@ -57,5 +81,22 @@ describe("validatePasscode", () => {
     expect(GENERIC_SIGN_IN_FAILURE).toBe(
       "Unable to sign in with those credentials.",
     );
+  });
+
+  it("requires 8 to 64 printable non-space ASCII characters", () => {
+    expect(MAXIMUM_PASSCODE_LENGTH).toBe(64);
+    expect(validatePasscode("A".repeat(65), employeeNumber)).toEqual({
+      valid: false,
+      reason: "too_long",
+    });
+    for (const passcode of ["Cedar 7!9", "Cedar7!\n", "Cedar7!é"]) {
+      expect(validatePasscode(passcode, employeeNumber)).toEqual({
+        valid: false,
+        reason: "unsupported_characters",
+      });
+    }
+    expect(validatePasscode("Maple_Ridge-47!", employeeNumber)).toEqual({
+      valid: true,
+    });
   });
 });

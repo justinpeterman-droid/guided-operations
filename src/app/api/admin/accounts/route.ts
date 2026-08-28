@@ -1,5 +1,9 @@
 import { z } from "zod";
 
+import {
+  isAllowedEmployeeNumber,
+  normalizeEmployeeNumber,
+} from "@/features/auth/credentials";
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,7 +22,10 @@ export const runtime = "nodejs";
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
 const requestSchema = z
   .object({
-    employeeNumber: z.string().min(1).max(64),
+    employeeNumber: z
+      .string()
+      .transform(normalizeEmployeeNumber)
+      .refine(isAllowedEmployeeNumber),
     displayName: z.string().min(1).max(120),
     role: z.enum(["officer", "administrator"]),
     shiftCode: z.enum(["A", "B", "C", "D", "U", "F"]),
@@ -28,7 +35,7 @@ const requestSchema = z
   .strict();
 
 function employeeNumberHint(employeeNumber: string): string {
-  const normalized = employeeNumber.normalize("NFKC").trim();
+  const normalized = normalizeEmployeeNumber(employeeNumber);
   return normalized.slice(-4) || "—";
 }
 

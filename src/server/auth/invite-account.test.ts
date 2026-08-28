@@ -52,6 +52,18 @@ describe("inviteAccount", () => {
     expect(dependencies.store.stage).not.toHaveBeenCalled();
   });
 
+  it("rejects an ambiguous employee number before provider account creation", async () => {
+    const dependencies = setup();
+
+    await expect(
+      inviteAccount({ ...input, employeeNumber: "fixture 02" }, dependencies),
+    ).resolves.toEqual({ status: "failed" });
+    expect(
+      dependencies.authUserProvisioner.createPasswordUser,
+    ).not.toHaveBeenCalled();
+    expect(dependencies.store.stage).not.toHaveBeenCalled();
+  });
+
   it("delivers a generated passcode once and activates only afterwards", async () => {
     const dependencies = setup();
 

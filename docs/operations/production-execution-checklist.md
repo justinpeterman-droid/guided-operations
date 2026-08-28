@@ -201,7 +201,11 @@ Pause and report a blocker instead of guessing when work requires:
       foundation.
 - [ ] Resolve and test administrator MFA or an explicitly approved equivalent
       for the real-data Production target.
-- [ ] Define employee-number normalization and allowed passcode alphabet.
+- [x] Define employee-number normalization and allowed passcode alphabet. The
+      initial single-facility contract preserves leading zeroes, bounds the
+      approved identifier characters, and requires 8–64 printable non-space
+      ASCII passcode characters. Owner usability acceptance remains open before
+      a real account is created (`docs/adr/0003-employee-number-pin-auth.md`).
 - [x] Add a tested, provider-neutral minimum-passcode/common-pattern/employee-
       equality policy primitive without prematurely deciding the final
       identifier format or creating hosted accounts (`ab66239`).
@@ -219,7 +223,9 @@ Pause and report a blocker instead of guessing when work requires:
       token theft, Auth-admin key misuse, bootstrap, reset, role changes, and
       last-admin safety. ADR-0003 records the threats, controls, residual hosted
       checks, and the owner-approved implementation choice.
-- [ ] Accept ADR-0003 or replace it without weakening the credential boundary.
+- [x] Accept ADR-0003's private server-only alias bridge without weakening the
+      credential boundary. Hosted alias/recovery, lifecycle, MFA, and usability
+      qualification remain separate release gates.
 - [x] Add forward identity/account/rate-limit/audit migrations. The repository
       contains the default-deny account foundation, opaque attempt tracking,
       bootstrap, step-up, lifecycle, session-revocation, and redacted-audit
@@ -308,7 +314,9 @@ Pause and report a blocker instead of guessing when work requires:
 
 ### Phase 2 exit
 
-- [ ] ADR-0003 is Accepted with spike and threat-model evidence.
+- [x] ADR-0003 is Accepted with spike and threat-model evidence. This records
+      the architecture decision only; it does not close the hosted Auth, MFA, or
+      remaining Phase 2 exit gates.
 - [ ] Auth, session, lifecycle, server authorization, RLS, Storage, and
       bootstrap positive/negative evidence is complete.
 - [ ] Protected Preview supports fictional officer/admin identities without

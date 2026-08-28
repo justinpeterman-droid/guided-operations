@@ -74,6 +74,7 @@ export function PersonalPasscodeChangeForm() {
       <input
         autoComplete="username"
         id="personal-employee-number"
+        maxLength={32}
         name="employeeNumber"
         required
         type="text"
@@ -82,7 +83,7 @@ export function PersonalPasscodeChangeForm() {
       <input
         autoComplete="current-password"
         id="current-personal-passcode"
-        maxLength={256}
+        maxLength={64}
         name="currentPasscode"
         required
         type="password"
@@ -91,7 +92,7 @@ export function PersonalPasscodeChangeForm() {
       <input
         autoComplete="new-password"
         id="new-personal-passcode"
-        maxLength={256}
+        maxLength={64}
         minLength={8}
         name="newPasscode"
         required
@@ -101,7 +102,7 @@ export function PersonalPasscodeChangeForm() {
       <input
         autoComplete="new-password"
         id="confirm-personal-passcode"
-        maxLength={256}
+        maxLength={64}
         minLength={8}
         name="confirmPasscode"
         required

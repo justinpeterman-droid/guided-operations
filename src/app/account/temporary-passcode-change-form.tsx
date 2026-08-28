@@ -74,13 +74,14 @@ export function TemporaryPasscodeChangeForm({
       <h2>Choose your personal passcode</h2>
       <p>
         Your temporary passcode must be replaced before you can use this
-        workspace. Use at least eight characters. Do not reuse your employee
-        number or a simple common pattern.
+        workspace. Use 8–64 letters, numbers, or symbols with no spaces. Do not
+        reuse your employee number or a simple common pattern.
       </p>
       <label htmlFor="employee-number">Confirm employee number</label>
       <input
         autoComplete="username"
         id="employee-number"
+        maxLength={32}
         name="employeeNumber"
         required
         type="text"
@@ -89,7 +90,7 @@ export function TemporaryPasscodeChangeForm({
       <input
         autoComplete="new-password"
         id="new-passcode"
-        maxLength={256}
+        maxLength={64}
         minLength={8}
         name="passcode"
         required

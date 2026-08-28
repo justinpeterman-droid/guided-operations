@@ -47,8 +47,12 @@ resource.
 ## Authentication implementation constraints
 
 - **O-012 passcode policy:** at least eight characters for individual officer
-  and administrator passcodes. The implementation still rejects common patterns
-  and employee-number equality.
+  and administrator passcodes. The implementation contract now bounds personal
+  passcodes to 8–64 printable non-space ASCII characters and still rejects
+  common patterns and employee-number equality. Employee numbers use bounded
+  NFKC/trim/uppercase normalization while preserving leading zeroes and approved
+  separators. The owner must accept the final wording/usability before the first
+  real account is created.
 - **O-013 admin assurance:** the earlier passcode-only exception does not cover
   the real-data Production target. Administrator MFA or an explicitly approved,
   tested equivalent is an open release gate.

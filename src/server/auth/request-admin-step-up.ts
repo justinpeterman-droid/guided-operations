@@ -3,6 +3,8 @@ import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
 
+import { MAXIMUM_PASSCODE_LENGTH } from "@/features/auth/credentials";
+
 import { issueAdminStepUp, type AdminStepUpPurpose } from "./admin-step-up";
 import {
   authorizeCurrentSession,
@@ -10,7 +12,9 @@ import {
 } from "./current-session";
 import type { AdminStepUpStore } from "./private-admin-step-up-store";
 
-const inputSchema = z.object({ passcode: z.string().min(1).max(256) }).strict();
+const inputSchema = z
+  .object({ passcode: z.string().min(1).max(MAXIMUM_PASSCODE_LENGTH) })
+  .strict();
 
 export type AdministratorPasscodeVerifier = Readonly<{
   verify(authUserId: string, passcode: string): Promise<boolean>;

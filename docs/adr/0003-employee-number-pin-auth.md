@@ -1,6 +1,6 @@
 # ADR-0003: Employee Number Plus PIN-Like Authentication
 
-- **Status:** Accepted for implementation; security verification in progress
+- **Status:** Accepted; release qualification in progress
 - **Date:** 2026-08-25
 - **Deciders:** Product owner, security owner, and technical lead
 
@@ -16,10 +16,10 @@ complete.
 The original foundation stored no real operational records, but authentication
 metadata still deserved production-grade protection. The owner later authorized
 real operational and personal data only in isolated Production after release
-gates; that change raises the acceptance bar and does not make this Proposed ADR
-accepted.
+gates; that change raises the acceptance bar and does not by itself qualify the
+accepted decision for release.
 
-## Proposed decision
+## Decision
 
 Prefer a server-only Auth alias bridge, subject to a hosted Supabase spike and
 security approval:
@@ -34,8 +34,9 @@ security approval:
 - Keep application role, status, forced-change state, and auth_version in
   `app_private.user_accounts` and recheck them server-side.
 - Disable public signup and generic email/phone recovery.
-- Use a password-class PIN-like secret with a proposed minimum of eight
-  characters; reject employee-number equality/common sequences.
+- Use a password-class PIN-like secret containing 8–64 printable ASCII
+  characters with no whitespace; reject employee-number equality and common or
+  simple sequences.
 - Apply account/device/network/global limits and generic errors.
 - Use protected Auth admin operations for account creation/reset only after
   active-admin, CSRF, idempotency, and purpose-bound step-up checks.
@@ -131,8 +132,15 @@ credential is not an acceptable simplification.
 
 ## Security acceptance criteria
 
-- At least eight-character approved secret policy; final alphabet/length signed
-  off after usability testing.
+- Passcodes contain 8–64 printable ASCII characters (`!` through `~`) with no
+  whitespace. They may use letters, numbers, and symbols; common/repeated/simple
+  sequences and employee-number equality remain rejected. The owner must still
+  accept the wording and usability before the first real account is created.
+- Employee numbers are NFKC-normalized, trimmed, and uppercased; leading zeroes
+  are preserved. The initial single-facility identifier is 3–32 characters,
+  begins and ends with an ASCII letter or digit, and may contain only ASCII
+  letters, digits, `.`, `_`, `/`, or `-` between them. No punctuation is
+  silently removed.
 - Internal alias never appears in UI, API, logs, analytics, audit details,
   browser storage, emails, or recoverable public endpoints.
 - Unknown and known employee numbers have generic responses and bounded timing.
@@ -168,6 +176,17 @@ credential is not an acceptable simplification.
 - The owner approved Option A, the private server-only Supabase alias bridge, on
   2026-08-25. This authorizes implementation only; it does not waive the
   security acceptance criteria or authorize real operational data.
+
+## Credential input contract — 2026-08-28
+
+The implementation now applies the bounded employee-number and passcode rules
+above at sign-in, bootstrap, account invitation, personal passcode change, and
+administrator step-up boundaries. Generated temporary passcodes already use a
+20-character subset of the accepted alphabet. Unit and route tests reject
+ambiguous employee numbers, whitespace/non-ASCII passcodes, and overlong
+credentials before provider or database work. This closes the undefined-input
+contract, but owner usability acceptance, administrator MFA, and hosted Auth
+qualification remain release gates.
 
 ## Hosted alias-spike evidence — 2026-08-25
 
@@ -328,18 +347,22 @@ threat model by themselves.
 
 ## Action items
 
-1. [ ] Decide final secret length, alphabet, normalization, and admin MFA
-       requirement.
-2. [x] Spike random internal aliases on a disposable hosted Supabase project.
-3. [ ] Complete hosted email/recovery/alias non-exposure proof and document the
+1. [x] Define the bounded employee-number normalization and 8–64 printable
+       non-space ASCII passcode contract. Owner usability acceptance remains a
+       release gate before a real account is created.
+2. [ ] Resolve and test administrator MFA or an explicitly approved equivalent
+       for the real-data Production target.
+3. [x] Spike random internal aliases on a disposable hosted Supabase project.
+4. [ ] Complete hosted email/recovery/alias non-exposure proof and document the
        hosted account lifecycle. Local cookie/browser non-exposure is proven.
-4. [ ] Complete hosted expiry and revocation qualification. The encrypted
+5. [ ] Complete hosted expiry and revocation qualification. The encrypted
        server-only cookie, local refresh rotation, local sign-out, and protected
        fictional vertical slice are implemented and passing.
-5. [x] Threat-model enumeration, lockout denial, Auth admin secret, and
+6. [x] Threat-model enumeration, lockout denial, Auth admin secret, and
        bootstrap requirements are recorded above. Implement and test each listed
        control before acceptance.
-6. [ ] Obtain product/security acceptance or record Option B as a new ADR.
+7. [x] The product owner accepted Option A for implementation on 2026-08-25.
+       Security release acceptance remains contingent on every open gate above.
 
 ## References
 

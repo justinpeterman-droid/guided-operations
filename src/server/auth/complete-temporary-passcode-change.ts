@@ -3,6 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import {
+  isAllowedEmployeeNumber,
+  MAXIMUM_PASSCODE_LENGTH,
   normalizeEmployeeNumber,
   validatePasscode,
 } from "@/features/auth/credentials";
@@ -12,8 +14,11 @@ import type { TemporaryPasscodeChangeStore } from "./private-passcode-change-sto
 
 const inputSchema = z
   .object({
-    employeeNumber: z.string().min(1).max(128),
-    passcode: z.string().min(1).max(256),
+    employeeNumber: z
+      .string()
+      .transform(normalizeEmployeeNumber)
+      .refine(isAllowedEmployeeNumber),
+    passcode: z.string().min(1).max(MAXIMUM_PASSCODE_LENGTH),
   })
   .strict();
 
@@ -52,9 +57,7 @@ export async function completeTemporaryPasscodeChange(
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success) return { status: "invalid_input" };
 
-  const normalizedEmployeeNumber = normalizeEmployeeNumber(
-    parsed.data.employeeNumber,
-  );
+  const normalizedEmployeeNumber = parsed.data.employeeNumber;
   if (!validatePasscode(parsed.data.passcode, normalizedEmployeeNumber).valid) {
     return { status: "invalid_input" };
   }

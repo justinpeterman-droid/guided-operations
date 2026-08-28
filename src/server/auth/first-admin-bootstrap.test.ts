@@ -27,6 +27,25 @@ function setup() {
 }
 
 describe("bootstrapFirstAdministrator", () => {
+  it("rejects an ambiguous employee number before provider account creation", async () => {
+    const dependencies = setup();
+
+    await expect(
+      bootstrapFirstAdministrator(
+        {
+          employeeNumber: "fixture 01",
+          employeeNumberHint: "01",
+          displayName: "Fictional Administrator",
+        },
+        dependencies,
+      ),
+    ).resolves.toEqual({ status: "failed" });
+    expect(
+      dependencies.authUserProvisioner.createPasswordUser,
+    ).not.toHaveBeenCalled();
+    expect(dependencies.store.stage).not.toHaveBeenCalled();
+  });
+
   it("delivers a generated credential without returning it and activates only after delivery", async () => {
     const dependencies = setup();
 

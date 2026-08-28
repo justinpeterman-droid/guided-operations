@@ -3,6 +3,8 @@ import "server-only";
 import { z } from "zod";
 
 import {
+  isAllowedEmployeeNumber,
+  MAXIMUM_PASSCODE_LENGTH,
   normalizeEmployeeNumber,
   validatePasscode,
 } from "@/features/auth/credentials";
@@ -12,9 +14,12 @@ import type { PersonalPasscodeChangeStore } from "./personal-passcode-change-sto
 
 const inputSchema = z
   .object({
-    employeeNumber: z.string().min(1).max(128),
-    currentPasscode: z.string().min(1).max(256),
-    newPasscode: z.string().min(1).max(256),
+    employeeNumber: z
+      .string()
+      .transform(normalizeEmployeeNumber)
+      .refine(isAllowedEmployeeNumber),
+    currentPasscode: z.string().min(1).max(MAXIMUM_PASSCODE_LENGTH),
+    newPasscode: z.string().min(1).max(MAXIMUM_PASSCODE_LENGTH),
   })
   .strict();
 
@@ -48,9 +53,7 @@ export async function changePersonalPasscode(
 ): Promise<"changed" | "invalid_input" | "failed"> {
   const parsed = inputSchema.safeParse(input);
   if (!parsed.success) return "invalid_input";
-  const normalizedEmployeeNumber = normalizeEmployeeNumber(
-    parsed.data.employeeNumber,
-  );
+  const normalizedEmployeeNumber = parsed.data.employeeNumber;
   if (
     parsed.data.currentPasscode === parsed.data.newPasscode ||
     !validatePasscode(parsed.data.newPasscode, normalizedEmployeeNumber).valid

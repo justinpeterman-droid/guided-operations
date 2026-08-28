@@ -66,6 +66,14 @@ describe("handleSignInEndpoint", () => {
         authenticate,
       ),
     ).resolves.toMatchObject({ response: expect.any(Response) });
+    await expect(
+      handleSignInEndpoint(
+        request({ employeeNumber: "EMP 42", passcode: "Cedar 7!9" }),
+        origin,
+        subjects,
+        authenticate,
+      ),
+    ).resolves.toMatchObject({ response: expect.any(Response) });
     expect(authenticate).not.toHaveBeenCalled();
   });
 

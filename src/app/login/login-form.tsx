@@ -55,7 +55,7 @@ export function LoginForm() {
         autoComplete="username"
         disabled={submitting}
         id="employee-number"
-        maxLength={80}
+        maxLength={32}
         name="employeeNumber"
         required
       />
@@ -65,7 +65,7 @@ export function LoginForm() {
         autoComplete="current-password"
         disabled={submitting}
         id="passcode"
-        maxLength={256}
+        maxLength={64}
         name="passcode"
         required
         type="password"

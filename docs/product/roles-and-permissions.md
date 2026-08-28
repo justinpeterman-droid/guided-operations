@@ -164,7 +164,9 @@ not an acceptable control.
 
 ## Decisions still required before implementation acceptance
 
-- Exact employee-number normalization and display rules.
+- Owner usability acceptance of the exact employee-number display and passcode
+  wording before any real account is created; the bounded technical contract is
+  defined in ADR-0003.
 - PIN length, retry, lockout/backoff, and reset expiry policy.
 - Officer incident-access rule after handoff, reassignment, or shift change.
 - Whether administrators require step-up on every admin entry or only sensitive

@@ -2,7 +2,13 @@ import "server-only";
 
 import { z } from "zod";
 
-import { GENERIC_SIGN_IN_FAILURE } from "@/features/auth/credentials";
+import {
+  GENERIC_SIGN_IN_FAILURE,
+  isAllowedEmployeeNumber,
+  MAXIMUM_PASSCODE_LENGTH,
+  normalizeEmployeeNumber,
+  validatePasscode,
+} from "@/features/auth/credentials";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 
 import type { GuardedSignInRequest } from "./guarded-employee-sign-in";
@@ -10,8 +16,20 @@ import type { AuthRequestRateLimitSubjects as RequestSubjects } from "./request-
 
 const signInBodySchema = z
   .object({
-    employeeNumber: z.string().trim().min(1).max(80),
-    passcode: z.string().min(1).max(256),
+    employeeNumber: z
+      .string()
+      .transform(normalizeEmployeeNumber)
+      .refine(isAllowedEmployeeNumber),
+    passcode: z.string().min(1).max(MAXIMUM_PASSCODE_LENGTH),
+  })
+  .superRefine((input, context) => {
+    if (!validatePasscode(input.passcode, input.employeeNumber).valid) {
+      context.addIssue({
+        code: "custom",
+        path: ["passcode"],
+        message: "Invalid credential input.",
+      });
+    }
   })
   .strict();
 

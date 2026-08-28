@@ -2,6 +2,11 @@ import "server-only";
 
 import { randomBytes, randomUUID } from "node:crypto";
 
+import {
+  isAllowedEmployeeNumber,
+  normalizeEmployeeNumber,
+} from "@/features/auth/credentials";
+
 import { createEmployeeLookupDigest } from "./employee-sign-in";
 import type {
   AuthUserProvisioner,
@@ -96,13 +101,16 @@ export async function inviteAccount(
 ): Promise<InviteAccountResult> {
   const authorization = await dependencies.authorization.consume();
   if (!authorization) return { status: "denied" };
+  if (!isAllowedEmployeeNumber(input.employeeNumber)) {
+    return { status: "failed" };
+  }
 
   const now = dependencies.now?.() ?? new Date();
   const temporaryPasscode = createTemporaryPasscode();
   const alias = createInternalAlias();
   const temporaryPasscodeExpiresAt = new Date(now.getTime() + 30 * 60_000);
   const employeeLookupDigest = createEmployeeLookupDigest(
-    input.employeeNumber.normalize("NFKC").trim().toUpperCase(),
+    normalizeEmployeeNumber(input.employeeNumber),
     dependencies.employeeLookupHmacKey,
   );
 
