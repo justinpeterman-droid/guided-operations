@@ -91,6 +91,10 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Confirm Web quality (`33172294619`), Database quality (`33172294839`),
       Recovery rehearsal (`33172294635`), and Authenticated browser quality
       (`33172294904`) are green for exact commit `49f6413` on 2026-08-28.
+- [x] Confirm Web quality (`33173353076`), Database quality (`33173353098`),
+      Recovery rehearsal (`33173353168`), and Authenticated browser quality
+      (`33173353133`) are green for exact commit `d821926` on 2026-08-28 after
+      adding disabled-account session revocation coverage.
 
 ### Phase 0 exit
 
@@ -229,8 +233,11 @@ Pause and report a blocker instead of guessing when work requires:
       incident/report, output, sign-out, and administrator lifecycle workflows
       with fictional qualification identities in pull-request CI (`49f6413`, run
       `33172294904`).
-- [ ] Complete explicit browser revocation/bootstrap-ceremony coverage and
-      protected hosted qualification without alias leakage.
+- [x] Prove in a real local browser that disabling an officer ends the officer's
+      already-authenticated access and that the old credential receives the same
+      generic sign-in failure (`d821926`, run `33173353133`).
+- [ ] Complete bootstrap-ceremony qualification and protected hosted
+      qualification without alias leakage.
 
 ### Phase 2 exit
 

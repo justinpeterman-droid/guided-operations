@@ -129,7 +129,10 @@ fresh reset; CI retries are disabled for those specifications so a failure is
 not hidden by retrying against already-mutated test state. On 2026-08-28 the
 guarded lane passed at commit `49f6413` after completing public mobile/print,
 officer Count Sheet, report/revision/Word-download, incident creation, sign-out,
-and administrator workflows with fictional data.
+and administrator workflows with fictional data. At commit `d821926` the same
+lane also proved that an administrator disabling the fictional officer removes
+that officer's already-authenticated access and rejects the old credential with
+the generic sign-in failure (`33173353133`).
 
 ## PostgreSQL, RLS, Auth, and Storage matrix
 
