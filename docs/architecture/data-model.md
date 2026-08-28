@@ -355,7 +355,9 @@ remain in private Storage.
 ### app_private.policy_documents
 
 Stable logical source: id, source code/title, owner/issuer, classification,
-source type, active version ID, created_at, archived_at.
+source type, canonical collection, active version ID, created_at, archived_at.
+The collection is one of `BMU policies`, `BMU Post Orders`, or `SD` and is set
+explicitly at registration time.
 
 ### app_private.policy_document_versions
 
@@ -370,17 +372,19 @@ source type, active version ID, created_at, archived_at.
 ### app_private.policy_ingestion_runs
 
 The immutable run identity records the source hash, environment, extraction/OCR
-tool and configuration hashes, normalization/chunking versions, optional
-embedding profile, code/lock hashes, counts, failures, status, and QA reviewer.
-A run cannot become `ready` unless its approved page/chunk counts match the
-stored evidence and it has no recorded failures.
+provider/tool/model and configuration hashes, source filename and collection,
+normalization/chunking versions and full configuration, retry/resume lineage,
+safe failure details, optional embedding profile, code/lock hashes, counts,
+status, and QA reviewer. A run cannot become `ready` unless its approved
+page/chunk counts match the stored evidence and it has no recorded failures.
 
 ### app_private.policy_pages
 
 Version and ingestion-run IDs, 1-based source page index, printed label,
 normalized bounded text and checksum, extraction mode/confidence, dimensions,
-rotation, structured-layout reference, warnings, and QA state. Page evidence for
-a ready run cannot be silently changed or deleted.
+rotation, heading/section hierarchy, structured-layout reference/hash,
+controlled warnings, and QA state. Page evidence for a ready run cannot be
+silently changed or deleted.
 
 ### app_private.policy_chunks
 

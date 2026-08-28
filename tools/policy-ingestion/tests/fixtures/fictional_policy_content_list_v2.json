@@ -1,0 +1,29 @@
+[
+  {
+    "page_idx": 0,
+    "blocks": [
+      { "type": "title", "text": "Fictional Training Procedure", "level": 1 },
+      {
+        "type": "paragraph",
+        "text": "This invented procedure is used only to test page-aware policy ingestion."
+      },
+      { "type": "page_number", "text": "A-1" }
+    ]
+  },
+  {
+    "page_idx": 1,
+    "blocks": [
+      { "type": "title", "text": "Review Steps", "level": 2 },
+      {
+        "type": "paragraph",
+        "text": "A fictional reviewer checks the training record before approval.",
+        "ocr_confidence": 0.91
+      },
+      {
+        "type": "table",
+        "table_body": "<table><tr><th>Training item</th></tr><tr><td>Invented example</td></tr></table>"
+      },
+      { "type": "page_number", "text": "A-2" }
+    ]
+  }
+]

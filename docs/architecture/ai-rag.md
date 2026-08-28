@@ -106,6 +106,29 @@ Controls:
 - evaluation gate before active;
 - no corpus content in Git, CI artifacts, logs, queue messages, or snapshots.
 
+### Implemented local MinerU foundation
+
+`tools/policy-ingestion/` implements the provider-neutral local extraction path.
+The MinerU command and output parsing are isolated behind an extraction provider
+adapter; discovery, normalization, validation, chunking, checkpointing, and
+Supabase import do not depend on the MinerU SDK.
+
+The source root must contain these exact canonical collections, retained as
+explicit database and chunk provenance rather than inferred from filenames:
+
+- `BMU policies`
+- `BMU Post Orders`
+- `SD`
+
+The local pipeline supports PDF, DOCX, BMP, JPEG, PNG, TIFF, and WebP sources.
+It uses source/configuration-addressed attempt directories, rechecks the source
+SHA-256 after extraction, preserves page/printed-label/heading/section/table
+evidence, and produces deterministic chunks spanning no more than two pages by
+default. A successful import remains `awaiting_review`; it does not activate a
+document, create embeddings, or make passages retrievable. Real source files and
+extraction artifacts remain outside Git. See
+`docs/operations/local-policy-ingestion.md` for the operator procedure.
+
 PDFs and extracted text are untrusted. Parser isolation, resource limits, and
 malware/content checks must be selected before real corpus ingestion.
 
@@ -120,7 +143,9 @@ Use PostgreSQL full-text search plus pgvector semantic search:
    - GIN-indexed tsvector keyword ranking;
    - a dimension/operator-matched vector index and distance function.
 5. Fuse ranked lists with a versioned reciprocal-rank or measured equivalent.
-6. Apply source/version/access filters before final ranking.
+6. Apply source/version/access filters before final ranking. Collection is an
+   explicit filter dimension, allowing all-collection search, one-collection
+   search, or cross-collection comparison without reclassifying filenames.
 7. De-duplicate overlapping chunks while preserving page/section boundaries.
 8. Enforce a bounded context budget and source diversity rule.
 9. Return stable chunk/source citation IDs with each context item.

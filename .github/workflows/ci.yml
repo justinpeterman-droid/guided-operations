@@ -31,6 +31,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Set up Python for policy ingestion tests
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
       - name: Install locked dependencies
         run: npm ci
 
@@ -45,6 +50,9 @@ jobs:
 
       - name: Run unit and component tests
         run: npm test
+
+      - name: Run fictional policy-ingestion tests
+        run: npm run test:policy-ingestion
 
       - name: Run synthetic policy evaluation
         run: npm run test:eval

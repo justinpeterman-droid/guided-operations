@@ -549,14 +549,22 @@ system.
 
 ## Migration stages and gates
 
-The repository now contains the local-only R2 registry foundation in forward
-migration `20260826222000_add_policy_ingestion_provenance.sql`. It records
+The repository contains the local-only R2 registry foundation in forward
+migration `20260826222000_add_policy_ingestion_provenance.sql`, refined for the
+local MinerU workflow by
+`20260828173000_add_local_policy_ingestion_pipeline.sql`. It records
 rights/current-version decisions, immutable ingestion identity, page evidence,
-bounded chunk-to-page mappings, and ready-run QA/count checks. Retrieval now
-excludes non-current, rights-expired, provider-disallowed, non-ready, or
-non-approved page/chunk evidence. This is schema and fictional-test evidence
-only: no hosted migration, real source upload, rights decision, extraction,
-corpus acceptance, or production cutover has occurred.
+canonical collection, extraction/chunking configuration and retry provenance,
+bounded chunk-to-page mappings, and ready-run QA/count checks. The exact source
+collections are `BMU policies`, `BMU Post Orders`, and `SD`; they are explicit
+metadata throughout ingestion and are never reconstructed from filenames.
+Retrieval now excludes non-current, rights-expired, provider-disallowed,
+non-ready, or non-approved page/chunk evidence. This is schema and
+fictional-test evidence only. `tools/policy-ingestion/` now supplies the
+resumable Windows MinerU extraction, validation, deterministic chunking,
+checkpoint, and private direct database-import foundation. No hosted migration,
+real source upload, extraction, corpus acceptance, or production cutover has
+occurred.
 
 | Stage                      | Work                                                                                        | Exit gate                                                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |

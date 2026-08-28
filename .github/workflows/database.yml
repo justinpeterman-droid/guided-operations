@@ -9,6 +9,7 @@ on:
       - "scripts/verify-production-data-inventory.mjs"
       - "docs/operations/production-data-inventory.json"
       - "docs/operations/production-data-inventory.md"
+      - "tools/policy-ingestion/**"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/database.yml"
@@ -21,6 +22,7 @@ on:
       - "scripts/verify-production-data-inventory.mjs"
       - "docs/operations/production-data-inventory.json"
       - "docs/operations/production-data-inventory.md"
+      - "tools/policy-ingestion/**"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/database.yml"
@@ -50,6 +52,11 @@ jobs:
           node-version: 22
           cache: npm
 
+      - name: Set up Python for private import integration test
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
       - name: Install locked application dependencies
         run: npm ci
 
@@ -61,6 +68,9 @@ jobs:
       - name: Start local PostgreSQL
         run: supabase db start
 
+      - name: Install pinned PostgreSQL test driver
+        run: python -m pip install "psycopg[binary]==3.3.4"
+
       - name: Rebuild from migrations and fictional seed
         run: supabase db reset
 
@@ -69,6 +79,11 @@ jobs:
 
       - name: Run pgTAP tests
         run: supabase test db --local
+
+      - name: Test fictional policy bundle import
+        env:
+          POLICY_INGESTION_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: npm run test:policy-ingestion
 
       - name: Verify generated database types
         run: npm run db:types:check

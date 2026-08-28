@@ -139,6 +139,23 @@ Suggested logical queues:
 - embeddings
 - document-exports
 
+### Local policy extraction exception
+
+The implemented MinerU policy extractor is a bounded local batch tool, not an
+interactive Vercel job. It runs on the authorized Windows workstation so OCR has
+no per-page cloud API charge and may use the local NVIDIA GPU. Source bytes and
+normalized text never enter a queue message. The local checkpoint records only
+private artifacts under the operator-selected working directory; database
+commits are short, per-document imports performed after extraction and
+validation finish.
+
+Checkpoint identity is the source SHA-256 plus the extraction, normalization,
+and chunking configuration hashes. A completed identity is skipped, an
+interrupted attempt can resume, and a forced attempt creates a new numbered
+directory. Safe database failure fields and batch reports contain collection,
+hashes, counts, timing, and controlled error codes—not policy text, credentials,
+or original absolute paths.
+
 Start with fewer queues if visibility/retry requirements are identical. Split
 only when isolation, concurrency, or alerting requires it.
 

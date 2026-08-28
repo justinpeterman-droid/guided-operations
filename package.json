@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run && npm run test:operations",
     "test:operations": "node --test scripts/create-production-backup.test.mjs scripts/local-auth-config.test.mjs scripts/local-authenticated-browser-qualification-guard.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-policy-corpus-manifest.test.mjs scripts/verify-production-migration-history.test.mjs scripts/verify-production-release-record.test.mjs scripts/write-production-migration-evidence.test.mjs",
+    "test:policy-ingestion": "python -m unittest discover -s tools/policy-ingestion/tests -v",
     "test:watch": "vitest",
     "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts",
     "test:e2e": "playwright test",
