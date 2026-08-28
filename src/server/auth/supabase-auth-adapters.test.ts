@@ -1,14 +1,18 @@
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
 const createUser = vi.fn();
 const deleteUser = vi.fn();
+const updateUserById = vi.fn();
 const signInWithPassword = vi.fn();
 
 vi.mock("@supabase/supabase-js", () => ({
   createClient: vi.fn(() => ({
-    auth: { admin: { createUser, deleteUser }, signInWithPassword },
+    auth: {
+      admin: { createUser, deleteUser, updateUserById },
+      signInWithPassword,
+    },
   })),
 }));
 vi.mock("@/lib/env/auth-server", () => ({
@@ -26,8 +30,13 @@ vi.mock("@/lib/supabase/server", () => ({
 
 import {
   createSupabaseAdministratorPasscodeVerifier,
+  createSupabaseAuthPasswordResetter,
   createSupabaseAuthUserProvisioner,
 } from "./supabase-auth-adapters";
+
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
 describe("createSupabaseAuthUserProvisioner", () => {
   it("uses the isolated Auth admin API to create a confirmed synthetic alias", async () => {
@@ -108,5 +117,41 @@ describe("createSupabaseAdministratorPasscodeVerifier", () => {
     await expect(
       mismatched.verify("fixture-user", "FreshPasscode9!"),
     ).resolves.toBe(false);
+  });
+});
+
+describe("createSupabaseAuthPasswordResetter", () => {
+  it("retries one temporary provider failure with the same replacement credential", async () => {
+    updateUserById
+      .mockResolvedValueOnce({ error: { status: 503 } })
+      .mockResolvedValueOnce({ error: null });
+
+    await expect(
+      createSupabaseAuthPasswordResetter().updatePassword(
+        "fixture-user",
+        "GeneratedFixturePasscode1",
+      ),
+    ).resolves.toBe(true);
+
+    expect(updateUserById).toHaveBeenCalledTimes(2);
+    expect(updateUserById).toHaveBeenNthCalledWith(1, "fixture-user", {
+      password: "GeneratedFixturePasscode1",
+    });
+    expect(updateUserById).toHaveBeenNthCalledWith(2, "fixture-user", {
+      password: "GeneratedFixturePasscode1",
+    });
+  });
+
+  it("does not retry a permanent provider rejection", async () => {
+    updateUserById.mockResolvedValueOnce({ error: { status: 422 } });
+
+    await expect(
+      createSupabaseAuthPasswordResetter().updatePassword(
+        "fixture-user",
+        "GeneratedFixturePasscode1",
+      ),
+    ).resolves.toBe(false);
+
+    expect(updateUserById).toHaveBeenCalledTimes(1);
   });
 });

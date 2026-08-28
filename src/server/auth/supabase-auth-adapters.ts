@@ -148,10 +148,24 @@ export function createSupabaseAuthPasswordResetter(): AuthPasswordResetter {
   const client = createSupabaseAuthAdminClient();
   return {
     async updatePassword(authUserId, passcode) {
-      const { error } = await client.auth.admin.updateUserById(authUserId, {
-        password: passcode,
-      });
-      return !error;
+      for (let attempt = 0; attempt < 2; attempt += 1) {
+        try {
+          const { error } = await client.auth.admin.updateUserById(authUserId, {
+            password: passcode,
+          });
+          if (!error) return true;
+          const status = "status" in error ? error.status : undefined;
+          if (
+            attempt > 0 ||
+            typeof status !== "number" ||
+            (status !== 429 && status < 500)
+          )
+            return false;
+        } catch {
+          if (attempt > 0) return false;
+        }
+      }
+      return false;
     },
   };
 }

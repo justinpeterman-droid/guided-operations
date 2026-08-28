@@ -252,6 +252,13 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Pass direct database
       anonymous/authenticated/cross-user/cross-role/disabled and elevated-key
       negative tests.
+  - [x] The isolated local pgTAP suite exercises actual `anon`, `authenticated`,
+        and `service_role` database roles and fictional session claims. It
+        proves private-schema/API denial for the elevated Data API role,
+        anonymous and authenticated private-object denial, missing/malformed and
+        stale claims, disabled-account denial, officer/admin role boundaries,
+        cross-officer records, and cross-shift records. Protected hosted
+        requalification remains open, so the parent gate is not complete.
 - [x] Add local anonymous and authenticated negative tests proving both private
       Storage buckets deny listing, insertion, alteration, and direct deletion.
       Elevated-key qualification and hosted Storage evidence remain pending.
@@ -514,6 +521,11 @@ Pause and report a blocker instead of guessing when work requires:
       responsive, reduced-motion, visual, print, and degraded-provider checks.
       The guarded fictional officer/admin workflow lane is automated; the
       remaining specialized and hosted checks stay open.
+  - [x] Local automated accessibility checks cover WCAG 2.0/2.1 A and AA plus
+        WCAG 2.2 AA, browser/page/request errors, visible keyboard focus, a
+        390-by-844 mobile viewport, horizontal overflow, and reduced motion.
+        Manual screen-reader, zoom/reflow, visual/print acceptance, degraded
+        providers, and protected hosted proof remain open.
 - [ ] Pass approved-corpus retrieval/citation/refusal/injection evaluations.
 - [ ] Verify monitoring, alerts, budgets, backups, restore, and rollback.
 - [ ] Confirm no unresolved critical/high security issue.

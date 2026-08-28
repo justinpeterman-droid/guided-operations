@@ -288,6 +288,15 @@ The target is WCAG 2.2 AA unless the owner documents a stricter requirement.
 Before pilot, include manual review with representative assistive technology and
 resolve or explicitly owner-accept every known blocker.
 
+The public browser qualification injects the pinned `axe-core` engine into the
+home, sign-in, account, forms, and fictional preview routes. It fails on any
+WCAG 2.0/2.1 A or AA or WCAG 2.2 AA violation, console/page error, or failed
+request. The same qualification requires a visible keyboard focus indicator and
+checks the fictional preview routes at a 390-by-844 viewport with reduced motion
+enabled for horizontal overflow and usable main content. This automated sweep
+does not replace manual screen-reader, 200/400 percent zoom/reflow, visual, or
+print acceptance on the protected release candidate.
+
 ## CI lanes and release execution
 
 | Lane              | Trigger                                                            | Minimum evidence                                                                           |
