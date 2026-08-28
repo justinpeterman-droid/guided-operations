@@ -215,23 +215,33 @@ Pause and report a blocker instead of guessing when work requires:
         access/refresh values are absent from the encrypted cookie,
         `document.cookie`, and browser storage; hosted recovery/email/log review
         remains open.
-- [ ] Threat-model enumeration, timing, lockout denial, credential stuffing,
+- [x] Threat-model enumeration, timing, lockout denial, credential stuffing,
       token theft, Auth-admin key misuse, bootstrap, reset, role changes, and
-      last-admin safety.
+      last-admin safety. ADR-0003 records the threats, controls, residual hosted
+      checks, and the owner-approved implementation choice.
 - [ ] Accept ADR-0003 or replace it without weakening the credential boundary.
-- [ ] Add forward identity/account/rate-limit/audit migrations.
+- [x] Add forward identity/account/rate-limit/audit migrations. The repository
+      contains the default-deny account foundation, opaque attempt tracking,
+      bootstrap, step-up, lifecycle, session-revocation, and redacted-audit
+      migrations. Applying the pending migrations to a hosted target remains a
+      separately authorized release step.
 - [x] Add generated Data API types and an exact local migration drift check.
-- [ ] Add least-privilege routine and administrative server clients.
-- [ ] Implement sign-in with generic failures and layered throttling/lockout.
+- [x] Add least-privilege routine and administrative server clients. Routine
+      session/RLS clients use the publishable key, while the Auth-admin client
+      is server-only and isolated to lifecycle ceremonies.
+- [x] Implement sign-in with generic failures and layered throttling/lockout.
+      Account, device, network, and global windows store only purpose-separated
+      keyed digests; malformed, cross-origin, denied, unknown, and bad-secret
+      requests share the generic no-store failure boundary.
 - [x] Implement server-only authenticated encrypted session cookies that are
       HttpOnly/SameSite=Lax and Secure outside explicit local development/test;
       local tamper, chunk, alias/token non-exposure, safe redirect, and browser
       tests pass. Hosted qualification remains a separate gate.
-- [ ] Implement refresh rotation, expiry, logout, logout-all, forced temporary
+- [x] Implement refresh rotation, expiry, logout, logout-all, forced temporary
       passcode change, reset revocation, and disabled-account behavior. Local
-      forced-change completion is implemented and passes a clean local
-      replay/lint/146-pgTAP test suite on the pending commit; hosted Preview
-      browser verification and the remaining lifecycle paths are still required.
+      route, service, database, and two-browser evidence covers the lifecycle;
+      protected Preview expiry and provider-failure qualification remain release
+      gates.
   - [x] Local database, route, and two-browser tests prove logout-all advances
         application authority before provider revocation, denies tokens during a
         bounded reconciliation window, seals the result afterward, and
@@ -242,9 +252,14 @@ Pause and report a blocker instead of guessing when work requires:
         credential update and provider revocation both succeed. A fictional
         two-browser run proves the other session is denied and the replacement
         credential signs in (`277c942`, run `33181418441`).
-- [ ] Implement CSRF/origin checks and authenticated `no-store` behavior.
-- [ ] Implement server authorization plus operation-specific RLS/Storage rules.
-- [ ] Implement protected first-admin bootstrap with generated temporary secret,
+- [x] Implement CSRF/origin checks and authenticated `no-store` behavior.
+      Mutations require the configured same origin and session-bound CSRF proof;
+      authenticated and sign-in responses use no-store behavior.
+- [x] Implement server authorization plus operation-specific RLS/Storage rules.
+      Sensitive operations recheck current account authority, private tables use
+      forced RLS/default-deny grants, and private Storage buckets have explicit
+      negative tests. Hosted requalification remains open below.
+- [x] Implement protected first-admin bootstrap with generated temporary secret,
       single-use delivery, idempotency, forced change, and audit redaction.
 - [x] Add a local-only, zero-account database bootstrap ceremony: transaction
       lock, pending administrator, forced expiring temporary credential state,
@@ -305,14 +320,19 @@ Pause and report a blocker instead of guessing when work requires:
 - [x] Define versioned Zod/domain contracts for fictional incident revisions,
       confirmed-fact provenance, explicit unknown/not-applicable states, and
       report-draft references that exclude unreviewed narrative (`45f0c0b`).
-- [ ] Add incident, fact, draft, revision, export, audit, and idempotency
-      schema.
+- [x] Add incident, fact, draft, revision, export, audit, and idempotency
+      schema. Forward migrations cover incident/report heads and immutable
+      revisions, candidate/finalization state, audited print/export, guarded
+      retries, and current-version conflict handling.
 - [x] Add the initial default-deny incident/report foundation: incident and
       report heads, immutable revisions, report access relationships, indexes,
       forced RLS, revoked direct grants, and pgTAP checks (`25ad616`; local
       replay/lint/30 pgTAP and GitHub Database quality passed).
-- [ ] Add constraints, indexes, grants, forced RLS, and append-only protections.
-- [ ] Implement server-only reads and authorized transactional mutations.
+- [x] Add constraints, indexes, grants, forced RLS, and append-only protections.
+- [x] Implement server-only reads and authorized transactional mutations.
+      Reviewed RPCs conceal unauthorized records and bind every mutation to the
+      current session, role, facility, officer relationship, revision, and
+      idempotency boundary required by that operation.
 - [x] Add a narrow server-only immutable incident-revision read: current session
       authority is checked before the authenticated RPC; a missing or
       unauthorized revision is concealed; returned data omits field notes and
@@ -320,11 +340,14 @@ Pause and report a blocker instead of guessing when work requires:
       unrelated-officer denial (local replay/lint/pgTAP passed on the pending
       review commit).
 - [ ] Port the accepted officer shell and design primitives from pinned source.
-- [ ] Implement Home, New Report, Reports, one incident workflow, Document
+- [x] Implement Home, New Report, Reports, one incident workflow, Document
       Studio, history, and Account.
-- [ ] Implement incident number/name, preparer selection, field notes, explicit
+- [x] Implement incident number/name, preparer selection, field notes, explicit
       unknowns, and deterministic missing-information review.
-- [ ] Implement fact confirmation before generated narrative.
+- [x] Implement fact confirmation before generated narrative. Draft generation
+      accepts only officer-confirmed, source-linked facts from the authorized
+      immutable incident revision; unknown, not-applicable, proposed, and
+      unrelated-officer facts are rejected.
 - [x] Add the guarded report-draft candidate boundary: it reads one authorized
       immutable revision, limits generation to selected confirmed facts,
       validates paragraph provenance, requires same-origin/session-CSRF/retry
