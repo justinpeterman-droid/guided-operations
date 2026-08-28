@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { readFile } from "node:fs/promises";
 
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
@@ -418,6 +419,47 @@ test("an officer and administrator can use the protected per-officer report work
       .filter({ hasText: finalNarrative }),
   ).toBeVisible();
   await expect(page.getByText("Restored from revision 1.")).toBeVisible();
+
+  const [currentDownload, currentDownloadResponse] = await Promise.all([
+    page.waitForEvent("download"),
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith(`/export-docx?revision=4`),
+    ),
+    page.getByRole("button", { name: "Download current Word file" }).click(),
+  ]);
+  expect(currentDownloadResponse.status()).toBe(200);
+  expect(currentDownloadResponse.headers()["x-report-revision"]).toBe("4");
+  expect(currentDownload.suggestedFilename()).toBe(
+    `report-${reportId}-revision-4.docx`,
+  );
+  const currentDownloadPath = await currentDownload.path();
+  if (!currentDownloadPath) throw new Error("Fictional DOCX path is missing.");
+  const currentDownloadBytes = await readFile(currentDownloadPath);
+  expect(currentDownloadBytes.subarray(0, 4).toString("hex")).toBe("504b0304");
+  expect(currentDownloadBytes.byteLength).toBeGreaterThan(1_000);
+  await expect(page.getByText("Downloaded report revision 4.")).toBeVisible();
+
+  const historicalRevisionOne = page
+    .getByRole("listitem")
+    .filter({ hasText: "Revision 1" });
+  const [historicalDownload, historicalDownloadResponse] = await Promise.all([
+    page.waitForEvent("download"),
+    page.waitForResponse(
+      (response) =>
+        response.request().method() === "POST" &&
+        response.url().endsWith(`/export-docx?revision=1`),
+    ),
+    historicalRevisionOne
+      .getByRole("button", { name: "Download this version" })
+      .click(),
+  ]);
+  expect(historicalDownloadResponse.status()).toBe(200);
+  expect(historicalDownloadResponse.headers()["x-report-revision"]).toBe("1");
+  expect(historicalDownload.suggestedFilename()).toBe(
+    `report-${reportId}-revision-1.docx`,
+  );
 
   await page.evaluate(() => {
     window.print = () => {

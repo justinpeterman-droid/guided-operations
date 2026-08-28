@@ -285,21 +285,34 @@ remains unavailable until the required step-up workflow is implemented.
 
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
-- POST /reports/{reportId}/export
+- POST /api/web/v1/reports/{reportId}/export-docx?revision={revisionNumber}
 
-An export always names an explicit immutable revision and template version.
+An export always names an explicit immutable revision and template version. The
+implemented DOCX route accepts exactly one canonical positive `revision` query
+value, no request body, a bounded retry key, same-origin session CSRF, and an
+active session. It reads only that immutable revision after the database checks
+active same-facility report access. It supports printable first-person reports
+and cover letters; supervisor summaries and disciplinary supplements remain
+copy-only. The server creates deterministic Office Open XML bytes, then rechecks
+authorization and records an idempotent redacted audit containing the revision,
+template version, checksum, and size before returning any bytes. The response is
+`private, no-store`, uses an identifier-only filename, and includes the checksum
+and opaque audit/export ID. This short one-document path does not retain a
+duplicate Storage object; official source-form or bulk artifacts still require
+the controlled artifact lifecycle.
 
-Until deterministic server-side export is qualified, the implemented protected
-report screen offers only an explicit browser print action for the current
-immutable revision. `POST /api/web/v1/reports/{reportId}/print` requires the
-current session, same-origin CSRF, a bounded retry key, and the exact current
-complete revision. The database rechecks facility/report access, rejects stale
-revisions, and records one idempotent `report.print.requested` event before the
-browser opens its dialog. The audit holds only opaque references, revision,
-action, request correlation, actor, and facility; it never holds narrative.
-Print styling excludes navigation and mutation controls. The event records a
-request, not completed physical/PDF output, and the server-side export endpoint
-remains unimplemented rather than pretending browser print is a durable export.
+The protected report screen also offers an explicit browser print action for the
+current immutable printable revision.
+`POST /api/web/v1/reports/{reportId}/print` requires the current session,
+same-origin CSRF, a bounded retry key, and the exact current complete revision.
+The database rechecks facility/report access, rejects stale revisions, and
+records one idempotent `report.print.requested` event before the browser opens
+its dialog. The audit holds only opaque references, revision, action, request
+correlation, actor, and facility; it never holds narrative. Print styling
+excludes navigation and mutation controls. The print event records a request,
+not completed physical/PDF output. Neither the reviewed report DOCX nor browser
+print claims to be the official 005/409 form; that output remains blocked on
+approved source templates and fidelity qualification.
 
 ### AI jobs
 

@@ -148,11 +148,14 @@ Corpus bytes and text never enter GitHub Actions artifacts or general logs.
 1. User selects an explicit immutable revision and export format.
 2. Server authenticates, authorizes, validates idempotency, and creates an
    export job tied to that exact revision/template version.
-3. A short qualified path may render immediately. Otherwise the queue/worker
-   produces deterministic bytes.
-4. The result is uploaded once to a content-addressed private object key.
-5. PostgreSQL records checksum, size, media type, template version, creator, and
-   expiry/lifecycle state.
+3. A short qualified path may render deterministic bytes immediately. Otherwise
+   the queue/worker produces them.
+4. A short, single-document response may be streamed without retaining a
+   duplicate object after the database records a redacted checksum/size audit.
+   Durable, official-source, packet, and bulk results are uploaded once to a
+   content-addressed private object key.
+5. For retained artifacts, PostgreSQL records checksum, size, media type,
+   template version, creator, and expiry/lifecycle state.
 6. Download reauthorizes the current user. Restricted output is streamed through
    the app or receives a very short-lived signed URL.
 7. Audit records IDs, format, revision, and result—not document text.

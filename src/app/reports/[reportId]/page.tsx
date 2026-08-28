@@ -4,6 +4,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
 import { listReportRevisionsForCurrentSession } from "@/server/incidents/list-report-revisions";
 
+import { DownloadReportButton } from "./download-report-button";
 import { ReportHistory } from "./report-history";
 import { PrintReportButton } from "./print-report-button";
 import { ReportRevisionForm } from "./report-revision-form";
@@ -37,13 +38,24 @@ export default async function ReportPage({
             <strong>Final report</strong>
           </span>
         </Link>
-        <Link className="reports-home-link" href="/reports">
-          Reports
-        </Link>
-        <PrintReportButton
-          reportId={result.report.reportId}
-          revisionNumber={result.report.revisionNumber}
-        />
+        <div className="reports-header-actions">
+          <Link className="reports-home-link" href="/reports">
+            Reports
+          </Link>
+          {isPrintableReport(result.report.reportType) ? (
+            <>
+              <DownloadReportButton
+                current
+                reportId={result.report.reportId}
+                revisionNumber={result.report.revisionNumber}
+              />
+              <PrintReportButton
+                reportId={result.report.reportId}
+                revisionNumber={result.report.revisionNumber}
+              />
+            </>
+          ) : null}
+        </div>
       </header>
       <section
         className="reports-intro report-print-heading"
@@ -80,6 +92,7 @@ export default async function ReportPage({
           revisionNumber={result.report.revisionNumber}
         />
         <ReportHistory
+          allowDownload={isPrintableReport(result.report.reportType)}
           currentRevisionNumber={result.report.revisionNumber}
           reportId={reportId}
           revisions={await loadHistory(reportId)}
@@ -87,6 +100,10 @@ export default async function ReportPage({
       </article>
     </main>
   );
+}
+
+function isPrintableReport(reportType: string) {
+  return reportType === "first_person" || reportType === "cover_letter";
 }
 
 async function loadHistory(reportId: string) {

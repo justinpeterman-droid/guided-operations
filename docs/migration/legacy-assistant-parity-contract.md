@@ -135,9 +135,12 @@ Still required for parity:
   validation where the confirmed schema provides enough data;
 - complete real-browser acceptance for incident creation, extraction review,
   category confirmation, fixed gap questions, draft generation, comparison, and
-  explicit-revision export; the later
-  review/correction/conflict/history/restore/ print and administrator-visibility
-  path is locally qualified with fictional data but still needs hosted and owner
+  explicit-revision export. The replacement now has a deterministic generic
+  reviewed-report DOCX for an explicitly selected immutable revision, with an
+  authorization recheck and redacted integrity audit; it is not the approved
+  005/409 form. The later review/correction/conflict/history/restore/print,
+  generic Word download, and administrator-visibility path is locally covered
+  with fictional tests but still needs full browser, hosted, and owner
   acceptance.
 
 ## RAG Policy Assistant

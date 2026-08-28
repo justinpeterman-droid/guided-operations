@@ -3,6 +3,8 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
+import { DownloadReportButton } from "./download-report-button";
+
 type Revision = Readonly<{
   revisionNumber: number;
   reason: string | null;
@@ -31,10 +33,12 @@ export function ReportHistory({
   reportId,
   currentRevisionNumber,
   revisions,
+  allowDownload = false,
 }: {
   reportId: string;
   currentRevisionNumber: number;
   revisions: readonly Revision[];
+  allowDownload?: boolean;
 }) {
   const router = useRouter();
   const [selectedRevision, setSelectedRevision] = useState<number | null>(null);
@@ -107,6 +111,12 @@ export function ReportHistory({
             >
               Restore this version
             </button>
+            {allowDownload ? (
+              <DownloadReportButton
+                reportId={reportId}
+                revisionNumber={revision.revisionNumber}
+              />
+            ) : null}
           </li>
         ))}
       </ol>

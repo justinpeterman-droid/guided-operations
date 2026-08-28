@@ -71,4 +71,45 @@ describe("ReportHistory", () => {
     );
     expect(refresh).toHaveBeenCalledOnce();
   });
+
+  it("offers an exact-version Word download only when the report supports it", () => {
+    const revisions = [
+      {
+        revisionNumber: 2,
+        reason: "Fictional correction.",
+        createdAt: "2026-08-26T00:00:00Z",
+        isCurrent: true,
+        restoredFromRevisionNumber: null,
+      },
+      {
+        revisionNumber: 1,
+        reason: null,
+        createdAt: "2026-08-25T00:00:00Z",
+        isCurrent: false,
+        restoredFromRevisionNumber: null,
+      },
+    ];
+    const { rerender } = render(
+      <ReportHistory
+        allowDownload
+        reportId="11111111-1111-4111-8111-111111111111"
+        currentRevisionNumber={2}
+        revisions={revisions}
+      />,
+    );
+    expect(
+      screen.getAllByRole("button", { name: "Download this version" }),
+    ).toHaveLength(2);
+
+    rerender(
+      <ReportHistory
+        reportId="11111111-1111-4111-8111-111111111111"
+        currentRevisionNumber={2}
+        revisions={revisions}
+      />,
+    );
+    expect(
+      screen.queryByRole("button", { name: "Download this version" }),
+    ).not.toBeInTheDocument();
+  });
 });

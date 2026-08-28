@@ -74,11 +74,11 @@ The hosted details and limitations are recorded in
 
 1. The fictional Development Supabase project remains at the previously verified
    62-migration head and has one active fictional administrator. The repository
-   now has five additional locally qualified forward migrations, through
-   `20260827134000`, that have not been applied to the hosted project. The owner
-   must complete the fictional administrator's temporary-passcode change before
-   the protected workflow can create a fictional officer. A separate isolated
-   live Supabase project is still required before release.
+   now has six additional forward migrations, through `20260827135000`, that
+   have not been applied to the hosted project. The owner must complete the
+   fictional administrator's temporary-passcode change before the protected
+   workflow can create a fictional officer. A separate isolated live Supabase
+   project is still required before release.
 2. Authentication and authorization have local fictional proof for encrypted
    alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
    Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
@@ -88,14 +88,16 @@ The hosted details and limitations are recorded in
 3. The core report path is locally browser-qualified with fictional data for
    explicit category confirmation, per-note-line fact confirmation/exclusion,
    officer edit/finalize/correction, bounded stale-conflict recovery,
-   append-only history/restore, audited print, and same-facility administrator
-   visibility. A protected, provider-neutral model boundary now returns only
-   review suggestions: an allowed category plus source-line-bound facts. The
-   officer must still confirm the category and every fact, and the manual path
-   remains available when AI is disabled. Remaining work includes model and
-   operational-data evaluation, approved gap rules, the complete
-   draft-generation flow; supported export; Forms Library and Count Sheet
-   acceptance; hosted proof; and owner acceptance.
+   append-only history/restore, audited print, explicit-version reviewed-report
+   Word download, and same-facility administrator visibility. A protected,
+   provider-neutral model boundary now returns only review suggestions: an
+   allowed category plus source-line-bound facts. The officer must still confirm
+   the category and every fact, and the manual path remains available when AI is
+   disabled. Remaining work includes model and operational-data evaluation,
+   approved gap rules, the complete draft-generation flow; the approved 005/409
+   source-form mapping and output fidelity; Forms Library and Count Sheet
+   acceptance; hosted proof; and owner acceptance. The generic Word download is
+   not an official 005/409 form.
 4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
 5. The approved corpus has not passed retrieval, citation, refusal,
@@ -296,9 +298,9 @@ required before production login**
 ## Phase 3 — incident and report vertical slice
 
 Status: **implementation in progress; the protected incident-to-draft path now
-enforces per-officer fact selection and connects to the review screen;
-deterministic export, full browser qualification, and owner acceptance remain
-open**
+enforces per-officer fact selection and connects to the review screen; a generic
+exact-version reviewed-report Word download exists, while approved 005/409
+output, full browser qualification, and owner acceptance remain open**
 
 ### Steps
 
@@ -327,8 +329,10 @@ open**
    mutations. The current protected incident workspace now lets an authorized
    user choose one reporting officer, see only that officer's scoped confirmed
    facts, and request a review-only draft through the existing hardened route.
-9. Implement deterministic DOCX/print output behind an interface. Benchmark
-   document generation before deciding whether ADR-0005 needs a worker.
+9. The short deterministic reviewed-report DOCX path is implemented behind a
+   protected explicit-revision interface without retaining duplicate bytes.
+   Complete approved 005/409 form output and benchmark generation before
+   deciding whether ADR-0005 needs a worker.
 10. Add unit, contract, PostgreSQL, RLS, concurrency, stale-write, idempotency,
     report-safety golden, export, browser, keyboard, responsive, accessibility,
     visual, and print tests using fictional data.

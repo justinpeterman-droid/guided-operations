@@ -265,11 +265,13 @@ Pause and report a blocker instead of guessing when work requires:
       immutable first report revision with candidate provenance, and returns
       only an opaque report ID (local unit and PostgreSQL checks pass; hosted CI
       remains a per-commit review gate).
-- [ ] Implement append-only revisions, restore-as-new-revision, concurrency,
+- [x] Implement append-only revisions, restore-as-new-revision, concurrency,
       idempotency, and truthful persistence/conflict states.
 - [x] Record redacted, idempotent audit metadata before protected current-report
       print requests and reject stale or unauthorized revisions.
-- [ ] Implement deterministic DOCX and print output.
+- [x] Implement deterministic explicit-version reviewed-report DOCX plus
+      current-version browser print. Keep official 005/409 output open until the
+      source form and mapping are approved and fidelity-qualified.
 - [ ] Pass domain, contract, PostgreSQL, RLS, concurrency, idempotency,
       report-safety, browser, accessibility, visual, print, and export checks.
 - [ ] Record owner workflow/output acceptance.

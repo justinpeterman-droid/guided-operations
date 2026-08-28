@@ -248,6 +248,21 @@ export type Database = {
           source_incident_revision_id: string
         }[]
       }
+      get_report_revision_for_export: {
+        Args: { p_report_id: string; p_revision_number: number }
+        Returns: {
+          created_at: string
+          incident_name: string
+          incident_number: string
+          narrative: string
+          report_id: string
+          report_revision_id: string
+          report_type: string
+          revision_number: number
+          schema_version: number
+          source_incident_revision_id: string
+        }[]
+      }
       list_admin_accounts: {
         Args: { p_limit?: number }
         Returns: {
@@ -401,6 +416,19 @@ export type Database = {
           p_request_digest: string
           p_request_id: string
           p_revision_number: number
+        }
+        Returns: string
+      }
+      record_report_docx_export: {
+        Args: {
+          p_idempotency_key_digest: string
+          p_output_sha256: string
+          p_report_id: string
+          p_request_digest: string
+          p_request_id: string
+          p_revision_number: number
+          p_size_bytes: number
+          p_template_version: string
         }
         Returns: string
       }

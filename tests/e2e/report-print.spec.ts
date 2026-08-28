@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test";
 
 const reportId = "11111111-1111-4111-8111-111111111111";
 
-test("keeps report viewing and print requests behind authentication", async ({
+test("keeps report viewing and deliberate output behind authentication", async ({
   page,
   request,
 }) => {
@@ -11,6 +11,11 @@ test("keeps report viewing and print requests behind authentication", async ({
     headers: { "idempotency-key": "fictional-print-key-1234" },
   });
   expect(response.status()).toBe(401);
+  const exportResponse = await request.post(
+    `/api/web/v1/reports/${reportId}/export-docx?revision=1`,
+    { headers: { "idempotency-key": "fictional-export-key-1234" } },
+  );
+  expect(exportResponse.status()).toBe(401);
 
   await page.goto(`/reports/${reportId}`);
   await expect(
@@ -18,5 +23,8 @@ test("keeps report viewing and print requests behind authentication", async ({
   ).toBeVisible();
   await expect(
     page.getByRole("button", { name: "Print current report" }),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("button", { name: /Download .*Word file/ }),
   ).toHaveCount(0);
 });
