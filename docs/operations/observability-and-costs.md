@@ -60,6 +60,7 @@ configured. Those remain live-environment qualification gates.
 | --------- | ------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
 | Web       | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke          |
 | Auth      | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event             |
+| Admin     | account create, role/shift change, disable, unlock, and passcode-reset outcome and duration                        | No administrator/target IDs, employee data, proof tokens, or handoff secrets   |
 | Retention | legal-hold placement/release and deletion approval/execution outcome and duration                                  | No target IDs, administrator IDs, proof tokens, authority or backup references |
 | Database  | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                              |
 | Storage   | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                       |

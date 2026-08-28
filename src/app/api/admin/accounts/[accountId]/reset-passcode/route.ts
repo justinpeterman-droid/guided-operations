@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -9,6 +11,11 @@ import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-stor
 import { createAccountPasscodeResetStore } from "@/server/auth/private-invited-account-store";
 import { resetAccountPasscode } from "@/server/auth/reset-account-passcode";
 import { createSupabaseAuthPasswordResetter } from "@/server/auth/supabase-auth-adapters";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -25,6 +32,22 @@ export async function POST(
   request: Request,
   context: Readonly<{ params: Promise<Readonly<{ accountId: string }>> }>,
 ): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.account_reset_passcode",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [{ accountId }, environment, runtimeEnvironment, client] =
       await Promise.all([
@@ -33,11 +56,13 @@ export async function POST(
         getRuntimeEnvironment(),
         createSupabaseServerClient(),
       ]);
-    if (!z.string().uuid().safeParse(accountId).success) return invalid();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (!z.string().uuid().safeParse(accountId).success)
+      return observe(invalid(), "validation_rejected");
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return denied();
+    if (!session.allowed) return observe(denied(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -46,9 +71,9 @@ export async function POST(
         environment.CSRF_HMAC_KEY,
       )
     )
-      return forbidden();
+      return observe(forbidden(), "request_not_allowed");
     const proof = proofSchema.safeParse(await request.json());
-    if (!proof.success) return invalid();
+    if (!proof.success) return observe(invalid(), "validation_rejected");
     const result = await resetAccountPasscode(
       { targetAuthUserId: accountId },
       {
@@ -70,18 +95,23 @@ export async function POST(
       },
     );
     if (result.status === "reset")
-      return Response.json(
-        {
-          data: {
-            temporaryPasscode: result.temporaryPasscode,
-            temporaryPasscodeExpiresAt: result.expiresAt.toISOString(),
+      return observe(
+        Response.json(
+          {
+            data: {
+              temporaryPasscode: result.temporaryPasscode,
+              temporaryPasscodeExpiresAt: result.expiresAt.toISOString(),
+            },
           },
-        },
-        { headers },
+          { headers },
+        ),
+        "reset",
       );
-    return result.status === "denied" ? denied() : unavailable();
+    return result.status === "denied"
+      ? observe(denied(), "authentication_required")
+      : observe(unavailable(), "service_unavailable");
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 

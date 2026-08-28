@@ -1,4 +1,7 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
+
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -7,6 +10,11 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
 import { createAccountUnlockStore } from "@/server/auth/private-invited-account-store";
 import { unlockAccount } from "@/server/auth/unlock-account";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 export const dynamic = "force-dynamic";
@@ -20,6 +28,22 @@ export async function POST(
   request: Request,
   context: Readonly<{ params: Promise<Readonly<{ accountId: string }>> }>,
 ): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.account_unlock",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [{ accountId }, environment, runtimeEnvironment, client] =
       await Promise.all([
@@ -28,11 +52,13 @@ export async function POST(
         getRuntimeEnvironment(),
         createSupabaseServerClient(),
       ]);
-    if (!z.string().uuid().safeParse(accountId).success) return invalid();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (!z.string().uuid().safeParse(accountId).success)
+      return observe(invalid(), "validation_rejected");
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return denied();
+    if (!session.allowed) return observe(denied(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -41,9 +67,9 @@ export async function POST(
         environment.CSRF_HMAC_KEY,
       )
     )
-      return forbidden();
+      return observe(forbidden(), "request_not_allowed");
     const proof = proofSchema.safeParse(await request.json());
-    if (!proof.success) return invalid();
+    if (!proof.success) return observe(invalid(), "validation_rejected");
     const result = await unlockAccount(
       { targetAuthUserId: accountId },
       {
@@ -64,10 +90,15 @@ export async function POST(
       },
     );
     if (result === "unlocked")
-      return Response.json({ data: { status: "unlocked" } }, { headers });
-    return result === "denied" ? denied() : unavailable();
+      return observe(
+        Response.json({ data: { status: "unlocked" } }, { headers }),
+        "unlocked",
+      );
+    return result === "denied"
+      ? observe(denied(), "authentication_required")
+      : observe(unavailable(), "service_unavailable");
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 function denied() {

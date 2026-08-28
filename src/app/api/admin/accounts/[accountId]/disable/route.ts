@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
@@ -8,6 +10,11 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { disableAccount } from "@/server/auth/disable-account";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
 import { createAccountDisableStore } from "@/server/auth/private-invited-account-store";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -24,6 +31,22 @@ export async function POST(
   request: Request,
   context: Readonly<{ params: Promise<Readonly<{ accountId: string }>> }>,
 ): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.account_disable",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [{ accountId }, environment, runtimeEnvironment, client] =
       await Promise.all([
@@ -32,11 +55,14 @@ export async function POST(
         getRuntimeEnvironment(),
         createSupabaseServerClient(),
       ]);
-    if (!z.string().uuid().safeParse(accountId).success) return invalidInput();
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    if (!z.string().uuid().safeParse(accountId).success)
+      return observe(invalidInput(), "validation_rejected");
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return authenticationRequired();
+    if (!session.allowed)
+      return observe(authenticationRequired(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -45,10 +71,10 @@ export async function POST(
         environment.CSRF_HMAC_KEY,
       )
     ) {
-      return requestNotAllowed();
+      return observe(requestNotAllowed(), "request_not_allowed");
     }
     const proof = proofSchema.safeParse(await request.json());
-    if (!proof.success) return invalidInput();
+    if (!proof.success) return observe(invalidInput(), "validation_rejected");
     const result = await disableAccount(
       { targetAuthUserId: accountId },
       {
@@ -68,14 +94,19 @@ export async function POST(
         store: createAccountDisableStore(),
       },
     );
-    if (result === "denied") return authenticationRequired();
-    if (result !== "disabled") return unavailable();
-    return Response.json(
-      { data: { status: "disabled" } },
-      { headers: NO_STORE_HEADERS },
+    if (result === "denied")
+      return observe(authenticationRequired(), "authentication_required");
+    if (result !== "disabled")
+      return observe(unavailable(), "service_unavailable");
+    return observe(
+      Response.json(
+        { data: { status: "disabled" } },
+        { headers: NO_STORE_HEADERS },
+      ),
+      "disabled",
     );
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 

@@ -214,4 +214,39 @@ describe("safe operational events", () => {
       ]),
     );
   });
+
+  it("records administrator account outcomes without identity or handoff data", () => {
+    const event = buildSafeOperationalEvent(
+      {
+        event_name: "admin.account_reset_passcode",
+        outcome: "reset",
+        request_id: "11111111-1111-4111-8111-111111111111",
+        status_code: 200,
+        duration_ms: 11,
+        environment: "production",
+      },
+      {
+        environment: {},
+        now: () => new Date("2026-08-28T12:00:00.000Z"),
+      },
+    );
+
+    expect(event).toMatchObject({
+      event_name: "admin.account_reset_passcode",
+      outcome: "reset",
+    });
+    expect(Object.keys(event)).not.toEqual(
+      expect.arrayContaining([
+        "administrator_id",
+        "account_id",
+        "employee_number",
+        "display_name",
+        "role",
+        "shift_code",
+        "step_up_request_id",
+        "step_up_token",
+        "temporary_passcode",
+      ]),
+    );
+  });
 });

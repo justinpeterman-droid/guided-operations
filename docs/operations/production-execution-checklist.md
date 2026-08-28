@@ -552,8 +552,12 @@ Pause and report a blocker instead of guessing when work requires:
       approval/execution now return the same opaque correlation and emit only
       outcome/duration metadata; target IDs, administrator IDs, proof tokens,
       authority references, and backup references/digests have no event field.
-      Hosted sinks, remaining administrator/Storage/DB signals,
-      access/retention, alerts, and delivery tests remain open.
+      Account creation, role/shift changes, disablement, unlock, and passcode
+      reset also return matching correlation and emit only outcome/duration;
+      administrator/target IDs, employee data, role/shift values, proof tokens,
+      and temporary passcodes have no event field. Hosted sinks, remaining
+      administrator step-up/Storage/DB signals, access/retention, alerts, and
+      delivery tests remain open.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion

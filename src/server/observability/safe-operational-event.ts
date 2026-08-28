@@ -12,6 +12,12 @@ const safeIdentifierSchema = z
 const safeOperationalEventInputSchema = z
   .object({
     event_name: z.enum([
+      "admin.account_change_role",
+      "admin.account_change_shift",
+      "admin.account_create",
+      "admin.account_disable",
+      "admin.account_reset_passcode",
+      "admin.account_unlock",
       "admin.legal_hold_place",
       "admin.legal_hold_release",
       "admin.retention_deletion_approve",
@@ -34,6 +40,8 @@ const safeOperationalEventInputSchema = z
       "changed",
       "completed",
       "conflict",
+      "created",
+      "disabled",
       "insufficient_evidence",
       "integrity_failed",
       "invalid_suggestion",
@@ -41,6 +49,7 @@ const safeOperationalEventInputSchema = z
       "provider_unavailable",
       "placed",
       "request_not_allowed",
+      "reset",
       "reviewed",
       "released",
       "service_unavailable",
@@ -52,6 +61,7 @@ const safeOperationalEventInputSchema = z
       "storage_unavailable",
       "stored",
       "suggested",
+      "unlocked",
       "validation_rejected",
     ]),
     reason_code: z

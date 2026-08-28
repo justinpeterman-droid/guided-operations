@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
+vi.mock("server-only", () => ({}));
 vi.mock("@/lib/env/auth-server", () => ({ getAuthServerEnvironment: vi.fn() }));
 vi.mock("@/lib/env/runtime", () => ({ getRuntimeEnvironment: vi.fn() }));
 vi.mock("@/lib/supabase/server", () => ({
@@ -21,6 +22,9 @@ vi.mock("@/server/auth/private-invited-account-store", () => ({
 vi.mock("@/server/auth/supabase-auth-adapters", () => ({
   createSupabaseAuthUserProvisioner: vi.fn(() => ({})),
 }));
+vi.mock("@/server/observability/safe-operational-event", () => ({
+  writeSafeOperationalEvent: vi.fn(),
+}));
 vi.mock("@/server/security/request-origin", () => ({
   isTrustedMutationRequest: vi.fn(),
 }));
@@ -33,6 +37,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { inviteAccount } from "@/server/auth/invite-account";
+import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -112,6 +117,24 @@ describe("POST /api/admin/accounts", () => {
       expect.objectContaining({ authorization: expect.any(Object) }),
     );
     expect(response.headers.get("cache-control")).toBe("private, no-store");
+    expect(response.headers.get("x-request-id")).toMatch(/^[0-9a-f-]{36}$/);
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.account_create",
+        outcome: "created",
+        request_id: response.headers.get("x-request-id"),
+        status_code: 200,
+        environment: "preview",
+      }),
+    );
+    const serializedEvents = JSON.stringify(
+      vi.mocked(writeSafeOperationalEvent).mock.calls,
+    );
+    expect(serializedEvents).not.toContain(requestBody.employeeNumber);
+    expect(serializedEvents).not.toContain(requestBody.displayName);
+    expect(serializedEvents).not.toContain(requestBody.requestId);
+    expect(serializedEvents).not.toContain(requestBody.token);
+    expect(serializedEvents).not.toContain("InMemoryPasscodeOnly");
     await expect(response.json()).resolves.toEqual({
       data: {
         employeeNumberHint: "0002",
@@ -138,6 +161,13 @@ describe("POST /api/admin/accounts", () => {
 
     expect(response.status).toBe(403);
     expect(inviteAccount).not.toHaveBeenCalled();
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        event_name: "admin.account_create",
+        outcome: "request_not_allowed",
+        status_code: 403,
+      }),
+    );
   });
 
   it("does not create an account with malformed invite input", async () => {

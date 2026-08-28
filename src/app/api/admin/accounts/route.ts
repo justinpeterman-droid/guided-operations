@@ -1,3 +1,5 @@
+import { randomUUID } from "node:crypto";
+
 import { z } from "zod";
 
 import {
@@ -13,6 +15,11 @@ import { inviteAccount } from "@/server/auth/invite-account";
 import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
 import { createInvitedAccountStore } from "@/server/auth/private-invited-account-store";
 import { createSupabaseAuthUserProvisioner } from "@/server/auth/supabase-auth-adapters";
+import {
+  boundedOperationalDuration,
+  observedResponse,
+} from "@/server/observability/observed-response";
+import type { SafeOperationalEventInput } from "@/server/observability/safe-operational-event";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -45,16 +52,34 @@ function employeeNumberHint(employeeNumber: string): string {
  * once to that administrator for the approved in-person handoff.
  */
 export async function POST(request: Request): Promise<Response> {
+  const correlationId = randomUUID();
+  const startedAt = Date.now();
+  let appEnvironment: SafeOperationalEventInput["environment"] = "test";
+  const observe = (
+    response: Response,
+    outcome: SafeOperationalEventInput["outcome"],
+  ) =>
+    observedResponse(response, {
+      event_name: "admin.account_create",
+      outcome,
+      request_id: correlationId,
+      status_code: response.status,
+      duration_ms: boundedOperationalDuration(startedAt),
+      environment: appEnvironment,
+    });
+
   try {
     const [environment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
       getRuntimeEnvironment(),
       createSupabaseServerClient(),
     ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
     const session = await authorizeCurrentSession(client, {
       requiredRole: "administrator",
     });
-    if (!session.allowed) return authenticationRequired();
+    if (!session.allowed)
+      return observe(authenticationRequired(), "authentication_required");
     if (
       !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
       !hasValidSessionCsrfRequest(
@@ -63,11 +88,11 @@ export async function POST(request: Request): Promise<Response> {
         environment.CSRF_HMAC_KEY,
       )
     ) {
-      return requestNotAllowed();
+      return observe(requestNotAllowed(), "request_not_allowed");
     }
 
     const parsed = requestSchema.safeParse(await request.json());
-    if (!parsed.success) return invalidInput();
+    if (!parsed.success) return observe(invalidInput(), "validation_rejected");
 
     let handoff:
       Readonly<{ temporaryPasscode: string; expiresAt: Date }> | undefined;
@@ -107,20 +132,25 @@ export async function POST(request: Request): Promise<Response> {
       },
     );
 
-    if (result.status === "denied") return authenticationRequired();
-    if (result.status !== "activated" || !handoff) return unavailable();
-    return Response.json(
-      {
-        data: {
-          employeeNumberHint: employeeNumberHint(input.employeeNumber),
-          temporaryPasscode: handoff.temporaryPasscode,
-          temporaryPasscodeExpiresAt: handoff.expiresAt.toISOString(),
+    if (result.status === "denied")
+      return observe(authenticationRequired(), "authentication_required");
+    if (result.status !== "activated" || !handoff)
+      return observe(unavailable(), "service_unavailable");
+    return observe(
+      Response.json(
+        {
+          data: {
+            employeeNumberHint: employeeNumberHint(input.employeeNumber),
+            temporaryPasscode: handoff.temporaryPasscode,
+            temporaryPasscodeExpiresAt: handoff.expiresAt.toISOString(),
+          },
         },
-      },
-      { headers: NO_STORE_HEADERS },
+        { headers: NO_STORE_HEADERS },
+      ),
+      "created",
     );
   } catch {
-    return unavailable();
+    return observe(unavailable(), "service_unavailable");
   }
 }
 
