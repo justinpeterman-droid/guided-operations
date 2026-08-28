@@ -25,6 +25,7 @@ const vitestCli = resolve(
   "vitest.mjs",
 );
 const publicBrowserQualificationSpecs = [
+  "tests/e2e/accessibility.spec.ts",
   "tests/e2e/admin-retention.spec.ts",
   "tests/e2e/count-sheet.spec.ts",
   "tests/e2e/forms-library.spec.ts",
