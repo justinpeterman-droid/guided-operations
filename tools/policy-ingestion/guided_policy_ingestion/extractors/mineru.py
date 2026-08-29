@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Any
@@ -132,6 +133,7 @@ def parse_mineru_content(path: Path, version: str) -> ExtractionResult:
         )
     if not blocks:
         warnings.append("no_content_blocks")
+    _apply_banner_page_labels(blocks, page_count, warnings)
     return ExtractionResult(
         blocks=tuple(blocks),
         page_count=page_count,
@@ -142,6 +144,80 @@ def parse_mineru_content(path: Path, version: str) -> ExtractionResult:
         layout_reference=path.name,
         layout_metadata_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
     )
+
+
+_BANNER_PAGE = re.compile(r"PAGE\s*NUMBER\s*(\d{1,4})\s*OF\s*(\d{1,4})", re.IGNORECASE)
+
+
+def _apply_banner_page_labels(
+    blocks: list[RawBlock], page_count: int, warnings: list[str]
+) -> None:
+    """Derive printed page labels from a repeated header banner.
+
+    Some policy sets state the printed page inside the masthead table
+    ("PAGE NUMBER 1 OF 4") rather than as a discrete page-number block, so the
+    discrete-block path above never fires and every chunk cites no printed page.
+
+    A banner is used as an anchor only when the document's own page count
+    matches the total the banner declares. That equality is what makes the
+    offset check safe: it proves the extractor saw the same number of pages the
+    document claims, so page N of the extraction is page (anchor + N - anchor
+    index) of the document. Without that agreement - a cover sheet, a merged
+    scan, a dropped page - the labels are left unset rather than guessed. A
+    wrong page citation is worse than an absent one.
+    """
+    if not blocks or page_count <= 0:
+        return
+    if any(block.printed_page_label for block in blocks):
+        return
+
+    anchors: dict[int, int] = {}
+    declared_totals: set[int] = set()
+    for block in blocks:
+        haystack = block.table_html or block.text or ""
+        match = _BANNER_PAGE.search(haystack)
+        if match:
+            anchors.setdefault(block.page_index, int(match.group(1)))
+            declared_totals.add(int(match.group(2)))
+
+    if not anchors or len(declared_totals) != 1:
+        return
+    declared_total = declared_totals.pop()
+    if declared_total != page_count:
+        warnings.append("printed_page_total_mismatch")
+        return
+
+    anchor_index = min(anchors)
+    offset = anchors[anchor_index] - anchor_index
+    # Every anchor we found must agree with the same offset.
+    if any(value - index != offset for index, value in anchors.items()):
+        warnings.append("printed_page_anchors_inconsistent")
+        return
+
+    seen: set[int] = set()
+    for block in blocks:
+        if block.page_index in seen:
+            continue
+        label = block.page_index + offset
+        if label < 1 or label > declared_total:
+            warnings.append("printed_page_out_of_range")
+            return
+        seen.add(block.page_index)
+
+    # Carry the label on a dedicated, text-free marker block per page rather
+    # than stamping it onto content blocks. Normalization treats any block with
+    # a printed_page_label as page-number furniture and skips its text, so
+    # labelling real content would silently empty the page.
+    for page_index in sorted(seen):
+        blocks.append(
+            RawBlock(
+                page_index=page_index,
+                kind="page_number",
+                text="",
+                printed_page_label=str(page_index + offset),
+                metadata={"source": "banner_derived"},
+            )
+        )
 
 
 class MinerUProvider:
