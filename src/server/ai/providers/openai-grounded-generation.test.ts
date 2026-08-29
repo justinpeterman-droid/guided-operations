@@ -22,6 +22,9 @@ const citation = {
 const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_POLICY_MODEL: "fictional-model",
+  OPENAI_DATA_CONTROLS_APPROVAL_REF: "fictional-owner-approval",
+  OPENAI_DATA_RETENTION_MODE: "zero_data_retention",
+  OPENAI_API_DATA_SHARING_ENABLED: "false",
 };
 const release = vi.fn().mockResolvedValue(undefined);
 const budgetGuard = {
@@ -122,6 +125,27 @@ describe("OpenAI grounded generation provider", () => {
         maximumAnswerCharacters: 4000,
       }),
     ).rejects.toThrow("circuit open");
+    expect(fetch).not.toHaveBeenCalled();
+  });
+
+  it("does not contact OpenAI when data controls are not approved", async () => {
+    const fetch = vi.fn();
+    const provider = createOpenAiGroundedGenerationProvider({
+      fetch,
+      environment: {
+        ...environment,
+        OPENAI_DATA_RETENTION_MODE: "none",
+      },
+      budgetGuard,
+    });
+
+    await expect(
+      provider.generate({
+        question: "What does the fictional policy say?",
+        passages: [{ citation, relevanceScore: 0.9 }],
+        maximumAnswerCharacters: 4000,
+      }),
+    ).rejects.toThrow();
     expect(fetch).not.toHaveBeenCalled();
   });
 });

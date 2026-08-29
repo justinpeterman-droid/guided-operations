@@ -9,6 +9,9 @@ import { createOpenAiIncidentFactExtractionProvider } from "./openai-incident-fa
 const environment = {
   OPENAI_API_KEY: "x".repeat(20),
   OPENAI_REPORT_DRAFT_MODEL: "fictional-report-model",
+  OPENAI_DATA_CONTROLS_APPROVAL_REF: "fictional-owner-approval",
+  OPENAI_DATA_RETENTION_MODE: "zero_data_retention",
+  OPENAI_API_DATA_SHARING_ENABLED: "false",
 };
 
 describe("OpenAI incident fact extraction provider", () => {

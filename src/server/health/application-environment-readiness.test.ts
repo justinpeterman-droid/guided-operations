@@ -28,6 +28,11 @@ function validEnvironment(overrides: Record<string, string | undefined> = {}) {
     OPENAI_POLICY_MODEL: "fictional-policy-model",
     OPENAI_REPORT_DRAFT_MODEL: "fictional-report-model",
     OPENAI_EMBEDDING_MODEL: "fictional-embedding-model",
+    OPENAI_EMBEDDING_DIMENSIONS: "3",
+    POLICY_EMBEDDING_PROFILE_KEY: "fictional.openai-embedding-v1",
+    OPENAI_DATA_CONTROLS_APPROVAL_REF: "fictional-owner-approval",
+    OPENAI_DATA_RETENTION_MODE: "zero_data_retention",
+    OPENAI_API_DATA_SHARING_ENABLED: "false",
     RAG_CORPUS_VERSION: "fictional-corpus-v1",
     ...overrides,
   };
@@ -75,9 +80,22 @@ describe("application environment readiness", () => {
           OPENAI_POLICY_MODEL: undefined,
           OPENAI_REPORT_DRAFT_MODEL: undefined,
           OPENAI_EMBEDDING_MODEL: undefined,
+          OPENAI_EMBEDDING_DIMENSIONS: undefined,
+          POLICY_EMBEDDING_PROFILE_KEY: undefined,
+          OPENAI_DATA_CONTROLS_APPROVAL_REF: undefined,
+          OPENAI_DATA_RETENTION_MODE: undefined,
+          OPENAI_API_DATA_SHARING_ENABLED: undefined,
         }),
       ),
     ).not.toThrow();
+  });
+
+  it("rejects enabled AI without approved provider data controls", () => {
+    expect(() =>
+      assertApplicationEnvironmentReadiness(
+        validEnvironment({ OPENAI_DATA_RETENTION_MODE: "none" }),
+      ),
+    ).toThrow();
   });
 
   it("still requires an explicit corpus state while AI is disabled", () => {

@@ -6,6 +6,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 import { getAuthSessionEnvironment } from "@/lib/env/auth-session";
 import { getAiBudgetEnvironment } from "@/lib/env/ai-budget";
 import { getIncidentServerEnvironment } from "@/lib/env/incident-server";
+import { getOpenAiEmbeddingEnvironment } from "@/lib/env/openai-embedding";
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
 import { getOpenAiReportDraftEnvironment } from "@/lib/env/openai-report-draft";
 import { getObservabilityEnvironment } from "@/lib/env/observability";
@@ -18,10 +19,6 @@ const aiEnvironmentSchema = z.object({
     .string()
     .trim()
     .regex(/^[a-z0-9][a-z0-9._-]{1,159}$/),
-});
-
-const enabledAiEnvironmentSchema = z.object({
-  OPENAI_EMBEDDING_MODEL: z.string().trim().min(1).max(160),
 });
 
 /**
@@ -49,9 +46,7 @@ export function assertApplicationEnvironmentReadiness(
   if (aiBudget.AI_GENERATION_ENABLED) {
     getOpenAiPolicyEnvironment(environment);
     getOpenAiReportDraftEnvironment(environment);
-    enabledAiEnvironmentSchema.parse({
-      OPENAI_EMBEDDING_MODEL: environment.OPENAI_EMBEDDING_MODEL,
-    });
+    getOpenAiEmbeddingEnvironment(environment);
   }
 
   if (runtime.APP_ENV === "production" && !auth.AUTH_SIGN_IN_ENABLED) {
