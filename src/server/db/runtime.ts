@@ -7,7 +7,7 @@ import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
 const accountIdSchema = z.uuid();
 
-type TransactionSql = postgres.TransactionSql<{}>;
+type TransactionSql = postgres.TransactionSql<Record<string, never>>;
 
 let applicationDatabase: postgres.Sql | undefined;
 
