@@ -1,7 +1,10 @@
 name: Recovery rehearsal
 
 on:
+  # Cost control: see the note in browser.yml. Runs on pull-request open or
+  # ready-for-review, on merges to main, and on demand.
   pull_request:
+    types: [opened, reopened, ready_for_review]
     paths:
       - "scripts/rehearse-local-recovery.mjs"
       - "package.json"

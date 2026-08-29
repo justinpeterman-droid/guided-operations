@@ -1,7 +1,13 @@
 name: Authenticated browser quality
 
 on:
+  # Cost control: this suite runs ~10 minutes. Running it on every push to a
+  # pull-request branch exhausted the private-repository Actions allowance on
+  # 2026-08-28. It now runs when a pull request opens or is marked ready, on
+  # merges to main, and on demand via workflow_dispatch. Dispatch it manually
+  # before merging if the branch changed materially since the last run.
   pull_request:
+    types: [opened, reopened, ready_for_review]
     paths:
       - ".github/workflows/browser.yml"
       - "package.json"
