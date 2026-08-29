@@ -25,9 +25,11 @@
     "db:test": "supabase test db --local"
   },
   "dependencies": {
+    "@node-rs/argon2": "2.0.2",
     "@supabase/ssr": "0.12.5",
     "@supabase/supabase-js": "2.112.4",
     "next": "16.3.2",
+    "postgres": "3.4.9",
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "server-only": "0.0.1",
