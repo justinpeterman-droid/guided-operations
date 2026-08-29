@@ -1,4 +1,8 @@
-import { Algorithm, hash, verify } from "@node-rs/argon2";
+import {
+  randomBytes,
+  scrypt as nodeScrypt,
+  timingSafeEqual,
+} from "node:crypto";
 
 import { normalizeEmployeeNumber } from "./employee-number";
 
@@ -17,6 +21,14 @@ const COMMON_VALUES = [
   "welcome123",
   "administrator",
 ];
+
+const SCRYPT_VERSION = 1;
+const SCRYPT_N = 32_768;
+const SCRYPT_R = 8;
+const SCRYPT_P = 3;
+const SCRYPT_KEY_LENGTH = 32;
+const SCRYPT_SALT_LENGTH = 16;
+const SCRYPT_MAX_MEMORY = 64 * 1024 * 1024;
 
 export type PasscodeValidationResult =
   | { success: true }
@@ -75,24 +87,91 @@ export function validateNewPasscode(
 }
 
 export async function hashPasscode(passcode: string): Promise<string> {
-  return hash(passcode, {
-    algorithm: Algorithm.Argon2id,
-    memoryCost: 19_456,
-    timeCost: 2,
-    parallelism: 1,
-    outputLen: 32,
-  });
+  const salt = randomBytes(SCRYPT_SALT_LENGTH);
+  const derivedKey = await deriveScrypt(passcode, salt);
+
+  return [
+    "scrypt",
+    `v=${SCRYPT_VERSION}`,
+    `N=${SCRYPT_N}`,
+    `r=${SCRYPT_R}`,
+    `p=${SCRYPT_P}`,
+    salt.toString("base64url"),
+    derivedKey.toString("base64url"),
+  ].join("$");
 }
 
 export async function verifyPasscode(
   passcodeHash: string,
   passcode: string,
 ): Promise<boolean> {
+  const parsed = parsePasscodeHash(passcodeHash);
+  if (!parsed) {
+    return false;
+  }
+
   try {
-    return await verify(passcodeHash, passcode);
+    const actual = await deriveScrypt(passcode, parsed.salt);
+    return timingSafeEqual(actual, parsed.derivedKey);
   } catch {
     return false;
   }
+}
+
+function parsePasscodeHash(
+  value: string,
+): { salt: Buffer; derivedKey: Buffer } | null {
+  const parts = value.split("$");
+  if (
+    parts.length !== 7 ||
+    parts[0] !== "scrypt" ||
+    parts[1] !== `v=${SCRYPT_VERSION}` ||
+    parts[2] !== `N=${SCRYPT_N}` ||
+    parts[3] !== `r=${SCRYPT_R}` ||
+    parts[4] !== `p=${SCRYPT_P}`
+  ) {
+    return null;
+  }
+
+  try {
+    const salt = Buffer.from(parts[5], "base64url");
+    const derivedKey = Buffer.from(parts[6], "base64url");
+
+    if (
+      salt.length !== SCRYPT_SALT_LENGTH ||
+      derivedKey.length !== SCRYPT_KEY_LENGTH
+    ) {
+      return null;
+    }
+
+    return { salt, derivedKey };
+  } catch {
+    return null;
+  }
+}
+
+function deriveScrypt(passcode: string, salt: Buffer): Promise<Buffer> {
+  return new Promise((resolve, reject) => {
+    nodeScrypt(
+      passcode,
+      salt,
+      SCRYPT_KEY_LENGTH,
+      {
+        N: SCRYPT_N,
+        r: SCRYPT_R,
+        p: SCRYPT_P,
+        maxmem: SCRYPT_MAX_MEMORY,
+      },
+      (error, derivedKey) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+
+        resolve(derivedKey);
+      },
+    );
+  });
 }
 
 function isSimpleSequence(value: string): boolean {
