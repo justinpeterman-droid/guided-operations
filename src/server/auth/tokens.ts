@@ -10,9 +10,13 @@ export interface IssuedOpaqueToken {
   serialized: string;
 }
 
+export function issueOpaqueSecret(): string {
+  return randomBytes(32).toString("base64url");
+}
+
 export function issueOpaqueToken(): IssuedOpaqueToken {
   const id = randomUUID();
-  const secret = randomBytes(32).toString("base64url");
+  const secret = issueOpaqueSecret();
 
   return {
     id,
