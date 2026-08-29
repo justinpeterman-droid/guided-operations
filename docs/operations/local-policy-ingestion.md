@@ -2,12 +2,15 @@
 
 **Purpose:** Extract and prepare the approved local policy corpus with MinerU on
 the authorized Windows workstation, then optionally import reviewed provenance
-into the private Supabase RAG tables.
+into the private Supabase RAG tables and, after separate approval, resume
+profile-bound embeddings for reviewed chunks.
 
 **Current state:** The tool and schema are implemented. Running the extraction
 command does not activate policy chat. Production import additionally requires
 the reviewed database migration, registered document versions, private database
-credentials, and the explicit import command below.
+credentials, and the explicit import command below. The embedding foundation is
+implemented but must not process real policy text until corpus rights and the
+OpenAI project data-control/retention gates are approved.
 
 ## Safety boundary
 
@@ -17,6 +20,8 @@ credentials, and the explicit import command below.
 - The normal path uses local MinerU models and has no per-page OCR API charge.
 - Browser code never receives a database password or Supabase service-role key.
 - A successful document is `awaiting_review`, not active or searchable.
+- Embedding sends approved chunk text to the configured OpenAI project. It is a
+  separate controlled Production action, not part of normal MinerU extraction.
 - The tool logs collection, hashes, counts, safe error codes, and timing. It
   does not log policy text or absolute source paths.
 
@@ -189,6 +194,64 @@ source that is not uniquely pre-registered or whose registered collection
 differs. Each document imports in a short transaction as `awaiting_review`;
 chunks remain `pending` and `qa_approved = false`.
 
+## Resumable embeddings after QA
+
+Do not run this section merely because extraction succeeded. Before any real
+policy embedding, all of the following must already be true:
+
+- the exact document version and rights evidence are approved;
+- `external_ai_allowed` is approved and its rights-review date is current;
+- the ingestion run, pages, and chunks passed human QA and are active;
+- the OpenAI project data-use, retention, region, API-data-sharing, budget, and
+  credential controls are reviewed and recorded;
+- an `embedding_profiles` row exactly matches the pinned provider, model, and
+  dimensions; activation remains a separate evaluation decision;
+- the Production connection guard and owner-controlled command are used.
+
+Set the pinned non-secret configuration and the server-only API key only in the
+private operator PowerShell window:
+
+```powershell
+$env:OPENAI_API_KEY = "<server-only project API key>"
+$env:OPENAI_DATA_CONTROLS_APPROVAL_REF = "<safe approval record id; no secret>"
+$env:OPENAI_DATA_RETENTION_MODE = "<zero_data_retention or modified_abuse_monitoring>"
+$env:OPENAI_API_DATA_SHARING_ENABLED = "false"
+$env:OPENAI_EMBEDDING_MODEL = "<approved exact model id>"
+$env:OPENAI_EMBEDDING_DIMENSIONS = "<approved dimension>"
+$env:POLICY_EMBEDDING_PROFILE_KEY = "<registered immutable profile key>"
+```
+
+The command refuses to create any provider request when these data-control
+values are missing, the retention mode is `none`/unverified, or API data sharing
+is not exactly `false`. These values are an operator attestation; verify the
+exact OpenAI project in its Data Controls settings before recording them.
+
+First perform a metadata-only dry run for one approved version:
+
+```powershell
+python ingest.py embed <document-version-uuid> --dry-run --target-environment production --source-data controlled-policy --confirm-controlled-production-embedding
+```
+
+Then resume only missing chunks in bounded batches:
+
+```powershell
+python ingest.py embed <document-version-uuid> --batch-size 16 --target-environment production --source-data controlled-policy --confirm-controlled-production-embedding
+```
+
+Use `--limit 10` for the first controlled pilot. The command never overwrites an
+existing `(chunk, profile)` embedding. Stop with `Ctrl+C`; rerunning the same
+command selects only missing chunks. A model or dimension change requires a new
+immutable profile key. The safe summary reports only the opaque document-version
+ID, profile key, eligible/existing/embedded/remaining counts, and no policy
+text.
+
+Before a chunk can cross the embedding-provider boundary, every physical page
+from `page_start` through `page_end` must exist exactly once and be approved.
+The command holds database share locks through the provider call so a rights,
+version, ingestion, page, or chunk change cannot race that authorization check.
+Changing page or chunk evidence clears stale page/chunk/run QA, and the run must
+pass fresh complete-range review before it can become `ready` again.
+
 ## Review the result
 
 Open the safe batch report:
@@ -213,8 +276,9 @@ MinerU artifacts locally. Never paste extracted text into an issue or chat.
   physical-page provenance.
 - Tables are retained in normalized page/chunk text and MinerU layout artifacts,
   but complex table fidelity requires human QA.
-- The current tool prepares lexical chunks only. The application and reviewed
-  database RPC can search every canonical collection or filter to one exact
-  collection, and each returned citation includes that collection. Embedding
-  generation, measured hybrid rank fusion, QA approval, and atomic activation
-  are separate release gates.
+- The current tool prepares lexical chunks and has a resumable provider-style
+  embedding command. The application and reviewed v4 database RPC implement
+  deterministic lexical/semantic rank fusion for an exact enabled profile and
+  preserve canonical collection citations. Real embedding generation, vector
+  index selection, measured hybrid qualification, QA acceptance, and atomic
+  activation remain separate release gates.

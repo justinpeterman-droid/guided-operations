@@ -77,32 +77,35 @@ protection before launch.
 Names are a contract; actual values belong in local ignored files, Vercel
 environment settings, Supabase secrets, or protected GitHub environments.
 
-| Variable                                                                       |                           Local |                 Preview/staging |                        Production | Classification                                                                      |
-| ------------------------------------------------------------------------------ | ------------------------------: | ------------------------------: | --------------------------------: | ----------------------------------------------------------------------------------- |
-| `NEXT_PUBLIC_SUPABASE_URL`                                                     |                             yes |                             yes |                               yes | Public endpoint, environment-specific                                               |
-| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                         |                             yes |                             yes |                               yes | Public low-privilege key; RLS remains mandatory                                     |
-| `SUPABASE_SECRET_KEY`                                                          |                        optional |                     server only |                       server only | **Secret**, elevated and RLS-bypassing                                              |
-| `SUPABASE_DB_URL`                                                              |                    local server |                     server only |                       server only | **Secret**; current private RPC/auth adapter connection                             |
-| `SUPABASE_MIGRATION_DB_URL`                                                    |                              no |                              no | protected GitHub environment only | **Secret**; dedicated production migration connection, never a Vercel runtime value |
-| `AI_PROVIDER`                                                                  |                             yes |                             yes |                               yes | Non-secret provider selector                                                        |
-| `AI_GENERATION_ENABLED`                                                        |                             yes |                             yes |                               yes | Non-secret emergency gate; `false` stops provider calls                             |
-| `AI_MONTHLY_REQUEST_CAP` / `AI_BUDGET_STOP_PERCENT`                            |                             yes |                             yes |                               yes | Non-secret owner-approved cap and stop point; required by readiness                 |
-| `AI_ACCOUNT_MONTHLY_SHARE_PERCENT` / `AI_ACCOUNT_SHORT_WINDOW_MAX`             |                        optional |                        optional |                          optional | Non-secret fair-use limits; safe defaults are 5% monthly and 6/minute per operation |
-| `AI_ACCOUNT_CONCURRENCY_MAX` / `AI_REQUEST_LEASE_SECONDS`                      |                        optional |                        optional |                          optional | Non-secret concurrency controls; safe defaults are 2 calls and a 90-second lease    |
-| `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL` |              when AI is enabled |              when AI is enabled |                when AI is enabled | Non-secret configuration; pin and record in releases                                |
-| `OPENAI_API_KEY`                                                               | when AI is enabled, server only | when AI is enabled, server only |   when AI is enabled, server only | **Secret**; never `NEXT_PUBLIC_*`                                                   |
-| `RAG_CORPUS_VERSION`                                                           |                             yes |                             yes |                               yes | Non-secret immutable manifest/version identifier                                    |
-| `SAFE_OPERATIONAL_LOGGING_ENABLED`                                             |                             yes |                             yes |                               yes | Non-secret fail-closed gate; required `true` in Production                          |
-| `APP_ENV`                                                                      |                             yes |                             yes |                               yes | Non-secret guard against cross-environment writes                                   |
-| `APP_ORIGIN`                                                                   |                             yes |                             yes |                               yes | Non-secret exact allowed origin                                                     |
-| `EMPLOYEE_LOOKUP_PEPPER`                                                       |                    local server |                     server only |                       server only | **Secret**; keys employee-number lookup without storing raw values                  |
-| `AUTH_DUMMY_ALIAS`                                                             |                    local server |                     server only |                       server only | **Secret**; fixed timing-defense identity, never browser-visible                    |
-| `AUTH_SESSION_ENCRYPTION_KEY`                                                  |                    local server |                     server only |                       server only | **Secret**; exact random 32-byte base64url key for the encrypted session envelope   |
-| `CSRF_HMAC_KEY`                                                                |                    local server |                     server only |                       server only | **Secret**; environment-specific session-bound CSRF signing key                     |
-| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                |                    local server |                     server only |                       server only | **Secret**; hashes retry keys without retaining their raw values                    |
-| `AUTH_SIGN_IN_ENABLED`                                                         |                             yes |                             yes |                               yes | Non-secret fail-closed feature gate; enabled only after auth proof                  |
-| production backup database, Storage and destination credentials                |                              no |                              no |      protected operator host only | **Secret**; separate from runtime/migration credentials and prohibited in CI        |
-| production backup age recipient                                                |                              no |                              no |      protected operator host only | Public encryption recipient; private identity/key remains separately controlled     |
+| Variable                                                                                               |                           Local |                 Preview/staging |                        Production | Classification                                                                                                                     |
+| ------------------------------------------------------------------------------------------------------ | ------------------------------: | ------------------------------: | --------------------------------: | ---------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_SUPABASE_URL`                                                                             |                             yes |                             yes |                               yes | Public endpoint, environment-specific                                                                                              |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`                                                                 |                             yes |                             yes |                               yes | Public low-privilege key; RLS remains mandatory                                                                                    |
+| `SUPABASE_SECRET_KEY`                                                                                  |                        optional |                     server only |                       server only | **Secret**, elevated and RLS-bypassing                                                                                             |
+| `SUPABASE_DB_URL`                                                                                      |                    local server |                     server only |                       server only | **Secret**; current private RPC/auth adapter connection                                                                            |
+| `SUPABASE_MIGRATION_DB_URL`                                                                            |                              no |                              no | protected GitHub environment only | **Secret**; dedicated production migration connection, never a Vercel runtime value                                                |
+| `AI_PROVIDER`                                                                                          |                             yes |                             yes |                               yes | Non-secret provider selector                                                                                                       |
+| `AI_GENERATION_ENABLED`                                                                                |                             yes |                             yes |                               yes | Non-secret emergency gate; `false` stops provider calls                                                                            |
+| `AI_MONTHLY_REQUEST_CAP` / `AI_BUDGET_STOP_PERCENT`                                                    |                             yes |                             yes |                               yes | Non-secret owner-approved cap and stop point; required by readiness                                                                |
+| `AI_ACCOUNT_MONTHLY_SHARE_PERCENT` / `AI_ACCOUNT_SHORT_WINDOW_MAX`                                     |                        optional |                        optional |                          optional | Non-secret fair-use limits; safe defaults are 5% monthly and 6/minute per operation                                                |
+| `AI_ACCOUNT_CONCURRENCY_MAX` / `AI_REQUEST_LEASE_SECONDS`                                              |                        optional |                        optional |                          optional | Non-secret concurrency controls; safe defaults are 2 calls and a 90-second lease                                                   |
+| `OPENAI_POLICY_MODEL` / `OPENAI_REPORT_DRAFT_MODEL` / `OPENAI_EMBEDDING_MODEL`                         |              when AI is enabled |              when AI is enabled |                when AI is enabled | Non-secret configuration; pin and record in releases                                                                               |
+| `OPENAI_EMBEDDING_DIMENSIONS` / `POLICY_EMBEDDING_PROFILE_KEY`                                         |              when AI is enabled |              when AI is enabled |                when AI is enabled | Non-secret immutable profile binding; must match the enabled database profile                                                      |
+| `OPENAI_API_KEY`                                                                                       | when AI is enabled, server only | when AI is enabled, server only |   when AI is enabled, server only | **Secret**; never `NEXT_PUBLIC_*`                                                                                                  |
+| `OPENAI_DATA_CONTROLS_APPROVAL_REF` / `OPENAI_DATA_RETENTION_MODE` / `OPENAI_API_DATA_SHARING_ENABLED` |              when AI is enabled |              when AI is enabled |                when AI is enabled | Non-secret fail-closed attestation bound to an operator-reviewed OpenAI project; the approval reference must contain no credential |
+| `OPENAI_ADMIN_KEY` / `OPENAI_PROJECT_ID` / `OPENAI_DATA_CONTROLS_CHECK_ENABLED`                        |                              no |                              no |      protected operator host only | The Admin key is a **secret** used only by the manual project-retention verifier; never place it in application runtime            |
+| `RAG_CORPUS_VERSION`                                                                                   |                             yes |                             yes |                               yes | Non-secret immutable manifest/version identifier                                                                                   |
+| `SAFE_OPERATIONAL_LOGGING_ENABLED`                                                                     |                             yes |                             yes |                               yes | Non-secret fail-closed gate; required `true` in Production                                                                         |
+| `APP_ENV`                                                                                              |                             yes |                             yes |                               yes | Non-secret guard against cross-environment writes                                                                                  |
+| `APP_ORIGIN`                                                                                           |                             yes |                             yes |                               yes | Non-secret exact allowed origin                                                                                                    |
+| `EMPLOYEE_LOOKUP_PEPPER`                                                                               |                    local server |                     server only |                       server only | **Secret**; keys employee-number lookup without storing raw values                                                                 |
+| `AUTH_DUMMY_ALIAS`                                                                                     |                    local server |                     server only |                       server only | **Secret**; fixed timing-defense identity, never browser-visible                                                                   |
+| `AUTH_SESSION_ENCRYPTION_KEY`                                                                          |                    local server |                     server only |                       server only | **Secret**; exact random 32-byte base64url key for the encrypted session envelope                                                  |
+| `CSRF_HMAC_KEY`                                                                                        |                    local server |                     server only |                       server only | **Secret**; environment-specific session-bound CSRF signing key                                                                    |
+| `INCIDENT_IDEMPOTENCY_HMAC_KEY`                                                                        |                    local server |                     server only |                       server only | **Secret**; hashes retry keys without retaining their raw values                                                                   |
+| `AUTH_SIGN_IN_ENABLED`                                                                                 |                             yes |                             yes |                               yes | Non-secret fail-closed feature gate; enabled only after auth proof                                                                 |
+| production backup database, Storage and destination credentials                                        |                              no |                              no |      protected operator host only | **Secret**; separate from runtime/migration credentials and prohibited in CI                                                       |
+| production backup age recipient                                                                        |                              no |                              no |      protected operator host only | Public encryption recipient; private identity/key remains separately controlled                                                    |
 
 The protected GitHub environment named `production-database` also owns three
 non-secret fail-closed variables: `PRODUCTION_MIGRATION_ENABLED=true`, the exact
@@ -150,10 +153,47 @@ public API probe but returns only `ready` or `not_ready`. It never returns a
 missing variable name or value. When `AI_GENERATION_ENABLED=false`, readiness
 does not require an unused OpenAI key or model names; the provider adapters deny
 before reading them and AI routes return the documented temporary-unavailable
-state. Enabling AI immediately makes the key and all pinned models mandatory.
-Production readiness also requires `AUTH_SIGN_IN_ENABLED=true` and
+state. Enabling AI immediately makes the key, all pinned models, an opaque
+approval reference, an approved Zero Data Retention or Modified Abuse Monitoring
+mode, and explicit `OPENAI_API_DATA_SHARING_ENABLED=false` mandatory. The
+application cannot prove a provider-dashboard setting from an ordinary project
+API key, so an operator must verify the exact OpenAI project and record the safe
+approval reference before enabling AI. The reference must never contain an API
+key, project credential, policy text, or personnel data. Production readiness
+also requires `AUTH_SIGN_IN_ENABLED=true` and
 `SAFE_OPERATIONAL_LOGGING_ENABLED=true`, while Preview may keep both gates
 disabled until their qualification evidence is ready.
+
+### OpenAI project data-control proof
+
+OpenAI documents that normal API traffic is not used for training unless the
+customer explicitly opts in, while default abuse-monitoring retention can still
+last up to 30 days. Approved organizations/projects can select Zero Data
+Retention or Modified Abuse Monitoring. The project-level setting is available
+through an Admin API, which requires a separate Admin key rather than the
+application's project API key. See the official
+[OpenAI data controls](https://platform.openai.com/docs/models/default-usage-policies-by-endpoint)
+and
+[project retention API](https://developers.openai.com/api/reference/python/resources/admin/subresources/organization/subresources/projects/subresources/data_retention/methods/retrieve).
+
+On the protected operator host, set the following only for the verification
+process, after confirming in the OpenAI dashboard that API data sharing is off:
+
+```powershell
+$env:OPENAI_DATA_CONTROLS_CHECK_ENABLED = "true"
+$env:OPENAI_ADMIN_KEY = "<temporary operator-only Admin key>"
+$env:OPENAI_PROJECT_ID = "<exact application project id>"
+$env:OPENAI_DATA_RETENTION_MODE = "<approved exact mode>"
+$env:OPENAI_API_DATA_SHARING_ENABLED = "false"
+npm run openai:data-controls:check
+```
+
+The command returns only the verified retention mode and the recorded
+data-sharing-disabled state. It never returns the Admin key or project ID and
+does not read or transmit policy content. The OpenAI Admin API proves the remote
+retention mode; API data-sharing status remains a dashboard/operator check until
+an authoritative provider API exposes it. Remove the Admin key from the shell
+immediately after collecting release evidence.
 
 ## Cross-environment safety checks
 

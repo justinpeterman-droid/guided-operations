@@ -154,16 +154,41 @@ Index type, distance operator, weights, match count, chunk size/overlap, and
 reranking are evaluated choices. Do not copy a generic HNSW configuration
 without measuring the actual corpus.
 
-The current provider-neutral retrieval adapter uses the reviewed lexical RPC as
-the first bounded implementation. It searches all three canonical collections by
-default and accepts an optional exact collection scope. The database returns the
-registered collection with every passage and applies collection and explicit
-document-version filters inside the same account, facility, rights,
-current-version, ingestion-QA, page, and chunk authorization boundary. Empty,
-unknown, or oversized filters are rejected instead of being widened. The Policy
-Expert interface can search all approved policies or one collection and shows
-collection provenance beside each citation. Semantic retrieval and measured rank
-fusion remain separate qualification work.
+The current provider-neutral retrieval adapter now uses the reviewed hybrid v4
+RPC. A server-only OpenAI adapter creates one bounded query embedding with the
+pinned model, dimension, and profile key. Provider errors, dimension/model
+mismatches, zero vectors, malformed rows, and invalid empty filters fail as
+service unavailable; they are not mislabeled as insufficient evidence and do not
+silently fall back to a different model or lexical-only behavior.
+
+Inside the database, authorization is applied before ranking. Only chunks that
+have an embedding for the exact enabled profile and still pass account,
+facility, rights, current-version, external-AI, ingestion-QA, page-QA, chunk-QA,
+source-hash, collection, and optional approved-version filters are candidates.
+The RPC ranks at most 20-60 lexical and semantic candidates, uses deterministic
+equal-weight reciprocal-rank fusion with `k = 60`, breaks ties by immutable
+chunk ID, and returns the registered collection and citation provenance. This
+fixed configuration is `supabase-hybrid-rrf-v1`; changing its weights, constant,
+pool, or distance operator requires a new version and evaluation.
+
+The local ingestion tool also has a separate provider-style `embed` command. It
+processes one pre-registered, approved document version at a time, skips
+existing `(chunk, profile)` rows, and requires every physical page in each
+bounded chunk range to exist and be approved. It rechecks rights and QA while
+holding database share locks through each provider call, so evidence cannot be
+changed between authorization and external egress. Any later page or chunk
+evidence change clears stale QA and a run cannot return to `ready` until the
+complete page range is freshly approved. The command validates
+model/order/dimension/non-zero vectors and inserts immutable profile-bound
+embeddings. Controlled policy embedding is fail-closed to the explicitly
+confirmed Production connection. It must not be run until corpus rights and the
+current OpenAI project data-control review are approved.
+
+This is fictional local foundation proof, not measured corpus qualification. No
+vector index is selected yet because index type/operator, recall, latency,
+memory, and build time must be measured on the accepted corpus. The Policy
+Expert interface can search all approved policies or one exact collection and
+shows collection provenance beside each citation.
 
 ## Grounded answer generation
 
@@ -228,6 +253,11 @@ officer's source note.
   questions/data. Enforce this in fixtures, demos, and manual evaluation.
 - Review current OpenAI data-use, retention, region, and enterprise settings
   before uploading real corpus content; do not infer them from this design.
+- Every OpenAI adapter and the local embedding command fail closed unless an
+  operator records a safe approval reference, one of the provider's approved
+  Zero Data Retention or Modified Abuse Monitoring modes, and explicit API data
+  sharing `false`. This runtime attestation prevents accidental calls but does
+  not replace dashboard/Admin API verification of the exact OpenAI project.
 - Log question SHA-256/HMAC, source IDs/counts, configuration, latency, usage,
   and safe result code—not raw question, context, or answer.
 

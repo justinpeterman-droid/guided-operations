@@ -34,6 +34,18 @@ and record the upstream release.
 Automated tools may open narrowly scoped PRs. They must not merge or deploy
 dependency updates automatically.
 
+The current repeatable integrity gate is:
+
+```powershell
+npm run dependency:integrity:check
+```
+
+It rejects high-severity vulnerabilities in the complete locked Node.js
+dependency graph and verifies npm registry signatures and attestations. Run it
+through `npm run security:check` with the tracked-secret and runtime-logging
+checks before qualification. A provider-side scanner or alert remains a separate
+control and must not be inferred from this local result.
+
 ## Risk tiers
 
 - **Tier 1:** Next.js/React runtime, Supabase/Auth/Storage, database driver, AI

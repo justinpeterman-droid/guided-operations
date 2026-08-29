@@ -566,6 +566,14 @@ checkpoint, and private direct database-import foundation. No hosted migration,
 real source upload, extraction, corpus acceptance, or production cutover has
 occurred.
 
+Forward migration `20260828220000_enforce_policy_page_range_approval.sql` closes
+the page-QA egress gap. A bounded chunk is eligible only when every physical
+page in its inclusive range exists and is approved. Ready-run validation uses
+the same helper, evidence edits clear stale run/page/chunk QA, and row locks
+serialize those edits with the final provider-egress check. This preserves the
+historical citation/version model while preventing an interior missing or
+pending page from being hidden by approved range endpoints.
+
 Forward migration `20260828200000_add_collection_filtered_policy_retrieval.sql`
 adds the reviewed collection-aware lexical RPC. It keeps session/facility,
 rights, current-version, ready-run, approved-page, and approved-chunk checks in

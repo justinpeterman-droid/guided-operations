@@ -2,7 +2,8 @@
 
 - **Recorded:** 2026-08-27
 - **Scope:** authoritative Supabase non-production project only
-- **Data state:** empty application tables and empty private Storage buckets
+- **Data state on 2026-08-27:** empty application tables and empty private
+  Storage buckets; one exact fictional qualification identity was added later
 - **Hosted changes made by this reconciliation:** none
 
 ## Why reconciliation was required
@@ -24,8 +25,8 @@ was reapplied.
 
 ## Evidence reviewed
 
-- The intended project name, `us-east-1` region, healthy provider state, and
-  empty application/Storage inventory were rechecked.
+- The intended project name, `us-east-1` region, healthy provider state, and the
+  then-empty application/Storage inventory were rechecked.
 - The complete ordered hosted migration list was compared with every repository
   filename.
 - The affected hosted functions, identities, return types, language, volatility,
@@ -54,10 +55,16 @@ SQL contents were not changed. After the rename:
 - [x] Pass database lint, all 411 pgTAP assertions, generated-type, and
       production-inventory checks in a clean checkout on 2026-08-27.
 - [ ] Pass exact-head Web quality and recovery rehearsal CI.
-- [ ] Run a linked `supabase db push --dry-run` and confirm that it proposes
-      only migrations after `20260826081706`.
-- [ ] Review the pending SQL for locks, compatibility, Auth/RLS/Storage changes,
-      and rollback behavior.
+- [x] Run a linked `supabase db push --dry-run` and confirm that it proposes
+      only unapplied migrations. The 2026-08-28 refresh found the hosted head at
+      `20260827120000` and proposed the exact 13-migration repository suffix;
+      see
+      [`2026-08-28-development-migration-dry-run.md`](2026-08-28-development-migration-dry-run.md).
+- [x] Review the pending SQL for locks, compatibility, Auth/RLS/Storage changes,
+      and rollback behavior. The empty-target-only lock assumptions, coordinated
+      Auth/application promotion requirement, enum rollback limit, and remaining
+      stop gates are recorded in
+      [`2026-08-28-pending-migration-review.md`](2026-08-28-pending-migration-review.md).
 - [ ] Record approval for the exact non-production apply.
 - [ ] Apply, verify the exact head, and run hosted fictional qualification.
 

@@ -403,10 +403,12 @@ signed-in workflow pass in the guarded fictional browser lane**
 
 ## Phase 5 — policy corpus and grounded assistance
 
-Status: **the resumable local MinerU, provenance, collection-aware lexical
-retrieval, and citation code are implemented and pass fictional local tests;
-real corpus review/import, embeddings, hybrid qualification, hosted migration,
-and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
+Status: **the resumable local MinerU, provenance, collection-aware retrieval,
+pinned query-embedding adapter, resumable chunk-embedding foundation,
+deterministic hybrid fusion, and citation code are implemented and pass
+fictional local tests; real corpus review/import/embedding, vector-index
+measurement, hybrid qualification, hosted migration, and evaluation remain
+blocked on OQ-008, OQ-009, and OQ-010**
 
 ### Steps
 
@@ -433,7 +435,10 @@ and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 8. Review current OpenAI project data controls and endpoint retention before
    sending restricted corpus text. Do not opt in to API data sharing. Decide
    whether default retention is acceptable or approved retention controls are
-   required.
+   required. The application and local embedding CLI now fail closed unless an
+   operator records a safe approval reference, an approved Zero Data Retention
+   or Modified Abuse Monitoring mode, and API data sharing exactly `false`;
+   hosted project verification and owner evidence remain required.
 9. Port Policy Expert and the archived full-policy-reader behavior: approved
    source IDs, source/version/page citations, bounded passages, original-PDF
    fallback, passage highlighting, and accessible focus restoration.
@@ -457,8 +462,9 @@ and evaluation remain blocked on OQ-008, OQ-009, and OQ-010**
 
 Status: **account/audit/health controls, purpose-bound legal-hold operation,
 bounded two-year review, fail-closed controlled deletion, redacted core
-telemetry, and local recovery are implemented; hosted deletion/recovery
-rehearsal, monitoring, alerts, budgets, and exercises remain open**
+telemetry, a machine-enforced runtime logging boundary, and local recovery are
+implemented; hosted deletion/recovery rehearsal, monitoring, alerts, budgets,
+and exercises remain open**
 
 ### Steps
 

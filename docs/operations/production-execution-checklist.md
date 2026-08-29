@@ -74,7 +74,16 @@ Pause and report a blocker instead of guessing when work requires:
       24 pgTAP tests passed on 2026-08-25.
 - [x] Add automated tracked-secret scanning and high-severity production
       dependency review.
-- [ ] Review Dependabot updates individually.
+- [x] Review current Dependabot alerts and dependency integrity. The read-only
+      review on 2026-08-28 found zero open Dependabot alerts; `npm audit` found
+      zero vulnerabilities in 461 locked packages, and npm verified signatures
+      for all 461 packages plus attestations for 132. No version update was
+      applied because available non-security updates require narrow,
+      individually qualified changes.
+- [ ] Enable GitHub code scanning and secret scanning, or record an owner risk
+      decision and an equivalent supported control. The read-only 2026-08-28 API
+      check found both repository services unavailable; the repository CI
+      scanner remains an additional control, not a provider-side substitute.
 - [x] Confirm no secret, real operational data, restricted corpus content,
       provider-link metadata, browser artifact, generated document/archive, or
       generated build output is tracked. The tracked-secret scanner and
@@ -113,13 +122,44 @@ Pause and report a blocker instead of guessing when work requires:
       browser quality (`33189510850`) are green for exact commit `9a01c92` on
       2026-08-28. The dated local-candidate record keeps hosted, corpus, manual,
       owner, and promotion gates open.
-- [x] Re-run the complete non-database local web gate for the
-      readiness-observability working tree based on `3caaca7`: formatting,
-      ESLint, TypeScript, 210 Vitest files/655 tests, 52 operations tests, and
-      the optimized Next.js 16.3.2 Production build pass. Tracked-secret and
-      production-dependency scans are clean; the scoped security diff review has
-      no reportable finding. Database, recovery, hosted browser, corpus, manual,
-      owner, and promotion gates remain open.
+- [x] Re-run the complete local hybrid-retrieval working-tree gate based on
+      `f18cc00`: formatting, ESLint, TypeScript, 214 passing Vitest files/681
+      passing tests, 66 operations tests, the optimized Next.js 16.3.2
+      Production build, database reset/lint, and 23 pgTAP files/628 database
+      tests pass. The tracked-secret, production-dependency, and data-inventory
+      checks also pass. The local ingestion suite passes all 31 tests, including
+      the actual local database repository query. Test fixtures remain
+      fictional.
+- [x] Run the current working tree through Production-style Chromium using only
+      fictional local data. All 26 public/Preview, mobile, reduced-motion,
+      keyboard-focus, automated WCAG A/AA, print, forms, Count Sheet, officer,
+      policy, report, and administrator screen checks passed. The guarded
+      authenticated qualification then passed all 33 checks covering generic
+      sign-in resistance, two-browser revocation, Officer Count Sheet,
+      per-officer report access, reviewed incident creation, administrator
+      denial/roster, and final cleanup. This is strong local browser evidence,
+      but it is not protected-Preview or exact-commit cloud-CI evidence.
+- [x] Remediate and independently verify security finding `rag/page-qa-egress`.
+      The embedding selector now requires every physical page in the bounded
+      chunk range, holds database locks through provider egress, and clears
+      stale run/page/chunk QA after evidence changes. An independent bypass
+      review identified race and stale-QA cases; the final migration and
+      repository changes cover them. Local reset, schema lint, all 23 pgTAP
+      files/628 tests, and all 31 ingestion tests including the actual local
+      repository query pass. No real text was sent to an external provider.
+- [ ] Restore GitHub-hosted runner execution before treating the branch as an
+      exact candidate. On 2026-08-28 all four workflows for `f18cc00` failed
+      before any workflow step ran; the jobs show `runner_id: 0`, no assigned
+      runner, and an empty step list. Repository Actions are enabled and allow
+      all actions, so local success does not satisfy the required cloud-CI gate.
+      A Web quality retry (`33220340201`, attempt 2, job `99020335878`) on
+      2026-08-28 reproduced the same two-second no-step failure with
+      `runner_id: 0`. After GitHub's public status returned to all-systems
+      operational, attempt 3 (job `99024789864`) failed identically in three
+      seconds with no runner and no steps. Repository/API evidence cannot expose
+      the account billing or hosted-runner allocation reason with the current
+      credential, so the owner must inspect GitHub billing/Actions usage or
+      contact GitHub Support. The external runner gate remains open.
 
 ### Phase 0 exit
 
@@ -200,6 +240,23 @@ Pause and report a blocker instead of guessing when work requires:
 - [ ] Rebuild and qualify the reconciled migration set, run a linked dry-run,
       and apply the pending additive migrations only through the recorded
       non-production approval path.
+  - [x] The 2026-08-28 linked Development dry-run proposed exactly the expected
+        13-migration suffix after the hosted head, with no seeds, roles, or
+        hosted changes. See
+        [`2026-08-28-development-migration-dry-run.md`](2026-08-28-development-migration-dry-run.md).
+        Exact-commit review, security remediation, CI, and the separately
+        controlled apply remain open.
+  - [x] Review the exact 13-file SQL set for destructive DDL, migration-time
+        data changes, locks, uniqueness, grants, Auth-hook compatibility, and
+        rollback. No table/schema/column drop or anonymous-access change was
+        found; the review is valid only for the verified fictional Development
+        boundary and is recorded in
+        [`2026-08-28-pending-migration-review.md`](2026-08-28-pending-migration-review.md).
+  - [x] Add and run a value-free read-only Development data-boundary verifier.
+        It proved one exact fictional fixture account, zero operational rows,
+        two private buckets, and zero Storage objects across 31 application
+        tables. See
+        [`2026-08-28-development-data-boundary.md`](2026-08-28-development-data-boundary.md).
 - [ ] Inspect desktop/mobile Preview text, assets, console, network, headers,
       focus, and protection boundaries.
   - [x] The exact local Production build passes all 26 database-independent
@@ -519,9 +576,19 @@ Pause and report a blocker instead of guessing when work requires:
       deterministic chunks/hashes, local Supabase import, and full-text-indexed
       lexical retrieval foundation. It preserves the three canonical
       collections, supports all-collection and one-collection search, and keeps
-      imports awaiting review. No real source was processed or activated.
+      imports awaiting review. After owner authorization and the complete local
+      gates, the first Defender-scanned real source completed local-only MinerU
+      extraction as three pages and three chunks in `awaiting_review`; the
+      resumable remainder is running. Nothing was imported, embedded, sent to a
+      provider, or activated.
 - [ ] Generate approved embeddings, select and measure the vector index, and
       qualify deterministic hybrid rank fusion on the accepted corpus.
+  - [x] Implement a fictional local foundation for pinned OpenAI query
+        embeddings, resumable approved-chunk embedding batches, exact profile
+        and dimension validation, and database-authorized deterministic
+        reciprocal-rank fusion. Provider failure is explicit and no real policy
+        text was sent. Real embedding, index measurement, evaluation, and
+        activation remain open.
 - [x] Implement separate provider-neutral retrieval and generation adapters,
       including database-enforced approved-version filtering for bounded
       evaluation and catalog requests. Collection filtering now stays inside the
@@ -531,6 +598,14 @@ Pause and report a blocker instead of guessing when work requires:
       redacted errors.
 - [ ] Review OpenAI project data controls/retention and keep API data sharing
       disabled.
+  - Local implementation evidence: every server OpenAI adapter and the local
+    policy-embedding command now reject provider calls unless an opaque approval
+    reference, an approved retention mode, and API data sharing exactly `false`
+    are configured. An operator-only verifier can independently query the exact
+    project's retention mode with a temporary Admin key and returns no key or
+    project identifier. Hosted execution, dashboard confirmation that data
+    sharing is disabled, and owner evidence remain open, so this release gate is
+    not checked complete.
 - [x] Implement Policy Expert and the protected full-source reader with
       immutable source/version/page citations and insufficient-evidence
       behavior. Each visible citation opens the authorized, checksum-verified
@@ -595,6 +670,12 @@ Pause and report a blocker instead of guessing when work requires:
       content-free success/unavailable event with no provider/configuration
       details after complete environment validation. Hosted sinks, Storage/DB
       signals, access/retention, alerts, and delivery tests remain open.
+- [x] Add a machine-checked runtime-output boundary. Production `src` code now
+      fails the security gate if it writes directly to `console`, stdout, or
+      stderr anywhere except the strict safe operational-event sink. Fictional
+      negative tests prove direct output is rejected without retaining the
+      attempted value; all 55 operations tests, tracked-secret scanning, the
+      runtime logging check, and the production dependency audit pass locally.
 - [x] Maintain a machine-checked production data inventory covering every
       private application table and Storage bucket plus Auth, AI, logs, browser,
       non-production, support, and backup surfaces. Hosted settings, deletion
@@ -727,17 +808,21 @@ Pause and report a blocker instead of guessing when work requires:
 
 ## Immediate next actions
 
-1. Rebuild the timestamp-reconciled migration set from zero and rerun exact-head
-   web, database, and recovery CI.
-2. Run a read-only linked non-production migration dry-run and review its exact
-   pending list before any hosted apply.
-3. Apply the approved additive set to the empty non-production project, then
-   create fictional Officer and Administrator qualification accounts.
+1. Resolve GitHub-hosted runner/account execution and obtain green web,
+   database, recovery, and authenticated-browser CI on the exact new commit.
+2. Review and bind the recorded 13-migration Development dry-run to the final
+   security-cleared exact commit; rerun if the candidate changes.
+3. Apply the approved additive set to the verified fictional-only non-production
+   project, then create only the additional fictional Officer qualification
+   account required for hosted testing.
 4. Run hosted Auth, RLS, Storage, browser, accessibility, responsive, print, and
    degraded-provider qualification; remove the fictional accounts and data when
    evidence is retained.
-5. Ingest the approved corpus only after its private manifest and provider-use
-   controls pass, then run citation, refusal, and injection evaluation.
-6. Freeze an exact candidate and complete the isolated Production setup, restore
+5. Complete local-only MinerU extraction of the owner-authorized corpus, then
+   finish its private manifest and human page/chunk QA. Keep import, embeddings,
+   and provider use blocked until their separate controls pass.
+6. Generate embeddings only after provider-use controls pass, then run citation,
+   refusal, and injection evaluation.
+7. Freeze an exact candidate and complete the isolated Production setup, restore
    rehearsal, promotion, smoke tests, monitoring window, rollback test, and
    final owner acceptance.
