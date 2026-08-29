@@ -1,6 +1,6 @@
 begin;
 
-select plan(23);
+select plan(38);
 
 select has_table(
   'app_private',
@@ -218,6 +218,211 @@ select is(
   'the fictional ingestion run has two bounded source pages'
 );
 
+select has_function(
+  'app_private',
+  'policy_chunk_pages_are_approved',
+  array['uuid', 'integer', 'integer'],
+  'one private helper proves approval for every source page in a chunk range'
+);
+
+select is(
+  app_private.policy_chunk_pages_are_approved(
+    '30303030-3030-4030-8030-303030303030',
+    1,
+    2
+  ),
+  true,
+  'a complete approved multi-page range is eligible'
+);
+
+select is(
+  app_private.policy_chunk_pages_are_approved(
+    '30303030-3030-4030-8030-303030303030',
+    1,
+    3
+  ),
+  false,
+  'a range with a missing source page fails closed'
+);
+
+select is(
+  app_private.policy_chunk_pages_are_approved(
+    '30303030-3030-4030-8030-303030303030',
+    null,
+    2
+  ),
+  false,
+  'a legacy chunk without a complete page range fails closed'
+);
+
+select throws_ok(
+  $$
+    update app_private.policy_pages
+    set review_status = 'pending'
+    where ingestion_run_id = '30303030-3030-4030-8030-303030303030'
+      and source_page_index = 2
+  $$,
+  'Move the policy ingestion run out of ready before changing its page or chunk evidence',
+  'an approved page cannot become pending while its ingestion run is ready'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.policy_pages (
+      document_version_id, ingestion_run_id, source_page_index,
+      normalized_text, normalized_text_sha256, extraction_mode, review_status
+    ) values (
+      '20202020-2020-4020-8020-202020202020',
+      '30303030-3030-4030-8030-303030303030',
+      3,
+      'Fictional late pending page.',
+      repeat('b', 64),
+      'native',
+      'pending'
+    )
+  $$,
+  'Move the policy ingestion run out of ready before changing its page or chunk evidence',
+  'a pending page cannot be inserted after an ingestion run becomes ready'
+);
+
+select throws_ok(
+  $$
+    insert into app_private.policy_chunks (
+      id, document_version_id, ingestion_run_id, ordinal, page_start, page_end,
+      content, content_sha256, lifecycle_status, qa_approved
+    ) values (
+      '50505050-5050-4050-8050-505050505050',
+      '20202020-2020-4020-8020-202020202020',
+      '30303030-3030-4030-8030-303030303030',
+      1,
+      1,
+      2,
+      'Fictional late policy passage.',
+      repeat('c', 64),
+      'active',
+      true
+    )
+  $$,
+  'Move the policy ingestion run out of ready before changing its page or chunk evidence',
+  'a chunk cannot be inserted after an ingestion run becomes ready'
+);
+
+update app_private.policy_ingestion_runs
+set status = 'awaiting_review'
+where id = '30303030-3030-4030-8030-303030303030';
+
+update app_private.policy_pages
+set normalized_text = 'Fictional corrected second page.',
+    normalized_text_sha256 = repeat('d', 64)
+where ingestion_run_id = '30303030-3030-4030-8030-303030303030'
+  and source_page_index = 2;
+
+update app_private.policy_chunks
+set content = 'Fictional corrected bounded policy passage.',
+    content_sha256 = repeat('e', 64)
+where id = '40404040-4040-4040-8040-404040404040';
+
+select is(
+  (
+    select review_status::text
+    from app_private.policy_pages
+    where ingestion_run_id = '30303030-3030-4030-8030-303030303030'
+      and source_page_index = 2
+  ),
+  'pending',
+  'changing page evidence clears the page approval'
+);
+
+select is(
+  (
+    select qa_status::text
+    from app_private.policy_ingestion_runs
+    where id = '30303030-3030-4030-8030-303030303030'
+  ),
+  'pending',
+  'changing page or chunk evidence clears the run-level QA approval'
+);
+
+select is(
+  (
+    select lifecycle_status::text || ':' || qa_approved::text
+    from app_private.policy_chunks
+    where id = '40404040-4040-4040-8040-404040404040'
+  ),
+  'pending:false',
+  'changing chunk evidence clears the chunk approval and activation'
+);
+
+update app_private.policy_chunks
+set lifecycle_status = 'active',
+    qa_approved = true
+where id = '40404040-4040-4040-8040-404040404040';
+
+select throws_ok(
+  $$
+    update app_private.policy_ingestion_runs
+    set status = 'ready',
+        qa_status = 'approved',
+        qa_reviewed_by = '15151515-1515-4515-8515-151515151515',
+        qa_reviewed_at = statement_timestamp(),
+        page_count = 1,
+        chunk_count = 1
+    where id = '30303030-3030-4030-8030-303030303030'
+  $$,
+  'Ready policy ingestion counts and QA evidence must match stored pages and chunks',
+  'aggregate counts cannot hide a pending page inside an approved chunk range'
+);
+
+update app_private.policy_pages
+set review_status = 'approved'
+where ingestion_run_id = '30303030-3030-4030-8030-303030303030'
+  and source_page_index = 2;
+
+select is(
+  (
+    select review_status::text
+    from app_private.policy_pages
+    where ingestion_run_id = '30303030-3030-4030-8030-303030303030'
+      and source_page_index = 2
+  ),
+  'approved',
+  'a corrected page can receive a fresh approval'
+);
+
+select is(
+  (
+    select lifecycle_status::text || ':' || qa_approved::text
+    from app_private.policy_chunks
+    where id = '40404040-4040-4040-8040-404040404040'
+  ),
+  'active:true',
+  'a corrected chunk can receive fresh QA and activation'
+);
+
+select is(
+  app_private.policy_chunk_pages_are_approved(
+    '30303030-3030-4030-8030-303030303030',
+    1,
+    2
+  ),
+  true,
+  'fresh review restores complete page-range eligibility'
+);
+
+select lives_ok(
+  $$
+    update app_private.policy_ingestion_runs
+    set status = 'ready',
+        qa_status = 'approved',
+        qa_reviewed_by = '15151515-1515-4515-8515-151515151515',
+        qa_reviewed_at = statement_timestamp(),
+        page_count = 2,
+        chunk_count = 1
+    where id = '30303030-3030-4030-8030-303030303030';
+  $$,
+  'fresh page, chunk, and run QA can return corrected evidence to ready'
+);
+
 select throws_ok(
   $$
     update app_private.policy_ingestion_runs
@@ -275,6 +480,10 @@ select throws_ok(
   'a new policy chunk cannot omit its ingestion run'
 );
 
+update app_private.policy_ingestion_runs
+set status = 'awaiting_review'
+where id = '30303030-3030-4030-8030-303030303030';
+
 select throws_ok(
   $$
     insert into app_private.policy_chunks (
@@ -293,6 +502,10 @@ select throws_ok(
   'Policy chunk source-page range is incomplete',
   'a policy chunk cannot cite a page absent from its ingestion run'
 );
+
+update app_private.policy_ingestion_runs
+set status = 'ready'
+where id = '30303030-3030-4030-8030-303030303030';
 
 select ok(
   exists (

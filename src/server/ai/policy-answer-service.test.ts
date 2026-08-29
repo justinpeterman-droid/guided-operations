@@ -167,6 +167,19 @@ describe("policy answer service", () => {
     });
   });
 
+  it("preserves a bounded budget reason from query embedding", async () => {
+    const { service } = createService(
+      vi
+        .fn()
+        .mockRejectedValue(new AiBudgetCircuitOpenError("budget_exhausted")),
+    );
+
+    await expect(service.answer(request)).resolves.toEqual({
+      kind: "provider_unavailable",
+      reasonCode: "budget_exhausted",
+    });
+  });
+
   it("preserves only the bounded budget reason for an honest degraded state", async () => {
     const { service } = createService(
       undefined,

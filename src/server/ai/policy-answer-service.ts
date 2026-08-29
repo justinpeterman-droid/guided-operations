@@ -122,7 +122,13 @@ export function createPolicyAnswerService(
             ? { collections: [...request.collections] }
             : {}),
         });
-      } catch {
+      } catch (error) {
+        if (error instanceof AiBudgetCircuitOpenError) {
+          return {
+            kind: "provider_unavailable",
+            reasonCode: error.reasonCode,
+          };
+        }
         return { kind: "provider_unavailable", reasonCode: "retrieval_failed" };
       }
 

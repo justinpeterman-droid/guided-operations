@@ -7,6 +7,7 @@ import {
 } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createOpenAiGroundedGenerationProvider } from "@/server/ai/providers/openai-grounded-generation";
+import { createOpenAiPolicyQueryEmbeddingProvider } from "@/server/ai/providers/openai-query-embedding";
 import { createPolicyAnswerService } from "@/server/ai/policy-answer-service";
 import { validatePolicyAnswerEndpointRequest } from "@/server/ai/policy-answer-endpoint";
 import { createSupabasePolicyRetrievalProvider } from "@/server/ai/supabase-policy-retrieval";
@@ -74,7 +75,12 @@ export async function POST(request: Request): Promise<Response> {
 
     const service = createPolicyAnswerService(
       {
-        retrieval: createSupabasePolicyRetrievalProvider(client),
+        retrieval: createSupabasePolicyRetrievalProvider(
+          client,
+          createOpenAiPolicyQueryEmbeddingProvider({
+            accountId: session.account.authUserId,
+          }),
+        ),
         generation: createOpenAiGroundedGenerationProvider({
           accountId: session.account.authUserId,
         }),

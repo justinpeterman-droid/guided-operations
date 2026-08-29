@@ -536,6 +536,33 @@ export type Database = {
           version_label: string
         }[]
       }
+      retrieve_policy_passages_v4: {
+        Args: {
+          p_approved_document_version_ids?: string[]
+          p_collections?: string[]
+          p_embedding_profile_key: string
+          p_limit?: number
+          p_query_embedding: string
+          p_question: string
+        }
+        Returns: {
+          chunk_id: string
+          collection: string
+          document_id: string
+          document_version_id: string
+          excerpt: string
+          lexical_rank: number
+          page_end: number
+          page_start: number
+          relevance_score: number
+          section_path: string
+          semantic_rank: number
+          source_sha256: string
+          stable_key: string
+          title: string
+          version_label: string
+        }[]
+      }
       save_count_sheet: {
         Args: {
           p_base_revision_number: number

@@ -1,6 +1,6 @@
 begin;
 
-select plan(214);
+select plan(225);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1855,6 +1855,25 @@ select ok(
   'only authenticated users can execute collection-filtered policy retrieval'
 );
 
+select ok(
+  has_function_privilege(
+    'authenticated',
+    'api.retrieve_policy_passages_v4(text,extensions.vector,text,integer,uuid[],text[])',
+    'execute'
+  )
+  and not has_function_privilege(
+    'anon',
+    'api.retrieve_policy_passages_v4(text,extensions.vector,text,integer,uuid[],text[])',
+    'execute'
+  )
+  and not has_function_privilege(
+    'service_role',
+    'api.retrieve_policy_passages_v4(text,extensions.vector,text,integer,uuid[],text[])',
+    'execute'
+  ),
+  'only authenticated users can execute hybrid policy retrieval'
+);
+
 select lives_ok(
   $$
     insert into app_private.policy_documents (
@@ -1958,6 +1977,50 @@ select lives_ok(
       true
     );
 
+    insert into app_private.policy_chunks (
+      id, document_version_id, ingestion_run_id, ordinal, page_start, page_end,
+      printed_page_start, printed_page_end, section_path, content,
+      content_sha256, lifecycle_status, qa_approved
+    ) values (
+      'ecececec-ecec-4cec-8cec-ecececececec',
+      'bcbcbcbc-bcbc-4cbc-8cbc-bcbcbcbcbcbc',
+      'dededede-dede-4ede-8ede-dededededede',
+      1,
+      1,
+      1,
+      'Fictional 1',
+      'Fictional 1',
+      'Distinct access wording',
+      'Distinctly worded access permissions apply.',
+      repeat('8', 64),
+      'active',
+      true
+    );
+
+    insert into app_private.embedding_profiles (
+      profile_key, provider, model, dimensions, enabled
+    ) values (
+      'fictional.openai-embedding-v1',
+      'openai',
+      'fictional-embedding-model',
+      3,
+      true
+    );
+
+    insert into app_private.policy_chunk_embeddings (
+      policy_chunk_id, profile_key, embedding
+    ) values
+      (
+        'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd',
+        'fictional.openai-embedding-v1',
+        '[0.7,0.7,0]'::extensions.vector
+      ),
+      (
+        'ecececec-ecec-4cec-8cec-ecececececec',
+        'fictional.openai-embedding-v1',
+        '[1,0,0]'::extensions.vector
+      );
+
     update app_private.policy_ingestion_runs
     set status = 'ready',
         qa_status = 'approved',
@@ -1967,7 +2030,7 @@ select lives_ok(
         qa_reviewed_at = statement_timestamp(),
         completed_at = statement_timestamp(),
         page_count = 1,
-        chunk_count = 1
+        chunk_count = 2
     where id = 'dededede-dede-4ede-8ede-dededededede';
   $$,
   'a fictional approved and indexed policy chunk can be staged for retrieval tests'
@@ -2007,6 +2070,22 @@ select is(
   ),
   0,
   'collection filtering cannot bypass the missing-account denial'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      null
+    )
+  ),
+  0,
+  'hybrid retrieval cannot bypass the missing-account denial'
 );
 
 select set_config('request.jwt.claim.sub', '33333333-3333-4333-8333-333333333333', true);
@@ -2130,6 +2209,70 @@ select is(
   'a collection filter excludes passages from other collections'
 );
 
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      null
+    )
+  ),
+  2,
+  'hybrid retrieval fuses lexical and semantic candidates from the authorized corpus'
+);
+
+select is(
+  (
+    select chunk_id
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      1,
+      null,
+      null
+    )
+  ),
+  'cdcdcdcd-cdcd-4dcd-8dcd-cdcdcdcdcdcd'::uuid,
+  'deterministic rank fusion promotes a passage supported by both lexical and semantic rank'
+);
+
+select is(
+  (
+    select chunk_id
+    from api.retrieve_policy_passages_v4(
+      'authorization vocabulary',
+      '[1,0,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      1,
+      null,
+      null
+    )
+  ),
+  'ecececec-ecec-4cec-8cec-ecececececec'::uuid,
+  'semantic rank can retrieve an authorized passage without an exact word match'
+);
+
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      array['SD']::text[]
+    )
+  ),
+  0,
+  'hybrid collection filtering cannot cross into another collection'
+);
+
 select throws_ok(
   $$
     select *
@@ -2171,6 +2314,70 @@ select throws_ok(
   'an unknown collection filter is rejected'
 );
 
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      array[]::text[]
+    );
+  $$,
+  'Invalid policy collection filter',
+  'hybrid retrieval rejects an empty collection filter instead of widening it'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'unknown.embedding-profile',
+      8,
+      null,
+      null
+    );
+  $$,
+  'Invalid policy query embedding',
+  'hybrid retrieval rejects an unknown or disabled embedding profile'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      null
+    );
+  $$,
+  'Invalid policy query embedding',
+  'hybrid retrieval rejects a vector whose dimension does not match its profile'
+);
+
+select throws_ok(
+  $$
+    select *
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0,0,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      null
+    );
+  $$,
+  'Invalid policy query embedding',
+  'hybrid retrieval rejects a zero query vector'
+);
+
 reset role;
 
 update app_private.policy_document_versions
@@ -2184,6 +2391,21 @@ select is(
   (select count(*)::integer from api.retrieve_policy_passages('fictional procedure', 8)),
   0,
   'retrieval excludes a policy version whose rights review expired'
+);
+select is(
+  (
+    select count(*)::integer
+    from api.retrieve_policy_passages_v4(
+      'fictional procedure',
+      '[0.7,0.7,0]'::extensions.vector,
+      'fictional.openai-embedding-v1',
+      8,
+      null,
+      null
+    )
+  ),
+  0,
+  'hybrid retrieval excludes a policy version whose rights review expired'
 );
 reset role;
 

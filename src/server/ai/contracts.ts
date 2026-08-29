@@ -13,6 +13,17 @@ export interface RetrievedPolicyPassage {
   relevanceScore: number;
 }
 
+export interface PolicyQueryEmbedding {
+  profileKey: string;
+  dimensions: number;
+  values: number[];
+}
+
+export interface PolicyQueryEmbeddingProvider {
+  readonly providerKey: string;
+  embedQuestion(question: string): Promise<PolicyQueryEmbedding>;
+}
+
 export interface PolicyRetrievalRequest {
   facilityId: string;
   question: string;

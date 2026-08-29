@@ -20,6 +20,9 @@ vi.mock("@/server/ai/supabase-policy-retrieval", () => ({
 vi.mock("@/server/ai/providers/openai-grounded-generation", () => ({
   createOpenAiGroundedGenerationProvider: vi.fn(),
 }));
+vi.mock("@/server/ai/providers/openai-query-embedding", () => ({
+  createOpenAiPolicyQueryEmbeddingProvider: vi.fn(),
+}));
 vi.mock("@/server/observability/safe-operational-event", () => ({
   writeSafeOperationalEvent: vi.fn(),
 }));
@@ -29,6 +32,8 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createPolicyAnswerService } from "@/server/ai/policy-answer-service";
 import { createOpenAiGroundedGenerationProvider } from "@/server/ai/providers/openai-grounded-generation";
+import { createOpenAiPolicyQueryEmbeddingProvider } from "@/server/ai/providers/openai-query-embedding";
+import { createSupabasePolicyRetrievalProvider } from "@/server/ai/supabase-policy-retrieval";
 import { validatePolicyAnswerEndpointRequest } from "@/server/ai/policy-answer-endpoint";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { writeSafeOperationalEvent } from "@/server/observability/safe-operational-event";
@@ -106,6 +111,13 @@ describe("POST /api/web/v1/policy-answer", () => {
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
     ).not.toContain("Fictional cited answer");
+    expect(createOpenAiPolicyQueryEmbeddingProvider).toHaveBeenCalledWith({
+      accountId: session.account.authUserId,
+    });
+    expect(createSupabasePolicyRetrievalProvider).toHaveBeenCalledWith(
+      client,
+      undefined,
+    );
     expect(
       JSON.stringify(vi.mocked(writeSafeOperationalEvent).mock.calls),
     ).not.toContain("Earlier fictional question");
