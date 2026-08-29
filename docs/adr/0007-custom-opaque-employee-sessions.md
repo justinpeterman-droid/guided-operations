@@ -19,13 +19,19 @@ Product authentication uses these boundaries:
 
 1. Normalize the submitted employee number and compute an HMAC-SHA256 lookup digest with `EMPLOYEE_LOOKUP_PEPPER`.
 2. A dedicated server-only pre-authentication Postgres role may execute only narrowly reviewed account lookup and rate-limit functions.
-3. Passcodes are stored only as Argon2id hashes in `app_private.user_credentials`.
+3. Passcodes are stored only as versioned **scrypt** hashes in `app_private.user_credentials`. The implementation uses Node's built-in asynchronous `crypto.scrypt` and OWASP's approved memory-hard profile `N=2^15`, `r=8`, `p=3` (approximately 32 MiB), with a random 16-byte salt and 32-byte derived key.
 4. Successful login creates an opaque `go_session=<uuid>.<secret>` browser cookie. The raw secret exists only in the cookie and request memory.
 5. PostgreSQL stores only HMAC-SHA256 session-secret digests and a short previous-secret grace digest during rotation.
 6. Next.js resolves and verifies the opaque session before protected reads or mutations, rechecking account status, role, `auth_version`, expiry, and forced-change state.
 7. Authenticated database work uses a separate least-privileged runtime Postgres role. A transaction sets a verified `app.current_account_id` only after session validation; grants and RLS remain defense in depth.
 8. Routine product authentication does not use Supabase Auth user sessions, browser JWTs, or the Supabase service-role/secret key.
 9. Administrator elevation lasts no more than 15 minutes. High-impact actions require a purpose-bound, single-use step-up artifact that expires after 5 minutes.
+
+### Why scrypt instead of a native Argon2 package
+
+Argon2id remains OWASP's first choice when available. OWASP explicitly recommends scrypt when Argon2id is unavailable and lists `N=2^15`, `r=8`, `p=3` as one of the equivalent minimum profiles. Node 22 provides scrypt in the built-in `node:crypto` module, so this selection avoids an additional native binary dependency and its platform-specific supply-chain/install surface while preserving a reviewed memory-hard password KDF.
+
+The stored format includes the algorithm version and exact parameters. Verification rejects hashes whose parameters do not match the accepted profile rather than silently accepting a weaker work factor.
 
 ## Credential policy
 
@@ -87,7 +93,7 @@ The last active administrator cannot be disabled or demoted. Account creation, r
 This ADR is implemented only when tests prove:
 
 - generic bounded behavior for known and unknown employee numbers;
-- Argon2id passcode verification and weak-passcode rejection;
+- versioned scrypt passcode verification and weak-passcode rejection;
 - secure cookie creation, rotation, expiry, logout, logout-all, reset, disable, lockout, and `auth_version` revocation;
 - no raw employee number, passcode, session secret, or credential hash in browser storage, logs, audit metadata, or API errors;
 - pre-auth and runtime database roles cannot bypass their grants/RLS boundaries;
@@ -109,5 +115,7 @@ This ADR is implemented only when tests prove:
 - ADR-0003: `docs/adr/0003-employee-number-pin-auth.md`
 - Authentication/RBAC/RLS: `docs/architecture/auth-rbac-rls.md`
 - Security policy: `SECURITY.md`
+- OWASP Password Storage Cheat Sheet: https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html
+- Node.js `crypto.scrypt`: https://nodejs.org/api/crypto.html#cryptoscryptpassword-salt-keylen-options-callback
 - Supabase JWT documentation: https://supabase.com/docs/guides/auth/jwts
 - Supabase Custom Access Token Hook: https://supabase.com/docs/guides/auth/auth-hooks/custom-access-token-hook
