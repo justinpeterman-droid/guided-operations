@@ -37,25 +37,24 @@ describe("opaque authentication tokens", () => {
   });
 
   it("derives and constant-time verifies a session-bound CSRF token", () => {
-    const token = deriveCsrfToken(
-      "3d3740e1-2c0e-45fc-8a25-c9d01cf6bd93",
-      "session-secret",
-      "csrf-key",
-    );
+    const sessionId = "3d3740e1-2c0e-45fc-8a25-c9d01cf6bd93";
+    const token = deriveCsrfToken(sessionId, "session-secret", "csrf-key");
+    const replacement = token.at(-1) === "A" ? "B" : "A";
+    const tampered = `${token.slice(0, -1)}${replacement}`;
 
     expect(token).toMatch(/^[A-Za-z0-9_-]{43}$/);
     expect(
       verifyCsrfToken(
         token,
-        "3d3740e1-2c0e-45fc-8a25-c9d01cf6bd93",
+        sessionId,
         "session-secret",
         "csrf-key",
       ),
     ).toBe(true);
     expect(
       verifyCsrfToken(
-        `${token.slice(0, -1)}A`,
-        "3d3740e1-2c0e-45fc-8a25-c9d01cf6bd93",
+        tampered,
+        sessionId,
         "session-secret",
         "csrf-key",
       ),
