@@ -11,11 +11,33 @@ from ..models import ExtractionResult, RawBlock, SourceFile
 from .base import ExtractionError
 
 
+def _text_fragments(value: Any) -> list[str]:
+    if isinstance(value, str):
+        return [value.strip()] if value.strip() else []
+    if isinstance(value, list):
+        return [fragment for item in value for fragment in _text_fragments(item)]
+    if isinstance(value, dict):
+        fragments: list[str] = []
+        for key in (
+            "text",
+            "content",
+            "paragraph_content",
+            "title_content",
+            "table_caption",
+            "table_footnote",
+            "table_body",
+            "html",
+        ):
+            if key in value:
+                fragments.extend(_text_fragments(value[key]))
+        return fragments
+    return []
+
+
 def _text(block: dict[str, Any]) -> str:
-    for key in ("text", "content", "table_body", "html"):
-        value = block.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
+    fragments = _text_fragments(block)
+    if fragments:
+        return "\n".join(fragments).strip()
     lines = block.get("lines")
     if isinstance(lines, list):
         parts = []
@@ -36,6 +58,12 @@ def _flatten_content_list(payload: Any) -> tuple[list[dict[str, Any]], int]:
     flattened: list[dict[str, Any]] = []
     page_indexes: set[int] = set()
     for position, item in enumerate(payload):
+        if isinstance(item, list):
+            page_indexes.add(position)
+            for block in item:
+                if isinstance(block, dict):
+                    flattened.append({**block, "page_idx": block.get("page_idx", position)})
+            continue
         if not isinstance(item, dict):
             continue
         nested = item.get("blocks") or item.get("content_list") or item.get("elements")
@@ -68,7 +96,10 @@ def parse_mineru_content(path: Path, version: str) -> ExtractionResult:
         page_index = int(item.get("page_idx", 0))
         kind = str(item.get("type", item.get("block_type", "text"))).lower()
         block_text = _text(item)
+        content = item.get("content")
         level_value = item.get("text_level", item.get("level"))
+        if level_value is None and isinstance(content, dict):
+            level_value = content.get("text_level", content.get("level"))
         try:
             heading_level = int(level_value) if level_value is not None else None
         except (TypeError, ValueError):

@@ -9,7 +9,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from guided_policy_ingestion.connection_guard import require_approved_production_connection
-from guided_policy_ingestion.cli import _importer
+from guided_policy_ingestion.cli import _importer, _run_embedding
 from guided_policy_ingestion.importers.supabase import ImportErrorSafe
 
 PROJECT_REF = "abcdefghijklmnopqrst"
@@ -69,6 +69,9 @@ class ProductionConnectionGuardTests(unittest.TestCase):
                 "SUPABASE_DB_URL": "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
                 "GUIDED_OPERATIONS_FACILITY_ID": "00000000-0000-0000-0000-000000000001",
                 "SUPABASE_PROJECT_REF": PROJECT_REF,
+                "OPENAI_DATA_CONTROLS_APPROVAL_REF": "fictional-owner-approval",
+                "OPENAI_DATA_RETENTION_MODE": "zero_data_retention",
+                "OPENAI_API_DATA_SHARING_ENABLED": "false",
             },
             clear=True,
         ):
@@ -109,6 +112,46 @@ class ProductionConnectionGuardTests(unittest.TestCase):
             clear=True,
         ):
             self.assertIsNotNone(_importer(arguments, Path(__file__).resolve().parents[1]))
+
+    def test_controlled_embedding_requires_explicit_production_confirmation(self) -> None:
+        arguments = Namespace(
+            document_version_id="00000000-0000-4000-8000-000000000001",
+            batch_size=16,
+            limit=None,
+            source_data="controlled-policy",
+            target_environment="local",
+            confirm_controlled_production_embedding=False,
+            profile_key=None,
+            dry_run=False,
+        )
+        with self.assertRaisesRegex(ImportErrorSafe, "explicit confirmation"):
+            _run_embedding(arguments)
+
+    def test_controlled_embedding_rejects_localhost_labeled_production(self) -> None:
+        arguments = Namespace(
+            document_version_id="00000000-0000-4000-8000-000000000001",
+            batch_size=16,
+            limit=None,
+            source_data="controlled-policy",
+            target_environment="production",
+            confirm_controlled_production_embedding=True,
+            profile_key=None,
+            dry_run=False,
+        )
+        with patch.dict(
+            "os.environ",
+            {
+                "SUPABASE_DB_URL": "postgresql://postgres:postgres@127.0.0.1:54322/postgres",
+                "GUIDED_OPERATIONS_FACILITY_ID": "00000000-0000-0000-0000-000000000001",
+                "SUPABASE_PROJECT_REF": PROJECT_REF,
+                "OPENAI_DATA_CONTROLS_APPROVAL_REF": "fictional-owner-approval",
+                "OPENAI_DATA_RETENTION_MODE": "zero_data_retention",
+                "OPENAI_API_DATA_SHARING_ENABLED": "false",
+            },
+            clear=True,
+        ):
+            with self.assertRaisesRegex(ImportErrorSafe, "approved Supabase project"):
+                _run_embedding(arguments)
 
 
 if __name__ == "__main__":
