@@ -4,33 +4,33 @@
 
 **Goal:** Turn the verified no-data Guided Operations foundation into a protected authenticated vertical slice with one fictional administrator, one fictional officer, and a working authenticated dashboard.
 
-**Architecture:** Use employee-number lookup plus application-owned Argon2id credentials and opaque server sessions. Do not send Supabase Auth access/refresh tokens to the browser: Supabase currently requires the `email` claim in access JWTs, so the synthetic-alias SSR design in ADR-0003 cannot satisfy the repository rule that the alias never enters browser storage. Next.js remains the backend-for-frontend; Supabase PostgreSQL stores credential/session metadata behind server-only access, while database grants/RLS remain a second boundary.
+**Architecture:** Use application-owned Argon2id credentials and opaque sessions. The preferred Supabase Auth alias + SSR-token design is rejected because Supabase documents `email` as a required access-token JWT claim; sending that JWT to the browser would place the synthetic alias in browser-held session material, violating ADR-0003's alias-invisibility rule. Next.js remains the BFF. A dedicated pre-auth database role can execute only two lookup/rate-limit functions; a separate authenticated runtime database role operates under a verified `app.current_account_id` request context and RLS. Browser cookies contain only an opaque application session token.
 
-**Tech Stack:** Next.js 16.3 App Router, React 19.2, TypeScript 5.9, PostgreSQL 17/Supabase, Zod 4, Vitest 4, Playwright 1.62, Argon2id, server-only PostgreSQL client.
+**Tech Stack:** Next.js 16.3 App Router, React 19.2, TypeScript 5.9, PostgreSQL 17/Supabase, Zod 4, Vitest 4, Playwright 1.62, Argon2id, `postgres` server-only PostgreSQL client.
 
 **Spec:** `docs/superpowers/specs/2026-08-28-guided-operations-completion-execution-design.md`
 
 ## Global Constraints
 
 - `ROADMAP.md`, `SECURITY.md`, accepted ADRs, and `docs/product/workflow-and-report-safety.md` remain authoritative.
-- The release remains a private, non-commercial hobby app for a small invited group of officers; real operational/personnel data is prohibited.
-- Employee login is employee number plus an individual passcode; no shared facility code, public signup, email/phone login, or public recovery flow.
-- Passcodes for this milestone are 10-64 characters, case-sensitive, not normalized, and may contain printable characters; reject control characters, employee-number equality, repeated/sequence/common values, and known test-fixture weak values. Generated temporary passcodes use 16 characters from an unambiguous letter/digit alphabet.
-- Employee numbers are normalized with Unicode NFKC, trim, uppercase, and the existing product-accepted character set before keyed hashing; raw employee numbers never enter logs, audit metadata, browser storage, or durable rate-limit keys.
-- Browser session cookies contain only an opaque random application token; no Supabase Auth access/refresh token enters browser storage.
-- Session cookie: `go_session`, Secure outside local development, HttpOnly, SameSite=Lax, Path=/, 12-hour absolute lifetime, 60-minute idle lifetime.
-- Session secrets rotate after 30 minutes of age with a 30-second previous-secret grace window for concurrent requests; credential/reset/role/status/logout-all changes revoke all affected sessions immediately.
-- Administrative elevation lasts at most 15 minutes. Purpose-bound step-up artifacts expire after 5 minutes and are single-use.
-- State-changing requests validate authentication, current account state, authorization, Zod input, Origin, Sec-Fetch-Site when present, and a session-bound CSRF token before mutation.
-- Server Components perform reads; Server Actions handle internal form mutations; `proxy.ts` may do cheap redirect filtering but is never the authorization boundary.
-- The existing applied foundation migration is immutable. All database changes are forward-only.
-- Browser code never receives database credentials, peppers, credential hashes, session hashes, AI keys, service-role keys, or unrestricted application-table access.
+- This remains a private, non-commercial hobby release. Real incident, inmate, roster, report, personnel, and operational-paperwork data are prohibited.
+- Employee login is employee number + individual passcode. No shared code, email/phone login, public signup, or public recovery.
+- Passcodes are 10-64 characters, case-sensitive, exact-byte input with no normalization; reject control characters, employee-number equality, repeated/sequence/common values, and repository weak-value fixtures. Generated temporary passcodes are 16 characters from an unambiguous letter/digit alphabet.
+- Employee numbers use NFKC + trim + uppercase before keyed SHA-256 lookup hashing. Raw employee numbers never enter logs, audit metadata, browser storage, or durable rate-limit keys.
+- Browser authentication cookie: `go_session=<uuid>.<43-char-base64url-secret>`, Secure outside local development, HttpOnly, SameSite=Lax, Path=/, 12-hour absolute lifetime, 60-minute idle lifetime.
+- Store only HMAC-SHA256 session-secret digests. Rotate after 30 minutes with a 30-second previous-secret grace window for concurrent requests.
+- Credential reset/change, role/status change, disable, and logout-all increment `auth_version` and revoke affected sessions in the same transaction.
+- Admin elevation lasts 15 minutes. High-impact action step-up expires after 5 minutes, is purpose-bound, and is consumed once.
+- State-changing requests validate session, current account state, authorization, Zod input, Origin, Sec-Fetch-Site when present, and a session-bound CSRF token before mutation.
+- Server Components perform protected reads. Server Actions handle internal form mutations. `proxy.ts` may do cheap redirect filtering but is never authorization.
+- The applied `20260825125137_foundation.sql` migration is immutable. Changes are forward-only.
+- No browser bundle receives database URLs, peppers, hashes, AI secrets, service-role keys, or unrestricted table access.
 - No Google Cloud runtime dependency may be introduced.
-- Hosted database migration, real identity provisioning, production traffic changes, and merge remain explicit owner gates.
+- Hosted migrations, hosted DB-role passwords, identity provisioning, traffic changes, and merges remain explicit owner gates.
 
 ---
 
-### Task 1: Reconcile status truth and replace the failed alias-token design
+### Task 1: Reconcile repository truth and replace ADR-0003
 
 **Files:**
 - Modify: `README.md`
@@ -44,64 +44,66 @@
 - Modify: `docs/OWNER_DECISIONS.md`
 
 **Interfaces:**
-- Consumes: verified Vercel foundation evidence in `docs/operations/2026-08-25-hosted-foundation.md`; owner decisions O-012 through O-014.
-- Produces: accepted authentication architecture contract used by every later task in this plan.
+- Consumes: `docs/operations/2026-08-25-hosted-foundation.md`, O-012 through O-014, and the approved completion spec.
+- Produces: the exact identity/session contract used by Tasks 2-7.
 
-- [ ] **Step 1: Record the evidence that rejects the standard SSR alias bridge**
+- [ ] **Step 1: Mark ADR-0003 Rejected with provider evidence**
 
-In ADR-0003, change the status from `Proposed` to `Rejected` and record the exact incompatibility:
+Add:
 
 ```markdown
 ## Rejection evidence — 2026-08-29
 
-The preferred server-only alias bridge cannot use Supabase's normal SSR access-token cookie flow without violating this ADR's own alias-invisibility requirement. Supabase documents `email` as a required access-token JWT claim that a Custom Access Token Hook cannot remove. A password-auth user whose internal email-like alias is used for sign-in therefore carries that alias inside the access JWT. Sending that JWT to the browser, even in an HttpOnly cookie, places the alias in browser-held session material.
+Supabase documents `email` as a required access-token JWT claim that a Custom Access Token Hook cannot remove. The proposed synthetic email-like sign-in alias would therefore be embedded in the access JWT. Sending the standard Supabase SSR access-token cookie to the browser violates this ADR's requirement that the internal alias never enter browser storage.
 
-The product will not weaken the alias-invisibility acceptance criterion. ADR-0007 replaces this proposal with application-owned opaque sessions and credentials.
+The product will not weaken that acceptance criterion. ADR-0007 replaces this proposal with application-owned credentials and opaque sessions.
 ```
 
-Reference the current official Supabase Custom Access Token Hook and JWT documentation in ADR-0003's references section.
+Reference the official Supabase Custom Access Token Hook and JWT documentation.
 
-- [ ] **Step 2: Create ADR-0007 with the exact accepted session design**
+- [ ] **Step 2: Create ADR-0007 and set it Accepted**
 
-The ADR must state:
-
-```markdown
-- employee number -> keyed SHA-256 lookup digest using EMPLOYEE_LOOKUP_PEPPER
-- passcode -> Argon2id hash stored only in app_private.user_credentials
-- browser -> opaque `<session-id>.<secret>` cookie only
-- database -> only HMAC-SHA256 session-secret digests; never raw session secrets
-- Next.js -> validates opaque session and current account status on protected requests
-- PostgreSQL -> operation-specific grants/RLS plus current account context as defense in depth
-- admin -> 15-minute elevation + 5-minute purpose-bound single-use step-up
-- no Supabase Auth user session tokens are used for product authentication
-```
-
-Set ADR-0007 to `Accepted` under the owner's standing instruction to use the safest recommended implementation after Option A failed its documented security gate.
-
-- [ ] **Step 3: Reconcile stale hosted-current-state paragraphs**
-
-Update README/PRODUCT/ARCHITECTURE/SECURITY/ROADMAP to state only verified facts:
+ADR-0007 must lock these decisions:
 
 ```text
-canonical foundation URL: https://guided-operations.vercel.app
-GitHub -> authoritative Vercel project linkage: verified
-live foundation page: remotely verified
-GET /api/health/live: verified HTTP 200
-owner passcode/admin decisions O-012..O-014: recorded
-sign-in: still disabled until Milestone 1 implementation passes
-real policy corpus: still not imported
-operational/personnel data: still prohibited
+employee lookup: HMAC-SHA256 with EMPLOYEE_LOOKUP_PEPPER
+credential storage: Argon2id in app_private.user_credentials
+browser session: opaque application token only
+pre-auth DB access: dedicated execute-only role/functions
+post-auth DB access: separate runtime role + verified request account context + RLS
+Supabase Auth user sessions: not used for product authentication
+admin elevation: 15 minutes
+step-up: 5 minutes, exact purpose, single use
+passcode: 10-64 chars; generated temporary secret: 16 unambiguous chars
 ```
 
-Remove the stale blockers that claim Git linkage/application inspection and OQ-005/OQ-006/OQ-007 are unresolved. Do not mark authentication itself complete.
+Record that this is the documented fallback already authorized by the approved completion design after Option A failed its security gate.
 
-- [ ] **Step 4: Update the auth/RBAC design for opaque sessions**
+- [ ] **Step 3: Reconcile stale hosted-current-state claims**
 
-Replace `auth.uid()` as the product-session identity source. The target must say the BFF resolves an opaque session to authoritative `user_accounts.id`, sets request account context only after verification, and server-side DAL authorization remains mandatory. Keep default-deny RLS and direct-bypass tests.
+README/PRODUCT/ARCHITECTURE/SECURITY/ROADMAP must agree on:
 
-- [ ] **Step 5: Verify documentation formatting**
+```text
+https://guided-operations.vercel.app is the verified canonical foundation URL
+private GitHub -> authoritative Vercel project linkage is verified
+live foundation page and /api/health/live were remotely verified
+O-012/O-013/O-014 are resolved
+sign-in remains disabled until Milestone 1 passes
+policy corpus remains unimported
+operational/personnel data remains prohibited
+```
 
-Run:
+Remove stale blockers claiming Vercel Git linkage/application inspection or OQ-005/OQ-006/OQ-007 remain unresolved.
+
+- [ ] **Step 4: Replace auth.uid()-centric product-session text**
+
+`docs/architecture/auth-rbac-rls.md` must describe this request path:
+
+```text
+opaque cookie -> pre-auth session lookup -> constant-time secret verification -> current account/status/auth_version verification -> APP_DATABASE_URL transaction -> SET LOCAL app.current_account_id -> DAL authorization -> RLS/grants
+```
+
+- [ ] **Step 5: Verify docs formatting**
 
 ```bash
 npm run format:check
@@ -118,44 +120,39 @@ git commit -m "docs: select opaque employee authentication"
 
 ---
 
-### Task 2: Add the forward-only authentication schema and pgTAP security contracts
+### Task 2: Add forward-only opaque-auth schema, roles, functions, and pgTAP contracts
 
 **Files:**
 - Create: `supabase/migrations/20260829090000_opaque_authentication.sql`
+- Modify: `supabase/tests/foundation.test.sql`
 - Create: `supabase/tests/authentication.test.sql`
 - Modify: `supabase/seed.sql`
 
 **Interfaces:**
-- Consumes: foundation tables `app_private.staff_members`, `app_private.user_accounts`, `app_private.audit_events`.
-- Produces: `user_accounts.id`, `user_credentials`, `user_sessions`, `auth_rate_limits`, `admin_step_ups`, current-account helper functions, and RLS/grant contracts.
+- Consumes: foundation `staff_members`, `user_accounts`, and `audit_events`.
+- Produces: application account IDs, credential/session/rate-limit/step-up tables, `guided_operations_preauth`, `guided_operations_runtime`, two pre-auth lookup functions, and current-account RLS helpers.
 
-- [ ] **Step 1: Write failing pgTAP assertions before the migration**
+- [ ] **Step 1: Add failing pgTAP checks first**
 
-Start `authentication.test.sql` with checks that will fail against the current foundation:
+`authentication.test.sql` starts with catalog checks using the same style as `foundation.test.sql`:
 
 ```sql
 begin;
-select plan(18);
-
+select plan(24);
 select has_column('app_private', 'user_accounts', 'id', 'user_accounts has application id');
 select has_table('app_private', 'user_credentials', 'credential table exists');
 select has_table('app_private', 'user_sessions', 'session table exists');
 select has_table('app_private', 'auth_rate_limits', 'rate-limit table exists');
 select has_table('app_private', 'admin_step_ups', 'step-up table exists');
-select row_security_active('app_private.user_credentials'::regclass);
-select row_security_active('app_private.user_sessions'::regclass);
-select row_security_active('app_private.auth_rate_limits'::regclass);
-select row_security_active('app_private.admin_step_ups'::regclass);
-
+select ok(exists(select 1 from pg_roles where rolname = 'guided_operations_preauth'), 'preauth role exists');
+select ok(exists(select 1 from pg_roles where rolname = 'guided_operations_runtime'), 'runtime role exists');
 select * from finish();
 rollback;
 ```
 
-Extend the final file to 18 explicit checks covering RLS, append-only/deny behavior, unique token digests, last-admin protection helper existence, and anon/authenticated having no direct credential/session grants.
+The final 24 checks also prove every new table has both `relrowsecurity` and `relforcerowsecurity`, public/anon/authenticated/service_role have no direct auth-table grants, preauth has no table grants, only the reviewed preauth functions are executable by preauth, and token hashes are unique.
 
-- [ ] **Step 2: Run the database test to prove it fails**
-
-Run:
+- [ ] **Step 2: Prove the new tests fail on the current schema**
 
 ```bash
 npm run db:start
@@ -163,40 +160,44 @@ npm run db:reset
 npm run db:test
 ```
 
-Expected: `authentication.test.sql` fails because the new schema does not exist.
+Expected: `authentication.test.sql` fails because the new contract is absent.
 
-- [ ] **Step 3: Write the forward migration with a no-account safety assertion**
-
-The migration begins with:
+- [ ] **Step 3: Start the migration with a zero-account/zero-audit safety assertion**
 
 ```sql
 begin;
 
 do $$
 begin
-  if exists (select 1 from app_private.user_accounts) then
-    raise exception 'opaque authentication migration requires the verified zero-account foundation';
+  if exists (select 1 from app_private.user_accounts)
+     or exists (select 1 from app_private.audit_events) then
+    raise exception 'opaque auth migration requires the verified zero-account/no-operational-data foundation';
   end if;
 end
 $$;
 ```
 
-Refactor the empty foundation `user_accounts` table without editing the applied migration:
+- [ ] **Step 4: Refactor empty foundation identity columns forward-only**
 
 ```sql
 alter table app_private.user_accounts add column id uuid not null default gen_random_uuid();
 alter table app_private.user_accounts drop constraint user_accounts_pkey;
 alter table app_private.user_accounts add primary key (id);
-alter table app_private.user_accounts alter column auth_user_id drop not null;
-alter table app_private.user_accounts add constraint user_accounts_auth_user_id_unique unique (auth_user_id);
+alter table app_private.user_accounts drop column auth_user_id;
 alter table app_private.user_accounts drop column sign_in_alias;
+
+alter table app_private.audit_events add column actor_account_id uuid
+  references app_private.user_accounts(id) on delete set null;
+drop index if exists app_private.audit_events_actor_occurred_idx;
+alter table app_private.audit_events drop column actor_auth_user_id;
+create index audit_events_actor_account_occurred_idx
+  on app_private.audit_events (actor_account_id, occurred_at desc)
+  where actor_account_id is not null;
 ```
 
-Keep `auth_user_id` nullable only as migration provenance/future compatibility; product authorization must not depend on it.
+Update `foundation.test.sql` so it proves the new account PK and audit actor FK rather than the superseded `auth.users` relationships.
 
-- [ ] **Step 4: Add credential and opaque-session tables**
-
-Create exact columns:
+- [ ] **Step 5: Add credentials and sessions**
 
 ```sql
 create table app_private.user_credentials (
@@ -209,7 +210,7 @@ create table app_private.user_credentials (
 );
 
 create table app_private.user_sessions (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key,
   account_id uuid not null references app_private.user_accounts(id) on delete cascade,
   secret_hash text not null unique check (secret_hash ~ '^[a-f0-9]{64}$'),
   previous_secret_hash text check (previous_secret_hash is null or previous_secret_hash ~ '^[a-f0-9]{64}$'),
@@ -227,11 +228,9 @@ create table app_private.user_sessions (
 );
 ```
 
-Add indexes on `(account_id, revoked_at)`, `absolute_expires_at`, and `idle_expires_at`.
+Add indexes `(account_id, revoked_at)`, `idle_expires_at`, and `absolute_expires_at`.
 
-- [ ] **Step 5: Add rate-limit and step-up tables**
-
-Use keyed digests only:
+- [ ] **Step 6: Add keyed rate-limit and admin step-up tables**
 
 ```sql
 create table app_private.auth_rate_limits (
@@ -245,7 +244,7 @@ create table app_private.auth_rate_limits (
 );
 
 create table app_private.admin_step_ups (
-  id uuid primary key default gen_random_uuid(),
+  id uuid primary key,
   account_id uuid not null references app_private.user_accounts(id) on delete cascade,
   session_id uuid not null references app_private.user_sessions(id) on delete cascade,
   purpose text not null check (purpose ~ '^[a-z][a-z0-9_.-]{2,80}$'),
@@ -257,17 +256,38 @@ create table app_private.admin_step_ups (
 );
 ```
 
-- [ ] **Step 6: Add default-deny RLS and current-account helpers**
+- [ ] **Step 7: Create two NOLOGIN group roles**
 
-Enable and force RLS on all four new tables. Add `app_private.current_account_id()` that reads `current_setting('app.current_account_id', true)` and returns null when absent or malformed. Add narrow self-read policies only where the runtime role needs them; credential hashes, session hashes, rate-limit rows, and step-up hashes never become browser/Data API DTOs.
+```sql
+do $$
+begin
+  if not exists (select 1 from pg_roles where rolname = 'guided_operations_preauth') then
+    create role guided_operations_preauth nologin;
+  end if;
+  if not exists (select 1 from pg_roles where rolname = 'guided_operations_runtime') then
+    create role guided_operations_runtime nologin;
+  end if;
+end
+$$;
+```
 
-- [ ] **Step 7: Keep local seed unmistakably fictional**
+Hosted LOGIN roles/passwords are provisioned later outside Git and granted membership in exactly one group role.
 
-Do not seed real accounts or passcodes. Seed only the existing fictional facility/staff records needed for tests, and create credential/session rows inside test transactions instead of durable seed where possible.
+- [ ] **Step 8: Add pre-auth functions with empty search_path and minimal return shapes**
 
-- [ ] **Step 8: Run the database gate**
+Create `api.resolve_login_context(p_employee_lookup_hash text)` and `api.resolve_session_context(p_session_id uuid)` as reviewed `security definer` exceptions. They return only the single-row fields needed for constant-time credential/session verification. Grant schema usage + execute to `guided_operations_preauth`; grant no table access to preauth.
 
-Run:
+- [ ] **Step 9: Add current-account helper and runtime RLS**
+
+`app_private.current_account_id()` parses `current_setting('app.current_account_id', true)` and returns null on missing/invalid input. Enable+force RLS on all new tables. Runtime policies require `account_id = current_account_id()` for self credential/session rows; admin cross-account policies re-check authoritative `user_accounts.role/status`. Missing context returns no rows.
+
+Grant runtime only the table operations actually used by Milestone 1; keep `anon`, `authenticated`, `service_role`, and `PUBLIC` at zero direct grants.
+
+- [ ] **Step 10: Keep seed fictional and credential-free**
+
+Do not persist reusable passcodes/session tokens in `seed.sql`. Create test credentials inside pgTAP/Vitest fixtures.
+
+- [ ] **Step 11: Run the complete local database gate**
 
 ```bash
 npm run db:reset
@@ -275,24 +295,25 @@ npm run db:lint
 npm run db:test
 ```
 
-Expected: migration replay succeeds, lint exits 0, pgTAP exits 0.
+Expected: migration replay, lint, foundation tests, and authentication tests all exit 0.
 
-- [ ] **Step 9: Commit**
+- [ ] **Step 12: Commit**
 
 ```bash
-git add supabase/migrations/20260829090000_opaque_authentication.sql supabase/tests/authentication.test.sql supabase/seed.sql
-git commit -m "feat: add opaque authentication schema"
+git add supabase/migrations/20260829090000_opaque_authentication.sql supabase/tests/foundation.test.sql supabase/tests/authentication.test.sql supabase/seed.sql
+git commit -m "feat: add opaque authentication database contract"
 ```
 
 ---
 
-### Task 3: Add server-only cryptographic and database primitives
+### Task 3: Add server-only auth environment, hashing, token, CSRF, and database adapters
 
 **Files:**
 - Modify: `package.json`
 - Modify: `package-lock.json`
 - Modify: `.env.example`
 - Create: `src/lib/env/auth-server.ts`
+- Create: `src/server/db/preauth.ts`
 - Create: `src/server/db/runtime.ts`
 - Create: `src/server/auth/employee-number.ts`
 - Create: `src/server/auth/passcode.ts`
@@ -303,11 +324,9 @@ git commit -m "feat: add opaque authentication schema"
 - Create: `src/server/auth/__tests__/tokens.test.ts`
 
 **Interfaces:**
-- Produces: `normalizeEmployeeNumber`, `employeeLookupDigest`, `hashPasscode`, `verifyPasscode`, `issueOpaqueToken`, `hashOpaqueSecret`, `deriveCsrfToken`, `createRuntimeDb`.
+- Produces: `normalizeEmployeeNumber`, `employeeLookupDigest`, `hashPasscode`, `verifyPasscode`, `validateNewPasscode`, `issueOpaqueToken`, `hashOpaqueSecret`, `deriveCsrfToken`, `createPreauthDb`, `createRuntimeDb`.
 
-- [ ] **Step 1: Add failing unit tests for normalization, passcodes, and token hashing**
-
-Required cases:
+- [ ] **Step 1: Write failing primitive tests**
 
 ```ts
 expect(normalizeEmployeeNumber("  ab-123  ")).toBe("AB-123");
@@ -319,66 +338,59 @@ expect(issueOpaqueToken().secret).toMatch(/^[A-Za-z0-9_-]{43}$/);
 expect(hashOpaqueSecret("secret")).toMatch(/^[a-f0-9]{64}$/);
 ```
 
-- [ ] **Step 2: Run the focused tests and confirm failure**
-
-Run:
+- [ ] **Step 2: Prove the tests fail**
 
 ```bash
 npm test -- src/server/auth/__tests__
 ```
 
-Expected: fail because modules do not exist.
+Expected: missing modules/functions.
 
 - [ ] **Step 3: Add reviewed dependencies**
-
-Install a maintained Argon2id implementation and a small PostgreSQL client compatible with Node/Vercel server runtime:
 
 ```bash
 npm install @node-rs/argon2 postgres
 ```
 
-Record the resolved locked versions in the PR and run dependency review before merge.
+Record locked versions and dependency-review output in the PR.
 
-- [ ] **Step 4: Define server-only environment parsing**
+- [ ] **Step 4: Add exact server-only environment variables**
 
-Add to `.env.example`:
+`.env.example` adds:
 
 ```dotenv
+AUTH_LOOKUP_DATABASE_URL=
 APP_DATABASE_URL=
 SESSION_TOKEN_PEPPER=
 AUTH_SUBJECT_PEPPER=
 CSRF_TOKEN_PEPPER=
 ```
 
-`auth-server.ts` uses Zod and `server-only`; each pepper requires at least 32 bytes of encoded entropy. Never expose them through `NEXT_PUBLIC_` variables.
+Keep `SUPABASE_DB_URL` migration/operator-only. `auth-server.ts` is `server-only` and Zod-validates non-empty URLs plus at least 32 bytes of encoded entropy for each pepper.
 
-- [ ] **Step 5: Implement employee-number lookup primitives**
+- [ ] **Step 5: Implement employee lookup hashing**
 
-Use Node `crypto.createHmac("sha256", pepper)` after NFKC/trim/uppercase normalization. Raw employee numbers are never returned from logging helpers.
+Use `createHmac("sha256", EMPLOYEE_LOOKUP_PEPPER)` over the normalized employee number. Do not expose a helper that returns raw employee number in diagnostic metadata.
 
-- [ ] **Step 6: Implement Argon2id passcode hashing**
+- [ ] **Step 6: Implement Argon2id**
 
-Use Argon2id with a 64 MiB memory cost, time cost 3, parallelism 1, and 32-byte output. Keep exact passcode bytes case-sensitive and unnormalized. Reject 10+ repeated identical characters, obvious ascending/descending digit sequences, employee-number equality, and the repository's small denylist fixture before hashing.
+Use Argon2id with memory cost 64 MiB, time cost 3, parallelism 1, output length 32. Exact passcode bytes are case-sensitive and unnormalized.
 
-- [ ] **Step 7: Implement opaque session and CSRF primitives**
+- [ ] **Step 7: Implement opaque token and CSRF derivation**
 
-`issueOpaqueToken()` returns `{ id: crypto.randomUUID(), secret: randomBytes(32).toString("base64url") }`.
+`issueOpaqueToken()` returns UUID + 32 random bytes base64url. Store only `HMAC-SHA256(SESSION_TOKEN_PEPPER, secret)`. Derive CSRF as HMAC over `csrf:<session-id>:<secret>` using `CSRF_TOKEN_PEPPER`; compare using `timingSafeEqual`.
 
-The cookie value format is:
+- [ ] **Step 8: Implement two PostgreSQL clients**
 
-```text
-<uuid>.<43-char-base64url-secret>
+Both use:
+
+```ts
+postgres(url, { max: 1, prepare: false, idle_timeout: 20, connect_timeout: 10 })
 ```
 
-Store only `HMAC-SHA256(SESSION_TOKEN_PEPPER, secret)` in PostgreSQL. Derive CSRF as `HMAC-SHA256(CSRF_TOKEN_PEPPER, "csrf:" + sessionId + ":" + secret)` and compare with `timingSafeEqual`.
+`preauth.ts` may call only the two reviewed `api.resolve_*` functions plus rate-limit functions added by the migration. `runtime.ts` executes protected work inside a transaction that sets `SET LOCAL app.current_account_id = <verified account id>` before DAL queries.
 
-- [ ] **Step 8: Add the server-only PostgreSQL runtime client**
-
-Use `postgres(APP_DATABASE_URL, { max: 1, prepare: false, idle_timeout: 20, connect_timeout: 10 })`. The runtime URL must use the future least-privilege runtime login, not the `postgres` owner connection or Supabase service role.
-
-- [ ] **Step 9: Run focused and broad TypeScript tests**
-
-Run:
+- [ ] **Step 9: Run focused tests, typecheck, and lint**
 
 ```bash
 npm test -- src/server/auth/__tests__
@@ -391,13 +403,13 @@ Expected: all exit 0.
 - [ ] **Step 10: Commit**
 
 ```bash
-git add package.json package-lock.json .env.example src/lib/env/auth-server.ts src/server/db/runtime.ts src/server/auth
+git add package.json package-lock.json .env.example src/lib/env/auth-server.ts src/server/db src/server/auth
 git commit -m "feat: add authentication security primitives"
 ```
 
 ---
 
-### Task 4: Implement credential verification, abuse controls, and opaque session lifecycle
+### Task 4: Implement credential verification, abuse controls, opaque sessions, and revocation
 
 **Files:**
 - Create: `src/server/auth/types.ts`
@@ -410,84 +422,68 @@ git commit -m "feat: add authentication security primitives"
 - Create: `src/server/auth/__tests__/service.test.ts`
 
 **Interfaces:**
-- Produces: `authenticateEmployee`, `requireCurrentSession`, `rotateSessionIfNeeded`, `logoutSession`, `logoutAllSessions`, `changeOwnPasscode`, `unlockAccount`.
+- Produces: `authenticateEmployee`, `requireCurrentSession`, `rotateSessionIfNeeded`, `logoutSession`, `logoutAllSessions`, `changeOwnPasscode`.
 
-- [ ] **Step 1: Write service tests with a fake repository**
+- [ ] **Step 1: Write fake-repository service tests**
 
-Cover unknown account, wrong passcode, locked account, disabled account, forced-change account, successful session creation, expired session, idle expiry, auth-version mismatch, rotation grace, logout, logout-all, and credential-change revocation.
+Cover unknown account, wrong passcode, locked, disabled, forced-change, success, idle expiry, absolute expiry, auth-version mismatch, previous-secret grace, rotation, logout, logout-all, and credential-change revocation.
 
-All login failures use one public result:
+All unknown/wrong/inactive public credential failures return:
 
 ```ts
 { ok: false, code: "invalid_credentials", message: "Unable to sign in with those credentials." }
 ```
 
-Rate limiting may instead return generic `rate_limited` with no account-existence detail.
-
-- [ ] **Step 2: Verify tests fail before implementation**
-
-Run:
+- [ ] **Step 2: Prove focused tests fail**
 
 ```bash
 npm test -- src/server/auth/__tests__/service.test.ts src/server/auth/__tests__/session.test.ts src/server/auth/__tests__/rate-limit.test.ts
 ```
 
-Expected: fail because service/repository do not exist.
-
-- [ ] **Step 3: Implement constant-path credential verification**
-
-`authenticateEmployee` must:
+- [ ] **Step 3: Implement constant-path login**
 
 ```text
-normalize -> hash employee lookup -> evaluate account/device/network/global rate limits -> load one matching credential row OR dummy hash -> Argon2 verify -> recheck account status -> record success/failure -> create opaque session -> return minimal actor DTO
+normalize employee number
+-> keyed lookup hash
+-> evaluate account/device/network/global rate limits
+-> load matching credential context OR use committed valid dummy Argon2 hash
+-> Argon2 verify
+-> re-check status/locked_until
+-> record success/failure without raw identifiers
+-> create opaque session
+-> return minimal actor/session result
 ```
 
-Use a committed non-secret valid Argon2id dummy hash for missing-account verification so unknown accounts still perform password verification work.
+- [ ] **Step 4: Implement bounded abuse controls**
 
-- [ ] **Step 4: Implement bounded lockout**
-
-Use five failures inside 15 minutes as the first account lock threshold, then exponential lock durations capped at 15 minutes. Keep device/network/global limits separate so an attacker cannot permanently disable an account by knowing its employee number.
+First account lock threshold: five failures inside 15 minutes. Lock duration grows exponentially from 30 seconds and caps at 15 minutes. Device/network/global buckets are independent so knowledge of one employee number cannot create a permanent account denial.
 
 - [ ] **Step 5: Implement session validation and rotation**
 
-A session is valid only when:
+A session is valid only when row exists, not revoked, idle+absolute expiry are future, account is active, `session.auth_version = account.auth_version`, and current secret hash matches or previous hash is within the 30-second grace. Rotate atomically when `rotated_at` is older than 30 minutes.
 
-```text
-row exists
-AND not revoked
-AND now < idle_expires_at
-AND now < absolute_expires_at
-AND account.status = active
-AND session.auth_version = account.auth_version
-AND current secret hash matches OR previous hash is within 30-second grace
-```
+- [ ] **Step 6: Implement revocation rules**
 
-Rotate the secret after 30 minutes; update `previous_secret_hash`, `previous_valid_until`, `secret_hash`, and `rotated_at` atomically.
+Passcode change/reset, role/status change, disable, and logout-all increment `auth_version` and revoke all account sessions in one transaction.
 
-- [ ] **Step 6: Implement logout-all and credential-change revocation**
-
-Credential reset/change, role change, disable, and logout-all increment `auth_version` and revoke all existing session rows for the account in the same database transaction.
-
-- [ ] **Step 7: Run focused tests**
-
-Run:
+- [ ] **Step 7: Run all auth unit tests**
 
 ```bash
 npm test -- src/server/auth/__tests__
 ```
 
-Expected: all auth unit tests pass.
+Expected: all pass.
 
 - [ ] **Step 8: Commit**
 
 ```bash
 git add src/server/auth
-git commit -m "feat: implement opaque session lifecycle"
+git commit -m "feat: implement opaque authentication lifecycle"
 ```
 
 ---
 
-### Task 5: Implement bootstrap, administrator step-up, and minimal account lifecycle
+### Task 5: Add first-admin bootstrap, admin elevation/step-up, and minimal account lifecycle
 
 **Files:**
 - Modify: `package.json`
@@ -498,51 +494,49 @@ git commit -m "feat: implement opaque session lifecycle"
 - Create: `docs/operations/first-admin-bootstrap.md`
 
 **Interfaces:**
-- Produces: `bootstrapFirstAdmin`, `beginAdminStepUp`, `consumeAdminStepUp`, `createOfficerAccount`, `resetAccountPasscode`, `setAccountStatus`, `setAccountRole`.
+- Produces: `bootstrapFirstAdmin`, `beginAdminElevation`, `issueAdminStepUp`, `consumeAdminStepUp`, `createOfficerAccount`, `resetAccountPasscode`, `setAccountStatus`, `setAccountRole`, `unlockAccount`.
 
-- [ ] **Step 1: Write tests for bootstrap and last-admin protection**
+- [ ] **Step 1: Write tests first**
 
-Cover zero-account success, second bootstrap rejection, generated temporary passcode, forced-change flag, last-admin disable rejection, last-admin demotion rejection, reset revoking sessions, unlock clearing lock state, wrong/expired/replayed step-up rejection.
+Cover zero-account bootstrap success, second bootstrap rejection, generated temporary passcode + forced change, last-admin disable/demotion rejection, account creation, reset revocation, unlock, wrong/expired/replayed/wrong-purpose step-up.
 
-- [ ] **Step 2: Verify tests fail**
-
-Run:
+- [ ] **Step 2: Prove admin tests fail**
 
 ```bash
 npm test -- src/server/auth/__tests__/admin.test.ts
 ```
 
-Expected: fail because admin service does not exist.
+- [ ] **Step 3: Implement bootstrap under advisory lock**
 
-- [ ] **Step 3: Implement first-admin bootstrap under an advisory lock**
+Input is employee number + display name only. The service generates the 16-character temporary passcode internally, proves zero accounts under a transaction advisory lock, creates staff/account/credential rows, writes a redacted audit event, and returns the secret only to the authorized caller.
 
-`bootstrapFirstAdmin` takes employee number and display name, but **not** a passcode. It acquires a transaction advisory lock, proves zero accounts exist, generates a 16-character temporary passcode, creates fictional/admin staff+account+credential rows, writes a redacted audit event, and returns the temporary passcode only to the caller.
+- [ ] **Step 4: Add operator-only bootstrap command**
 
-- [ ] **Step 4: Add an operator-only bootstrap command**
+```bash
+npm install --save-dev tsx
+```
 
-Add `tsx` as a development dependency and:
+Add:
 
 ```json
 "auth:bootstrap-admin": "tsx scripts/bootstrap-admin.ts"
 ```
 
-The script refuses to run when `CI` is set or `process.stdout.isTTY` is false. It prints the generated temporary passcode exactly once to the interactive terminal and never writes it to a file or log.
+The script refuses `CI`, requires `process.stdout.isTTY`, and emits the temporary passcode exactly once to the interactive terminal. It never persists the secret.
 
-- [ ] **Step 5: Implement admin elevation and purpose-bound step-up**
+- [ ] **Step 5: Implement elevation and step-up**
 
-Elevation requires re-verifying the administrator's current passcode and is represented only in the current session server state. A high-impact operation issues a random step-up token bound to account, session, auth_version, and exact purpose; store only its hash; consume it atomically once within 5 minutes.
+Elevation re-verifies the current admin passcode and lasts 15 minutes in server session state. High-impact action issues a random token bound to account/session/auth_version/purpose; DB stores only its hash; consumption is atomic and expires in 5 minutes.
 
-- [ ] **Step 6: Implement minimal account lifecycle services**
+- [ ] **Step 6: Implement account lifecycle services**
 
-Account creation always generates a temporary passcode and forces first change. Reset, disable, role change, unlock, and logout-all are audited with allowlisted metadata only and require the correct purpose-bound step-up.
+Create/reset generate temporary passcodes and force change. Disable, role change, reset, unlock, and logout-all require exact-purpose step-up and append allowlisted audit metadata only.
 
-- [ ] **Step 7: Document bootstrap operator procedure**
+- [ ] **Step 7: Write the bootstrap runbook**
 
-The runbook must include prerequisites, exact command, fictional-data restriction, one-time credential handling, failure recovery, and proof that no credential appears in GitHub Actions/Vercel logs.
+Document prerequisites, exact command, fictional-data boundary, TTY-only secret delivery, failure recovery, hosted activation gate, and proof that no credential is allowed in GitHub/Vercel logs.
 
-- [ ] **Step 8: Run focused tests and type checks**
-
-Run:
+- [ ] **Step 8: Run focused checks**
 
 ```bash
 npm test -- src/server/auth/__tests__/admin.test.ts
@@ -561,7 +555,7 @@ git commit -m "feat: add protected account bootstrap and lifecycle"
 
 ---
 
-### Task 6: Wire login, forced passcode change, logout, proxy filtering, and the first dashboard
+### Task 6: Enable sign-in, forced passcode change, logout, and protected Home
 
 **Files:**
 - Create: `src/features/auth/schemas.ts`
@@ -578,55 +572,47 @@ git commit -m "feat: add protected account bootstrap and lifecycle"
 
 **Interfaces:**
 - Consumes: `authenticateEmployee`, `requireCurrentSession`, `changeOwnPasscode`, `logoutSession`, `deriveCsrfToken`.
-- Produces: the first real end-to-end authenticated product surface.
+- Produces: first working authenticated Guided Operations screen.
 
-- [ ] **Step 1: Read the version-matched Next.js 16.3 docs before code**
+- [ ] **Step 1: Read installed Next.js 16.3 docs before implementation**
 
-Read the installed documentation for Server Actions, `cookies()`, `redirect()`, caching/no-store, and `proxy.ts`. Follow repository `AGENTS.md`; do not substitute memorized Next.js APIs.
+Read version-matched docs for Server Actions, `cookies()`, `redirect()`, private/no-store rendering, and `proxy.ts` as required by `AGENTS.md`.
 
 - [ ] **Step 2: Write component/action tests first**
 
-Tests cover enabled sign-in fields, generic failure text, pending state, 429 guidance, forced-change redirect, invalid new passcode validation, and successful dashboard redirect.
+Cover enabled form controls, generic failure, pending state, 429 guidance, forced-change redirect, invalid new passcode, successful dashboard redirect, logout, and no credential/session internals in action state.
 
-- [ ] **Step 3: Verify tests fail**
-
-Run:
+- [ ] **Step 3: Prove auth UI tests fail**
 
 ```bash
 npm test -- src/features/auth
 ```
 
-Expected: fail because auth feature UI/actions do not exist.
+- [ ] **Step 4: Implement sign-in Server Action**
 
-- [ ] **Step 4: Implement the sign-in Server Action**
+Validate Zod input, call `authenticateEmployee`, set exact `go_session` cookie, redirect forced-change accounts to `/account/change-passcode`, otherwise `/home`. Return no employee existence signal or sensitive field.
 
-The action validates Zod input, normalizes the employee number server-side, calls `authenticateEmployee`, sets `go_session` with the exact cookie contract, and redirects to `/account/change-passcode` when `must_change_passcode` is true; otherwise redirect to `/home`.
+- [ ] **Step 5: Replace the disabled foundation form**
 
-Never return a raw employee number, credential hash, session token, device/network digest, or account-existence distinction to the Client Component.
-
-- [ ] **Step 5: Replace the disabled foundation form with the working sign-in form**
-
-Preserve the approved foundation visual direction and copy, but remove the inaccurate `being connected`/disabled state once the backend gate exists. Keep explicit fictional/hobby boundary copy outside the credential form.
+Preserve the navy/gold foundation visual direction but remove disabled controls and inaccurate `being connected` copy only after the backend exists. Keep the private hobby/fictional-data boundary visible.
 
 - [ ] **Step 6: Implement forced passcode change**
 
-The page is accessible only to a valid session requiring a passcode change. It includes the session-bound CSRF token, validates Origin/Sec-Fetch-Site in the action, changes the hash, increments auth_version, revokes old sessions, issues one new session, and redirects to `/home`.
+Require a valid session with `must_change_passcode`, render session-bound CSRF token, validate Origin/Sec-Fetch-Site + CSRF, change Argon2 hash, increment auth_version, revoke old sessions, issue one replacement session, redirect `/home`.
 
-- [ ] **Step 7: Implement protected `/home`**
+- [ ] **Step 7: Implement protected `/home` Server Component**
 
-`/home` is a Server Component. It calls `requireCurrentSession()` and renders only a minimal trusted actor DTO: display name, role, and safe session state. Use this as the authenticated dashboard foundation; do not invent incident/report/demo records.
+`requireCurrentSession()` returns only safe actor DTO fields. Render display name, role, and trusted session state. Do not invent incidents, forms, activity, or policy data.
 
-- [ ] **Step 8: Add `proxy.ts` as a convenience redirect gate**
+- [ ] **Step 8: Add lightweight `proxy.ts`**
 
-Proxy may check only whether the opaque session cookie is syntactically present and redirect obviously unauthenticated `/home` and `/account/*` requests to `/`. It must not query the database or be described as authorization.
+Proxy checks only syntactic presence of `go_session` to avoid obvious unauthenticated protected-route rendering. Database-backed `requireCurrentSession()` remains authoritative.
 
-- [ ] **Step 9: Add logout**
+- [ ] **Step 9: Add logout Server Action**
 
-Logout is a POST/Server Action with Origin+CSRF checks, revokes the current database session, clears `go_session`, and redirects to `/`.
+POST/Server Action with Origin+CSRF validation, DB revocation, cookie clear, redirect `/`.
 
-- [ ] **Step 10: Run component, type, lint, and build gates**
-
-Run:
+- [ ] **Step 10: Run UI + build gates**
 
 ```bash
 npm test -- src/features/auth
@@ -646,46 +632,44 @@ git commit -m "feat: enable secure employee sign in"
 
 ---
 
-### Task 7: Prove database, browser, abuse, and authorization behavior end to end
+### Task 7: Prove Milestone 1 end to end and record evidence
 
 **Files:**
-- Create: `e2e/authentication.spec.ts`
-- Modify: `playwright.config.ts` if needed for the existing project convention
+- Create: `tests/e2e/authentication.spec.ts`
+- Modify: `playwright.config.ts`
 - Modify: `supabase/tests/authentication.test.sql`
-- Modify: `docs/quality/testing.md` or the existing authentication-test section under `docs/quality/`
+- Modify: `docs/quality/testing.md`
 - Modify: `ROADMAP.md`
 - Modify: `docs/operations/2026-08-25-hosted-foundation.md`
 
 **Interfaces:**
-- Produces: Milestone 1 release evidence; does not itself authorize a hosted migration or production identity.
+- Produces: local Milestone 1 evidence. Hosted activation remains a separate owner gate.
 
-- [ ] **Step 1: Add Playwright coverage for the complete fictional flow**
+- [ ] **Step 1: Extend Playwright to mobile + desktop auth coverage**
 
-Use a fictional administrator and fictional officer only. Required browser cases:
+Keep existing Chromium and add a mobile Chromium project using `devices["iPhone 13"]`. `authentication.spec.ts` covers:
 
 ```text
-unknown employee + wrong passcode -> same generic error
-known employee + wrong passcode -> same generic error
+unknown + wrong passcode -> identical generic error
+known + wrong passcode -> identical generic error
 rate limit -> generic retry response
-first admin -> forced passcode change -> home
-admin creates fictional officer -> temp passcode -> forced change -> home
-disabled account -> existing session denied
-logout -> cookie cleared -> protected page redirected
+first fictional admin -> forced change -> home
+admin lifecycle creates fictional officer -> forced change -> home
+disabled existing session -> denied
+logout -> cookie cleared -> protected route redirected
 logout-all -> second browser context denied
-role/status change -> stale session denied
-CSRF missing/wrong -> mutation rejected
-cross-site Origin -> mutation rejected
-keyboard-only sign-in/change/logout works
-mobile 390x844 and desktop 1440x900 have no overflow or console errors
+role/status auth_version change -> stale session denied
+missing/wrong CSRF -> rejected
+cross-site Origin -> rejected
+keyboard-only sign-in/change/logout
+390x844 + desktop no overflow, console error, or failed asset
 ```
 
-- [ ] **Step 2: Expand pgTAP to direct-bypass denial cases**
+- [ ] **Step 2: Expand pgTAP direct-bypass checks**
 
-Verify anon/authenticated cannot directly select credential/session/rate-limit/step-up rows; missing request context returns no protected rows; a different current account context cannot read another account's protected self rows.
+Prove public/anon/authenticated/service_role and preauth cannot select credential/session hashes directly; missing runtime context gets zero protected rows; officer context cannot access another account; active admin context follows only the explicit admin policies.
 
-- [ ] **Step 3: Run the full local database gate**
-
-Run:
+- [ ] **Step 3: Run full local database gate**
 
 ```bash
 npm run db:reset
@@ -695,9 +679,7 @@ npm run db:test
 
 Expected: all exit 0.
 
-- [ ] **Step 4: Run the full web gate**
-
-Run:
+- [ ] **Step 4: Run full web/browser gate**
 
 ```bash
 npm run format:check
@@ -708,42 +690,45 @@ npm run build
 npm run test:e2e
 ```
 
-Expected: all exit 0 with no console/security failures in the auth scenarios.
+Expected: all exit 0.
 
-- [ ] **Step 5: Update the roadmap with evidence, not claims**
+- [ ] **Step 5: Update docs with only proven local evidence**
 
-Mark only the gates actually proven locally. Keep hosted migration, Vercel environment secrets, runtime database-role password, hosted identities, and production traffic as explicit owner-authorized follow-up actions.
+Keep hosted migration, hosted role credentials, Vercel secrets, hosted fictional identities, and hosted browser verification explicitly open.
 
-- [ ] **Step 6: Update Issue #2**
+- [ ] **Step 6: Update GitHub Issue #2**
 
-Post a concise milestone note containing the commit, passed gates, remaining external owner gates, and next blocker. Do not close the master goal.
+Post commit SHA, exact green local/CI gates, remaining external owner gates, and next blocker. Do not close the master goal.
 
 - [ ] **Step 7: Commit**
 
 ```bash
-git add e2e supabase/tests docs/quality ROADMAP.md docs/operations/2026-08-25-hosted-foundation.md
+git add tests/e2e/authentication.spec.ts playwright.config.ts supabase/tests/authentication.test.sql docs/quality/testing.md ROADMAP.md docs/operations/2026-08-25-hosted-foundation.md
 git commit -m "test: qualify milestone 1 authentication"
 ```
 
 ---
 
-## Hosted activation gate after local implementation
+## Hosted activation gate after Tasks 1-7
 
-Do **not** perform these steps automatically. They require explicit owner authorization because they change hosted security/data configuration:
+Do not perform automatically. Explicit owner authorization is required for each hosted-security/data change:
 
 1. Apply the reviewed forward migration to the designated non-production Supabase project.
-2. Provision the least-privilege runtime database login and set its password outside Git; configure `APP_DATABASE_URL` in the Vercel Preview environment.
-3. Generate and configure `SESSION_TOKEN_PEPPER`, `AUTH_SUBJECT_PEPPER`, and `CSRF_TOKEN_PEPPER` in Vercel's secret store.
-4. Run the first-admin bootstrap with a fictional administrator only.
-5. Create one fictional officer account through the protected admin flow.
-6. Verify the exact reviewed commit in a protected Vercel Preview, desktop and mobile.
-7. Re-run login/session/disable/logout-all/CSRF checks against the hosted Preview.
-8. Only after that evidence, update ADR-0007/ROADMAP/Issue #2 with hosted qualification.
+2. Provision one LOGIN role for `guided_operations_preauth` membership and one separate LOGIN role for `guided_operations_runtime` membership; passwords are generated out of band and never committed.
+3. Configure `AUTH_LOOKUP_DATABASE_URL` and `APP_DATABASE_URL` in Vercel Preview only.
+4. Generate/configure `SESSION_TOKEN_PEPPER`, `AUTH_SUBJECT_PEPPER`, and `CSRF_TOKEN_PEPPER` in Vercel's secret store.
+5. Run first-admin bootstrap with a fictional administrator only.
+6. Create one fictional officer through the protected lifecycle path.
+7. Verify the exact reviewed commit in a protected Vercel Preview on desktop/mobile.
+8. Re-run login, forced change, disable, logout-all, rotation, rate-limit, CSRF, and cross-origin cases against Preview.
+9. Record hosted evidence in ADR-0007, ROADMAP, hosted-foundation evidence, and Issue #2.
 
 ## Plan Self-Review
 
-- **Spec coverage:** This plan covers the approved Milestone 1 sequence: status reconciliation, failed Option A handling, authentication/session implementation, RLS/grants, first-admin bootstrap, fictional officer, protected dashboard, and browser/security evidence.
-- **No speculative product scope:** Incident/report, forms, RAG, and final administrator command-center work remain later roadmap milestones.
-- **Security boundary:** No step weakens alias invisibility, fictional-data restrictions, current-account rechecks, RLS/grants, step-up, audit redaction, or explicit hosted/merge owner gates.
-- **Type/interface continuity:** Later tasks consume the exact named primitives produced by Tasks 3-5; the UI never receives credential/session internals.
-- **External dependency:** GitHub Actions currently fails before runner assignment on PR #3; this plan does not treat that infrastructure failure as a passing repository gate or authorize bypassing it.
+- **Spec coverage:** status reconciliation, failed Option A handling, credential/session implementation, two-role DB boundary, RLS/grants, first-admin bootstrap, fictional officer lifecycle, protected dashboard, and browser/security evidence are all mapped to tasks.
+- **Placeholder scan:** no TBD/TODO or unknown path remains; Playwright uses the repository's actual `tests/e2e` directory.
+- **Foundation consistency:** `foundation.test.sql` is explicitly updated because the forward migration removes the now-superseded `auth.users` foreign keys.
+- **Data model consistency:** audit actor identity is migrated from `actor_auth_user_id` to `actor_account_id`; product sessions do not depend on Supabase Auth user IDs.
+- **Least privilege:** pre-auth and post-auth database credentials are separate; pre-auth has execute-only function access and no table grants.
+- **Scope:** incident/report, forms, RAG, and full administrator command-center work remain later roadmap milestones.
+- **External blocker:** PR #3's GitHub Actions job currently fails before runner assignment (`runner_id: 0`, no steps). This plan does not treat that as a passing gate and does not authorize bypassing it.
