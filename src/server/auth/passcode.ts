@@ -4,7 +4,10 @@ import {
   timingSafeEqual,
 } from "node:crypto";
 
-import { normalizeEmployeeNumber } from "./employee-number";
+import {
+  employeeLookupDigest,
+  normalizeEmployeeNumber,
+} from "./employee-number";
 
 const MIN_PASSCODE_LENGTH = 10;
 const MAX_PASSCODE_LENGTH = 64;
@@ -34,8 +37,7 @@ export type PasscodeValidationResult =
   | { success: true }
   | { success: false; reason: string };
 
-export function validateNewPasscode(
-  employeeNumber: string,
+export function validatePasscodeShape(
   passcode: string,
 ): PasscodeValidationResult {
   const length = Array.from(passcode).length;
@@ -65,6 +67,22 @@ export function validateNewPasscode(
     return { success: false, reason: "repeated" };
   }
 
+  if (isSimpleSequence(passcode)) {
+    return { success: false, reason: "sequence" };
+  }
+
+  return { success: true };
+}
+
+export function validateNewPasscode(
+  employeeNumber: string,
+  passcode: string,
+): PasscodeValidationResult {
+  const shape = validatePasscodeShape(passcode);
+  if (!shape.success) {
+    return shape;
+  }
+
   const normalizedEmployee = normalizeEmployeeNumber(employeeNumber);
   if (passcode.toUpperCase().includes(normalizedEmployee)) {
     return { success: false, reason: "employee-number" };
@@ -79,11 +97,29 @@ export function validateNewPasscode(
     return { success: false, reason: "employee-number" };
   }
 
-  if (isSimpleSequence(passcode)) {
-    return { success: false, reason: "sequence" };
+  return { success: true };
+}
+
+export function passcodeEqualsEmployeeLookupHash(
+  passcode: string,
+  employeeLookupHash: string,
+  pepper: string,
+): boolean {
+  if (!/^[a-f0-9]{64}$/.test(employeeLookupHash)) {
+    return false;
   }
 
-  return { success: true };
+  let candidateHash: string;
+  try {
+    candidateHash = employeeLookupDigest(passcode, pepper);
+  } catch {
+    return false;
+  }
+
+  return timingSafeEqual(
+    Buffer.from(candidateHash, "hex"),
+    Buffer.from(employeeLookupHash, "hex"),
+  );
 }
 
 export async function hashPasscode(passcode: string): Promise<string> {
