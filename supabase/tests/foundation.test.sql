@@ -95,14 +95,17 @@ select ok(
 
 select is(
   (
-    select constraint_row.confdeltype::text
+    select array_agg(attribute.attname order by key_column.ordinality)::text
     from pg_constraint as constraint_row
+    cross join lateral unnest(constraint_row.conkey) with ordinality as key_column(attnum, ordinality)
+    join pg_attribute as attribute
+      on attribute.attrelid = constraint_row.conrelid
+     and attribute.attnum = key_column.attnum
     where constraint_row.conrelid = 'app_private.user_accounts'::regclass
-      and constraint_row.confrelid = 'auth.users'::regclass
-      and constraint_row.contype = 'f'
+      and constraint_row.contype = 'p'
   ),
-  'r',
-  'deleting an Auth user is restricted while its application account exists'
+  '{id}',
+  'application account id is the user_accounts primary key'
 );
 
 select is(
@@ -110,11 +113,19 @@ select is(
     select constraint_row.confdeltype::text
     from pg_constraint as constraint_row
     where constraint_row.conrelid = 'app_private.audit_events'::regclass
-      and constraint_row.confrelid = 'auth.users'::regclass
+      and constraint_row.confrelid = 'app_private.user_accounts'::regclass
       and constraint_row.contype = 'f'
+      and exists (
+        select 1
+        from unnest(constraint_row.conkey) as key_attnum
+        join pg_attribute as attribute
+          on attribute.attrelid = constraint_row.conrelid
+         and attribute.attnum = key_attnum
+        where attribute.attname = 'actor_account_id'
+      )
   ),
   'n',
-  'deleting an Auth user preserves audit events and nulls the actor reference'
+  'deleting an application account preserves audit events and nulls actor reference'
 );
 
 select is(
