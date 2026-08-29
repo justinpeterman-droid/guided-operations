@@ -3,10 +3,12 @@ import { describe, it } from "node:test";
 
 import {
   FICTIONAL_TEST_BOOTSTRAP_CONFIRMATION,
+  FICTIONAL_DEVELOPMENT_AUDIT_CONFIRMATION,
   FICTIONAL_TEST_ROTATION_CONFIRMATION,
   GUIDED_OPERATIONS_DEVELOPMENT_PROJECT_REF,
   GUIDED_OPERATIONS_LOCAL_ORIGIN,
   validateFictionalTestBootstrapRequest,
+  validateFictionalDevelopmentAuditRequest,
   validateFictionalTestRotationRequest,
 } from "./fictional-test-administrator-bootstrap-guard.mjs";
 
@@ -35,6 +37,15 @@ describe("fictional test administrator bootstrap guard", () => {
     assert.doesNotThrow(() =>
       validateFictionalTestRotationRequest({
         argv: [FICTIONAL_TEST_ROTATION_CONFIRMATION],
+        environment: developmentEnvironment,
+      }),
+    );
+  });
+
+  it("accepts a separately confirmed read-only Development audit", () => {
+    assert.doesNotThrow(() =>
+      validateFictionalDevelopmentAuditRequest({
+        argv: [FICTIONAL_DEVELOPMENT_AUDIT_CONFIRMATION],
         environment: developmentEnvironment,
       }),
     );

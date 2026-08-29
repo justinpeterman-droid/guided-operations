@@ -57,11 +57,9 @@ jobs:
       - name: Run synthetic policy evaluation
         run: npm run test:eval
 
-      - name: Scan tracked files for secret patterns
-        run: npm run secrets:check
-
-      - name: Audit production dependencies
-        run: npm audit --omit=dev --audit-level=high
+      - name:
+          Check secrets, runtime logging, dependencies, and package signatures
+        run: npm run security:check
 
       - name: Build production application
         run: npm run build

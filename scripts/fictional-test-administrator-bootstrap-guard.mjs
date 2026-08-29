@@ -2,6 +2,8 @@ export const FICTIONAL_TEST_BOOTSTRAP_CONFIRMATION =
   "--confirm-fictional-test-administrator";
 export const FICTIONAL_TEST_ROTATION_CONFIRMATION =
   "--rotate-fictional-test-administrator";
+export const FICTIONAL_DEVELOPMENT_AUDIT_CONFIRMATION =
+  "--confirm-read-only-fictional-development-audit";
 export const GUIDED_OPERATIONS_DEVELOPMENT_PROJECT_REF = "mfkunfqhosmrjbreythc";
 export const GUIDED_OPERATIONS_LOCAL_ORIGIN = "http://127.0.0.1:3109";
 
@@ -25,6 +27,25 @@ export function validateFictionalTestRotationRequest({ argv, environment }) {
       requiresLocalSessionFlow: true,
     },
   );
+}
+
+export function validateFictionalDevelopmentAuditRequest({
+  argv,
+  environment,
+}) {
+  validateFictionalTestAdministratorEnvironment(
+    { argv, environment },
+    {
+      confirmation: FICTIONAL_DEVELOPMENT_AUDIT_CONFIRMATION,
+      action: "read-only data-boundary audit",
+      requiresLocalSessionFlow: false,
+    },
+  );
+  if ((environment.EMPLOYEE_LOOKUP_PEPPER?.trim().length ?? 0) < 32) {
+    throw new Error(
+      "A valid employee lookup pepper is required for the read-only audit.",
+    );
+  }
 }
 
 function validateFictionalTestAdministratorEnvironment(
