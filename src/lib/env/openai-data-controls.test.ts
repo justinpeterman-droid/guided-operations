@@ -59,3 +59,61 @@ describe("OpenAI data controls environment", () => {
     ).toThrow();
   });
 });
+
+describe("fictional corpus exemption", () => {
+  it("waives the retention attestation for an explicitly fictional corpus", () => {
+    expect(
+      getOpenAiDataControlsEnvironment({
+        POLICY_CORPUS_CLASSIFICATION: "fictional",
+        OPENAI_API_DATA_SHARING_ENABLED: "false",
+      }),
+    ).toEqual({
+      POLICY_CORPUS_CLASSIFICATION: "fictional",
+      OPENAI_API_DATA_SHARING_ENABLED: false,
+    });
+  });
+
+  it("still forbids API data sharing for a fictional corpus", () => {
+    expect(() =>
+      getOpenAiDataControlsEnvironment({
+        POLICY_CORPUS_CLASSIFICATION: "fictional",
+        OPENAI_API_DATA_SHARING_ENABLED: "true",
+      }),
+    ).toThrow();
+  });
+
+  it.each(["restricted", "Fictional", "fictional ", "", "real"])(
+    "requires the full attestation when the classification is %o",
+    (classification) => {
+      expect(() =>
+        getOpenAiDataControlsEnvironment({
+          POLICY_CORPUS_CLASSIFICATION: classification,
+          OPENAI_API_DATA_SHARING_ENABLED: "false",
+        }),
+      ).toThrow();
+    },
+  );
+
+  it("requires the full attestation when no classification is set", () => {
+    expect(() =>
+      getOpenAiDataControlsEnvironment({
+        OPENAI_API_DATA_SHARING_ENABLED: "false",
+      }),
+    ).toThrow();
+  });
+
+  it("does not let a fictional classification weaken a real attestation", () => {
+    expect(
+      getOpenAiDataControlsEnvironment({
+        POLICY_CORPUS_CLASSIFICATION: "restricted",
+        OPENAI_DATA_CONTROLS_APPROVAL_REF: "owner-approval-2026-08-28",
+        OPENAI_DATA_RETENTION_MODE: "zero_data_retention",
+        OPENAI_API_DATA_SHARING_ENABLED: "false",
+      }),
+    ).toEqual({
+      OPENAI_DATA_CONTROLS_APPROVAL_REF: "owner-approval-2026-08-28",
+      OPENAI_DATA_RETENTION_MODE: "zero_data_retention",
+      OPENAI_API_DATA_SHARING_ENABLED: false,
+    });
+  });
+});
