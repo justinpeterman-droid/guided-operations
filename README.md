@@ -13,20 +13,26 @@ is imported.
 
 ## Current state
 
-As of 2026-08-25, this is an implementation foundation, not a production
-release.
+As of 2026-08-29, this is an implementation foundation moving into the secure
+login milestone, not a completed release.
 
-| Area                  | State                                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------- |
-| GitHub repository     | Private replacement repository created; web and database CI pass                                                |
-| Web foundation        | Next.js 16 App Router and React 19 scaffolded                                                                   |
-| Accepted appearance   | Guided Operations navy/gold design tokens established                                                           |
-| Migrated product code | Count Sheet calculations, schema parser, types, and tests                                                       |
-| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty     |
-| Authentication        | Employee-number plus personal-passcode design documented; no accounts or connected login                        |
-| RAG corpus            | Not copied; inventory and reconciliation are required first                                                     |
-| Vercel                | Protected preview created; Git linkage, environment variables, and application-content verification remain open |
-| Supabase              | Project healthy; private schemas, forced RLS, private buckets, `pgcrypto`, and `pgvector` established           |
+| Area                  | State                                                                                                               |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| GitHub repository     | Private replacement repository; GitHub Actions is currently failing before runner assignment, with no steps started |
+| Web foundation        | Next.js 16 App Router and React 19 scaffolded                                                                       |
+| Accepted appearance   | Guided Operations navy/gold design tokens established                                                               |
+| Migrated product code | Count Sheet calculations, schema parser, types, and tests                                                           |
+| Database              | Foundation migration applied to Supabase Free in `us-east-1`; application tables remain empty                       |
+| Authentication        | Opaque employee-session architecture accepted in ADR-0007; implementation and security tests are in progress        |
+| RAG corpus            | Not copied; inventory, rights, hashing, page mapping, and reconciliation are required first                         |
+| Vercel                | Git-connected authoritative project verified at `https://guided-operations.vercel.app`; foundation page is live      |
+| Supabase              | Project healthy; private schemas, forced RLS, private buckets, `pgcrypto`, and `pgvector` established               |
+
+The live foundation page and `GET /api/health/live` were remotely verified.
+Sign-in remains disabled until Milestone 1's credential, session, authorization,
+RLS, and browser-security gates pass. Owner decisions O-012 through O-014 have
+resolved the individual-passcode floor, initial administrator authority, and
+hobby-boundary MFA decision.
 
 The predecessor repository remains intact. Canonical source provenance and the
 deliberate copy/rewrite/omit decisions live in
@@ -37,17 +43,18 @@ foundation evidence is recorded in
 ## Stack decision
 
 The app uses **Next.js**, which is a React framework—not a competing UI library.
-A plain Vite React SPA would preserve more of the old build unchanged, but it
-would force sensitive authentication, authorization, policy retrieval, AI calls,
-and database orchestration into a separate backend. Next.js keeps the existing
-React component model while adding server-only boundaries, route handlers,
-secure cookie integration, and first-class Vercel deployment.
+Next.js keeps sensitive authentication, authorization, policy retrieval, AI
+calls, and database orchestration behind server-only boundaries while preserving
+the React component model and first-class Vercel deployment.
 
 Target services:
 
-- **Vercel:** Next.js web application and short server-side request handlers.
-- **Supabase:** PostgreSQL 17, Auth, private Storage, Queues, full-text search,
-  and `pgvector`.
+- **Vercel:** Next.js web application and bounded server-side request handlers.
+- **Supabase:** PostgreSQL 17, private Storage, Queues, full-text search, and
+  `pgvector`.
+- **Application-owned authentication:** employee number plus individual passcode,
+  Argon2id credential hashing, opaque browser sessions, and least-privileged
+  direct Postgres roles as defined by ADR-0007.
 - **OpenAI initially:** accessed through provider-neutral generation and
   embedding interfaces. No Google hosting or Google-specific runtime is part of
   the target.
@@ -87,11 +94,13 @@ and fill it from the appropriate local or hosted secret store.
 
 ```powershell
 npm ci
-npm run lint
-npm run typecheck
-npm test
+npm run verify:web
 npm run build
 ```
+
+Vercel preview builds also execute `npm run verify:web` before `next build`, so
+formatting, lint, type checking, and unit/component tests remain a deployment
+build gate even if GitHub Actions is temporarily unavailable.
 
 After environment linkage is complete, run the web app with:
 
@@ -146,8 +155,8 @@ changes follow
 - Nothing is filed, submitted, acknowledged, or made official without an
   authorized person reviewing the result and taking the explicit action.
 - Revisions are append-only; restores create new revisions.
-- Browser code never receives Supabase secret/service credentials or direct
-  unrestricted application-table access.
+- Browser code never receives database credentials, passcode/session hashes,
+  server secrets, AI keys, or direct unrestricted application-table access.
 - Preview and automated-test environments use fictional operational data only.
 - A green build is not a deployment, pilot approval, or production
   authorization.
