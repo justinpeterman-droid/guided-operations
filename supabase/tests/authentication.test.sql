@@ -1,6 +1,6 @@
 begin;
 
-select plan(24);
+select plan(32);
 
 select has_column('app_private', 'user_accounts', 'id', 'user_accounts has application id');
 select has_table('app_private', 'user_credentials', 'credential table exists');
@@ -71,8 +71,8 @@ select is(
     where grantee = 'guided_operations_preauth'
       and routine_schema = 'app_private'
   ),
-  3,
-  'preauth role can execute only three reviewed functions'
+  7,
+  'preauth role can execute only seven reviewed functions'
 );
 
 select has_function('app_private', 'preauth_lookup_account', array['text'], 'preauth account lookup exists');
@@ -87,6 +87,42 @@ select has_function('app_private', 'current_account_id', array[]::text[], 'reque
 select has_function('app_private', 'current_account_is_active', array[]::text[], 'active-account helper exists');
 select has_function('app_private', 'current_account_is_admin', array[]::text[], 'administrator helper exists');
 select has_function('app_private', 'runtime_current_account', array[]::text[], 'safe current-account DTO exists');
+select has_function(
+  'app_private',
+  'preauth_record_login_failure',
+  array['uuid', 'integer', 'integer'],
+  'login failure recorder exists'
+);
+select has_function(
+  'app_private',
+  'preauth_create_session',
+  array['uuid', 'uuid', 'integer', 'text', 'text', 'text', 'timestamp with time zone', 'timestamp with time zone'],
+  'session creator exists'
+);
+select has_function(
+  'app_private',
+  'preauth_refresh_session',
+  array['uuid', 'text', 'text', 'timestamp with time zone'],
+  'session refresh/rotation function exists'
+);
+select has_function(
+  'app_private',
+  'preauth_revoke_session',
+  array['uuid', 'text', 'text'],
+  'session revocation function exists'
+);
+select has_function(
+  'app_private',
+  'runtime_change_passcode',
+  array['text', 'integer'],
+  'runtime passcode change function exists'
+);
+select has_function(
+  'app_private',
+  'runtime_revoke_all_sessions',
+  array['text'],
+  'runtime logout-all function exists'
+);
 
 select is(
   (select count(*)::integer from app_private.user_accounts),
