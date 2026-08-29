@@ -15,6 +15,7 @@
   --gow-muted: #516579;
   --gow-border: #cbd7e1;
   --gow-focus: #075fae;
+  --gow-danger: #8a2631;
   --gow-radius-control: 10px;
   --gow-radius-card: 16px;
   --gow-radius-feature: 24px;
@@ -54,7 +55,8 @@ input {
 }
 
 button:focus-visible,
-input:focus-visible {
+input:focus-visible,
+a:focus-visible {
   outline: 3px solid var(--gow-focus);
   outline-offset: 3px;
 }
@@ -67,7 +69,9 @@ input:focus-visible {
 
 .brand-bar,
 .foundation-grid,
-.foundation-footer {
+.foundation-footer,
+.dashboard-shell,
+.account-shell {
   width: min(1180px, calc(100% - 40px));
   margin-inline: auto;
 }
@@ -130,7 +134,9 @@ input:focus-visible {
   padding-block: 48px 72px;
 }
 
-.product-intro h1 {
+.product-intro h1,
+.dashboard-hero h1,
+.account-copy h1 {
   max-width: 760px;
   margin: 0;
   color: var(--gow-navy-950);
@@ -199,7 +205,8 @@ input:focus-visible {
 }
 
 .supporting-copy,
-.connection-status {
+.connection-status,
+.passcode-guidance {
   color: var(--gow-muted);
   font-size: 0.86rem;
   line-height: 1.55;
@@ -222,7 +229,8 @@ input:focus-visible {
 }
 
 .sign-in-card input,
-.sign-in-card button {
+.sign-in-card button,
+.secondary-action {
   min-height: 48px;
   border-radius: var(--gow-radius-control);
 }
@@ -235,6 +243,12 @@ input:focus-visible {
   border: 1px solid #c8d2da;
 }
 
+.sign-in-card input:not(:disabled) {
+  color: var(--gow-ink);
+  background: var(--gow-surface);
+  border-color: #9fb1c1;
+}
+
 .sign-in-card button {
   margin-top: 14px;
   color: #667684;
@@ -243,10 +257,109 @@ input:focus-visible {
   font-weight: 800;
 }
 
+.sign-in-card button:not(:disabled) {
+  color: #fff;
+  background: linear-gradient(180deg, var(--gow-navy-800), var(--gow-navy-950));
+  border-color: var(--gow-navy-950);
+  box-shadow: 0 9px 18px rgba(7, 31, 56, 0.16);
+  cursor: pointer;
+}
+
 .connection-status {
   margin: 20px 0 0;
   padding-top: 18px;
   border-top: 1px solid #d8e1e8;
+}
+
+.form-message {
+  margin: 10px 0 0;
+  color: var(--gow-danger);
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.passcode-guidance {
+  margin: 12px 0 0;
+}
+
+.dashboard-shell {
+  align-self: start;
+  padding-block: 48px 72px;
+}
+
+.dashboard-hero {
+  max-width: 850px;
+}
+
+.dashboard-grid {
+  display: grid;
+  margin-top: 40px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.dashboard-card {
+  padding: 24px;
+  background: rgba(255, 255, 255, 0.92);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-card);
+  box-shadow: 0 12px 28px rgba(19, 53, 83, 0.08);
+}
+
+.dashboard-card-kicker {
+  color: var(--gow-gold-500);
+  font-size: 0.7rem;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.dashboard-card h2 {
+  margin: 10px 0 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 1.35rem;
+}
+
+.dashboard-card p {
+  margin: 12px 0 0;
+  color: var(--gow-muted);
+  font-size: 0.88rem;
+  line-height: 1.6;
+}
+
+.dashboard-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.dashboard-actions form {
+  margin: 0;
+}
+
+.secondary-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 17px;
+  color: var(--gow-navy-900);
+  background: rgba(255, 255, 255, 0.86);
+  border: 1px solid var(--gow-border);
+  font-weight: 800;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.account-shell {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(320px, 0.75fr);
+  align-items: center;
+  gap: clamp(36px, 7vw, 88px);
+  padding-block: 48px 72px;
 }
 
 .foundation-footer {
@@ -260,7 +373,8 @@ input:focus-visible {
 }
 
 @media (max-width: 860px) {
-  .foundation-grid {
+  .foundation-grid,
+  .account-shell {
     grid-template-columns: 1fr;
     align-items: start;
     padding-top: 30px;
@@ -269,12 +383,18 @@ input:focus-visible {
   .sign-in-card {
     width: min(100%, 560px);
   }
+
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 620px) {
   .brand-bar,
   .foundation-grid,
-  .foundation-footer {
+  .foundation-footer,
+  .dashboard-shell,
+  .account-shell {
     width: min(100% - 28px, 1180px);
   }
 
@@ -288,6 +408,16 @@ input:focus-visible {
 
   .foundation-footer {
     flex-direction: column;
+  }
+
+  .dashboard-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-actions form,
+  .dashboard-actions .secondary-action {
+    width: 100%;
   }
 }
 
