@@ -1,174 +1,73 @@
 # ADR-0003: Employee Number Plus PIN-Like Authentication
 
-- **Status:** Proposed
+- **Status:** Rejected
 - **Date:** 2026-08-25
+- **Rejected:** 2026-08-29
 - **Deciders:** Product owner, security owner, and technical lead
+- **Replacement:** ADR-0007
 
 ## Context
 
-Users need the familiar employee-number plus PIN-like sign-in experience. The
-system must use individual accounts and cannot use the former shared
-access/admin codes. Hosted Supabase password Auth accepts email or phone
-identifiers, not an arbitrary employee-number username. A final implementation
-decision is required before production code can claim this requirement is
-complete.
+Users need employee-number plus personal-passcode sign-in with individual accounts. The former shared access/admin codes are prohibited. Supabase password Auth accepts email or phone identifiers rather than an arbitrary employee-number username, so this ADR proposed a random server-only synthetic Auth alias.
 
-The initial release stores no real operational records, but authentication
-metadata still deserves production-grade protection.
+The proposal was acceptable only if the alias never appeared in user-facing surfaces, APIs, logs, analytics, audit details, browser storage, emails, redirects, or recoverable public endpoints.
 
-## Proposed decision
+## Rejected proposal
 
-Prefer a server-only Auth alias bridge, subject to a hosted Supabase spike and
-security approval:
+The preferred Option A was:
 
-- Normalize employee number and resolve it by a keyed lookup digest in the
-  non-exposed `app_private` schema.
-- Map the account to a random, non-user-facing Auth alias.
-- Call Supabase Auth password sign-in on the server using that alias.
-- Use the supported SSR access/refresh cookie flow.
-- Keep application role, status, forced-change state, and auth_version in
-  `app_private.user_accounts` and recheck them server-side.
-- Disable public signup and generic email/phone recovery.
-- Use a password-class PIN-like secret with a proposed minimum of eight
-  characters; reject employee-number equality/common sequences.
-- Apply account/device/network/global limits and generic errors.
-- Use protected Auth admin operations for account creation/reset only after
-  active-admin, CSRF, idempotency, and purpose-bound step-up checks.
+1. normalize employee number and resolve it by a keyed lookup digest;
+2. map the account to a random internal email-like Auth alias;
+3. call Supabase Auth password sign-in server-side using that alias;
+4. use Supabase SSR access/refresh cookies;
+5. keep application role, status, forced-change state, and `auth_version` in `app_private.user_accounts`;
+6. disable public signup and generic recovery;
+7. apply generic errors, throttling, lockout, revocation, and admin step-up.
 
-This is not Accepted until every action item passes. If the alias lifecycle
-cannot be made safe, choose Option B rather than reducing credential strength or
-exposing aliases.
+## Rejection evidence — 2026-08-29
+
+Supabase's current JWT documentation identifies `email` as a required access-token claim for email/password Auth users. Required claims cannot be removed to make an Auth access JWT opaque to the application. A user whose synthetic email-like alias is used for password sign-in therefore carries that alias in the access token.
+
+Sending the normal Supabase SSR access token to the browser—even only in an HttpOnly cookie—would place the synthetic alias in browser-held session material. That violates this ADR's own alias-invisibility acceptance criterion.
+
+The product will not weaken that criterion simply to keep the provider-managed session design. The documented fallback, application-owned credentials plus opaque sessions, is accepted in ADR-0007.
 
 ## Options considered
 
-### Option A: Supabase Auth with private server-only alias bridge
+### Option A: Supabase Auth with private alias bridge — rejected
 
-| Dimension            | Assessment                                   |
-| -------------------- | -------------------------------------------- |
-| User experience      | Meets employee number + PIN-like requirement |
-| Supabase integration | Strong after adapter                         |
-| Security complexity  | Medium-high                                  |
-| Custom cryptography  | Low                                          |
-| Status               | Preferred, requires spike                    |
+The provider would own password hashing and refresh-token rotation, but the synthetic identifier cannot satisfy the required browser-invisibility boundary when it is a required access-token claim.
 
-Pros:
+### Option B: Custom employee credentials and opaque sessions — selected
 
-- Supabase owns password hashing and session rotation.
-- Works with Auth JWT identity and RLS.
-- Browser never learns the synthetic alias.
-- Preserves the practical login UI.
+This exactly fits employee-number semantics and keeps browser session material opaque. The project takes responsibility for Argon2id credential hashing, token generation/hashing, rotation, expiry, revocation, cookies, rate limiting, and comprehensive security tests. See ADR-0007.
 
-Cons:
+### Option C: Email/phone password, SSO, or passkey identity — deferred
 
-- Relies on a non-user-facing email-like alias behavior that must be validated.
-- Auth admin API secret is powerful and must be isolated.
-- Generic recovery/email flows do not naturally fit.
-- JWT revocation is not instantaneous without current account checks/short TTL.
+Provider-supported identity could be reconsidered later, particularly for stronger MFA, but it changes the required employee-number login experience.
 
-### Option B: Custom employee credential and opaque session tables
+### Option D: Shared facility code or weak common PIN — rejected
 
-| Dimension                          | Assessment                               |
-| ---------------------------------- | ---------------------------------------- |
-| User experience                    | Exact fit                                |
-| Supabase integration               | PostgreSQL only; Auth not used for users |
-| Security complexity                | High                                     |
-| Custom cryptography/session burden | High                                     |
-| Status                             | Fallback if Option A fails               |
+A shared credential removes individual attribution and makes revocation/audit ineffective.
 
-Pros:
+## Owner decisions preserved
 
-- Exact employee-number semantics and lifecycle.
-- Immediate auth_version/session-family revocation can mirror old behavior.
-- No synthetic email/phone alias.
+- Officers and administrators use individual passcodes with a minimum length of at least eight characters. ADR-0007 raises the implementation floor to 10 characters for this release.
+- The implementation rejects common patterns and a passcode equal to the normalized employee number.
+- The owner is the first/main administrator and sole initial authority for account creation, resets, unlocks, and temporary-secret delivery.
+- Administrator MFA remains deferred only for the fictional-data hobby boundary and must be reconsidered before official adoption or real operational/personnel data.
 
-Cons:
+## Closed action items
 
-- The project owns Argon2id parameters, token generation/hashing, rotation,
-  refresh reuse detection, cookies, and future MFA integration.
-- More security-critical code and testing.
-- Loses direct Supabase Auth/RLS identity integration unless custom JWT/session
-  bridging is added.
+1. Final credential policy moved to ADR-0007.
+2. The alias approach was rejected before creating real Auth users because provider token semantics already fail the required invisibility criterion.
+3. No public signup/recovery or synthetic-alias account lifecycle will be built.
+4. SSR Auth-token cookies are replaced by opaque application sessions.
+5. Enumeration, lockout denial, credential storage, bootstrap, and session threat cases move to ADR-0007's acceptance tests.
+6. Product/security selection is recorded in ADR-0007.
 
-### Option C: Email/phone password, SSO, or passkey identity
+## References
 
-| Dimension          | Assessment                          |
-| ------------------ | ----------------------------------- |
-| User experience    | Does not meet current requirement   |
-| Security potential | Strong, especially SSO/passkeys/MFA |
-| Implementation     | Provider-supported                  |
-| Status             | Future reconsideration              |
-
-Pros:
-
-- Native provider flows and recovery.
-- Better long-term MFA/identity assurance options.
-
-Cons:
-
-- Requires users to supply a different identifier.
-- Adds email/phone/identity-provider dependencies not currently requested.
-
-### Option D: Shared facility code or four-digit common PIN
-
-Rejected. It removes attribution, makes revocation/audit ineffective, and is
-explicitly prohibited.
-
-## Trade-off analysis
-
-Option A keeps password storage and sessions in a reviewed Auth system while
-preserving the UI. Its safety depends on proving the alias and recovery
-lifecycle, not just making sign-in succeed. Option B is acceptable only with a
-dedicated threat model and comprehensive parity tests. A short shared/numeric
-credential is not an acceptable simplification.
-
-## Security acceptance criteria
-
-- At least eight-character approved secret policy; final alphabet/length signed
-  off after usability testing.
-- Internal alias never appears in UI, API, logs, analytics, audit details,
-  browser storage, emails, or recoverable public endpoints.
-- Unknown and known employee numbers have generic responses and bounded timing.
-- Public signup/recovery is unavailable.
-- System-generated temporary secret expires and forces change.
-- Login/account/device/network/global rate limits and bounded lockout work.
-- Secure HttpOnly SameSite cookies, refresh rotation, expiry, logout,
-  logout-all, reset, deactivation, and role change pass real-browser tests.
-- Current account role/status/auth_version is checked on sensitive requests.
-- Auth admin secret is server-only and isolated from routine DAL clients.
-- Purpose-bound single-use admin step-up and last-admin protection pass tests.
-- Complete grants/RLS matrix passes direct bypass attempts.
-- First-admin bootstrap and secret delivery have an approved runbook.
-
-## Owner decisions — 2026-08-25
-
-- Officers and administrators use individual passcodes with a minimum length of
-  eight characters. The implementation must also reject common patterns and a
-  passcode equal to the normalized employee number.
-- The owner is the first/main administrator and is the sole initial authority to
-  create accounts, reset passcodes, unlock accounts, and deliver temporary
-  secrets.
-- Administrator MFA is deferred for the no-data hobby foundation. This decision
-  does not permit official adoption or real operational/personnel data, and MFA
-  must be reconsidered before either boundary changes.
-
-## Consequences if accepted
-
-- Employee number is a lookup input, not the Auth provider identifier exposed to
-  the user.
-- Account provisioning/reset requires a tightly controlled Auth admin adapter.
-- Email-based recovery/verification is not part of the experience.
-- Admin MFA remains a follow-up decision and is preferred before real
-  operational data.
-- Credential and Auth behavior are versioned product contracts with security
-  regression tests.
-
-## Action items
-
-1. [ ] Decide final secret length, alphabet, normalization, and admin MFA
-       requirement.
-2. [ ] Spike random internal aliases on a disposable hosted Supabase project.
-3. [ ] Prove no email/recovery/alias exposure and document account lifecycle.
-4. [ ] Implement SSR cookies and session revocation tests in a vertical slice.
-5. [ ] Threat-model enumeration, lockout denial, Auth admin secret, and
-       bootstrap.
-6. [ ] Obtain product/security acceptance or record Option B as a new ADR.
+- Replacement ADR: `docs/adr/0007-custom-opaque-employee-sessions.md`
+- Supabase JWTs: https://supabase.com/docs/guides/auth/jwts
+- Supabase Custom Access Token Hook: https://supabase.com/docs/guides/auth/auth-hooks/custom-access-token-hook
