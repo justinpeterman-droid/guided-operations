@@ -2,7 +2,12 @@ import { timingSafeEqual } from "node:crypto";
 
 import { deriveCsrfToken } from "./csrf";
 import { employeeLookupDigest, normalizeEmployeeNumber } from "./employee-number";
-import { verifyPasscode } from "./passcode";
+import {
+  hashPasscode,
+  passcodeEqualsEmployeeLookupHash,
+  validatePasscodeShape,
+  verifyPasscode,
+} from "./passcode";
 import { hashAuthSubject } from "./subjects";
 import {
   hashOpaqueSecret,
@@ -10,7 +15,11 @@ import {
   issueOpaqueToken,
   parseOpaqueToken,
 } from "./tokens";
-import type { AuthRepository, CurrentAccount } from "./types";
+import type {
+  AuthRepository,
+  CurrentAccount,
+  LoginAccount,
+} from "./types";
 
 const MINUTE = 60 * 1000;
 const HOUR = 60 * MINUTE;
@@ -24,10 +33,30 @@ const DUMMY_PASSCODE_HASH =
   "scrypt$v=1$N=32768$r=8$p=3$AAECAwQFBgcICQoLDA0ODw$Ht1_wgvDK-JFLpA_0dUmT4Yy4u90hkC10yvXsKnOwwI";
 
 const RATE_LIMITS = [
-  { subject: "account" as const, limit: 5, windowSeconds: 900, blockSeconds: 900 },
-  { subject: "device" as const, limit: 20, windowSeconds: 900, blockSeconds: 900 },
-  { subject: "network" as const, limit: 50, windowSeconds: 900, blockSeconds: 900 },
-  { subject: "global" as const, limit: 1000, windowSeconds: 60, blockSeconds: 60 },
+  {
+    subject: "account" as const,
+    limit: 5,
+    windowSeconds: 900,
+    blockSeconds: 900,
+  },
+  {
+    subject: "device" as const,
+    limit: 20,
+    windowSeconds: 900,
+    blockSeconds: 900,
+  },
+  {
+    subject: "network" as const,
+    limit: 50,
+    windowSeconds: 900,
+    blockSeconds: 900,
+  },
+  {
+    subject: "global" as const,
+    limit: 1000,
+    windowSeconds: 60,
+    blockSeconds: 60,
+  },
 ];
 
 export interface AuthServiceSecrets {
@@ -76,8 +105,15 @@ export interface AuthService {
     deviceId: string;
     networkId: string;
   }): Promise<SignInResult>;
-  resolveSession(serializedSession: string): Promise<ResolvedSession | null>;
+  resolveSession(
+    serializedSession: string,
+    options?: { rotate?: boolean },
+  ): Promise<ResolvedSession | null>;
   signOut(serializedSession: string): Promise<void>;
+  changePasscode(
+    session: ResolvedSession,
+    newPasscode: string,
+  ): Promise<{ success: true } | { success: false; reason: string }>;
 }
 
 export function createAuthService({
@@ -88,7 +124,7 @@ export function createAuthService({
   return {
     async signIn(input) {
       const timestamp = now();
-      const candidate = prepareEmployeeCandidate(
+      const lookupHash = prepareEmployeeLookupHash(
         input.employeeNumber,
         secrets.employeeLookupPepper,
       );
@@ -109,7 +145,7 @@ export function createAuthService({
       );
 
       const rateSubjects = {
-        account: candidate.lookupHash,
+        account: lookupHash,
         device: deviceHash,
         network: networkHash,
         global: globalHash,
@@ -137,13 +173,13 @@ export function createAuthService({
         };
       }
 
-      const account = await repository.lookupAccount(candidate.lookupHash);
+      const account = await repository.lookupAccount(lookupHash);
       const eligible = accountCanAttemptLogin(account, timestamp);
-      const hashToVerify = eligible ? account!.passcodeHash : DUMMY_PASSCODE_HASH;
+      const hashToVerify = eligible ? account.passcodeHash : DUMMY_PASSCODE_HASH;
       const verified = await verifyPasscode(hashToVerify, input.passcode);
 
       if (!eligible || !verified) {
-        if (eligible && account) {
+        if (eligible) {
           await repository.recordLoginFailure(
             account.accountId,
             LOCK_AFTER_FAILURES,
@@ -197,7 +233,7 @@ export function createAuthService({
       };
     },
 
-    async resolveSession(serializedSession) {
+    async resolveSession(serializedSession, options) {
       const parsed = parseOpaqueToken(serializedSession);
       if (!parsed) {
         return null;
@@ -242,6 +278,7 @@ export function createAuthService({
       }
 
       const rotationDue =
+        options?.rotate !== false &&
         matchesCurrent &&
         stored.rotatedAt.getTime() <= timestamp.getTime() - SESSION_ROTATE_MS;
       const nextSecret = rotationDue ? issueOpaqueSecret() : null;
@@ -267,12 +304,12 @@ export function createAuthService({
         return null;
       }
 
-      const effectiveSecret = refreshed.rotated && nextSecret
-        ? nextSecret
-        : parsed.secret;
-      const replacementSessionToken = refreshed.rotated && nextSecret
-        ? `${parsed.id}.${nextSecret}`
-        : null;
+      const effectiveSecret =
+        refreshed.rotated && nextSecret ? nextSecret : parsed.secret;
+      const replacementSessionToken =
+        refreshed.rotated && nextSecret
+          ? `${parsed.id}.${nextSecret}`
+          : null;
 
       return {
         account,
@@ -299,38 +336,56 @@ export function createAuthService({
         "user-logout",
       );
     },
+
+    async changePasscode(session, newPasscode) {
+      const shape = validatePasscodeShape(newPasscode);
+      if (!shape.success) {
+        return { success: false, reason: shape.reason };
+      }
+
+      if (
+        passcodeEqualsEmployeeLookupHash(
+          newPasscode,
+          session.account.employeeLookupHash,
+          secrets.employeeLookupPepper,
+        )
+      ) {
+        return { success: false, reason: "employee-number" };
+      }
+
+      const passcodeHash = await hashPasscode(newPasscode);
+      const nextAuthVersion = await repository.changePasscode(
+        session.account.accountId,
+        passcodeHash,
+        session.account.authVersion,
+      );
+      if (!nextAuthVersion) {
+        return { success: false, reason: "conflict" };
+      }
+
+      return { success: true };
+    },
   };
 }
 
-function prepareEmployeeCandidate(
+function prepareEmployeeLookupHash(
   rawEmployeeNumber: string,
   pepper: string,
-): { lookupHash: string; normalized: string | null } {
+): string {
   const bounded = rawEmployeeNumber.slice(0, 128);
 
   try {
-    const normalized = normalizeEmployeeNumber(bounded);
-    return {
-      normalized,
-      lookupHash: employeeLookupDigest(normalized, pepper),
-    };
+    return employeeLookupDigest(normalizeEmployeeNumber(bounded), pepper);
   } catch {
     const canonicalInvalid = bounded.normalize("NFKC").trim().toUpperCase();
-    return {
-      normalized: null,
-      lookupHash: hashAuthSubject(
-        "account",
-        `invalid:${canonicalInvalid}`,
-        pepper,
-      ),
-    };
+    return hashAuthSubject("account", `invalid:${canonicalInvalid}`, pepper);
   }
 }
 
 function accountCanAttemptLogin(
-  account: Awaited<ReturnType<AuthRepository["lookupAccount"]>>,
+  account: LoginAccount | null,
   timestamp: Date,
-): account is NonNullable<typeof account> {
+): account is LoginAccount {
   if (!account) {
     return false;
   }
