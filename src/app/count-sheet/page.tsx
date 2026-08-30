@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 import { CountSheetWorkspace } from "@/features/count-sheet/count-sheet-workspace";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
@@ -14,24 +14,12 @@ export default async function CountSheetPage() {
   if (access.kind === "unassigned") return <ShiftRequired />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/home">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Count Sheet</strong>
-          </span>
-        </Link>
-        <WorkspaceNavigation current="Count Sheet" />
-      </header>
+    <WorkspaceShell current="Count Sheet" title="Count Sheet">
       <CountSheetWorkspace
         initialWorkDate={centralWorkDate()}
         shiftCode={access.shiftCode}
       />
-    </main>
+    </WorkspaceShell>
   );
 }
 

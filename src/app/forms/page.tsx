@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
   chainOfCustodyGuidance,
   countSheetCapabilities,
@@ -19,20 +19,11 @@ export default async function FormsPage() {
   if (access.kind === "unavailable") return <Unavailable />;
 
   return (
-    <main className="forms-library-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/home">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Forms Library</strong>
-          </span>
-        </Link>
-        <WorkspaceNavigation current="Forms" />
-      </header>
-
+    <WorkspaceShell
+      className="forms-library-page"
+      current="Forms"
+      title="Forms Library"
+    >
       <section className="forms-library-intro" aria-labelledby="forms-title">
         <p className="eyebrow">Approved paperwork</p>
         <h1 id="forms-title">Find the right paperwork.</h1>
@@ -149,7 +140,7 @@ export default async function FormsPage() {
           eligible digital form and its rules have been approved and tested.
         </p>
       </section>
-    </main>
+    </WorkspaceShell>
   );
 }
 

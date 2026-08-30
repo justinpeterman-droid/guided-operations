@@ -1,29 +1,75 @@
+"use client";
+
 import Link from "next/link";
+import { useEffect, useId, useRef, useState } from "react";
 
-const items = [
-  ["Home", "/home"],
-  ["Reports", "/reports"],
-  ["Policy", "/policy-expert"],
-  ["Count Sheet", "/count-sheet"],
-  ["Forms", "/forms"],
-  ["Account", "/account"],
-] as const;
+import {
+  WORKSPACE_NAV_ITEMS,
+  type WorkspaceNavLabel,
+} from "@/app/components/workspace-navigation-items";
 
-/** Shared plain-language navigation for normal officer pages. */
-export function WorkspaceNavigation({
-  current,
-}: Readonly<{ current?: string }>) {
+export type WorkspaceNavigationProps = Readonly<{
+  current?: WorkspaceNavLabel;
+}>;
+
+/** Plain-language officer navigation with a compact mobile menu. */
+export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
+  const [open, setOpen] = useState(false);
+  const panelId = useId();
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+
+    function handlePointerDown(event: MouseEvent) {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handlePointerDown);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handlePointerDown);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [open]);
+
   return (
-    <nav aria-label="Workspace" className="workspace-navigation">
-      {items.map(([label, href]) => (
-        <Link
-          aria-current={current === label ? "page" : undefined}
-          href={href}
-          key={href}
-        >
-          {label}
-        </Link>
-      ))}
-    </nav>
+    <div className="workspace-navigation-root" ref={rootRef}>
+      <button
+        aria-controls={panelId}
+        aria-expanded={open}
+        className="workspace-navigation-toggle"
+        onClick={() => setOpen((value) => !value)}
+        type="button"
+      >
+        {open ? "Close menu" : "Menu"}
+      </button>
+      <nav
+        aria-label="Workspace"
+        className={
+          open ? "workspace-navigation is-open" : "workspace-navigation"
+        }
+        id={panelId}
+      >
+        {WORKSPACE_NAV_ITEMS.map(([label, href]) => (
+          <Link
+            aria-current={current === label ? "page" : undefined}
+            href={href}
+            key={href}
+            onClick={() => setOpen(false)}
+          >
+            {label}
+          </Link>
+        ))}
+      </nav>
+    </div>
   );
 }

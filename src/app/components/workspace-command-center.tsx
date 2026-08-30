@@ -1,6 +1,9 @@
 import Link from "next/link";
 
+import { GuidedMark } from "@/app/components/workspace-brand";
 import type { ReportSummary } from "@/server/incidents/list-reports";
+
+export { GuidedMark };
 
 type CommandIconName = "report" | "history" | "policy" | "forms";
 
@@ -67,27 +70,6 @@ const officerTools: readonly {
     icon: "forms",
   },
 ];
-
-/**
- * A non-shield brand mark for the preview command center. The linked circles
- * echo the review path without implying an agency insignia.
- */
-export function GuidedMark() {
-  return (
-    <svg
-      aria-hidden="true"
-      className="workspace-guided-mark"
-      fill="none"
-      viewBox="0 0 52 52"
-    >
-      <path d="M12 34c0-12.2 9.8-22 22-22h6" />
-      <path d="M40 12 34 6m6 6-6 6" />
-      <path d="M40 18c0 12.2-9.8 22-22 22h-6" />
-      <circle cx="14" cy="34" r="4" />
-      <circle cx="38" cy="18" r="4" />
-    </svg>
-  );
-}
 
 function ArrowIcon() {
   return (
