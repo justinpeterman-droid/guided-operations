@@ -343,7 +343,8 @@ export function CountSheetWorkspace({
 
   return (
     <section
-      className={`count-sheet-preview ${printStyles.printLayout}`}
+      aria-busy={state === "loading"}
+      className={`count-sheet-preview ${printStyles.printLayout}${state === "loading" ? " is-loading" : ""}`}
       aria-labelledby="count-sheet-title"
     >
       <div className="count-sheet-heading">
@@ -415,7 +416,14 @@ export function CountSheetWorkspace({
         </div>
       </div>
 
-      <div className="fictional-notice" role="status">
+      <div
+        className={
+          state === "loading"
+            ? "fictional-notice count-sheet-loading-notice"
+            : "fictional-notice"
+        }
+        role="status"
+      >
         <strong>{message}</strong> Do not guess a number just to make the sheet
         balance.
       </div>

@@ -200,7 +200,7 @@ describe("NewIncidentWorkspace", () => {
     await user.click(
       screen.getByRole("button", { name: "Continue to Forms & Export" }),
     );
-    expect(screen.getByText("005 409")).toBeVisible();
+    expect(screen.getByText("005 / 409 designation")).toBeVisible();
     await user.click(screen.getByRole("button", { name: "Save incident" }));
 
     expect(fetch).toHaveBeenNthCalledWith(1, "/api/web/v1/staff?limit=100", {
