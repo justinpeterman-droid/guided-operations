@@ -181,6 +181,7 @@ export function PolicyExpert() {
                   <PolicyAnswer
                     headingId={`policy-answer-title-${index}`}
                     outcome={entry.outcome}
+                    question={entry.question}
                   />
                 </article>
               ))}
@@ -204,12 +205,81 @@ export function PolicyExpert() {
   );
 }
 
+type ReportState = "idle" | "sending" | "sent" | "failed";
+
+/**
+ * The only channel that tells the owner an answer was wrong. The corpus is
+ * refreshed by hand once a year, so nothing else surfaces a stale or mis-cited
+ * answer in between. Reporting is therefore one click, with no reason required
+ * and no confirmation step - friction here means wrong answers go unreported.
+ */
+function ReportAnswerControl({
+  answer,
+  question,
+}: {
+  answer: GroundedPolicyAnswer;
+  question: string;
+}) {
+  const [state, setState] = useState<ReportState>("idle");
+
+  async function report() {
+    setState("sending");
+    try {
+      const csrfToken = await getCsrfToken();
+      const response = await fetch("/api/web/v1/answer-reports", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "Content-Type": "application/json",
+          "x-csrf-token": csrfToken,
+        },
+        body: JSON.stringify({
+          question,
+          answerText: answer.answer,
+          citations: answer.citations,
+        }),
+      });
+      setState(response.ok ? "sent" : "failed");
+    } catch {
+      setState("failed");
+    }
+  }
+
+  if (state === "sent") {
+    return (
+      <p className="policy-report-status" role="status">
+        Reported. This answer is queued for review.
+      </p>
+    );
+  }
+
+  return (
+    <p className="policy-report">
+      <button
+        className="policy-report-button"
+        disabled={state === "sending"}
+        onClick={report}
+        type="button"
+      >
+        {state === "sending" ? "Reportingâ€¦" : "Report this answer"}
+      </button>
+      <span aria-live="polite" className="policy-report-status">
+        {state === "failed"
+          ? "The report could not be sent. Tell the administrator directly."
+          : "Wrong, out of date, or citing the wrong policy?"}
+      </span>
+    </p>
+  );
+}
+
 function PolicyAnswer({
   headingId,
   outcome,
+  question,
 }: {
   headingId: string;
   outcome: Exclude<AnswerOutcome, undefined>;
+  question: string;
 }) {
   const heading =
     outcome.kind === "answer" ? "Cited guidance" : "Evidence is not sufficient";
@@ -249,6 +319,7 @@ function PolicyAnswer({
           ))}
         </ol>
       ) : null}
+      <ReportAnswerControl answer={outcome.answer} question={question} />
     </section>
   );
 }

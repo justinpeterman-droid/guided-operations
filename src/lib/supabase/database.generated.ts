@@ -442,6 +442,15 @@ export type Database = {
         }
         Returns: string
       }
+      report_policy_answer: {
+        Args: {
+          p_answer_text: string
+          p_citations: Json
+          p_corpus_version: string
+          p_question: string
+        }
+        Returns: string
+      }
       restore_count_sheet_revision: {
         Args: {
           p_base_revision_number: number
