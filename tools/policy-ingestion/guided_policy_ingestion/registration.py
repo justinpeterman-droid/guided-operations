@@ -36,6 +36,38 @@ class RegistrationErrorSafe(RuntimeError):
     """Raised with a message that is safe to print. Never carries policy text."""
 
 
+def _safe_database_detail(error: BaseException) -> str:
+    """Describe a database failure precisely without echoing any row value.
+
+    An error that says only "something went wrong" makes a one-word typo
+    undiagnosable, which is worse for the operator than the leak it was
+    guarding against. Postgres exposes structured diagnostics - the error
+    code, the table, column and constraint involved - and none of those carry
+    policy text, so they are reported while the message body, which can quote
+    the offending value, is not.
+    """
+    parts: list[str] = [type(error).__name__]
+    sqlstate = getattr(error, "sqlstate", None)
+    if sqlstate:
+        parts.append(f"code {sqlstate}")
+    diagnostics = getattr(error, "diag", None)
+    for label, attribute in (
+        ("table", "table_name"),
+        ("column", "column_name"),
+        ("constraint", "constraint_name"),
+    ):
+        value = getattr(diagnostics, attribute, None) if diagnostics else None
+        if value:
+            parts.append(f"{label} {value}")
+    if len(parts) == 1:
+        # Not a database error - a bad UUID or similar. The text of these is
+        # our own argument handling, not row content.
+        detail = str(error).strip().splitlines()[0] if str(error).strip() else ""
+        if detail:
+            parts.append(detail[:200])
+    return "; ".join(parts)
+
+
 @dataclass(frozen=True)
 class PolicySource:
     """One extracted document, as described by its manifest."""
@@ -261,9 +293,9 @@ class PolicyRegistrar:
                             summary.registered += 1
         except RegistrationErrorSafe:
             raise
-        except Exception as error:  # noqa: BLE001 - message is deliberately opaque
+        except Exception as error:  # noqa: BLE001 - reported without row values
             raise RegistrationErrorSafe(
-                "Registration failed; private details were not printed"
+                f"Registration failed: {_safe_database_detail(error)}"
             ) from error
         return summary
 
