@@ -11,7 +11,15 @@ describe("assessOfficial005409Fidelity", () => {
         fieldMapApproved: false,
         renderedFidelityApproved: false,
       }),
-    ).toEqual({ ready: false, blockers: ["approved_source_revision", "source_sha256", "approved_field_map", "rendered_fidelity"] });
+    ).toEqual({
+      ready: false,
+      blockers: [
+        "approved_source_revision",
+        "source_sha256",
+        "approved_field_map",
+        "rendered_fidelity",
+      ],
+    });
   });
 
   it("does not treat narrative/example material as an approved official source", () => {
