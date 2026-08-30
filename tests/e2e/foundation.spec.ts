@@ -1,6 +1,8 @@
 import { expect, test } from "@playwright/test";
 
-test("labels the replacement foundation honestly", async ({ page }) => {
+test("labels the workspace honestly and routes to sign in", async ({
+  page,
+}) => {
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
 
@@ -17,9 +19,11 @@ test("labels the replacement foundation honestly", async ({ page }) => {
       name: "Clear guidance for the work that has to be right.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("button", { name: "Sign in" })).toBeDisabled();
   await expect(
-    page.getByText("No live operational data or user accounts are connected"),
+    page.getByRole("link", { name: "Go to sign in" }),
+  ).toHaveAttribute("href", "/login");
+  await expect(
+    page.getByText("This is a working tool, not the system of record"),
   ).toBeVisible();
   expect(browserErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
