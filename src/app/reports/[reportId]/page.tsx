@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { WorkspaceShell } from "@/app/components/workspace-shell";
+import { getReportTypeDefinition } from "@/features/incidents/report-types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
 import { listReportRevisionsForCurrentSession } from "@/server/incidents/list-report-revisions";
@@ -26,45 +28,47 @@ export default async function ReportPage({
   if (result.kind === "unavailable")
     return <Message title="Report cannot be loaded right now." />;
 
+  const reportLabel = getReportTypeDefinition(result.report.reportType).label;
+
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/reports">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Final report</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <Link className="reports-home-link" href="/reports">
-            Reports
-          </Link>
-          {isPrintableReport(result.report.reportType) ? (
-            <>
-              <DownloadReportButton
-                current
-                reportId={result.report.reportId}
-                revisionNumber={result.report.revisionNumber}
-              />
-              <PrintReportButton
-                reportId={result.report.reportId}
-                revisionNumber={result.report.revisionNumber}
-              />
-            </>
-          ) : null}
-        </div>
-      </header>
+    <WorkspaceShell
+      actions={
+        isPrintableReport(result.report.reportType) ? (
+          <>
+            <DownloadReportButton
+              current
+              reportId={result.report.reportId}
+              revisionNumber={result.report.revisionNumber}
+            />
+            <PrintReportButton
+              reportId={result.report.reportId}
+              revisionNumber={result.report.revisionNumber}
+            />
+          </>
+        ) : null
+      }
+      current="Reports"
+      title={reportLabel}
+    >
       <section
         className="reports-intro report-print-heading"
         aria-labelledby="report-title"
       >
         <p className="eyebrow">Human-reviewed record</p>
-        <h1 id="report-title">Final report</h1>
+        <h1 id="report-title">{reportLabel}</h1>
         <p>
-          Revision {result.report.revisionNumber} · {result.report.reportType}
+          Revision {result.report.revisionNumber} ·{" "}
+          <span className={`incident-status status-${result.report.status}`}>
+            {result.report.status.replace("_", " ")}
+          </span>
+        </p>
+        <p>
+          <Link
+            className="reports-home-link"
+            href={`/incidents/${result.report.incidentId}`}
+          >
+            Open Document Studio for this incident
+          </Link>
         </p>
       </section>
       <article
@@ -98,7 +102,7 @@ export default async function ReportPage({
           revisions={await loadHistory(reportId)}
         />
       </article>
-    </main>
+    </WorkspaceShell>
   );
 }
 
