@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PreviewShell } from "@/app/components/preview-shell";
 import { DailyPaperworkPackageManager } from "@/features/daily-paperwork/daily-paperwork-package-manager";
 import type { DailyPaperworkTemplatePackageSummary } from "@/server/paperwork/list-daily-paperwork-template-packages";
 
@@ -19,20 +20,12 @@ const fictionalPackage: DailyPaperworkTemplatePackageSummary = {
 /** Fictional visual contract only; every package-import control is inert. */
 export default function AdminPaperworkPackagesPreviewPage() {
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/preview/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Daily Paperwork sources</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell
+      brandHref="/preview/admin"
+      className="reports-page"
+      headerClassName="workspace-header reports-header"
+      title="Daily Paperwork sources"
+    >
       <section
         className="reports-intro"
         aria-labelledby="preview-package-title"
@@ -50,6 +43,6 @@ export default function AdminPaperworkPackagesPreviewPage() {
       <Link className="workspace-return-link" href="/preview/admin">
         ← Return to administrator preview
       </Link>
-    </main>
+    </PreviewShell>
   );
 }
