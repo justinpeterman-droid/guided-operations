@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .collections import COLLECTION_SLUGS, canonical_collection
+from .diagnostics import safe_database_detail as _safe_database_detail
 
 # The corpus is replaced by hand once a year (O-026), so a review that is
 # current for a year matches the real refresh cycle rather than inventing one.
@@ -34,38 +35,6 @@ _STABLE_KEY = re.compile(r"^[a-z0-9][a-z0-9_-]{1,127}$")
 
 class RegistrationErrorSafe(RuntimeError):
     """Raised with a message that is safe to print. Never carries policy text."""
-
-
-def _safe_database_detail(error: BaseException) -> str:
-    """Describe a database failure precisely without echoing any row value.
-
-    An error that says only "something went wrong" makes a one-word typo
-    undiagnosable, which is worse for the operator than the leak it was
-    guarding against. Postgres exposes structured diagnostics - the error
-    code, the table, column and constraint involved - and none of those carry
-    policy text, so they are reported while the message body, which can quote
-    the offending value, is not.
-    """
-    parts: list[str] = [type(error).__name__]
-    sqlstate = getattr(error, "sqlstate", None)
-    if sqlstate:
-        parts.append(f"code {sqlstate}")
-    diagnostics = getattr(error, "diag", None)
-    for label, attribute in (
-        ("table", "table_name"),
-        ("column", "column_name"),
-        ("constraint", "constraint_name"),
-    ):
-        value = getattr(diagnostics, attribute, None) if diagnostics else None
-        if value:
-            parts.append(f"{label} {value}")
-    if len(parts) == 1:
-        # Not a database error - a bad UUID or similar. The text of these is
-        # our own argument handling, not row content.
-        detail = str(error).strip().splitlines()[0] if str(error).strip() else ""
-        if detail:
-            parts.append(detail[:200])
-    return "; ".join(parts)
 
 
 @dataclass(frozen=True)

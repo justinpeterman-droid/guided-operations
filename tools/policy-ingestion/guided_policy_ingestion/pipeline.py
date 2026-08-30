@@ -11,6 +11,7 @@ from .discovery import discover_sources
 from .extractors.base import ExtractionError, ExtractionProvider
 from .importers.supabase import ImportErrorSafe, SupabaseImporter
 from .models import NormalizedPage, PolicyChunk, SourceFile, ValidationResult, jsonable
+from .diagnostics import safe_pipeline_reason as _safe_pipeline_reason
 from .normalization import NORMALIZATION_VERSION, normalize_extraction
 from .validation import validate_document
 
@@ -39,21 +40,6 @@ class BatchSummary:
             {"discovered": 0, "processed": 0, "skipped": 0, "awaiting_review": 0, "failed": 0, "pages": 0, "chunks": 0},
         )
         bucket[key] += amount
-
-
-def _safe_pipeline_reason(error: BaseException) -> str:
-    """Name a pipeline failure without printing a source path.
-
-    OSError carries the filename it choked on, and the tool must not log
-    absolute source paths, so only its errno is reported. The remaining types
-    raise messages this code or a parser wrote, which name structure rather
-    than content.
-    """
-    name = type(error).__name__
-    if isinstance(error, OSError):
-        return f"{name}; errno {error.errno}"
-    detail = str(error).strip().splitlines()[0] if str(error).strip() else ""
-    return f"{name}: {detail[:200]}" if detail else name
 
 
 def _load_bundle(attempt_dir: Path) -> tuple[tuple[NormalizedPage, ...], tuple[PolicyChunk, ...]]:

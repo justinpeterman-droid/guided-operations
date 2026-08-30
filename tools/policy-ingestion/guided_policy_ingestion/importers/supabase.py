@@ -8,6 +8,7 @@ from dataclasses import asdict
 from pathlib import Path
 
 from ..config import ChunkingConfig, ExtractionConfig
+from ..diagnostics import safe_database_detail as _safe_database_detail
 from ..models import NormalizedPage, PolicyChunk, SourceFile, ValidationResult
 from ..normalization import NORMALIZATION_VERSION
 
@@ -237,4 +238,8 @@ class SupabaseImporter:
         except ImportErrorSafe:
             raise
         except Exception as error:
-            raise ImportErrorSafe("Supabase import failed; private details were not printed") from error
+            # The structured Postgres diagnostics name the table, column and
+            # constraint without quoting any row, which is what an operator
+            # needs to act. The message body, which can echo a value, is not
+            # included.
+            raise ImportErrorSafe(f"Supabase import failed: {_safe_database_detail(error)}") from error
