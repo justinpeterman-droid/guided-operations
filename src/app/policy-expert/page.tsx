@@ -64,7 +64,7 @@ function Unavailable() {
           Your question has not been submitted or retained. Please try again
           later.
         </p>
-        <Link className="reports-home-link" href="/">
+        <Link className="reports-home-link" href="/home">
           Return home
         </Link>
       </section>

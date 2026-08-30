@@ -64,7 +64,7 @@ function PasscodeChangeRequired({
   csrfToken,
 }: Readonly<{ csrfToken: string | null }>) {
   return (
-    <main className="reports-page account-page">
+    <WorkspaceShell className="reports-page account-page" title="Account">
       <section
         className="reports-intro"
         aria-labelledby="passcode-change-title"
@@ -77,7 +77,7 @@ function PasscodeChangeRequired({
         </p>
       </section>
       <TemporaryPasscodeChangeForm csrfToken={csrfToken} />
-    </main>
+    </WorkspaceShell>
   );
 }
 
