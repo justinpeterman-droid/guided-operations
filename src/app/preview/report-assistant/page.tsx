@@ -2,7 +2,11 @@ import { PreviewShell } from "@/app/components/preview-shell";
 
 export default function ReportAssistantPreviewPage() {
   return (
-    <PreviewShell brandHref="/" className="workspace-page" title="Report assistant">
+    <PreviewShell
+      brandHref="/"
+      className="workspace-page"
+      title="Report assistant"
+    >
       <section className="workspace-intro" aria-labelledby="workspace-title">
         <p className="eyebrow">Review-first report drafting</p>
         <h1 id="workspace-title">Start with what is known.</h1>
