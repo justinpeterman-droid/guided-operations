@@ -146,7 +146,16 @@ def parse_mineru_content(path: Path, version: str) -> ExtractionResult:
     )
 
 
-_BANNER_PAGE = re.compile(r"PAGE\s*NUMBER\s*(\d{1,4})\s*OF\s*(\d{1,4})", re.IGNORECASE)
+# Three masthead dialects appear across the corpus and all state the same fact:
+#   "PAGE NUMBER 1 OF 4"  (unit policies)
+#   "Page 1 of 6"         (post orders)
+#   "PAGE: 1 of 11"       (secretarial directives)
+# Digits are required on both sides of "of" so prose like "page 3 of the manual"
+# cannot match. The page-count agreement check below is what ultimately makes a
+# derived label trustworthy; a false label is worse than none.
+_BANNER_PAGE = re.compile(
+    r"PAGE\s*(?:NUMBER)?\s*:?\s*(\d{1,4})\s*OF\s*(\d{1,4})", re.IGNORECASE
+)
 
 
 def _apply_banner_page_labels(
