@@ -1,24 +1,24 @@
-export type Official005409SourceKind = "authoritative_form" | "example_material";
+type SourceKind = "authoritative_form" | "example_material";
 
-export type Official005409FidelityInput = Readonly<{
-  sourceRevision: string | null;
-  sourceSha256: string | null;
-  sourceKind?: Official005409SourceKind;
-  fieldMapApproved: boolean;
-  renderedFidelityApproved: boolean;
-}>;
-
-export type Official005409FidelityBlocker =
+type Blocker =
   | "approved_source_revision"
   | "source_sha256"
   | "authoritative_source_kind"
   | "approved_field_map"
   | "rendered_fidelity";
 
-export type Official005409FidelityResult = Readonly<{
-  ready: boolean;
-  blockers: readonly Official005409FidelityBlocker[];
-}>;
+export interface Official005409FidelityInput {
+  readonly sourceRevision: string | null;
+  readonly sourceSha256: string | null;
+  readonly sourceKind?: SourceKind;
+  readonly fieldMapApproved: boolean;
+  readonly renderedFidelityApproved: boolean;
+}
+
+export interface Official005409FidelityResult {
+  readonly ready: boolean;
+  readonly blockers: readonly Blocker[];
+}
 
 const SHA256_PATTERN = /^[a-f0-9]{64}$/i;
 
@@ -30,7 +30,7 @@ const SHA256_PATTERN = /^[a-f0-9]{64}$/i;
 export function assessOfficial005409Fidelity(
   input: Official005409FidelityInput,
 ): Official005409FidelityResult {
-  const blockers: Official005409FidelityBlocker[] = [];
+  const blockers: Blocker[] = [];
 
   if (!input.sourceRevision?.trim()) {
     blockers.push("approved_source_revision");
