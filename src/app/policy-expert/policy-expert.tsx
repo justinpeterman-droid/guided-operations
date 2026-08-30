@@ -7,7 +7,7 @@ import type {
   GroundedPolicyAnswer,
   PolicyCollection,
 } from "@/features/policy/grounding";
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 
 type SubmissionState = "idle" | "submitting" | "failed";
 type CollectionScope = "all" | PolicyCollection;
@@ -110,20 +110,11 @@ export function PolicyExpert() {
   const submitting = state === "submitting";
 
   return (
-    <main className="policy-page">
-      <header className="workspace-header policy-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Policy Expert</strong>
-          </span>
-        </Link>
-        <WorkspaceNavigation current="Policy" />
-      </header>
-
+    <WorkspaceShell
+      className="policy-page"
+      current="Policy"
+      title="Policy Expert"
+    >
       <div className="policy-layout">
         <section className="policy-main" aria-labelledby="policy-title">
           <div className="policy-intro">
@@ -201,7 +192,7 @@ export function PolicyExpert() {
           </p>
         </aside>
       </div>
-    </main>
+    </WorkspaceShell>
   );
 }
 

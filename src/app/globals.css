@@ -1473,6 +1473,63 @@ a:focus-visible {
   gap: 4px;
 }
 
+.workspace-navigation-root {
+  position: relative;
+}
+
+.workspace-navigation-toggle {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--gow-navy-900);
+  background: #e4eef5;
+  border: 1px solid rgba(158, 176, 191, 0.75);
+  border-radius: var(--gow-radius-control);
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.workspace-shell-header {
+  align-items: flex-start;
+}
+
+.workspace-shell-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.workspace-shell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 16px;
+}
+
+.workspace-brand-guided > span:last-child {
+  display: flex;
+  align-items: center;
+  gap: 22px;
+}
+
+.workspace-brand-guided .eyebrow {
+  margin: 0;
+}
+
+.workspace-shell-header .workspace-brand-guided strong {
+  padding-left: 22px;
+  color: var(--gow-navy-800);
+  border-left: 1px solid rgba(126, 151, 171, 0.75);
+  font-family: var(--gow-font-sans);
+  font-size: 1rem;
+  font-weight: 500;
+}
+
 .workspace-navigation a {
   padding: 7px 9px;
   color: var(--gow-muted);
@@ -2968,6 +3025,41 @@ a:focus-visible {
 }
 
 @media (max-width: 860px) {
+  .workspace-navigation-toggle {
+    display: inline-flex;
+  }
+
+  .workspace-navigation {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    z-index: 20;
+    display: none;
+    flex-direction: column;
+    align-items: stretch;
+    width: min(100vw - 28px, 320px);
+    padding: 8px;
+    background: var(--gow-surface);
+    border: 1px solid rgba(158, 176, 191, 0.75);
+    border-radius: var(--gow-radius-card);
+    box-shadow: var(--gow-shadow-soft);
+  }
+
+  .workspace-navigation.is-open {
+    display: flex;
+  }
+
+  .workspace-navigation a {
+    min-height: 44px;
+    padding: 12px 14px;
+    font-size: 0.92rem;
+  }
+
+  .workspace-shell-toolbar {
+    width: 100%;
+    justify-content: space-between;
+  }
+
   .command-center-layout {
     grid-template-columns: 1fr;
   }

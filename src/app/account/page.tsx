@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
 
+import { WorkspaceShell } from "@/app/components/workspace-shell";
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { CSRF_TOKEN_COOKIE } from "@/server/security/session-csrf";
@@ -37,22 +39,11 @@ export default async function AccountPage() {
   }
 
   return (
-    <main className="reports-page account-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Account</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/reports">
-          Reports
-        </Link>
-      </header>
-
+    <WorkspaceShell
+      className="reports-page account-page"
+      current="Account"
+      title="Account"
+    >
       <section className="reports-intro" aria-labelledby="account-title">
         <p className="eyebrow">Private workspace</p>
         <h1 id="account-title">Account safety</h1>
@@ -65,7 +56,7 @@ export default async function AccountPage() {
 
       <AccountSessionControls />
       <PersonalPasscodeChangeForm />
-    </main>
+    </WorkspaceShell>
   );
 }
 
@@ -117,7 +108,7 @@ function AccountUnavailable() {
           Account safety cannot load right now.
         </h1>
         <p>Your sessions have not been changed. Please try again later.</p>
-        <Link className="reports-home-link" href="/">
+        <Link className="reports-home-link" href="/home">
           Return home
         </Link>
       </section>

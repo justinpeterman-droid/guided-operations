@@ -1,7 +1,8 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 
 import {
   REPORT_CHECKLIST_APPROVAL_STATUS,
@@ -498,21 +499,7 @@ export function NewIncidentWorkspace() {
   }
 
   return (
-    <main className="incident-page">
-      <header className="workspace-header incident-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>New incident</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/reports">
-          Reports
-        </Link>
-      </header>
+    <WorkspaceShell current="Reports" title="New incident">
       <div className="incident-workspace">
         <nav className="incident-steps" aria-label="Incident workflow">
           <ol>
@@ -1038,7 +1025,7 @@ export function NewIncidentWorkspace() {
           </ul>
         </aside>
       </div>
-    </main>
+    </WorkspaceShell>
   );
 }
 
