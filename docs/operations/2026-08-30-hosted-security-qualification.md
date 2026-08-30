@@ -13,6 +13,18 @@ The hosted Development database is current through:
 
 No repository migration is presently pending on the hosted Development project.
 
+## Hosted fictional-workflow readiness
+
+Read-only aggregate inspection found:
+
+- one Auth user;
+- one active application staff/account record;
+- that account is an active administrator still requiring temporary-passcode change;
+- no qualified officer account is present;
+- no hosted incidents, reports, or paperwork records are present yet.
+
+The full fictional administrator-to-officer workflow therefore cannot be marked qualified yet. Creating or altering hosted identities is intentionally deferred to the controlled account ceremony rather than being done through ad-hoc SQL.
+
 ## Direct database privilege matrix
 
 Read-only hosted catalog inspection confirmed:
@@ -66,10 +78,12 @@ The following cannot be closed by catalog/static evidence alone:
 5. complete protected page/API/Server Action route inventory against the authoritative account gate;
 6. production forwarding-header monitoring and fail-safe behavior.
 
+The currently available Vercel connector does not enumerate this private project, and the remote-browser/desktop path is unavailable in this session. Authenticated browser qualification is therefore still open rather than inferred from deployment status.
+
 A synthetic SQL-session JWT injection attempt through the database management connector was denied for both valid-looking and stale claims. Because that connector session does not reproduce the Supabase/PostgREST authentication context faithfully, that result is classified as a **test-harness limitation**, not a product failure.
 
 ## Current disposition
 
-No direct database privilege bypass was found in this hosted pass. The Development database is migration-current. The remaining security work is primarily authenticated browser/abuse qualification plus the leaked-password-protection configuration gate.
+No direct database privilege bypass was found in this hosted pass. The Development database is migration-current. The remaining security work is primarily the controlled fictional account ceremony, authenticated browser/abuse qualification, and the leaked-password-protection configuration gate.
 
 This document does not authorize Production or real-data use.
