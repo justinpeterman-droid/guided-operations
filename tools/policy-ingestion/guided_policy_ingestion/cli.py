@@ -19,6 +19,14 @@ from .embeddings.supabase import SupabaseEmbeddingRepository
 from .extractors.mineru import MinerUProvider
 from .importers.supabase import ImportErrorSafe, SupabaseImporter
 from .pipeline import IngestionPipeline
+from .registration import (
+    PolicyRegistrar,
+    RegistrationErrorSafe,
+    RegistrationSummary,
+    RightsAttestation,
+    load_manifests,
+    with_byte_sizes,
+)
 
 
 def _parser() -> argparse.ArgumentParser:
@@ -44,6 +52,38 @@ def _parser() -> argparse.ArgumentParser:
     ingest.add_argument("--target-environment", choices=("local", "production"), default="local")
     ingest.add_argument("--source-data", choices=("fictional", "controlled-policy"), default="controlled-policy")
     ingest.add_argument("--confirm-controlled-production-import", action="store_true")
+
+    register = subcommands.add_parser(
+        "register",
+        help="Create the policy document and version identities the importer requires",
+    )
+    register.add_argument("--work-dir", type=Path, default=default_work_dir())
+    register.add_argument("--collection", choices=CANONICAL_COLLECTIONS)
+    register.add_argument(
+        "--source-root",
+        type=Path,
+        help="Optional original source folder, used only to record byte sizes",
+    )
+    register.add_argument(
+        "--version-label",
+        required=True,
+        help="Label for this corpus edition, for example the assembly date",
+    )
+    register.add_argument(
+        "--rights-evidence-ref",
+        required=True,
+        help="Safe reference for the rights decision; never a secret or policy text",
+    )
+    register.add_argument(
+        "--rights-status",
+        choices=("pending", "approved_internal_search", "approved_full_reader"),
+        default="approved_full_reader",
+    )
+    register.add_argument("--classification", choices=("public", "internal", "restricted"), default="public")
+    register.add_argument("--dry-run", action="store_true")
+    register.add_argument("--target-environment", choices=("local", "production"), default="local")
+    register.add_argument("--source-data", choices=("fictional", "controlled-policy"), default="controlled-policy")
+    register.add_argument("--confirm-controlled-production-registration", action="store_true")
 
     embed = subcommands.add_parser(
         "embed",
@@ -156,8 +196,65 @@ def _run_embedding(args: argparse.Namespace) -> EmbeddingBatchSummary:
         raise ImportErrorSafe("Embedding failed; private details were not printed") from error
 
 
+def _run_registration(args: argparse.Namespace) -> RegistrationSummary:
+    if args.source_data == "controlled-policy" and not args.dry_run and (
+        args.target_environment != "production"
+        or not args.confirm_controlled_production_registration
+    ):
+        raise RegistrationErrorSafe(
+            "Controlled policy data may only be registered in Production with the explicit confirmation option"
+        )
+    sources = with_byte_sizes(
+        load_manifests(args.work_dir, args.collection),
+        args.source_root,
+    )
+    if not sources:
+        raise RegistrationErrorSafe("No extracted sources were found to register")
+    if args.dry_run:
+        return PolicyRegistrar("", "", args.target_environment).register(
+            sources,
+            RightsAttestation(
+                reviewer_staff_member_id="00000000-0000-0000-0000-000000000000",
+                evidence_ref=args.rights_evidence_ref,
+                rights_status=args.rights_status,
+                external_ai_allowed=args.rights_status != "pending",
+                classification=args.classification,
+            ),
+            args.version_label,
+            dry_run=True,
+        )
+
+    database_url = _required_environment("SUPABASE_DB_URL")
+    facility_id = _required_environment("GUIDED_OPERATIONS_FACILITY_ID")
+    reviewer = _required_environment("GUIDED_OPERATIONS_RIGHTS_REVIEWER_ID")
+    if args.source_data == "controlled-policy":
+        require_approved_production_connection(
+            database_url,
+            os.environ.get("SUPABASE_PROJECT_REF", ""),
+        )
+    return PolicyRegistrar(database_url, facility_id, args.target_environment).register(
+        sources,
+        RightsAttestation(
+            reviewer_staff_member_id=reviewer,
+            evidence_ref=args.rights_evidence_ref,
+            rights_status=args.rights_status,
+            external_ai_allowed=args.rights_status != "pending",
+            classification=args.classification,
+        ),
+        args.version_label,
+    )
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "register":
+        try:
+            summary = _run_registration(args)
+            print(json.dumps(summary.__dict__, indent=2, sort_keys=True))
+            return 0
+        except (RegistrationErrorSafe, ImportErrorSafe, ValueError) as error:
+            print(str(error), file=sys.stderr)
+            return 2
     if args.command == "embed":
         try:
             summary = _run_embedding(args)

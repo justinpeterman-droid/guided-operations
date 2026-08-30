@@ -158,6 +158,59 @@ and attempt number—not the original filename alone. Use `--work-dir` to select
 different private local drive. The report contains only counts broken down by
 collection.
 
+## Registration: creating the identities the import requires
+
+The import refuses any source that is not already exactly one
+`policy_document_version`. Extraction does not create those rows, so
+registration is a separate step and must run first. It reads only the extraction
+manifests - hashes, counts, filenames and collections - and never opens policy
+text.
+
+Registration is also where the rights attestation is recorded. The database
+enforces it rather than trusting it: `external_ai_allowed` is rejected unless
+`rights_status` is approved, with a named reviewer, a review timestamp and a
+non-empty evidence reference. Nothing can be embedded without that record.
+
+Source files belong in Storage under content-addressed keys, so a filename never
+becomes a URL:
+
+```text
+policy-sources/<collection-slug>/<source-sha256>.pdf
+```
+
+Upload them with the linked CLI. Windows drive letters break the CLI's URL
+parsing, so copy from inside the staging folder using relative paths, and never
+copy recursively into a prefix that already holds an object - the CLI then
+treats the destination as a directory and nests a second copy one level deeper:
+
+```powershell
+cd <staging folder>
+npx supabase storage cp -r ./bmu-policies ss:///policy-sources/bmu-policies/ --linked --experimental
+```
+
+Then register. A dry run needs no credentials and reports what would be created:
+
+```powershell
+python ingest.py register --work-dir <work dir> --version-label "2026-05-28" --rights-evidence-ref "<safe reference>" --dry-run
+```
+
+The controlled Production registration needs the same private values as the
+import, plus the reviewer, set only in the current private PowerShell window:
+
+```powershell
+$env:SUPABASE_DB_URL = "<private direct Supabase PostgreSQL connection string>"
+$env:GUIDED_OPERATIONS_FACILITY_ID = "<facility uuid>"
+$env:SUPABASE_PROJECT_REF = "<approved Production Supabase project reference>"
+$env:GUIDED_OPERATIONS_RIGHTS_REVIEWER_ID = "<reviewing staff member uuid>"
+
+python ingest.py register --work-dir <work dir> --version-label "2026-05-28" --rights-evidence-ref "<safe reference>" --target-environment production --source-data controlled-policy --confirm-controlled-production-registration
+```
+
+Each source registers in its own transaction and the command is idempotent on
+(facility, source hash), so a partial run leaves a consistent database and can
+simply be re-run. Use `--rights-status pending` to record a collection without
+approving it for search or any AI provider; it can be approved later.
+
 ## Supabase import requirements
 
 Do not put these values in `.env` files committed to Git. For a controlled
