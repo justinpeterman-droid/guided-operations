@@ -4,10 +4,7 @@ import {
   AdminAccessRequiredMessage,
   AdminUnavailableMessage,
 } from "@/app/components/workspace-message-presets";
-import {
-  AdminAccountLink,
-  AdminShell,
-} from "@/app/components/admin-shell";
+import { AdminAccountLink, AdminShell } from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
