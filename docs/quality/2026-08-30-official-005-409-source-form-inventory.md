@@ -56,10 +56,11 @@ every one of those cells is now empty:
 | TREATMENT AFFORDED TO OFFICER(s) | `None`             | empty |
 
 One value remains: **UNIT/DIVISION still reads `Benny Magness Unit`.** That is a
-judgement call rather than leftover data - a unit-specific blank may
-legitimately carry its own unit name. It needs an explicit decision before the
-field map is approved, because a renderer either prints it as part of the form
-or fills it as a field, and the two are not the same thing.
+decision the owner has now made: it is part of the form and is printed as a
+constant, not filled as a field (O-029, 2026-08-30). The renderer emits it
+literally, no domain value maps to it, and no code path may substitute a
+different unit. Using the tool at another facility would be a new form revision
+with a new hash, not a runtime parameter.
 
 ## Field inventory
 
