@@ -407,8 +407,13 @@ Status: **the resumable local MinerU, provenance, collection-aware retrieval,
 pinned query-embedding adapter, resumable chunk-embedding foundation,
 deterministic hybrid fusion, and citation code are implemented and pass
 fictional local tests; real corpus review/import/embedding, vector-index
-measurement, hybrid qualification, hosted migration, and evaluation remain
-blocked on OQ-008, OQ-009, and OQ-010**
+measurement, hybrid qualification, hosted migration, and evaluation remain no
+longer blocked on corpus rights: OQ-008 and OQ-009 closed 2026-08-30 (the corpus
+is public record and the owner is authorized - see O-021/O-022). Real corpus
+extraction is complete: 236 of 236 documents, 1,308 pages, 1,228 chunks, held
+locally and awaiting review. What remains is import, embedding, hybrid
+qualification and the accuracy evaluation. The corpus is refreshed once a year
+by the owner by hand; no automated freshness checking is wanted.**
 
 ### Steps
 
