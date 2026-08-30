@@ -14,6 +14,7 @@ import {
   type ReportChecklistAnswer,
   type ReportChecklistQuestion,
 } from "@/features/incidents/report-assistant-checklist";
+import { describeDocumentStudioForm } from "@/features/incidents/document-studio-catalog";
 import {
   buildReviewedFieldNoteFacts,
   isSupportedFactProposalSet,
@@ -966,7 +967,9 @@ export function NewIncidentWorkspace() {
                 {categoryDefinition ? (
                   <ul>
                     {categoryDefinition.requiredForms.map((formType) => (
-                      <li key={formType}>{formType.replaceAll("_", " ")}</li>
+                      <li key={formType}>
+                        {describeDocumentStudioForm(formType).label}
+                      </li>
                     ))}
                   </ul>
                 ) : null}

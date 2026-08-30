@@ -2586,15 +2586,26 @@ a:focus-visible,
   }
 
   .workspace-header,
+  .workspace-shell-toolbar,
+  .document-studio-tabs,
   .report-print-button,
   .report-output-button,
   .count-sheet-heading-actions,
-  .draft-finalization-form {
+  .draft-finalization-form,
+  .report-revision-form,
+  .report-history {
     display: none !important;
   }
 
+  .report-print-heading,
   .reports-intro {
     margin: 0 0 18px;
+  }
+
+  .document-studio-panel {
+    padding: 0;
+    border: 0;
+    box-shadow: none;
   }
 
   .draft-review-card {
@@ -2717,8 +2728,8 @@ a:focus-visible,
 .login-form button {
   margin-top: 18px;
   color: #fff;
-  background: var(--gow-navy-800);
-  border: 1px solid var(--gow-navy-800);
+  background: linear-gradient(180deg, var(--gow-navy-800), var(--gow-navy-950));
+  border: 1px solid rgba(231, 189, 90, 0.45);
   font-weight: 800;
 }
 
@@ -2857,7 +2868,7 @@ a:focus-visible,
 
 .document-studio-tabs button:hover,
 .document-studio-tabs button.is-current,
-.document-studio-tabs button[aria-current="page"] {
+.document-studio-tabs button[aria-selected="true"] {
   color: var(--gow-navy-900);
   background: #e4eef5;
   border-color: rgba(158, 176, 191, 0.75);
@@ -3320,6 +3331,61 @@ a:focus-visible,
   line-height: 1.5;
 }
 
+.policy-report {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 18px 0 0;
+}
+
+.policy-report-button {
+  min-height: 40px;
+  padding: 0 14px;
+  color: var(--gow-navy-900);
+  background: #fff;
+  border: 1px solid #9cb2c0;
+  border-radius: var(--gow-radius-control);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 800;
+}
+
+.policy-report-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.policy-report-status {
+  margin: 0;
+  color: var(--gow-muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.report-print-heading {
+  page-break-after: avoid;
+}
+
+.count-sheet-preview.is-loading {
+  opacity: 0.72;
+}
+
+.count-sheet-loading-notice strong {
+  color: var(--gow-navy-900);
+}
+
+.workspace-navigation-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 15;
+  padding: 0;
+  border: 0;
+  background: rgba(7, 31, 56, 0.28);
+  cursor: pointer;
+}
+
 .policy-citations {
   display: grid;
   gap: 8px;
@@ -3537,6 +3603,29 @@ a:focus-visible,
 
   .sign-in-card {
     width: min(100%, 560px);
+  }
+
+  .document-studio-tabs ul {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    scrollbar-width: thin;
+  }
+
+  .document-studio-tabs button {
+    min-width: 148px;
+  }
+
+  .document-studio-tabs button small {
+    display: none;
+  }
+
+  .document-studio-form-list li {
+    grid-template-columns: 1fr;
+  }
+
+  .report-list-item {
+    flex-direction: column;
   }
 }
 

@@ -68,8 +68,11 @@ describe("DocumentStudio", () => {
     expect(root.getByText("8 Barracks")).toBeVisible();
     expect(root.getByText(/Raw field notes stay server-side/i)).toBeVisible();
 
-    await user.click(root.getByRole("tab", { name: /Required Paperwork/i }));
-    expect(root.getByText("005 / 409 designation")).toBeVisible();
-    expect(root.getByText("Photo / video log")).toBeVisible();
+    await user.click(root.getByRole("tab", { name: /Officer Reports/i }));
+    await user.keyboard("{ArrowRight}");
+    expect(root.getByRole("tab", { name: /Copy to Records/i })).toHaveFocus();
+    expect(
+      root.getByText(/Copy-to-records output is not yet available/i),
+    ).toBeVisible();
   });
 });
