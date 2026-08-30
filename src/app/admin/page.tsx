@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+import {
+  AdminAccountLink,
+  AdminShell,
+} from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
@@ -15,22 +19,11 @@ export default async function AdminPage() {
   if (access === "denied") return <AccessRequired />;
 
   return (
-    <main className="workspace-preview-page admin-preview-page">
-      <header className="workspace-preview-header">
-        <Link className="workspace-brand" href="/home">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Administrator workspace</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/account">
-          Account
-        </Link>
-      </header>
-
+    <AdminShell
+      actions={<AdminAccountLink />}
+      className="workspace-preview-page admin-preview-page"
+      title="Administrator workspace"
+    >
       <section className="admin-preview-hero" aria-labelledby="admin-title">
         <p className="eyebrow">Administrator home</p>
         <h1 id="admin-title">
@@ -97,7 +90,7 @@ export default async function AdminPage() {
           </Link>
         </article>
       </section>
-    </main>
+    </AdminShell>
   );
 }
 

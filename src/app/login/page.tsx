@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { WorkspaceBrand } from "@/app/components/workspace-brand";
 
 import { LoginForm } from "./login-form";
 
@@ -6,15 +6,7 @@ export default function LoginPage() {
   return (
     <main className="login-page">
       <header className="workspace-header login-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Private workspace</strong>
-          </span>
-        </Link>
+        <WorkspaceBrand href="/" title="Private workspace" />
       </header>
 
       <section className="login-card" aria-labelledby="login-title">
