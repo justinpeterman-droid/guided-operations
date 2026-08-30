@@ -1,36 +1,51 @@
-import { render, screen } from "@testing-library/react";
+import { render, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it } from "vitest";
 
 import { WorkspaceNavigation } from "./workspace-navigation";
 
 describe("WorkspaceNavigation", () => {
   it("shows the officer tools and marks only the current page", () => {
-    render(<WorkspaceNavigation current="Policy" />);
+    const view = render(<WorkspaceNavigation current="Policy" />);
 
-    expect(screen.getByRole("navigation", { name: "Workspace" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute(
-      "href",
-      "/home",
+    expect(
+      within(view.container).getByRole("navigation", { name: "Workspace" }),
+    ).toBeVisible();
+    expect(
+      within(view.container).getByRole("link", { name: "Home" }),
+    ).toHaveAttribute("href", "/home");
+    expect(
+      within(view.container).getByRole("link", { name: "Reports" }),
+    ).toHaveAttribute("href", "/reports");
+    expect(
+      within(view.container).getByRole("link", { name: "Policy" }),
+    ).toHaveAttribute("aria-current", "page");
+    expect(
+      within(view.container).getByRole("link", { name: "Forms" }),
+    ).toHaveAttribute("href", "/forms");
+    expect(
+      within(view.container).getByRole("link", { name: "Count Sheet" }),
+    ).toHaveAttribute("href", "/count-sheet");
+    expect(
+      within(view.container).getByRole("link", { name: "Account" }),
+    ).toHaveAttribute("href", "/account");
+  });
+
+  it("opens and closes the mobile menu without leaving it stuck open", async () => {
+    const user = userEvent.setup();
+    const view = render(<WorkspaceNavigation current="Home" />);
+
+    const toggle = within(view.container).getByRole("button", { name: "Menu" });
+    await user.click(toggle);
+
+    expect(toggle).toHaveAccessibleName("Close menu");
+    expect(toggle).toHaveAttribute("aria-expanded", "true");
+
+    await user.click(
+      within(view.container).getByRole("link", { name: "Reports" }),
     );
-    expect(screen.getByRole("link", { name: "Reports" })).toHaveAttribute(
-      "href",
-      "/reports",
-    );
-    expect(screen.getByRole("link", { name: "Policy" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
-    expect(screen.getByRole("link", { name: "Forms" })).toHaveAttribute(
-      "href",
-      "/forms",
-    );
-    expect(screen.getByRole("link", { name: "Count Sheet" })).toHaveAttribute(
-      "href",
-      "/count-sheet",
-    );
-    expect(screen.getByRole("link", { name: "Account" })).toHaveAttribute(
-      "href",
-      "/account",
-    );
+
+    expect(toggle).toHaveAccessibleName("Menu");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
   });
 });
