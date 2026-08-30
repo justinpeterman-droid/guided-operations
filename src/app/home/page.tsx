@@ -1,9 +1,7 @@
 import Link from "next/link";
 
-import {
-  GuidedMark,
-  OfficerCommandCenter,
-} from "@/app/components/workspace-command-center";
+import { OfficerCommandCenter } from "@/app/components/workspace-command-center";
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
@@ -20,20 +18,11 @@ export default async function HomePage() {
   if (access.kind === "unavailable") return <Unavailable />;
 
   return (
-    <main className="workspace-preview-page">
-      <header className="workspace-preview-header command-center-page-header">
-        <Link className="workspace-brand" href="/home">
-          <GuidedMark />
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Officer workspace</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/account">
-          Account
-        </Link>
-      </header>
-
+    <WorkspaceShell
+      className="workspace-preview-page"
+      current="Home"
+      title="Officer workspace"
+    >
       <OfficerCommandCenter reports={access.reports} />
       {access.role === "administrator" ? (
         <section
@@ -53,7 +42,7 @@ export default async function HomePage() {
           </Link>
         </section>
       ) : null}
-    </main>
+    </WorkspaceShell>
   );
 }
 
@@ -136,7 +125,7 @@ function Unavailable() {
           Your workspace cannot load right now.
         </h1>
         <p>Your work has not been changed. Please try again later.</p>
-        <Link className="reports-home-link" href="/">
+        <Link className="reports-home-link" href="/home">
           Return home
         </Link>
       </section>

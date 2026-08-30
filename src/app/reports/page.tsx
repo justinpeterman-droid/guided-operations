@@ -1,9 +1,9 @@
 import Link from "next/link";
 
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
 
 import { ReportsList } from "./reports-list";
 import { SignOutButton } from "./sign-out-button";
@@ -39,23 +39,11 @@ export default async function ReportsPage() {
   if (result.kind === "unavailable") return <ReportsUnavailable />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Reports</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Reports" />
-          <SignOutButton />
-        </div>
-      </header>
-
+    <WorkspaceShell
+      actions={<SignOutButton />}
+      current="Reports"
+      title="Reports"
+    >
       <section className="reports-intro" aria-labelledby="reports-title">
         <p className="eyebrow">Your authorized work</p>
         <h1 id="reports-title">Reports and incidents</h1>
@@ -77,7 +65,7 @@ export default async function ReportsPage() {
       ) : (
         <ReportsList incidents={result.incidents} reports={result.reports} />
       )}
-    </main>
+    </WorkspaceShell>
   );
 }
 
@@ -91,7 +79,7 @@ function SignInRequired() {
           Reports are available only after the application verifies your current
           account and permissions.
         </p>
-        <Link className="reports-home-link" href="/">
+        <Link className="reports-home-link" href="/home">
           Return home
         </Link>
       </section>
@@ -112,7 +100,7 @@ function ReportsUnavailable() {
           Your existing work has not been changed. Please try again after the
           service is available.
         </p>
-        <Link className="reports-home-link" href="/">
+        <Link className="reports-home-link" href="/home">
           Return home
         </Link>
       </section>

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { WorkspaceShell } from "@/app/components/workspace-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
 
@@ -27,20 +27,7 @@ export default async function IncidentReportWorkspacePage({
   }
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Report Assistant</strong>
-          </span>
-        </Link>
-        <WorkspaceNavigation current="Reports" />
-      </header>
-
+    <WorkspaceShell current="Reports" title="Report Assistant">
       <section className="reports-intro" aria-labelledby="incident-title">
         <p className="eyebrow">Authorized incident · current revision</p>
         <h1 id="incident-title">{result.workspace.displayName}</h1>
@@ -57,7 +44,7 @@ export default async function IncidentReportWorkspacePage({
       </section>
 
       <ReportDraftRequestForm workspace={result.workspace} />
-    </main>
+    </WorkspaceShell>
   );
 }
 
