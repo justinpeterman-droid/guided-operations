@@ -15,7 +15,8 @@ it, which the review requires before any rendering code is written.
 | Property                 | Value                                                                  |
 | ------------------------ | ---------------------------------------------------------------------- |
 | Source kind              | `authoritative_form`                                                   |
-| SHA-256 of source bytes  | `f1e5f084b9bf1b08e41722f0e9bbdbb1d33c877b23ecbe5f994fd3a9f0c477bb`     |
+| SHA-256 of source bytes  | `e893a7930be9d7fa8e058aa695a25fd0b94b6e94f50301c11d7ccf91fc78d963`     |
+| Superseded copy          | `f1e5f084b9bf1b08e41722f0e9bbdbb1d33c877b23ecbe5f994fd3a9f0c477bb`     |
 | Format                   | DOCX, 4 tables, 11 paragraphs, no images                               |
 | Regulation               | Administrative Regulation, State of Arkansas, Department of Correction |
 | Section number           | 005/409                                                                |
@@ -27,6 +28,10 @@ it, which the review requires before any rendering code is written.
 | Filed secretary of state | 10/02/87                                                               |
 | Form footer              | `INCRT db (Revised )`                                                  |
 
+The superseded hash is the same form before the owner cleared the answered
+cells. Both are recorded so the earlier reading of this document remains
+traceable to the bytes it described.
+
 **The revision field is empty.** The footer's "Revised" parenthesis contains no
 date, so the document carries no revision identifier of its own. The regulation
 dates above are the only version evidence available, and they describe the
@@ -34,24 +39,27 @@ regulation rather than this rendering of the form. The
 `approved_source_revision` gate input should record the regulation dates
 explicitly and note the absence, rather than inventing a revision number.
 
-**This copy is not a pristine blank.** It is a working copy with several cells
-already answered. Those values are one officer's defaults, not part of the form,
-and must not be baked into a template:
+## Blank-form status
 
-| Field                            | Pre-filled value     |
-| -------------------------------- | -------------------- |
-| RANK                             | `Sgt.`               |
-| TIME                             | `Approximately pm`   |
-| INMATE(s) PRESENT                | `Same as Involved`   |
-| EMPLOYEE(s) PRESENT              | `Same as Involved`   |
-| OTHERS PRESENT/INVOLVED          | `N/A`                |
-| EXTENT OF INJURIES TO OFFICER(s) | `None`               |
-| TREATMENT AFFORDED TO OFFICER(s) | `None`               |
-| UNIT/DIVISION                    | `Benny Magness Unit` |
+The first copy reviewed was a working copy carrying one officer's default
+answers. The owner cleared them and resaved. Verified against the current bytes,
+every one of those cells is now empty:
 
-A pristine blank from the custody channel would be better evidence. Until one
-exists, any field map must treat the cells above as empty and record that the
-hash is of a partially completed copy.
+| Field                            | Was                | Now   |
+| -------------------------------- | ------------------ | ----- |
+| RANK                             | `Sgt.`             | empty |
+| TIME                             | `Approximately pm` | empty |
+| INMATE(s) PRESENT                | `Same as Involved` | empty |
+| EMPLOYEE(s) PRESENT              | `Same as Involved` | empty |
+| OTHERS PRESENT/INVOLVED          | `N/A`              | empty |
+| EXTENT OF INJURIES TO OFFICER(s) | `None`             | empty |
+| TREATMENT AFFORDED TO OFFICER(s) | `None`             | empty |
+
+One value remains: **UNIT/DIVISION still reads `Benny Magness Unit`.** That is a
+judgement call rather than leftover data - a unit-specific blank may
+legitimately carry its own unit name. It needs an explicit decision before the
+field map is approved, because a renderer either prints it as part of the form
+or fills it as a field, and the two are not the same thing.
 
 ## Field inventory
 
@@ -112,44 +120,45 @@ Warden/Center Supervisor/Administrator.
 
 `official-005-409-mapping.ts` produces four values. Measured against the form:
 
-| Mapped value       | Form field                 | Assessment         |
-| ------------------ | -------------------------- | ------------------ |
-| `form005` = `X`    | 005 designation box        | matches            |
-| `form409` = `X`/`` | 409 designation box        | matches            |
-| `approximateTime`  | TIME                       | see below          |
-| `location`         | LOCATION                   | matches            |
-| `presence`         | INMATE/EMPLOYEE(s) PRESENT | **does not match** |
+| Mapped value       | Form field                 | Assessment |
+| ------------------ | -------------------------- | ---------- |
+| `form005` = `X`    | 005 designation box        | matches    |
+| `form409` = `X`/`` | 409 designation box        | matches    |
+| `location`         | LOCATION                   | matches    |
+| `approximateTime`  | TIME                       | unverified |
+| `presence`         | INMATE/EMPLOYEE(s) PRESENT | unverified |
 
-Two discrepancies to resolve before the field map can be approved:
+Both unverified values need an owner decision, and the evidence for them is
+weaker than it first appeared. An earlier reading of this record claimed the
+form contradicted the mapper - that the form "reads `Same as Involved`" and
+"expects the word Approximately". That was wrong. Those strings came from the
+working copy's pre-filled cells, which have since been cleared. The blank form
+says nothing about either.
 
-1. **`presence` emits `"Same as above"`; the form's own copy reads
-   `"Same as Involved"`.** The mapper's wording was chosen without the form.
-   Which is correct is an owner question - the pre-filled text is one officer's
-   habit, not necessarily the sanctioned phrasing - but the two must not differ
-   silently.
-2. **`approximateTime` emits `APX. 3:05 PM`; the form's TIME cell reads
-   `Approximately pm`.** The form appears to expect the word "Approximately"
-   with the time and period written in, not the abbreviation `APX.`.
+What remains is a signal, not a rule: one officer completing this form wrote
+`Same as Involved` where the mapper emits `Same as above`, and wrote
+`Approximately` where the mapper emits `APX.`. That is evidence about unit
+practice and worth asking about, but it does not establish what the form
+requires.
 
 The remaining fifteen body fields, the narrative, and all seven signature and
 review areas have no mapping at all.
 
 ## Gate status
 
-| Gate input                  | State                                                    |
-| --------------------------- | -------------------------------------------------------- |
-| `authoritative_source_kind` | satisfiable - this is the real form                      |
-| `source_sha256`             | satisfiable - recorded above                             |
-| `approved_source_revision`  | **blocked** - the form carries no revision date          |
-| `approved_field_map`        | **blocked** - two discrepancies, fifteen fields unmapped |
-| `rendered_fidelity`         | **blocked** - nothing renders the form yet               |
+| Gate input                  | State                                                       |
+| --------------------------- | ----------------------------------------------------------- |
+| `authoritative_source_kind` | satisfiable - this is the real form                         |
+| `source_sha256`             | satisfiable - recorded above                                |
+| `approved_source_revision`  | **blocked** - the form carries no revision date             |
+| `approved_field_map`        | **blocked** - two undecided values, fifteen fields unmapped |
+| `rendered_fidelity`         | **blocked** - nothing renders the form yet                  |
 
 The gate stays closed. The deterministic mapper remains an approved mapping
 component and not an official-form renderer.
 
 ## Custody
 
-The source file is not copied into this repository. It is a working copy
-containing answered fields, and the repository does not hold real operational
-content. Its hash is recorded above so the exact bytes reviewed can be
-re-identified.
+The source file is not copied into this repository, which does not hold real
+operational content. Its hash is recorded above so the exact bytes reviewed can
+be re-identified.
