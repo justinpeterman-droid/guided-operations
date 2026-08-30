@@ -1,6 +1,8 @@
-import Link from "next/link";
-
 import { AdminShell } from "@/app/components/admin-shell";
+import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   listLegalHoldsForCurrentSession,
@@ -326,40 +328,16 @@ function formatTime(value: string): string {
 
 function AccessRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="retention-access-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="retention-access-title">Administrator access is required.</h1>
-        <p>
-          Legal-hold controls are available only to a current administrator.
-        </p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
+    <AdminAccessRequiredMessage description="Legal-hold controls are available only to a current administrator." />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="retention-unavailable-title"
-      >
-        <p className="eyebrow">Records controls unavailable</p>
-        <h1 id="retention-unavailable-title">
-          Records controls cannot load right now.
-        </h1>
-        <p>No legal hold has been changed.</p>
-        <Link className="reports-home-link" href="/admin">
-          Return to administrator workspace
-        </Link>
-      </section>
-    </main>
+    <AdminUnavailableMessage
+      description="No legal hold has been changed."
+      eyebrow="Records controls unavailable"
+      title="Records controls cannot load right now."
+    />
   );
 }

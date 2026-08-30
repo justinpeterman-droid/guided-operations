@@ -252,7 +252,7 @@ function ReportAnswerControl({
         onClick={report}
         type="button"
       >
-        {state === "sending" ? "Reportingâ€¦" : "Report this answer"}
+        {state === "sending" ? "Reporting…" : "Report this answer"}
       </button>
       <span aria-live="polite" className="policy-report-status">
         {state === "failed"

@@ -24,7 +24,7 @@ export function AdminShell({
       actions={actions ?? <AdminHomeLink />}
       brandHref={brandHref}
       className={className}
-      current="Home"
+      current={undefined}
       title={title}
     >
       {children}

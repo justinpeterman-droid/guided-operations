@@ -17,6 +17,7 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const toggleRef = useRef<HTMLButtonElement>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -30,6 +31,7 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         setOpen(false);
+        toggleRef.current?.focus();
       }
     }
 
@@ -43,11 +45,21 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
 
   return (
     <div className="workspace-navigation-root" ref={rootRef}>
+      {open ? (
+        <button
+          aria-hidden="true"
+          className="workspace-navigation-scrim"
+          onClick={() => setOpen(false)}
+          tabIndex={-1}
+          type="button"
+        />
+      ) : null}
       <button
         aria-controls={panelId}
         aria-expanded={open}
         className="workspace-navigation-toggle"
         onClick={() => setOpen((value) => !value)}
+        ref={toggleRef}
         type="button"
       >
         {open ? "Close menu" : "Menu"}

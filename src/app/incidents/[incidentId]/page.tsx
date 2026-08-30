@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { DocumentStudio } from "@/features/incidents/document-studio";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
@@ -18,13 +22,32 @@ export default async function IncidentReportWorkspacePage({
   const result = await loadIncidentReportWorkspace(incidentId);
 
   if (result.kind === "denied") {
-    return <Message title="Sign in to prepare a report." />;
+    return (
+      <OfficerSignInRequiredMessage
+        description="Your existing incident and reports have not been changed."
+        title="Sign in to prepare a report."
+      />
+    );
   }
   if (result.kind === "not_found") {
-    return <Message title="Incident unavailable." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing incident and reports have not been changed."
+        eyebrow="Private workspace"
+        title="Incident unavailable."
+      />
+    );
   }
   if (result.kind === "unavailable") {
-    return <Message title="Report preparation is unavailable right now." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing incident and reports have not been changed."
+        eyebrow="Private workspace"
+        title="Report preparation is unavailable right now."
+      />
+    );
   }
 
   const [incident, reports] = await Promise.all([
@@ -98,19 +121,4 @@ async function loadIncidentReports(incidentNumber: string) {
   } catch {
     return [];
   }
-}
-
-function Message({ title }: { title: string }) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state">
-        <p className="eyebrow">Private workspace</p>
-        <h1>{title}</h1>
-        <p>Your existing incident and reports have not been changed.</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
-  );
 }

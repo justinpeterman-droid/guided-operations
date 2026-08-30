@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useCallback, useState, type KeyboardEvent } from "react";
 
 import { ReportDraftRequestForm } from "@/app/incidents/[incidentId]/report-draft-request-form";
 import {
@@ -81,7 +81,7 @@ function OverviewPanel({ incident, reports, workspace }: DocumentStudioProps) {
             <div>
               <dt>Status</dt>
               <dd>
-                <span className={`incident-status status-${incident.status}`}>
+                <span className={`status-badge status-${incident.status}`}>
                   {incident.status.replace("_", " ")}
                 </span>
               </dd>
@@ -166,7 +166,7 @@ function OfficerReportsPanel({ reports, workspace }: DocumentStudioProps) {
                     </Link>
                   </th>
                   <td>
-                    <span className={`incident-status status-${report.status}`}>
+                    <span className={`status-badge status-${report.status}`}>
                       {report.status.replace("_", " ")}
                     </span>
                   </td>
@@ -381,6 +381,49 @@ function HistoryPanel({ reports, workspace }: DocumentStudioProps) {
 export function DocumentStudio(props: DocumentStudioProps) {
   const [activeTab, setActiveTab] = useState<DocumentStudioTabId>("overview");
 
+  const focusTab = useCallback((tabId: DocumentStudioTabId) => {
+    document.getElementById(`document-studio-tab-${tabId}`)?.focus();
+  }, []);
+
+  function activateTab(tabId: DocumentStudioTabId) {
+    setActiveTab(tabId);
+  }
+
+  function handleTabKeyDown(
+    event: KeyboardEvent<HTMLButtonElement>,
+    tabId: DocumentStudioTabId,
+  ) {
+    const index = DOCUMENT_STUDIO_TABS.findIndex((tab) => tab.id === tabId);
+    if (index < 0) return;
+
+    let nextIndex: number | null = null;
+    switch (event.key) {
+      case "ArrowRight":
+      case "ArrowDown":
+        nextIndex = (index + 1) % DOCUMENT_STUDIO_TABS.length;
+        break;
+      case "ArrowLeft":
+      case "ArrowUp":
+        nextIndex =
+          (index - 1 + DOCUMENT_STUDIO_TABS.length) %
+          DOCUMENT_STUDIO_TABS.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = DOCUMENT_STUDIO_TABS.length - 1;
+        break;
+      default:
+        return;
+    }
+
+    event.preventDefault();
+    const nextTab = DOCUMENT_STUDIO_TABS[nextIndex];
+    activateTab(nextTab.id);
+    focusTab(nextTab.id);
+  }
+
   return (
     <div className="document-studio">
       <nav
@@ -393,12 +436,13 @@ export function DocumentStudio(props: DocumentStudioProps) {
             <li key={tab.id} role="presentation">
               <button
                 aria-controls={`document-studio-panel-${tab.id}`}
-                aria-current={activeTab === tab.id ? "page" : undefined}
                 aria-selected={activeTab === tab.id}
                 className={activeTab === tab.id ? "is-current" : undefined}
                 id={`document-studio-tab-${tab.id}`}
-                onClick={() => setActiveTab(tab.id)}
+                onClick={() => activateTab(tab.id)}
+                onKeyDown={(event) => handleTabKeyDown(event, tab.id)}
                 role="tab"
+                tabIndex={activeTab === tab.id ? 0 : -1}
                 type="button"
               >
                 <span>{tab.label}</span>

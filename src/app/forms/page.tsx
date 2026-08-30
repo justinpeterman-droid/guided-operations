@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
+import {
   chainOfCustodyGuidance,
   countSheetCapabilities,
   dailyPaperworkCapabilities,
@@ -173,54 +177,19 @@ function CapabilityList({ items }: Readonly<{ items: readonly string[] }>) {
 
 function SignInRequired() {
   return (
-    <MessagePage
-      eyebrow="Private workspace"
+    <OfficerSignInRequiredMessage
+      description="Approved forms are available only after the app verifies your current account."
       title="Sign in to open the Forms Library."
-      copy="Approved forms are available only after the app verifies your current account."
-      href="/login"
-      action="Sign in"
     />
   );
 }
 
 function Unavailable() {
   return (
-    <MessagePage
+    <OfficerUnavailableMessage
+      description="No paperwork has been changed. Please try again later."
       eyebrow="Forms unavailable"
       title="The Forms Library cannot load right now."
-      copy="No paperwork has been changed. Please try again later."
-      href="/home"
-      action="Return home"
     />
-  );
-}
-
-function MessagePage({
-  eyebrow,
-  title,
-  copy,
-  href,
-  action,
-}: Readonly<{
-  eyebrow: string;
-  title: string;
-  copy: string;
-  href: string;
-  action: string;
-}>) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="forms-message-title"
-      >
-        <p className="eyebrow">{eyebrow}</p>
-        <h1 id="forms-message-title">{title}</h1>
-        <p>{copy}</p>
-        <Link className="reports-home-link" href={href}>
-          {action}
-        </Link>
-      </section>
-    </main>
   );
 }

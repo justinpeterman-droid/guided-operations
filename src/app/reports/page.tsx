@@ -1,6 +1,11 @@
 import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  HOME_ACTION,
+  SIGN_IN_ACTION,
+  WorkspaceMessage,
+} from "@/app/components/workspace-message";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
@@ -44,7 +49,7 @@ export default async function ReportsPage() {
       current="Reports"
       title="Reports"
     >
-      <section className="reports-intro" aria-labelledby="reports-title">
+      <section className="reports-intro">
         <p className="eyebrow">Your authorized work</p>
         <h1 id="reports-title">Reports and incidents</h1>
         <p>
@@ -61,6 +66,9 @@ export default async function ReportsPage() {
             authorized incident is created, it will appear here with its current
             review status.
           </p>
+          <Link className="reports-home-link" href="/incidents/new">
+            Start a new incident
+          </Link>
         </section>
       ) : (
         <ReportsList incidents={result.incidents} reports={result.reports} />
@@ -71,39 +79,22 @@ export default async function ReportsPage() {
 
 function SignInRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state" aria-labelledby="sign-in-title">
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="sign-in-title">Sign in to view reports.</h1>
-        <p>
-          Reports are available only after the application verifies your current
-          account and permissions.
-        </p>
-        <Link className="reports-home-link" href="/home">
-          Return home
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[SIGN_IN_ACTION]}
+      description="Reports are available only after the application verifies your current account and permissions."
+      eyebrow="Private workspace"
+      title="Sign in to view reports."
+    />
   );
 }
 
 function ReportsUnavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="unavailable-title"
-      >
-        <p className="eyebrow">Reports unavailable</p>
-        <h1 id="unavailable-title">Reports cannot be loaded right now.</h1>
-        <p>
-          Your existing work has not been changed. Please try again after the
-          service is available.
-        </p>
-        <Link className="reports-home-link" href="/home">
-          Return home
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[HOME_ACTION]}
+      description="Your existing work has not been changed. Please try again after the service is available."
+      eyebrow="Reports unavailable"
+      title="Reports cannot be loaded right now."
+    />
   );
 }
