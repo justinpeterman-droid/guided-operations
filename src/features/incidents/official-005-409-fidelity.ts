@@ -1,6 +1,4 @@
-export type Official005409SourceKind =
-  | "authoritative_form"
-  | "example_material";
+export type Official005409SourceKind = "authoritative_form" | "example_material";
 
 export type Official005409FidelityInput = Readonly<{
   sourceRevision: string | null;
