@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useState } from "react";
 
-import { GuidedMark } from "@/app/components/workspace-command-center";
+import { PreviewShell } from "@/app/components/preview-shell";
 
 const trainingQuestions = [
   {
@@ -24,18 +24,11 @@ export function PolicyTrainingPreview() {
   const selected = trainingQuestions[selectedQuestion];
 
   return (
-    <main className="policy-training-page">
-      <header className="workspace-preview-header command-center-page-header">
-        <Link className="workspace-brand" href="/preview/workspace">
-          <GuidedMark />
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Policy Expert</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell
+      className="policy-training-page"
+      headerClassName="workspace-preview-header command-center-page-header"
+      title="Policy Expert"
+    >
       <section className="policy-training-intro" aria-labelledby="policy-title">
         <h1 id="policy-title">Find the source before you decide.</h1>
         <p>
@@ -89,6 +82,6 @@ export function PolicyTrainingPreview() {
       <Link className="policy-training-return" href="/preview/workspace">
         Return to command center
       </Link>
-    </main>
+    </PreviewShell>
   );
 }

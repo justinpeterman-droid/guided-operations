@@ -1,9 +1,7 @@
 import Link from "next/link";
 
-import {
-  GuidedMark,
-  WorkspaceCommandCenter,
-} from "@/app/components/workspace-command-center";
+import { PreviewShell } from "@/app/components/preview-shell";
+import { WorkspaceCommandCenter } from "@/app/components/workspace-command-center";
 
 /**
  * A non-persistent visual workspace for owner review. It deliberately never
@@ -11,18 +9,11 @@ import {
  */
 export default function WorkspacePreviewPage() {
   return (
-    <main className="workspace-preview-page">
-      <header className="workspace-preview-header command-center-page-header">
-        <Link className="workspace-brand" href="/">
-          <GuidedMark />
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Officer workspace</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell
+      brandHref="/"
+      headerClassName="workspace-preview-header command-center-page-header"
+      title="Officer workspace"
+    >
       <WorkspaceCommandCenter />
 
       <section
@@ -43,6 +34,6 @@ export default function WorkspacePreviewPage() {
           View administrator layout <span aria-hidden="true">→</span>
         </Link>
       </section>
-    </main>
+    </PreviewShell>
   );
 }

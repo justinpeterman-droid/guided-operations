@@ -1,5 +1,7 @@
 import Link from "next/link";
 
+import { PreviewShell } from "@/app/components/preview-shell";
+
 const actions = [
   {
     title: "Roster",
@@ -27,20 +29,10 @@ const actions = [
 /** Visual contract only; no roster or account action is connected here. */
 export default function AdministratorPreviewPage() {
   return (
-    <main className="workspace-preview-page admin-preview-page">
-      <header className="workspace-preview-header">
-        <Link className="workspace-brand" href="/preview/workspace">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Administrator workspace</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell
+      className="workspace-preview-page admin-preview-page"
+      title="Administrator workspace"
+    >
       <section className="admin-preview-hero" aria-labelledby="admin-title">
         <p className="eyebrow">Administrator home</p>
         <h1 id="admin-title">
@@ -78,6 +70,6 @@ export default function AdministratorPreviewPage() {
       <Link className="workspace-return-link" href="/preview/workspace">
         ← Return to officer workspace layout
       </Link>
-    </main>
+    </PreviewShell>
   );
 }

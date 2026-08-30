@@ -1,21 +1,8 @@
-import Link from "next/link";
+import { PreviewShell } from "@/app/components/preview-shell";
 
 export default function ReportAssistantPreviewPage() {
   return (
-    <main className="workspace-page">
-      <header className="workspace-header">
-        <Link className="workspace-brand" href="/">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Report assistant</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell brandHref="/" className="workspace-page" title="Report assistant">
       <section className="workspace-intro" aria-labelledby="workspace-title">
         <p className="eyebrow">Review-first report drafting</p>
         <h1 id="workspace-title">Start with what is known.</h1>
@@ -122,6 +109,6 @@ export default function ReportAssistantPreviewPage() {
           </p>
         </div>
       </section>
-    </main>
+    </PreviewShell>
   );
 }
