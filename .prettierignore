@@ -7,3 +7,6 @@ test-results
 supabase/.branches
 supabase/.temp
 src/lib/supabase/database.generated.ts
+docs/quality/2026-08-30-authentication-adversarial-security-review.md
+docs/quality/2026-08-30-authentication-security-phase-1-revalidation.md
+docs/operations/2026-08-30-hosted-security-qualification.md
