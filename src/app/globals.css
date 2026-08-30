@@ -2648,6 +2648,210 @@ a:focus-visible {
   background: var(--gow-navy-900);
   border-color: var(--gow-navy-900);
 }
+
+.document-studio {
+  margin-top: 28px;
+}
+
+.document-studio-tabs {
+  border-bottom: 1px solid rgba(158, 176, 191, 0.75);
+}
+
+.document-studio-tabs ul {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  padding: 0 0 12px;
+  list-style: none;
+}
+
+.document-studio-tabs button {
+  display: grid;
+  gap: 2px;
+  min-height: 44px;
+  padding: 10px 14px;
+  color: var(--gow-muted);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: var(--gow-radius-control);
+  cursor: pointer;
+  text-align: left;
+}
+
+.document-studio-tabs button span {
+  color: var(--gow-navy-900);
+  font-size: 0.88rem;
+  font-weight: 800;
+}
+
+.document-studio-tabs button small {
+  color: var(--gow-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.document-studio-tabs button:hover,
+.document-studio-tabs button.is-current,
+.document-studio-tabs button[aria-current="page"] {
+  color: var(--gow-navy-900);
+  background: #e4eef5;
+  border-color: rgba(158, 176, 191, 0.75);
+}
+
+.document-studio-panel-wrap {
+  margin-top: 24px;
+}
+
+.document-studio-panel {
+  display: grid;
+  gap: 18px;
+  padding: 28px;
+  background: var(--gow-surface);
+  border: 1px solid rgba(165, 185, 199, 0.74);
+  border-radius: var(--gow-radius-card);
+  box-shadow: var(--gow-shadow-soft);
+}
+
+.document-studio-panel h2 {
+  margin: 0;
+  color: var(--gow-navy-950);
+  font-family: var(--gow-font-brand);
+  font-size: 1.45rem;
+  font-weight: 500;
+}
+
+.document-studio-panel h3 {
+  margin: 0 0 8px;
+  color: var(--gow-navy-900);
+  font-size: 1rem;
+}
+
+.document-studio-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+}
+
+.document-studio-summary-grid div {
+  display: grid;
+  gap: 4px;
+}
+
+.document-studio-summary-grid dt {
+  color: var(--gow-muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.document-studio-summary-grid dd {
+  margin: 0;
+  color: var(--gow-ink);
+  font-size: 0.95rem;
+}
+
+.document-studio-form-list,
+.document-studio-fact-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.document-studio-form-list li,
+.document-studio-fact-list li,
+.document-studio-history-card {
+  display: grid;
+  gap: 8px;
+  padding: 16px 18px;
+  background: var(--gow-surface-raised);
+  border: 1px solid rgba(165, 185, 199, 0.65);
+  border-radius: var(--gow-radius-control);
+}
+
+.document-studio-form-list li {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+}
+
+.document-studio-form-list p,
+.document-studio-fact-list p,
+.document-studio-panel > p,
+.document-studio-history-card p {
+  margin: 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
+
+.document-studio-capability {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.document-studio-capability.capability-available_in_reports {
+  color: var(--gow-navy-900);
+  background: #e4eef5;
+  border: 1px solid rgba(158, 176, 191, 0.75);
+}
+
+.document-studio-capability.capability-physical_only {
+  color: var(--gow-navy-900);
+  background: var(--gow-gold-100);
+  border: 1px solid #e5c672;
+}
+
+.document-studio-capability.capability-not_yet_available {
+  color: var(--gow-muted);
+  background: #eef2f5;
+  border: 1px solid rgba(158, 176, 191, 0.55);
+}
+
+.document-studio-fact-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.document-studio-fact-state {
+  padding: 4px 8px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: capitalize;
+}
+
+.document-studio-fact-state.state-confirmed {
+  color: var(--gow-navy-900);
+  background: #e4eef5;
+}
+
+.document-studio-fact-state.state-unknown,
+.document-studio-fact-state.state-not_applicable {
+  color: var(--gow-muted);
+  background: #eef2f5;
+}
+
+.document-studio-empty,
+.document-studio-footnote {
+  margin: 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
+
+.document-studio-table {
+  margin-top: 0;
+}
+
 .incident-stage {
   padding: clamp(28px, 5vw, 64px);
 }
