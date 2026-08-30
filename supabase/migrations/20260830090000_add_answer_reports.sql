@@ -12,7 +12,10 @@ create table app_private.answer_reports (
   id uuid primary key default gen_random_uuid(),
   facility_id uuid not null references app_private.facilities (id),
   reported_by_account_id uuid not null,
-  reported_at timestamptz not null default statement_timestamp(),
+  -- Named occurred_at, not reported_at, because the retention profile
+  -- event-two-years triggers off a column of that name across every table it
+  -- covers, and the deletion procedure relies on that being uniform.
+  occurred_at timestamptz not null default statement_timestamp(),
   question text not null,
   answer_text text not null,
   citations jsonb not null default '[]'::jsonb,
@@ -37,7 +40,7 @@ comment on table app_private.answer_reports is
   'Answers an officer flagged as wrong or doubtful. Reviewed by the owner; the queue of unreviewed rows is the accuracy backlog.';
 
 create index answer_reports_unreviewed_idx
-  on app_private.answer_reports (reported_at desc, id desc)
+  on app_private.answer_reports (occurred_at desc, id desc)
   where reviewed_at is null;
 
 alter table app_private.answer_reports enable row level security;

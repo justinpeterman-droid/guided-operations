@@ -436,6 +436,21 @@
       "deletion_status": "completion-evidence-retained-two-years-hosted-rehearsal-pending"
     },
     {
+      "id": "db:answer_reports",
+      "kind": "database_table",
+      "locator": "app_private.answer_reports",
+      "data_classes": [
+        "officer_question",
+        "generated_answer",
+        "policy_citation",
+        "account_identity"
+      ],
+      "purpose": "Officer reports that a shown policy answer was wrong or doubtful, held for owner review",
+      "retention_profile": "event-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
       "id": "storage:generated-exports",
       "kind": "storage_bucket",
       "locator": "generated-exports",
