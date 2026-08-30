@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AdminShell } from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   listLegalHoldsForCurrentSession,
@@ -42,25 +42,7 @@ export default async function AdminRetentionPage() {
     return <Unavailable />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Records controls</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link className="reports-home-link" href="/admin">
-            Administrator home
-          </Link>
-        </div>
-      </header>
-
+    <AdminShell title="Records controls">
       <section className="reports-intro" aria-labelledby="retention-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="retention-title">Retention and legal holds</h1>
@@ -75,7 +57,7 @@ export default async function AdminRetentionPage() {
       <DeletionRequestRegister requests={deletionResult.requests} />
       <PlaceLegalHoldForm />
       <LegalHoldRegister holds={holdResult.holds} />
-    </main>
+    </AdminShell>
   );
 }
 

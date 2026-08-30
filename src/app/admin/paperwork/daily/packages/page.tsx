@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AdminShell } from "@/app/components/admin-shell";
 import { DailyPaperworkPackageManager } from "@/features/daily-paperwork/daily-paperwork-package-manager";
 import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -18,25 +18,10 @@ export default async function DailyPaperworkPackagesPage() {
   if (result.kind === "unavailable") return <Unavailable />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin/paperwork/daily">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Daily Paperwork sources</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link className="reports-home-link" href="/admin">
-            Administrator home
-          </Link>
-        </div>
-      </header>
-
+    <AdminShell
+      brandHref="/admin/paperwork/daily"
+      title="Daily Paperwork sources"
+    >
       <section className="reports-intro" aria-labelledby="package-page-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="package-page-title">Approved form packages</h1>
@@ -48,7 +33,7 @@ export default async function DailyPaperworkPackagesPage() {
       </section>
 
       <DailyPaperworkPackageManager packages={result.packages} />
-    </main>
+    </AdminShell>
   );
 }
 
