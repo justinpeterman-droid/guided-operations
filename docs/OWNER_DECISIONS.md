@@ -43,12 +43,13 @@ resource.
       displayed as "Guided Operations" and uses `guided-operations` in host and
       project naming. No real facility name appears in the display name, the
       URL, or any public metadata. No real roster is added.
-- [ ] **OQ-004 — Plan eligibility:** confirm the intended invited-officer use
-      continues to fit Vercel Hobby's personal/non-commercial terms and Supabase
-      Free limits; otherwise approve the needed plan before deployment. The
-      2026-08-28 provider refresh confirms the organization is still Supabase
-      Free and Vercel Hobby, so real-data availability, backup, support, and
-      Production-domain protection remain unresolved.
+- [x] **OQ-004 (CLOSED 2026-08-30 by O-023 - scope limited to a few invited
+      officers)** ~~ — Plan eligibility:** confirm the intended invited-officer
+      use continues to fit Vercel Hobby's personal/non-commercial terms and
+      Supabase Free limits; otherwise approve the needed plan before deployment.
+      The 2026-08-28 provider refresh confirms the organization is still
+      Supabase Free and Vercel Hobby, so real-data availability, backup,
+      support, and Production-domain protection remain unresolved.
 
 ## Authentication implementation constraints
 
@@ -81,12 +82,13 @@ resource.
       deliberately excluded. The owner considers them current as of May 2026.
       Identification is not authorization — see O-018. The location is recorded
       outside Git.
-- [ ] **OQ-009 — Corpus custodian:** name who can approve source rights, current
-      versus superseded status, retention, full-document display, and external
-      AI processing. **Still open and now the critical path.** As of 2026-08-29
-      no agency approval exists; the owner confirms this remains a personal
-      project (see O-010). The post-order subset is security-sensitive and must
-      not be transmitted to any AI provider pending this approval.
+- [x] **OQ-009 (CLOSED 2026-08-30 by O-022 - the corpus is public record)** ~~ —
+      Corpus custodian:** name who can approve source rights, current versus
+      superseded status, retention, full-document display, and external AI
+      processing. **Still open and now the critical path.** As of 2026-08-29 no
+      agency approval exists; the owner confirms this remains a personal project
+      (see O-010). The post-order subset is security-sensitive and must not be
+      transmitted to any AI provider pending this approval.
 - [ ] **OQ-010 — Google boundary:** confirm whether Google AI APIs are also
       prohibited. The current target uses no Google hosting or Google-specific
       AI runtime either way.
