@@ -1,17 +1,26 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+import { GuidedMark } from "@/app/components/workspace-brand";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizeCurrentSession } from "@/server/auth/current-session";
+
+export const dynamic = "force-dynamic";
+
+/** Public entry: signed-in officers go to /home; everyone else sees sign-in. */
+export default async function PublicLandingPage() {
+  const access = await loadLandingAccess();
+  if (access === "authorized") redirect("/home");
+  if (access === "passcode_change_required") redirect("/account");
+
   return (
     <main className="foundation-page">
       <header className="brand-bar">
-        <span className="brand-mark" aria-hidden="true">
-          GO
-        </span>
+        <GuidedMark />
         <div>
           <p className="eyebrow">One facility · one trusted workspace</p>
           <p className="brand-name">Guided Operations</p>
         </div>
-        <span className="foundation-badge">Foundation preview</span>
       </header>
 
       <section className="foundation-grid" aria-labelledby="page-title">
@@ -53,46 +62,24 @@ export default function Home() {
           <p className="eyebrow">Secure access</p>
           <h2 id="sign-in-title">Sign in to your facility</h2>
           <p className="supporting-copy">
-            Employee-number and personal-passcode access is being connected to
-            the new Supabase identity layer.
+            Use your employee number and personal passcode. This private
+            workspace does not offer public registration or password recovery.
           </p>
 
-          <form aria-describedby="connection-status">
-            <label htmlFor="employee-number">Employee number</label>
-            <input
-              id="employee-number"
-              name="employee-number"
-              autoComplete="username"
-              autoCapitalize="none"
-              placeholder="Employee number"
-              disabled
-            />
-
-            <label htmlFor="personal-passcode">Personal passcode</label>
-            <input
-              id="personal-passcode"
-              name="personal-passcode"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Personal passcode"
-              disabled
-            />
-
-            <button type="button" disabled>
-              Sign in
-            </button>
-          </form>
-
-          <p className="connection-status" id="connection-status" role="status">
-            No live operational data or user accounts are connected to this
-            preview.
-          </p>
-
-          <Link className="preview-link" href="/preview/report-assistant">
-            View the fictional report workspace
+          <Link className="sign-in-action" href="/login">
+            Sign in
           </Link>
+
+          <p className="connection-status" role="status">
+            Fictional training previews below use sample data only. They never
+            create or change real work.
+          </p>
+
           <Link className="preview-link" href="/preview/workspace">
             View the officer workspace layout
+          </Link>
+          <Link className="preview-link" href="/preview/report-assistant">
+            View the fictional report workspace
           </Link>
           <Link className="preview-link" href="/preview/count-sheet">
             Try the fictional Count Sheet
@@ -101,9 +88,26 @@ export default function Home() {
       </section>
 
       <footer className="foundation-footer">
-        <span>Private replacement foundation</span>
+        <span>Private officer workspace</span>
         <span>Next.js · Vercel · Supabase</span>
       </footer>
     </main>
   );
+}
+
+async function loadLandingAccess(): Promise<
+  "authorized" | "passcode_change_required" | "signed_out"
+> {
+  try {
+    const session = await authorizeCurrentSession(
+      await createSupabaseServerClient(),
+      { allowForcedPasscodeChange: true },
+    );
+    if (!session.allowed) return "signed_out";
+    return session.account.mustChangePasscode
+      ? "passcode_change_required"
+      : "authorized";
+  } catch {
+    return "signed_out";
+  }
 }
