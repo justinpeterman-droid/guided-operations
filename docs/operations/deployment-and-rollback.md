@@ -3,18 +3,21 @@
 This runbook defines the intended Vercel/Supabase release process. No deployment
 is authorized or proven by this document.
 
-In this runbook, “Production” means Vercel's live deployment environment for the
-personal hobby app, using fictional operational data. It does not mean an
-official facility system. Any official adoption or real-data use requires a
-separate authorization, plan, and operational review.
+In this runbook, “Production” means the isolated Vercel Production deployment
+and separate live Supabase project. The owner authorized real operational and
+personal data only there, after every real-data release gate passes. Git,
+development, Preview, staging, CI, screenshots, logs, support tools, recovery
+rehearsals, and fixtures remain fictional-only. Owner authorization does not
+replace security, corpus, backup, restore, monitoring, or release evidence.
 
 ## Prerequisites
 
 - Exact commit and release record pass [`release-gates.md`](release-gates.md).
 - Vercel project, Supabase project, region, environment variables and protection
   settings are verified.
-- Candidate uses fictional operational data only and the approved corpus
-  version.
+- Candidate and qualification use fictional operational data only; the approved
+  corpus version is pinned without copying controlled source content into Git or
+  CI.
 - Production migration, backup, observability and rollback evidence is current.
 - Current and rollback deployments are compatible with the target database
   schema.
@@ -49,9 +52,12 @@ application promotion.
    corpus version, configuration version and baseline health.
 3. **MANUAL/AUTOMATED:** create required pre-release database and Storage
    backups and verify manifests/checksums.
-4. **AUTOMATED:** run production migration dry-run in the protected job.
+4. **AUTOMATED:** run the manual `Production database migration` workflow in
+   `dry-run` mode for the exact candidate and review its value-free evidence.
 5. **OWNER:** approve the exact migration output and Vercel deployment.
-6. **AUTOMATED/MANUAL:** apply additive production migrations.
+6. **AUTOMATED/MANUAL:** run the same protected workflow as a separate `apply`
+   request, supplying the reviewed dry-run and verified database-plus-Storage
+   backup references.
 7. **MANUAL:** promote the qualified deployment to Vercel Production. Do not
    change DNS during a routine application release.
 8. **AUTOMATED:** run read-only health plus authenticated fictional-account
@@ -61,6 +67,18 @@ application promotion.
    failures, Storage failures and AI failures/cost for at least 15 minutes and
    through the first representative use window.
 10. **MANUAL:** complete the release record and communicate outcome.
+
+For the AI fair-use migration, steps 6–7 are a declared AI-only maintenance
+window: older application instances receive a fail-closed budget denial, not a
+working identity-free fallback. Other site tools remain available. Rolling the
+application back is data-safe but leaves AI unavailable until the
+fair-use-capable application is restored.
+
+Run `npm run release:verify -- --phase production --file <private-record>` only
+after the full monitoring window. A passing result proves that the required
+references are present and bound to one candidate; operators still have to
+inspect the underlying provider, browser, security, backup, and approval
+evidence. Keep the real record private and outside Git.
 
 Production smoke must not create a real incident, real roster entry, or real
 operational form. Use clearly reserved fictional qualification identities and
@@ -99,8 +117,8 @@ Use when the prior application is compatible with the current schema:
    resuming normal releases.
 
 Qualify rollback retention and controls on the selected plan before the live
-hobby release. If the use stops being personal and non-commercial, recheck plan
-eligibility before another deployment.
+Production release. Recheck plan eligibility before every release and whenever
+access, ownership, funding, or purpose changes.
 
 ## Database or Storage recovery
 

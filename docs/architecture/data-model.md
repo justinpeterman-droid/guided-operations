@@ -1,7 +1,7 @@
 # Data Model
 
-**Status:** Target logical model; an initial locked foundation migration exists
-locally
+**Status:** Target logical model with a locked local migration chain, private
+operational record history, and retention/legal-hold foundations
 
 ## Schema boundaries
 
@@ -118,7 +118,35 @@ Immutable snapshot:
 - schema_version
 - provenance JSONB with bounded, validated keys
 
-Unique (incident_id, revision_number). A trigger rejects update/delete.
+Unique (incident_id, revision_number). A trigger rejects update/delete. Schema
+version two confirmed facts contain a bounded, unique `reportingStaffMemberIds`
+array. Every ID must match a `reporting_officer` relationship on that same
+revision. An empty array keeps a confirmed fact in the incident record but makes
+it unavailable to report generation. Immutable schema version one rows remain
+readable, but their unscoped facts cannot be used for a new draft.
+
+### app_private.incident_staff_relationships
+
+- incident_revision_id
+- staff_member_id
+- relationship: reporting_officer, preparer, involved_officer, witness
+- selected_by_account_id
+- created_at
+
+Relationships are immutable and revision-bound. One through twenty reporting
+officers and exactly one preparer are required at creation. The preparer is
+always the authenticated actor; the browser cannot assign preparation to another
+account. Every selected person must have an active account and active staff row
+in the same facility. Reporting and preparing relationships grant record access;
+involved and witness labels preserve attribution without silently granting
+access.
+
+The protected Report Assistant workspace is a derived read, not another durable
+record. It combines the current incident revision with only the active selected
+reporting officers needed to choose an attributed draft. The read omits raw
+field notes, full employee numbers, account IDs, facility fields, and unrelated
+staff. Draft creation then revalidates the selected officer and every selected
+fact against these immutable relationships inside the server and database.
 
 ### app_private.reports
 
@@ -136,6 +164,24 @@ Unique (incident_id, revision_number). A trigger rejects update/delete.
 Unique active relationship per report/account. This table supports explicit
 future collaboration without broadening facility tenancy.
 
+### app_private.report_draft_candidates
+
+Each immutable review-only candidate records its incident and source revision,
+selected `reporting_staff_member_id`, requesting/preparing account, controlled
+report type, confirmed fact IDs, cited paragraphs, and provider key. The
+selected staff member must be an active `reporting_officer` on the exact source
+revision, and every source fact must name that selected staff member in its
+revision-local officer scope. Reporter identity is deliberately removed before
+AI-provider input. Finalization derives the reporting account from this stored
+selection and keeps the preparer and final revision editor as separate
+attributions.
+
+Both `app_private.reports` and immutable review-only draft candidates accept
+only `first_person`, `supervisor_summary`, `cover_letter`, or `disciplinary`.
+Migration application fails rather than silently coercing an older unsupported
+type. The application repeats this closed-set validation at every public and
+server-read boundary so malformed storage does not become trusted content.
+
 ### app_private.report_revisions
 
 Immutable snapshot:
@@ -151,12 +197,63 @@ Immutable snapshot:
 Restore copies a selected snapshot into a new revision. Recovery output may be
 stored as non-current history but never promoted implicitly.
 
+### app_private.legal_holds and controlled retention deletion
+
+- Archived incident, report, and paperwork heads expose a database-derived
+  `deletion_eligible_at` exactly 730 days after the UTC archival instant.
+- Archival occurs at or after the final revision. Eligibility is a review date,
+  not permission to delete.
+- A private legal-hold row records facility, validated scope/target, bounded
+  authority reference, actor, placement time, and one immutable release
+  transition.
+- Facility holds protect all current record types in that facility. Incident
+  holds also protect child reports. Direct incident, report, paperwork, policy,
+  staff, and account scopes are validated against the facility boundary.
+- The private `record_retention_status` routine classifies archived operational
+  heads without deleting data. Data API roles have no direct table or function
+  access.
+- The server-only legal-hold adapter derives the administrator facility, lists a
+  bounded same-facility register, and calls private placement/release routines.
+  Protected routes require current administrator authority, trusted origin,
+  session CSRF, and distinct one-time step-up purposes for placement and
+  release.
+- `record_artifacts` privately registers generated exports by source target,
+  bucket/path, checksum, and size. `retention_deletion_requests` retains
+  metadata-only authority, backup, manifest, transaction-binding, and completion
+  evidence. Both tables force RLS and deny Data API roles.
+- Backup-aware approval is non-destructive and expires after 24 hours. A
+  separate execution proof plus exact record-ID confirmation is required.
+  Execution supports only a complete incident package or one paperwork record;
+  report-only deletion is rejected.
+- An expired approval cannot execute. The next valid approval attempt atomically
+  marks the expired request canceled, preserves it as evidence, and records a
+  bounded cancellation audit event before issuing a replacement.
+- Private routines lock and recheck the target and legal-hold scopes, bind the
+  actor/backend/transaction, verify registered Storage cleanup, and delete the
+  database package in one transaction. Append-only history tables reject all
+  other deletion paths. Hosted rehearsal and owner acceptance remain required.
+
 ## Forms and packets
 
 ### app_private.form_templates
 
-Template code, title, version, media type, Storage object ID/checksum, active
-range, field schema, scope, and physical/digital classification.
+Implemented for Daily Paperwork as an append-only private registry containing
+facility, template code/title/version, source authority and revision, source
+SHA-256, rights state, approved capabilities and print orientation, immutable
+structure and field schema, active range, and approval provenance. The table
+forces RLS, grants no Data API table access, and participates in the protected
+Production backup write freeze. Only bounded, administrator-authorized RPCs can
+list availability or retrieve one approved same-facility definition. Those RPCs
+also require the JWT security version to match the current account, so a stale
+administrator session cannot read a definition directly through the Data API.
+For a given work date, the highest applicable version controls the template
+lineage even when that version is quarantined or retired; an older approved
+version cannot become usable again after a withdrawal marker takes effect. New
+template versions must pass a bounded private definition contract before insert.
+The contract supports scalar text, integer, boolean, date, time, and
+approved-choice fields plus bounded repeating tables. Payloads must contain the
+exact declared keys and types; validation counts are derived by the database and
+contain no entered values.
 
 ### app_private.incident_packet_items
 
@@ -191,8 +288,27 @@ Use one canonical pair:
 Supported kinds include count sheet, assignment roster, uniform inspection,
 metal detector test, perimeter check, random search log, and detector sign-out.
 Records hold kind/date/shift/current head. Revisions hold the immutable reviewed
-definition and editor provenance. A partial unique index enforces the approved
-daily uniqueness rule for active records.
+definition and editor provenance. Every Daily Paperwork revision must reference
+the exact approved, same-facility template version that matches its date, kind,
+structure, and controlling lineage version; Count Sheet revisions cannot attach
+a Daily Paperwork template. Normal saves always use the controlling template
+selected inside the database. Exact historical restore is append-only and may
+preserve an older or retired template only when the new snapshot equals one
+prior revision's structure, payload, validation, and template identity. A
+partial unique index enforces the approved daily uniqueness rule for active
+records.
+
+The Count Sheet and generic six-kind Daily Paperwork workflow are implemented.
+Each active record is unique by facility, work date, and the approved shift code
+(`A`, `B`, `C`, `D`, `U`, or `F`). The record stores no mutable form values.
+Each revision snapshots the reviewed structure, user-entered payload,
+server-calculated validation, and safe provenance; revision inserts advance the
+current head serially. Count Sheets remain assigned-shift shared. Daily
+Paperwork is administrator-only and same-facility. Direct table access remains
+denied.
+
+Archived paperwork heads use the same 730-day deletion-review clock and
+legal-hold override as incident/report records.
 
 The former duplicate operational_paperwork tables are not a second target
 domain. Import reconciliation is described below and in
@@ -239,31 +355,50 @@ remain in private Storage.
 ### app_private.policy_documents
 
 Stable logical source: id, source code/title, owner/issuer, classification,
-source type, active version ID, created_at, archived_at.
+source type, canonical collection, active version ID, created_at, archived_at.
+The collection is one of `BMU policies`, `BMU Post Orders`, or `SD` and is set
+explicitly at registration time.
 
 ### app_private.policy_document_versions
 
-- document_id and monotonic version
-- effective/published/received dates where known
-- original object ID, media type, byte size, SHA-256
-- extraction/OCR state and tool version
-- source/provenance metadata
-- activation state and timestamps
+- document ID, version label, effective date, exact source SHA-256, private
+  Storage path, media type, byte size, page count, and restricted original
+  filename metadata;
+- rights status/evidence/reviewer/review window, allowed processing regions, and
+  explicit external-AI permission;
+- lifecycle and reviewed-current state, with at most one current version per
+  logical document.
+
+### app_private.policy_ingestion_runs
+
+The immutable run identity records the source hash, environment, extraction/OCR
+provider/tool/model and configuration hashes, source filename and collection,
+normalization/chunking versions and full configuration, retry/resume lineage,
+safe failure details, optional embedding profile, code/lock hashes, counts,
+status, and QA reviewer. A run cannot become `ready` unless its approved
+page/chunk counts match the stored evidence and it has no recorded failures.
 
 ### app_private.policy_pages
 
-Version ID, page number, normalized text object/reference or bounded text,
-extraction confidence, text checksum, and structural headings.
+Version and ingestion-run IDs, 1-based source page index, printed label,
+normalized bounded text and checksum, extraction mode/confidence, dimensions,
+rotation, heading/section hierarchy, structured-layout reference/hash,
+controlled warnings, and QA state. Page evidence for a ready run cannot be
+silently changed or deleted.
 
 ### app_private.policy_chunks
 
-- version/page range/section path
+- version/ingestion-run/page range/printed labels/section path
 - deterministic chunk ordinal and text checksum
 - bounded chunk text
 - tsvector generated/search column
-- embedding vector
-- embedding provider/model/dimension/version
-- active state
+- bounded character/token/overlap metadata
+- lifecycle and QA state
+
+Every new chunk must map to a contiguous stored page range of at most ten pages.
+Embeddings remain in `policy_chunk_embeddings`, separate from canonical chunk
+text, and identify their provider/model/dimension through an immutable embedding
+profile.
 
 Indexes:
 

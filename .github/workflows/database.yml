@@ -4,11 +4,27 @@ on:
   pull_request:
     paths:
       - "supabase/**"
+      - "src/lib/supabase/database.generated.ts"
+      - "scripts/verify-database-types.mjs"
+      - "scripts/verify-production-data-inventory.mjs"
+      - "docs/operations/production-data-inventory.json"
+      - "docs/operations/production-data-inventory.md"
+      - "tools/policy-ingestion/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/database.yml"
   push:
     branches: [main]
     paths:
       - "supabase/**"
+      - "src/lib/supabase/database.generated.ts"
+      - "scripts/verify-database-types.mjs"
+      - "scripts/verify-production-data-inventory.mjs"
+      - "docs/operations/production-data-inventory.json"
+      - "docs/operations/production-data-inventory.md"
+      - "tools/policy-ingestion/**"
+      - "package.json"
+      - "package-lock.json"
       - ".github/workflows/database.yml"
   workflow_dispatch:
 
@@ -23,10 +39,26 @@ jobs:
   database:
     name: Reset, lint, and pgTAP
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    # A fresh fictional database replay is short; do not let an unavailable
+    # runner block the release evidence for most of an hour.
+    timeout-minutes: 12
     steps:
       - name: Check out repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Use pinned Node.js runtime
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Python for private import integration test
+        uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
+        with:
+          python-version: "3.12"
+
+      - name: Install locked application dependencies
+        run: npm ci
 
       - name: Install pinned Supabase CLI
         uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
@@ -36,6 +68,9 @@ jobs:
       - name: Start local PostgreSQL
         run: supabase db start
 
+      - name: Install pinned PostgreSQL test driver
+        run: python -m pip install "psycopg[binary]==3.3.4"
+
       - name: Rebuild from migrations and fictional seed
         run: supabase db reset
 
@@ -44,6 +79,17 @@ jobs:
 
       - name: Run pgTAP tests
         run: supabase test db --local
+
+      - name: Test fictional policy bundle import
+        env:
+          POLICY_INGESTION_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: npm run test:policy-ingestion
+
+      - name: Verify generated database types
+        run: npm run db:types:check
+
+      - name: Verify production data inventory coverage
+        run: npm run data:inventory:check
 
       - name: Stop local PostgreSQL
         if: always()

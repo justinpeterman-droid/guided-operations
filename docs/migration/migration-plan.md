@@ -1,9 +1,11 @@
 # Replacement Migration Plan
 
-> **Current release boundary:** a personal, non-commercial hobby app for a small
-> invited group of officers, with fictional operational data. References to an
-> official facility pilot, real-data use, or organizational production below are
-> future gates and are not authorized by this plan.
+> **Current release boundary:** a private, single-facility Production app for a
+> small invited group. Real operational and personal data are authorized only in
+> isolated Production after every release gate passes; Git, local development,
+> CI, Preview, staging, screenshots, logs, support artifacts, and fixtures
+> remain fictional-only. This plan does not establish official facility
+> adoption.
 
 ## Status and objective
 
@@ -32,9 +34,10 @@ dependencies.
   the first release.
 - Employee number plus PIN-like sign-in experience.
 - Officer and administrator interactive roles.
-- No real operational/personnel data under the current build/validation
-  authorization.
-- Existing authorized policy/RAG material is the only permitted real content.
+- Real operational/personnel data only in isolated Production after release
+  approval; build and validation environments remain fictional-only.
+- Authorized policy/RAG material follows the separate corpus boundary and may
+  enter only approved environments.
 - United States region assumption, to be verified for every
   service/subprocessor.
 - OpenAI is acceptable initially; AI interfaces remain provider-neutral.
@@ -63,12 +66,12 @@ dependencies.
 
 ## Target environment model
 
-| Environment  | Vercel                               | Supabase                                                                                                                                                | Data rule                                                                         | Purpose                                                                     |
-| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
-| Local        | Local Next.js runtime                | Local Supabase CLI stack when practical                                                                                                                 | Fictional data; synthetic/non-sensitive RAG fixture only                          | Fast development, schema/RLS tests, offline-safe UI work                    |
-| Preview      | Per-pull-request Vercel preview      | Isolated preview database/project/branch if available, otherwise a tightly scoped shared non-production project with per-preview namespaces and cleanup | Fictional data only; no real corpus by default                                    | Review, browser tests, accessibility, visual approval                       |
-| Test/staging | Stable Vercel environment            | Separate non-production Supabase project                                                                                                                | Fictional operations; authorized test subset of corpus only after rights approval | Migration rehearsal, restore, integration, load, print, provider validation |
-| Live hobby   | Vercel Production environment/domain | Separate live Supabase project in an approved US region                                                                                                 | Fictional operations plus authorized corpus; real operations remain unauthorized  | Private invited-officer evaluation                                          |
+| Environment  | Vercel                               | Supabase                                                                                                                                                | Data rule                                                                           | Purpose                                                                     |
+| ------------ | ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| Local        | Local Next.js runtime                | Local Supabase CLI stack when practical                                                                                                                 | Fictional data; synthetic/non-sensitive RAG fixture only                            | Fast development, schema/RLS tests, offline-safe UI work                    |
+| Preview      | Per-pull-request Vercel preview      | Isolated preview database/project/branch if available, otherwise a tightly scoped shared non-production project with per-preview namespaces and cleanup | Fictional data only; no real corpus by default                                      | Review, browser tests, accessibility, visual approval                       |
+| Test/staging | Stable Vercel environment            | Separate non-production Supabase project                                                                                                                | Fictional operations; authorized test subset of corpus only after rights approval   | Migration rehearsal, restore, integration, load, print, provider validation |
+| Production   | Vercel Production environment/domain | Separate live Supabase project in an approved US region                                                                                                 | Owner-authorized real operations and corpus after release gates; two-year retention | Private invited-officer production release                                  |
 
 Never connect a pull-request preview to the production database or production
 storage bucket. Environment secrets, webhook targets, auth redirect URLs, cookie
@@ -120,7 +123,9 @@ distinct.
 - Corpus source recovery has a credible path; missing bytes are recorded as
   blockers.
 - GCP inventory and dependency graph are stored in a controlled location.
-- No real operational-data migration is planned under the current authorization.
+- No legacy operational-data migration is authorized by this plan. Initial
+  real-data entry begins only after controlled Production promotion unless a
+  separate, reconciled migration runbook is approved.
 
 ## Phase 1 — Repository and delivery foundation
 
@@ -305,7 +310,9 @@ distinct.
 - Complete Forms Library and add-to-incident flow.
 - Complete NCU Days Count entry, reconciliation, persistence, history, and
   landscape print.
-- Complete all six Daily Paperwork editors/prints with revision-safe autosave.
+- Map all six approved Daily Paperwork definitions into the implemented generic
+  revision engine; qualify source-order screen/print output and decide whether
+  bounded autosave is required in addition to the protected manual save.
 - Complete four Monthly Paperwork templates after deciding print-only vs.
   persisted edit contracts.
 - Keep Weekly Paperwork honestly unconfigured until approved templates exist.
@@ -417,10 +424,10 @@ successful, and pilot approved remain separate fields.
 
 Follow [Cutover, Retirement, and Rollback](cutover-retirement-rollback.md).
 
-Current authorization allows only fictional operational use. A limited private
-hobby evaluation may exercise authentication and workflows with fictional
-records plus the authorized corpus. It is not an official pilot and does not
-authorize real incident/personnel data.
+Current authorization permits real operational/personal data only in isolated
+Production after release gates. Qualification exercises authentication and
+workflows with fictional records plus the authorized corpus. It is not an
+official pilot and does not authorize real incident/personnel data.
 
 After target traffic and corpus behavior are accepted, close the defined
 rollback window and retire Google resources in dependency order. Data-bearing
@@ -495,7 +502,7 @@ Completed acceptance gates:
 Evidence links/artifacts:
 Known gaps:
 Blocker owner and next decision date:
-Real-data authorization: fictional-only (unless separately approved)
+Real-data authorization: Production-only after exact release approval
 Deployment state:
 Migration state:
 Pilot state:

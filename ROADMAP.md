@@ -1,23 +1,20 @@
 # Guided Operations production roadmap
 
 This roadmap turns the replacement foundation created on 2026-08-25 into an
-owner-authorized private hobby release. It is ordered by risk and dependency,
-not by visual prominence. A phase is complete only when its exit evidence is
-recorded. A merge, green CI run, provider project, or successful deployment is
-not production approval by itself.
+owner-authorized private production release. It is ordered by risk and
+dependency, not by visual prominence. A phase is complete only when its exit
+evidence is recorded. A merge, green CI run, provider project, or successful
+deployment is not production approval by itself.
 
 ## What "production" means here
 
-The target in this roadmap is a private internet-reachable hobby application for
-a small invited group of officers. It may use real approved policy/reference
-content, but operational records, rosters, reports, incidents, and paperwork
-remain fictional.
-
-This target is not an official agency or facility system. Official adoption or
-the use of real operational/personnel data requires a new written security,
-privacy, records, recovery, vendor, support, and owner-approval phase. It cannot
-be enabled by quietly changing an environment variable or checking off this
-roadmap.
+The target is a private internet-reachable production application for a small
+invited group of officers. The owner authorized real operational and personal
+data in the isolated Production environment on 2026-08-26, with two-year
+retention. It remains forbidden in Git and every non-production environment.
+Real-data entry still requires all release evidence in
+`docs/operations/real-data-governance.md`; this cannot be enabled by quietly
+changing an environment variable or checking off a plan item.
 
 ## Verified starting point — 2026-08-25
 
@@ -35,43 +32,113 @@ roadmap.
 The hosted details and limitations are recorded in
 [Hosted foundation record](docs/operations/2026-08-25-hosted-foundation.md).
 
+## Verified progress since the baseline — 2026-08-26
+
+- The authoritative Vercel project is Git-connected, protected Previews build
+  the branch, and an earlier exact deployment passed Vercel-protected access
+  plus liveness/readiness checks. The current candidate still needs a fresh
+  application sign-in browser qualification after its database migrations are
+  promoted to Development.
+- ADR-0003 is accepted for implementation. Guarded employee-number/passcode
+  sign-in, current-session checks, forced temporary-passcode change, personal
+  passcode change, logout/logout-all, first-admin bootstrap, account invitation,
+  reset, unlock, disablement, role change, last-admin protection, and
+  purpose-bound administrator step-up are implemented and tested locally. No
+  hosted account has been provisioned.
+- Protected Home, Account, Reports, incident creation, report draft/review,
+  append-only revision/history/restore, Policy Expert, administrator account,
+  audit, and health routes exist. They are implementation slices, not accepted
+  end-to-end parity or production proof.
+- The exact reviewed Count Sheet structure, protected assigned-shift load/save/
+  reopen screen, append-only persistence, conflict response, database-side form
+  enforcement, and fictional Chromium calculation check exist. Saved-sheet print
+  fidelity, revision-history UI, export, accessibility breadth, hosted
+  qualification, and other approved forms remain open.
+- Policy retrieval/generation adapters, strict citation validation, private
+  retrieval RPCs, and immutable ingestion/page/chunk provenance are built. The
+  real corpus is still absent and may not be imported until custody, rights,
+  hashing, page reconciliation, and evaluation gates pass.
+- Local fictional recovery rehearses both a PostgreSQL archive restore and
+  private Storage object copy/checksum reconciliation with cleanup. A guarded
+  operator-host tool now streams the Production database and each private
+  Storage object into public-key encryption at an attested off-provider target,
+  with an encrypted detailed manifest and value-free evidence. It has not been
+  run against hosted Production and does not replace a successful scheduled
+  backup, decryption, or restore into an isolated replacement project.
+- Complete runtime readiness, secret/dependency scanning, strict allowlisted
+  sign-in/policy/report telemetry, and repeated web/database/recovery CI exist.
+  Hosted monitoring, alert delivery, budgets, backup jobs, and a live restore
+  still remain open.
+
 ## Current launch blockers
 
-1. The Vercel project is not linked to the private GitHub repository and its
-   application content has not been remotely inspected.
-2. The current Supabase project must be designated non-production; a separate
-   live project is required before release.
-3. ADR-0003 authentication is Proposed. There are no connected accounts,
-   sessions, account lifecycle, runtime grants, or usable RLS policies.
-4. The product core is not implemented. The current page is an honest foundation
-   screen, not the officer workspace.
-5. The policy corpus lacks authoritative bytes, rights classification, current
+1. The fictional Development Supabase project remains at the previously verified
+   62-migration head and has one active fictional administrator. The repository
+   now has nine additional forward migrations, through `20260828151000`, that
+   have not been applied to the hosted project. The owner must complete the
+   fictional administrator's temporary-passcode change before the protected
+   workflow can create a fictional officer. A separate isolated live Supabase
+   project is still required before release.
+2. Authentication and authorization have local fictional proof for encrypted
+   alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
+   Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
+   still required for recovery/email configuration, expiry, timing bounds,
+   revoked-session/provider-failure behavior, direct RLS/API/Storage negatives,
+   and full officer/admin browser flows.
+3. The core report path is locally browser-qualified with fictional data for
+   explicit category confirmation, per-note-line fact confirmation/exclusion,
+   officer edit/finalize/correction, bounded stale-conflict recovery,
+   append-only history/restore, audited print, explicit-version reviewed-report
+   Word download, and same-facility administrator visibility. A protected,
+   provider-neutral model boundary now returns only review suggestions: an
+   allowed category plus source-line-bound facts. The officer must still confirm
+   the category and every fact, and the manual path remains available when AI is
+   disabled. Remaining work includes model and operational-data evaluation,
+   approved gap rules, the complete draft-generation flow; the approved 005/409
+   source-form mapping and output fidelity; Forms Library and Count Sheet
+   acceptance; hosted proof; and owner acceptance. The generic Word download is
+   not an official 005/409 form.
+4. The policy corpus lacks authoritative bytes, rights classification, current
    version approval, SHA-256 inventory, page maps, and citation reconciliation.
-6. Database and Storage backup automation and a successful isolated restore
-   drill do not exist.
-7. Production monitoring, alert routing, cost caps, and release/rollback proof
-   do not exist.
-8. GitHub branch protection and private-repository rulesets are unavailable on
+5. The approved corpus has not passed retrieval, citation, refusal,
+   supersession/conflict, prompt-injection, latency, and cost evaluation on the
+   pinned production configuration.
+6. The guarded encrypted off-provider database and Storage backup tool is built
+   locally, but its protected operator host, schedule, key custody, hosted run,
+   decryption proof, and restore into an isolated replacement project do not
+   exist. Local code and same-stack recovery proof do not close this gate.
+7. Production monitoring sinks, alert delivery, access/retention, cost caps,
+   provider budgets, incident ownership, and release/rollback exercises do not
+   exist.
+8. The production data inventory and protected, purpose-bound legal-hold
+   placement/release and controlled-deletion workflows are implemented locally.
+   Hosted Storage/backup reconciliation, restore/deletion rehearsal, live
+   backup-expiry evidence, and owner approval remain open.
+9. GitHub branch protection and private-repository rulesets are unavailable on
    the current account plan. The owner must upgrade or formally accept and
    document compensating release controls.
-9. Vercel Hobby Standard Protection does not protect the Production domain.
-   Application authentication remains mandatory; provider-level Production
-   protection requires a plan decision.
-10. Supabase Free projects can pause for low activity and require operator-run
+10. Vercel Hobby Standard Protection does not protect the Production domain.
+    Application authentication remains mandatory; provider-level Production
+    protection requires a plan decision.
+11. Supabase Free projects can pause for low activity and require operator-run
     off-provider database and Storage backups. The owner must accept or remove
     those limitations before release.
+12. The two currently Production-scoped Supabase server entries match the
+    fictional Development project. They must be removed from the Production
+    scope under exact authorization, then replaced only with complete values for
+    the future isolated Production project.
 
 ## Delivery sequence
 
 | Order | Phase                                            | Current status                   |              Working estimate | Primary exit gate                                                 |
 | ----: | ------------------------------------------------ | -------------------------------- | ----------------------------: | ----------------------------------------------------------------- |
-|     0 | Foundation closure and repository controls       | In progress                      |          1–2 engineering days | Truthful baseline, reproducible gates, reviewed decisions         |
-|     1 | Connected non-production environment             | Partially complete               |                      1–2 days | Remotely verified protected preview using non-production services |
-|     2 | Identity, sessions, authorization, and bootstrap | Blocked on owner/auth decisions  |                      5–8 days | Accepted ADR-0003 and negative security tests                     |
-|     3 | Incident and report vertical slice               | Planned                          |                    10–15 days | Accepted end-to-end fictional incident/report workflow            |
-|     4 | Forms and operational paperwork                  | Planned                          |                     8–12 days | Accepted persistence, print, export, and records behavior         |
-|     5 | Policy corpus and grounded assistance            | Blocked on corpus custody/rights |       10–20 days after access | Reconciled corpus and passing citation/refusal evaluation         |
-|     6 | Administration and operational controls          | Planned                          |                      5–8 days | Step-up admin, audit, monitoring, and recovery exercises pass     |
+|     0 | Foundation closure and repository controls       | Mostly built; decisions open     |          1–2 engineering days | Truthful baseline, reproducible gates, reviewed decisions         |
+|     1 | Connected non-production environment             | Connected; requalification open  |                      1–2 days | Remotely verified protected preview using non-production services |
+|     2 | Identity, sessions, authorization, and bootstrap | Built locally; hosted proof open |                      5–8 days | Accepted ADR-0003 and negative security tests                     |
+|     3 | Incident and report vertical slice               | Implementation in progress       |                    10–15 days | Accepted end-to-end fictional incident/report workflow            |
+|     4 | Forms and operational paperwork                  | Count Sheet slice in progress    |                     8–12 days | Accepted persistence, print, export, and records behavior         |
+|     5 | Policy corpus and grounded assistance            | Code built; corpus gate blocked  |       10–20 days after access | Reconciled corpus and passing citation/refusal evaluation         |
+|     6 | Administration and operational controls          | Implementation in progress       |                      5–8 days | Step-up admin, audit, monitoring, and recovery exercises pass     |
 |     7 | Live-environment qualification                   | Planned                          |                      3–5 days | Named release candidate passes every applicable release gate      |
 |     8 | Owner-authorized promotion and observation       | Planned                          | 1–2 days plus rollback window | Production evidence accepted; rollback retained                   |
 
@@ -131,7 +198,8 @@ Status: **in progress**
 
 ## Phase 1 — connected non-production environment
 
-Status: **partially complete; provider projects exist but linkage is open**
+Status: **connected; latest authenticated fictional requalification remains
+open**
 
 ### Steps
 
@@ -175,7 +243,10 @@ Status: **partially complete; provider projects exist but linkage is open**
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap
 
-Status: **blocked on OQ-005, OQ-006, OQ-007, and ADR-0003**
+Status: **private lifecycle, local password-provider configuration, encrypted
+server-only sessions, and the fictional officer sign-in/save/reopen/print/logout
+browser run are passing; hosted proof and ADR-0003 security acceptance remain
+required before production login**
 
 ### Steps
 
@@ -196,10 +267,12 @@ Status: **blocked on OQ-005, OQ-006, OQ-007, and ADR-0003**
 6. Implement separate server-only clients for routine user requests and narrow
    administrative Auth operations. Routine requests must carry the user's
    identity so RLS can evaluate it.
-7. Implement SSR Secure/HttpOnly/SameSite cookies, refresh rotation, expiry,
-   logout, logout-all, reset revocation, disabled-account checks, safe
-   redirects, CSRF/origin checks, and `no-store` behavior for authenticated
-   pages.
+7. Implement server-only encrypted Secure/HttpOnly/SameSite cookies, refresh
+   rotation, expiry, logout, logout-all, reset revocation, disabled-account
+   checks, safe redirects, CSRF/origin checks, and `no-store` behavior for
+   authenticated pages. The encrypted cookie, local rotation/logout, CSRF, and
+   no-store portions and local two-browser global/passcode-change revocation are
+   implemented; hosted expiry/provider-failure revocation remains.
 8. Implement default-deny operation-specific RLS/Storage policies and server
    authorization for officer, administrator, disabled, missing-identity,
    cross-user, and cross-role cases.
@@ -225,7 +298,12 @@ Status: **blocked on OQ-005, OQ-006, OQ-007, and ADR-0003**
 
 ## Phase 3 — incident and report vertical slice
 
-Status: **planned**
+Status: **implementation in progress; the protected incident-to-draft path now
+enforces per-officer fact selection and connects to the review screen; a generic
+exact-version reviewed-report Word download exists, while approved 005/409
+output, protected hosted qualification, manual accessibility/visual review, and
+owner acceptance remain open. The guarded local officer/administrator browser
+lane passes in pull-request CI with fictional data**
 
 ### Steps
 
@@ -245,13 +323,19 @@ Status: **planned**
 6. Implement incident identity using official incident number and descriptive
    incident name, officer/preparer selection, field notes, missing-information
    review, and explicit unknown states.
-7. Implement deterministic fact confirmation before any generated narrative. AI
-   drafts remain visibly unreviewed and cannot create or alter source facts.
+7. Implement deterministic fact confirmation before any generated narrative.
+   Confirmed facts now carry reporting-officer scopes and cross-officer use is
+   rejected by the application and database. AI drafts remain visibly unreviewed
+   and cannot create or alter source facts.
 8. Implement report drafts, append-only revisions, restore-as-new-revision,
    ownership/history, persistence status, conflict handling, and retry-safe
-   mutations.
-9. Implement deterministic DOCX/print output behind an interface. Benchmark
-   document generation before deciding whether ADR-0005 needs a worker.
+   mutations. The current protected incident workspace now lets an authorized
+   user choose one reporting officer, see only that officer's scoped confirmed
+   facts, and request a review-only draft through the existing hardened route.
+9. The short deterministic reviewed-report DOCX path is implemented behind a
+   protected explicit-revision interface without retaining duplicate bytes.
+   Complete approved 005/409 form output and benchmark generation before
+   deciding whether ADR-0005 needs a worker.
 10. Add unit, contract, PostgreSQL, RLS, concurrency, stale-write, idempotency,
     report-safety golden, export, browser, keyboard, responsive, accessibility,
     visual, and print tests using fictional data.
@@ -266,21 +350,39 @@ Status: **planned**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **planned**
+Status: **Count Sheet protected load/save/reopen/revision review/restore,
+redacted current-revision print-request audit, and a protected
+honest-availability Forms Library foundation are implemented. The six-form
+administrator Daily Paperwork catalog and private, append-only, source-bound
+template registry plus generic protected open/edit/save/history/exact-restore
+and audited current-revision print workflow are implemented locally. The
+Production-only package-review and registration screen is implemented locally;
+it automatically binds review to the current package, shows only value-free
+history, and requires a fresh package-bound administrator passcode proof. The
+workflow includes closed server-owned schemas, repeating rows, stale-session
+denial, optimistic conflict protection, idempotent writes, redacted print audit,
+and fail-closed quarantine/retirement handling. Approved source import,
+source-specific screen/print fidelity, rollback selection UI, PostgreSQL replay,
+hosted migration, manual accessibility review, protected hosted qualification,
+and owner acceptance remain open. The generic Count Sheet mobile/print-fit and
+signed-in workflow pass in the guarded fictional browser lane**
 
 ### Steps
 
-1. Connect the already-ported Count Sheet calculations to authenticated
-   persistence, history, review, print, and export without changing the tested
-   domain formulas silently.
+1. Complete qualification around the now-connected Count Sheet calculations,
+   assigned-shift persistence, revision review/restore, and saved-sheet print
+   control. Add supported export without changing the tested domain formulas
+   silently.
 2. Import only reviewed form definitions from the pinned predecessor source.
    Validate source revision, rights, schema, and fictional-data safety before
    copying each template.
-3. Implement Daily Paperwork storage/UI/print flows, then the approved Monthly
-   packet catalog.
-4. Implement Forms Library search/selection, capability labels, paper-accurate
-   preview, eligible download, controlled editable fields, N/A behavior, and
-   packet actions.
+3. Import the six approved Daily Paperwork definitions into the implemented
+   protected workflow, qualify each screen and print against its reference, then
+   build the approved Monthly packet catalog.
+4. Extend the protected Forms Library foundation with search/selection,
+   capability labels, paper-accurate preview, eligible download, controlled
+   editable fields, N/A behavior, and packet actions as approved definitions
+   become available.
 5. Keep Chain of Custody and every other physical-only workflow physical-only
    unless a new product/records decision explicitly changes it.
 6. Apply the same append-only revision, concurrency, idempotency, ownership,
@@ -301,7 +403,17 @@ Status: **planned**
 
 ## Phase 5 — policy corpus and grounded assistance
 
-Status: **blocked on OQ-008, OQ-009, and OQ-010**
+Status: **the resumable local MinerU, provenance, collection-aware retrieval,
+pinned query-embedding adapter, resumable chunk-embedding foundation,
+deterministic hybrid fusion, and citation code are implemented and pass
+fictional local tests; real corpus review/import/embedding, vector-index
+measurement, hybrid qualification, hosted migration, and evaluation remain no
+longer blocked on corpus rights: OQ-008 and OQ-009 closed 2026-08-30 (the corpus
+is public record and the owner is authorized - see O-021/O-022). Real corpus
+extraction is complete: 236 of 236 documents, 1,308 pages, 1,228 chunks, held
+locally and awaiting review. What remains is import, embedding, hybrid
+qualification and the accuracy evaluation. The corpus is refreshed once a year
+by the owner by hand; no automated freshness checking is wanted.**
 
 ### Steps
 
@@ -328,7 +440,10 @@ Status: **blocked on OQ-008, OQ-009, and OQ-010**
 8. Review current OpenAI project data controls and endpoint retention before
    sending restricted corpus text. Do not opt in to API data sharing. Decide
    whether default retention is acceptable or approved retention controls are
-   required.
+   required. The application and local embedding CLI now fail closed unless an
+   operator records a safe approval reference, an approved Zero Data Retention
+   or Modified Abuse Monitoring mode, and API data sharing exactly `false`;
+   hosted project verification and owner evidence remain required.
 9. Port Policy Expert and the archived full-policy-reader behavior: approved
    source IDs, source/version/page citations, bounded passages, original-PDF
    fallback, passage highlighting, and accessible focus restoration.
@@ -350,7 +465,11 @@ Status: **blocked on OQ-008, OQ-009, and OQ-010**
 
 ## Phase 6 — administration and operational controls
 
-Status: **planned**
+Status: **account/audit/health controls, purpose-bound legal-hold operation,
+bounded two-year review, fail-closed controlled deletion, redacted core
+telemetry, a machine-enforced runtime logging boundary, and local recovery are
+implemented; hosted deletion/recovery rehearsal, monitoring, alerts, budgets,
+and exercises remain open**
 
 ### Steps
 
@@ -372,10 +491,31 @@ Status: **planned**
 6. Add redacted application telemetry, request correlation, health/readiness,
    error/latency/Auth/Storage/database/AI metrics, cost and quota signals, and
    alert routing with a named primary and alternate.
-7. Set provider budgets and circuit breakers. A provider limit must create an
-   honest degraded state, not fabricated output or partial silent saves.
-8. Exercise credential rotation, dependency update, incident response,
-   application rollback, and feature-disable procedures.
+7. Keep a machine-checked production data inventory for every private table,
+   Storage bucket, Auth/AI/log/browser/non-production/support surface, and
+   backup copy. Treat hosted configuration, deletion, and reconciliation as
+   release evidence, not repository assumptions.
+8. Encode the ordinary two-year deletion-review clock and legal-hold override in
+   the database. Keep classification separate from deletion authority, and
+   require protected admin workflow plus backup-aware evidence before any
+   destructive cleanup. The protected `/admin/retention` register places and
+   releases validated holds, shows a bounded same-facility review list, and
+   permits only complete incident packages or eligible paperwork records to
+   enter controlled deletion. Approval and execution have separate one-time
+   administrator proofs. Approval is non-destructive, requires verified database
+   and Storage backup evidence, and expires after 24 hours. Execution requires
+   exact record-ID confirmation, locks and rechecks the target and holds,
+   verifies registered Storage objects, and completes database deletion in the
+   same transaction. Hosted backup/deletion rehearsal and live authority for any
+   specific deletion remain open.
+9. The repository now has a fail-closed, database-backed global AI request
+   circuit breaker and an honest degraded response; local qualification and
+   hosted migration remain required. Set and record the owner-approved monthly
+   request cap, stop percentage, OpenAI project budget, and alert thresholds
+   before enabling Production. A provider limit must never create fabricated
+   output or partial silent saves.
+10. Exercise credential rotation, dependency update, incident response,
+    application rollback, and feature-disable procedures.
 
 ### Exit evidence
 
@@ -387,7 +527,8 @@ Status: **planned**
 
 ## Phase 7 — live-environment qualification
 
-Status: **planned**
+Status: **protected backup tooling built locally; isolated live infrastructure,
+hosted backup/restore, qualification, and owner approval remain open**
 
 ### Steps
 
@@ -400,10 +541,15 @@ Status: **planned**
    exact project, region, `APP_ENV`, `APP_ORIGIN`, Auth redirects, publishable
    key, server secrets, AI project/key, model IDs, corpus version, and migration
    credentials without recording values.
-4. Disable automatic remote database migration. Production migrations run only
-   through an owner-protected job against an explicitly verified target.
-5. Implement scheduled encrypted logical database export plus a separate
-   private-Storage object inventory/export to an off-provider destination.
+4. Keep automatic remote database migration disabled. The manual-only,
+   exact-candidate workflow and fail-closed request/history guards are
+   implemented; configure its owner-protected `production-database` GitHub
+   environment before the first dry-run. Production migrations run only through
+   that job against an explicitly verified target.
+5. Configure the guarded operator-host tool for scheduled encrypted logical
+   database export plus separate private-Storage object inventory/export to an
+   attested off-provider destination. Keep Production data and credentials out
+   of GitHub Actions, developer machines, and every non-production environment.
 6. Restore the database and Storage backup into a new isolated project; verify
    Auth-linked state, constraints, RLS, object checksums, corpus rebuild,
    browser flows, and achieved RPO/RTO.

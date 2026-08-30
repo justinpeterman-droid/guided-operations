@@ -5,13 +5,13 @@
 
 ## Isolation model
 
-| Environment | Vercel                                     | Supabase                                                     | Data                                                                                               | Purpose                                     |
-| ----------- | ------------------------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | ------------------------------------------- |
-| Local       | Local Next.js/Supabase CLI where practical | Local stack or explicitly named disposable project           | Fictional fixtures; approved local corpus samples only                                             | Development and migration/RLS tests         |
-| Test/CI     | Ephemeral process/services                 | Ephemeral local PostgreSQL/Supabase-compatible test services | Deterministic fictional fixtures                                                                   | Unit, integration, contract, security tests |
-| Preview     | Per-pull-request protected deployment      | Isolated preview/disposable project; never production        | Fictional only; synthetic corpus fixtures                                                          | UI and acceptance review                    |
-| Staging     | Protected Vercel project/environment       | Dedicated staging project                                    | Fictional operational data; approved real corpus only if access controls are qualified             | End-to-end release qualification            |
-| Production  | Protected production deployment            | Dedicated production project                                 | Current policy permits real corpus; operational records remain fictional until separately approved | Approved live service                       |
+| Environment | Vercel                                     | Supabase                                                     | Data                                                                                         | Purpose                                     |
+| ----------- | ------------------------------------------ | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| Local       | Local Next.js/Supabase CLI where practical | Local stack or explicitly named disposable project           | Fictional fixtures; approved local corpus samples only                                       | Development and migration/RLS tests         |
+| Test/CI     | Ephemeral process/services                 | Ephemeral local PostgreSQL/Supabase-compatible test services | Deterministic fictional fixtures                                                             | Unit, integration, contract, security tests |
+| Preview     | Per-pull-request protected deployment      | Isolated preview/disposable project; never production        | Fictional only; synthetic corpus fixtures                                                    | UI and acceptance review                    |
+| Staging     | Protected Vercel project/environment       | Dedicated staging project                                    | Fictional operational data; approved real corpus only if access controls are qualified       | End-to-end release qualification            |
+| Production  | Protected production deployment            | Dedicated production project                                 | Owner-authorized real operational/personal data only after release gates; two-year retention | Approved live service                       |
 
 A private GitHub repository does not make a Vercel preview private. Deployment
 protection and application authentication must both be configured and verified.
@@ -110,8 +110,9 @@ rewriting old migration files.
 
 ## Backup and recovery
 
-The environment owner must define RPO, RTO, retention, legal hold, and restore
-authority before production.
+The owner has set a two-year retention rule and holds restore authority. RPO,
+RTO, legal-hold operation, and restore evidence remain required before real-data
+production entry.
 
 Minimum design:
 

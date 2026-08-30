@@ -2,7 +2,8 @@
 
 - **Status:** Target design
 - **Initial provider:** OpenAI through a provider-neutral adapter
-- **Approved real content:** Policy/reference corpus only
+- **Real operational content:** Production only after provider data controls,
+  model evaluation, and release gates are approved
 
 ## Purpose and boundary
 
@@ -14,6 +15,16 @@ gate.
 
 The browser never contacts a model provider. Next.js or the optional worker
 calls provider adapters after authentication and authorization.
+
+The incident extraction adapter is now implemented behind a protected Next.js
+route. It sends bounded source lines and controlled category definitions through
+the existing report-assistance budget operation, uses `store: false`, supplies
+no tools, and requires strict structured output. Domain validation rejects an
+unknown category or invented source-line key and restores exact source text on
+the server. The result is only a browser review suggestion: it is not persisted,
+confirmed, or used by report generation until the officer separately confirms
+it. A deterministic manual review remains available when generation is off or
+fails.
 
 ## Provider-neutral interfaces
 
@@ -35,6 +46,29 @@ The OpenAI adapter belongs under server/ai/providers. No OpenAI types leak into
 domain models or API contracts. Adding or changing a provider requires contract,
 evaluation, privacy, cost, and failure-mode qualification rather than a search
 and replace.
+
+The initial Responses adapter is server-only, requires an explicit
+`OPENAI_POLICY_MODEL` pin and a non-public `OPENAI_API_KEY`, sets
+`store: false`, supplies no tools, and requests strict structured output. Its
+parsed output is still untrusted until the domain citation validator accepts the
+exact retrieved provenance.
+
+The pinned models are the GPT-5.6 family: `gpt-5.6-terra` for policy answers and
+for report drafting, with `gpt-5.6-sol` and `gpt-5.6-luna` as the higher- and
+lower-cost dials. These models reason before answering, and those reasoning
+tokens are billed and counted against `max_output_tokens` without ever appearing
+in `output_text`. Every Responses call therefore pins `reasoning.effort` and
+adds a reasoning allowance on top of its answer allowance; the constants live in
+`server/ai/providers/openai-reasoning.ts`. A budget sized for the visible answer
+alone returns status `incomplete` with nothing in it, which reads as a broken
+provider when it is only an under-funded one.
+
+The domain `PolicyAnswerService` now composes those two interfaces without a
+provider SDK. It validates the question and facility scope, never invokes
+generation when retrieval yields no authorized passages, and validates every
+returned citation against the retrieved immutable passage before returning it.
+It retains no question, answer, or excerpt; any future route is responsible for
+authorization, transient rendering, and safe operational metrics.
 
 ## Corpus object model
 
@@ -82,6 +116,29 @@ Controls:
 - evaluation gate before active;
 - no corpus content in Git, CI artifacts, logs, queue messages, or snapshots.
 
+### Implemented local MinerU foundation
+
+`tools/policy-ingestion/` implements the provider-neutral local extraction path.
+The MinerU command and output parsing are isolated behind an extraction provider
+adapter; discovery, normalization, validation, chunking, checkpointing, and
+Supabase import do not depend on the MinerU SDK.
+
+The source root must contain these exact canonical collections, retained as
+explicit database and chunk provenance rather than inferred from filenames:
+
+- `BMU policies`
+- `BMU Post Orders`
+- `SD`
+
+The local pipeline supports PDF, DOCX, BMP, JPEG, PNG, TIFF, and WebP sources.
+It uses source/configuration-addressed attempt directories, rechecks the source
+SHA-256 after extraction, preserves page/printed-label/heading/section/table
+evidence, and produces deterministic chunks spanning no more than two pages by
+default. A successful import remains `awaiting_review`; it does not activate a
+document, create embeddings, or make passages retrievable. Real source files and
+extraction artifacts remain outside Git. See
+`docs/operations/local-policy-ingestion.md` for the operator procedure.
+
 PDFs and extracted text are untrusted. Parser isolation, resource limits, and
 malware/content checks must be selected before real corpus ingestion.
 
@@ -96,7 +153,9 @@ Use PostgreSQL full-text search plus pgvector semantic search:
    - GIN-indexed tsvector keyword ranking;
    - a dimension/operator-matched vector index and distance function.
 5. Fuse ranked lists with a versioned reciprocal-rank or measured equivalent.
-6. Apply source/version/access filters before final ranking.
+6. Apply source/version/access filters before final ranking. Collection is an
+   explicit filter dimension, allowing all-collection search, one-collection
+   search, or cross-collection comparison without reclassifying filenames.
 7. De-duplicate overlapping chunks while preserving page/section boundaries.
 8. Enforce a bounded context budget and source diversity rule.
 9. Return stable chunk/source citation IDs with each context item.
@@ -104,6 +163,42 @@ Use PostgreSQL full-text search plus pgvector semantic search:
 Index type, distance operator, weights, match count, chunk size/overlap, and
 reranking are evaluated choices. Do not copy a generic HNSW configuration
 without measuring the actual corpus.
+
+The current provider-neutral retrieval adapter now uses the reviewed hybrid v4
+RPC. A server-only OpenAI adapter creates one bounded query embedding with the
+pinned model, dimension, and profile key. Provider errors, dimension/model
+mismatches, zero vectors, malformed rows, and invalid empty filters fail as
+service unavailable; they are not mislabeled as insufficient evidence and do not
+silently fall back to a different model or lexical-only behavior.
+
+Inside the database, authorization is applied before ranking. Only chunks that
+have an embedding for the exact enabled profile and still pass account,
+facility, rights, current-version, external-AI, ingestion-QA, page-QA, chunk-QA,
+source-hash, collection, and optional approved-version filters are candidates.
+The RPC ranks at most 20-60 lexical and semantic candidates, uses deterministic
+equal-weight reciprocal-rank fusion with `k = 60`, breaks ties by immutable
+chunk ID, and returns the registered collection and citation provenance. This
+fixed configuration is `supabase-hybrid-rrf-v1`; changing its weights, constant,
+pool, or distance operator requires a new version and evaluation.
+
+The local ingestion tool also has a separate provider-style `embed` command. It
+processes one pre-registered, approved document version at a time, skips
+existing `(chunk, profile)` rows, and requires every physical page in each
+bounded chunk range to exist and be approved. It rechecks rights and QA while
+holding database share locks through each provider call, so evidence cannot be
+changed between authorization and external egress. Any later page or chunk
+evidence change clears stale QA and a run cannot return to `ready` until the
+complete page range is freshly approved. The command validates
+model/order/dimension/non-zero vectors and inserts immutable profile-bound
+embeddings. Controlled policy embedding is fail-closed to the explicitly
+confirmed Production connection. It must not be run until corpus rights and the
+current OpenAI project data-control review are approved.
+
+This is fictional local foundation proof, not measured corpus qualification. No
+vector index is selected yet because index type/operator, recall, latency,
+memory, and build time must be measured on the accepted corpus. The Policy
+Expert interface can search all approved policies or one exact collection and
+shows collection provenance beside each citation.
 
 ## Grounded answer generation
 
@@ -121,6 +216,8 @@ sections. It directs the model to:
 Post-generation validation:
 
 - every citation ID exists in the supplied context;
+- every citation's document, version, collection, checksum, page/section, and
+  excerpt exactly match the retrieved immutable passage;
 - cited source/version is active or explicitly historical;
 - quoted spans, if any, are bounded and actually present;
 - material claims meet the configured citation/support threshold;
@@ -146,6 +243,13 @@ AI results remain proposals until a user reviews and saves them. Job completion
 records source revision, prompt/model/config versions, and validation result.
 Stale base revisions cannot become current.
 
+The current incident UI establishes the human-review side of this boundary
+without calling a model: it proposes unchanged non-empty note lines, displays
+their exact source, requires confirm/exclude decisions, and resets confirmation
+after an edit. A provider-backed extraction adapter must later produce bounded
+typed proposals for this same review gate; it may not bypass it or overwrite the
+officer's source note.
+
 ## Prompt-injection and data controls
 
 - Corpus content, file metadata, user questions, and model output are untrusted.
@@ -159,6 +263,11 @@ Stale base revisions cannot become current.
   questions/data. Enforce this in fixtures, demos, and manual evaluation.
 - Review current OpenAI data-use, retention, region, and enterprise settings
   before uploading real corpus content; do not infer them from this design.
+- Every OpenAI adapter and the local embedding command fail closed unless an
+  operator records a safe approval reference, one of the provider's approved
+  Zero Data Retention or Modified Abuse Monitoring modes, and explicit API data
+  sharing `false`. This runtime attestation prevents accidental calls but does
+  not replace dashboard/Admin API verification of the exact OpenAI project.
 - Log question SHA-256/HMAC, source IDs/counts, configuration, latency, usage,
   and safe result code—not raw question, context, or answer.
 
@@ -197,6 +306,19 @@ Required suites:
 Define measurable thresholds before activation: retrieval recall@k, citation
 precision, unsupported-claim rate, answer abstention behavior, p95 latency, and
 cost per task. Human review owns acceptance.
+
+The provider-neutral evaluation harness in `src/server/ai/policy-evaluation.ts`
+now runs bounded cases sequentially and scores end-to-end answer status,
+required-citation recall, allowed-citation precision, abstention, forbidden
+prompt-injection output markers across every user-visible answer and limitation,
+and p95 latency. Category labels are bound to their required outcomes so one
+mislabeled case cannot claim retrieval, refusal, conflict, access, and provider
+degradation coverage at once. Its retained scorecard contains only bounded
+aliases, booleans, counts, rates, and timings—never questions, answers,
+excerpts, or provider errors. Test coverage uses synthetic policy data. A
+passing synthetic scorecard proves the harness behavior, not the real corpus or
+pinned Production model; those still require a private custodian-approved suite
+and owner review.
 
 ## Synchronous versus queued
 

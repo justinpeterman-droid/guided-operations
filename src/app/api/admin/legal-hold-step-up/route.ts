@@ -1,0 +1,109 @@
+import { z } from "zod";
+
+import { getAuthServerEnvironment } from "@/lib/env/auth-server";
+import { getRuntimeEnvironment } from "@/lib/env/runtime";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import type { AdminStepUpPurpose } from "@/server/auth/admin-step-up";
+import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { createAdminStepUpStore } from "@/server/auth/private-admin-step-up-store";
+import { requestAdminStepUp } from "@/server/auth/request-admin-step-up";
+import { createSupabaseAdministratorPasscodeVerifier } from "@/server/auth/supabase-auth-adapters";
+import { createAdminStepUpObserver } from "@/server/observability/admin-step-up-observer";
+import { isTrustedMutationRequest } from "@/server/security/request-origin";
+import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+
+export const dynamic = "force-dynamic";
+export const runtime = "nodejs";
+
+const headers = { "Cache-Control": "private, no-store" };
+const inputSchema = z
+  .object({
+    action: z.enum(["place", "release"]),
+    passcode: z.string().min(8).max(256),
+  })
+  .strict();
+
+/** Issues a proof valid for exactly one legal-hold placement or release. */
+export async function POST(request: Request): Promise<Response> {
+  const observe = createAdminStepUpObserver();
+  let appEnvironment: "development" | "preview" | "production" | "test" =
+    "test";
+  try {
+    const [environment, runtimeEnvironment, client] = await Promise.all([
+      getAuthServerEnvironment(),
+      getRuntimeEnvironment(),
+      createSupabaseServerClient(),
+    ]);
+    appEnvironment = runtimeEnvironment.APP_ENV;
+    const current = await authorizeCurrentSession(client, {
+      requiredRole: "administrator",
+    });
+    if (!current.allowed)
+      return observe(denied(), "authentication_required", appEnvironment);
+    if (
+      !isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN) ||
+      !hasValidSessionCsrfRequest(
+        request.headers,
+        current.sessionId,
+        environment.CSRF_HMAC_KEY,
+      )
+    )
+      return observe(forbidden(), "request_not_allowed", appEnvironment);
+
+    const parsed = inputSchema.safeParse(await request.json());
+    if (!parsed.success)
+      return observe(invalid(), "validation_rejected", appEnvironment);
+    const purpose: AdminStepUpPurpose =
+      parsed.data.action === "place"
+        ? "retention.place_legal_hold"
+        : "retention.release_legal_hold";
+    const result = await requestAdminStepUp(
+      client,
+      purpose,
+      { passcode: parsed.data.passcode },
+      {
+        verifier: createSupabaseAdministratorPasscodeVerifier(),
+        store: createAdminStepUpStore(),
+        hmacKey: environment.CSRF_HMAC_KEY,
+      },
+    );
+    if (result.status === "issued")
+      return observe(
+        Response.json(
+          { data: { requestId: result.requestId, token: result.token } },
+          { headers },
+        ),
+        "issued",
+        appEnvironment,
+      );
+    if (result.status === "invalid_input")
+      return observe(invalid(), "validation_rejected", appEnvironment);
+    return result.status === "unavailable"
+      ? observe(unavailable(), "service_unavailable", appEnvironment)
+      : observe(denied(), "authentication_required", appEnvironment);
+  } catch {
+    return observe(unavailable(), "service_unavailable", appEnvironment);
+  }
+}
+
+function denied() {
+  return Response.json(
+    { error: "authentication_required" },
+    { status: 401, headers },
+  );
+}
+function forbidden() {
+  return Response.json(
+    { error: "request_not_allowed" },
+    { status: 403, headers },
+  );
+}
+function invalid() {
+  return Response.json({ error: "invalid_request" }, { status: 400, headers });
+}
+function unavailable() {
+  return Response.json(
+    { error: "service_unavailable" },
+    { status: 503, headers },
+  );
+}

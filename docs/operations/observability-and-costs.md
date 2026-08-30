@@ -30,17 +30,53 @@ Errors must use stable codes and sanitized context. Debug logging is
 time-bounded, environment-scoped, owner-approved in production, and reviewed
 before activation.
 
+## Implemented application boundary
+
+The readiness, sign-in, local sign-out, sign-out-all, personal passcode-change,
+forced temporary-passcode-change, policy-answer, report-draft, policy-source,
+incident-fact, Daily Paperwork package, administrator account/retention
+lifecycle, and administrator step-up endpoints now emit a strict JSON event only
+when `SAFE_OPERATIONAL_LOGGING_ENABLED=true`. The schema accepts only a fixed
+operation, bounded outcome/reason code, random request ID, status, duration,
+environment, deployment/build identifiers, and the policy route's bounded
+citation count and corpus version. Every newly observed authentication lifecycle
+response returns the same opaque random ID in `X-Request-Id`; the Daily
+Paperwork package route also returns it in response metadata. A readiness event
+records only `completed` or `service_unavailable`, the opaque request ID, HTTP
+status, bounded duration, environment, timestamp, and approved deployment/build
+metadata. It never records the Supabase URL or key, a provider response or
+error, missing-variable details, connection information, or a project
+identifier. If the runtime environment itself cannot be validated, readiness
+still fails closed with the generic `not_ready` response and emits no custom
+event.
+
+These events record no employee number, account/user/session identifier,
+passcode, cookie, source filename, source metadata, package digest,
+administrator identity, form/report content, or arbitrary error text. Sign-in
+intentionally records no account-existence reason. Tests reject extra prompt,
+response, report, credential, personnel, operational-source, provider, and
+configuration fields and prove that passcode and provider-error values never
+enter the event call.
+
+Production readiness fails while this gate is off. Telemetry delivery failure
+does not change the user's application response. This implements the
+application-side redaction boundary; it does **not** prove that hosted log
+retention, access, dashboards, alerts, destinations, or test notifications are
+configured. Those remain live-environment qualification gates.
+
 ## Signals and checks
 
-| Area     | Minimum signal                                                                                       | Qualification                                                                  |
-| -------- | ---------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
-| Web      | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                  | Vercel observability/runtime logs plus an independent scheduled smoke          |
-| Auth     | sign-in outcome by reason code, session refresh/revocation failures, suspicious rate                 | No credentials or user content in the event                                    |
-| Database | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result    | Supabase logs/advisors and explicit test evidence                              |
-| Storage  | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation  | Private-bucket RLS tests                                                       |
-| RAG/AI   | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version | Synthetic continuous checks; secure real-corpus qualification before promotion |
-| Recovery | age and checksum of latest database and Storage backup; last restore drill result                    | Separate database and object evidence                                          |
-| Security | dependency/secret scan, authorization test, unexpected public asset check                            | Blocking alerts for confirmed exposure                                         |
+| Area      | Minimum signal                                                                                                     | Qualification                                                                           |
+| --------- | ------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
+| Web       | deployment health, route error rate, p50/p95 latency, synthetic authenticated smoke                                | Vercel observability/runtime logs plus an independent scheduled smoke                   |
+| Auth      | sign-in, passcode-change, local/global sign-out outcome and duration; refresh/revocation failures; suspicious rate | No account IDs, credentials, cookies, or user content in the event                      |
+| Admin     | step-up plus account create, role/shift change, disable, unlock, and passcode-reset outcome and duration           | No administrator/target IDs, employee data, passcodes, proof tokens, or handoff secrets |
+| Retention | legal-hold placement/release and deletion approval/execution outcome and duration                                  | No target IDs, administrator IDs, proof tokens, authority or backup references          |
+| Database  | connection usage, slow queries, lock waits/deadlocks, migration version, RLS negative-test result                  | Supabase logs/advisors and explicit test evidence                                       |
+| Storage   | upload/download failure, signed-link/authenticated access failures, inventory/backup reconciliation                | Private-bucket RLS tests                                                                |
+| RAG/AI    | retrieval latency, citation presence, refusal category, provider errors, tokens/cost, corpus version               | Synthetic continuous checks; secure real-corpus qualification before promotion          |
+| Recovery  | age and checksum of latest database and Storage backup; last restore drill result                                  | Separate database and object evidence                                                   |
+| Security  | dependency/secret scan, authorization test, unexpected public asset check                                          | Blocking alerts for confirmed exposure                                                  |
 
 ## Alert policy
 
@@ -66,14 +102,14 @@ test notification has been received.
 
 ## Provider-plan qualification
 
-- Vercel Hobby is the starting candidate for the confirmed personal,
-  non-commercial use. Recheck eligibility if access, ownership, funding, or
-  purpose changes. The selected plan and any supplemental telemetry must
-  preserve enough evidence for incident investigation.
-- A Supabase Free project may be paused for low activity and does not include
-  managed daily backups. A private hobby release is blocked until the owner
-  accepts those availability and recovery limits or upgrades to a plan that
-  meets the agreed objectives.
+- The selected Vercel plan must permit the exact invited-user and real-data
+  Production use. Recheck eligibility before promotion and whenever access,
+  ownership, funding, or purpose changes. The selected plan and any supplemental
+  telemetry must preserve enough evidence for incident investigation.
+- A Supabase Free project may be paused for low activity and may not provide the
+  required managed backup/recovery controls. Real-data Production is blocked
+  until the selected plan meets the approved availability, recovery, and
+  retention objectives.
 - Supabase Free and Vercel Hobby impose service and eligibility limits. OpenAI
   API use is usage-priced. The owner must review current provider terms and the
   AI budget before each live promotion.
@@ -89,9 +125,9 @@ when qualifying an environment.
 
 ### Vercel and Supabase
 
-- While the limits continue to fit, keep one shared non-production Supabase
-  project and one live hobby project within the Free allowance. Do not create
-  hidden long-lived environments.
+- Keep one explicitly named shared non-production Supabase project and one
+  isolated live Production project only while their selected plans and limits
+  qualify. Do not create hidden long-lived environments.
 - Pin the Vercel and Supabase regions together to avoid unnecessary latency and
   data transfer.
 - Set database statement timeouts, bounded pagination, indexes for policy/RLS
@@ -106,9 +142,26 @@ when qualifying an environment.
 
 - Put model/provider access behind a server-only adapter; browsers never receive
   provider credentials.
-- Configure per-user and global rate limits, request timeout, retry cap with
-  jitter, concurrency cap, maximum input/retrieval/output tokens, and maximum
-  retrieved chunks.
+- Every policy-answer and report-draft provider call first reserves one slot in
+  the shared private PostgreSQL limiter using the already-authorized opaque
+  account UUID. The atomic reservation enforces both the global monthly ceiling
+  and per-account fair-use controls. It stores no name, employee number, prompt,
+  response, citation, incident, report, or policy content.
+- `AI_GENERATION_ENABLED=false`, a failed budget check, or reaching
+  `AI_BUDGET_STOP_PERCENT` of `AI_MONTHLY_REQUEST_CAP` prevents the provider
+  request. The API returns an honest temporary-unavailable message while
+  authentication, policy browsing, forms, and saved records remain available.
+- The fail-closed defaults limit one account to 5% of the effective monthly
+  total, six requests per operation per minute, two concurrent provider calls,
+  and a 90-second crash-recovery lease. Configure these with
+  `AI_ACCOUNT_MONTHLY_SHARE_PERCENT`, `AI_ACCOUNT_SHORT_WINDOW_MAX`,
+  `AI_ACCOUNT_CONCURRENCY_MAX`, and `AI_REQUEST_LEASE_SECONDS`; the monthly
+  share cannot exceed 20%, so one account cannot consume the shared total.
+- Provider requests receive an abort deadline five seconds shorter than their
+  database concurrency lease. A still-running request therefore cannot outlive
+  its lease and silently free another concurrency slot.
+- Keep request timeout, retry cap with jitter, maximum input/retrieval/output
+  tokens, and maximum retrieved chunks bounded.
 - Cache only provider-neutral answers that contain no user or operational
   content. Key the cache by corpus version, retrieval configuration, model
   alias, and prompt-template version.
@@ -116,9 +169,10 @@ when qualifying an environment.
   spend more tokens to invent one.
 - Track cost per qualified request and daily/monthly aggregate without storing
   the request text.
-- Implement a budget circuit breaker that disables nonessential AI calls while
-  leaving authentication, policy browsing, and an honest unavailable state
-  operational.
+- Keep the OpenAI project budget and alerts as a second independent control. The
+  repository breaker counts requests, not currency or tokens, so the owner must
+  still approve the monthly request cap, stop percentage, models, provider spend
+  limit, and alert thresholds before Production is enabled.
 
 ## Dashboards and reviews
 

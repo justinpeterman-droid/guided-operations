@@ -7,9 +7,9 @@
 - **Source reference:** `justinpeterman-droid/prison-policy-ai` at
   `ebe52c4b977ab742975974732beec42fff1bbce5`
 
-**Use classification:** Personal, non-commercial hobby app for a small invited
-group of officers. It is not an official agency/facility system, and it is not
-authorized for real operational data.
+**Use classification:** Private single-facility application. The owner has
+authorized real operational and personal data in the isolated Production
+environment only after release gates pass. Non-production remains fictional.
 
 This document is the entry point for the replacement product. It records what
 the product is, what it is not, which constraints are non-negotiable, and where
@@ -17,14 +17,21 @@ the detailed product and migration contracts live.
 
 ## Status truth
 
-The new repository currently contains a Next.js foundation, Supabase
-connection/migration scaffolding, a liveness route, shared visual tokens, a
-tested pure Count Sheet calculation/schema slice, and a tested policy-answer
-grounding schema. These are useful technical and contract foundations; they are
-not accepted end-user feature parity. The hosted Supabase foundation now exists,
-but there is still no complete migrated product route, production
-authentication, application-to-Supabase environment linkage, migrated RAG
-corpus, verified Vercel production deployment, or Google Cloud retirement.
+The new repository now contains protected officer, account, incident/report,
+Policy Expert, and administrator implementation slices; guarded individual
+authentication/account lifecycle; private versioned database/RPC boundaries;
+Count Sheet persistence; strict AI adapters and corpus provenance; redacted core
+telemetry; and automated local fictional database-plus-Storage recovery. These
+are substantial implementation evidence, but no end-user feature has passed all
+parity, hosted fictional qualification, accessibility/print, corpus, recovery,
+and owner-acceptance gates.
+
+The Vercel project is Git-connected and protected Previews build the branch. The
+Development Supabase project remains empty and does not have the newest forward
+migrations or hosted accounts. There is still no isolated Production Supabase
+project, approved real corpus, complete protected Forms/Count Sheet
+qualification, hosted backup/restore and monitoring proof, production promotion,
+or Google Cloud retirement.
 
 Use these labels in plans, issues, pull requests, and documentation:
 
@@ -75,33 +82,33 @@ action.
   account management, and cited policy guidance.
 - Administrator incident oversight, paperwork, account/staff administration,
   audit visibility, and system health.
-- Existing authorized policy/RAG source material may be the only real content
-  used during the current build and validation scope.
+- Production may hold minimum-necessary authorized operational/personal records
+  and approved policy/RAG source material after release qualification.
 - Vercel for the web application and server runtime; Supabase for Postgres,
   authentication support, private object storage, and vector retrieval.
 - Provider-neutral AI interfaces. OpenAI is acceptable as an initial provider,
   but domain code must not depend directly on one provider's response shape.
 - United States regions for application data, storage, logs, and AI processing
   when the selected services support region choice.
-- Vercel Hobby and Supabase Free are the preferred starting plans for the
-  personal, non-commercial, non-operational app when current terms and quotas
-  permit. OpenAI remains usage-priced. Any official organizational adoption or
-  real-data use triggers a new plan/vendor/readiness decision.
+- Vercel and Supabase plans must meet the required protection, recovery,
+  retention, and capacity controls before real-data release. OpenAI remains
+  usage-priced and provider data controls require approval.
 
 ## Current data authorization boundary
 
-The replacement is not currently authorized to contain real personnel, incident,
-inmate, medical, evidence, account, or other operational records. Development,
-automated tests, screenshots, demonstrations, preview deployments, logs, and
-seeded databases must use clearly fictional data.
+Real personnel, incident, resident, medical, evidence, account, and operational
+records are authorized only in Production after the release gates pass.
+Development, automated tests, screenshots, demonstrations, preview deployments,
+logs, and seeded databases must use clearly fictional data.
 
-The only permitted real source material is the existing policy/RAG corpus after
-its provenance, access rights, retention, and processing rights are verified.
-Corpus files are private content and are not committed to Git by default.
+Outside isolated Production, the only permitted real source material is the
+existing policy/RAG corpus after its provenance, access rights, retention, and
+processing rights are verified. Corpus files are private content and are not
+committed to Git by default.
 
-Moving to real operational data in the future requires a separate, explicit
-approval and a completed security, privacy, retention, backup,
-incident-response, and operational-readiness review.
+See
+[`docs/operations/real-data-governance.md`](docs/operations/real-data-governance.md)
+for the owner approval, two-year retention rule, and remaining release controls.
 
 ## Product principles
 
@@ -159,6 +166,9 @@ The target boundary is:
 
 - [Product Principles](docs/product/principles.md) — decisions that
   implementation may not weaken.
+- [Experience Design Brief](docs/product/experience-design-brief.md) —
+  owner-approved visual direction, command-center hierarchy, responsive
+  behavior, and design acceptance checklist.
 - [Roles and Permissions](docs/product/roles-and-permissions.md) — identity,
   role, and authorization matrix.
 - [Feature Catalog and Parity](docs/product/feature-catalog-and-parity.md) —

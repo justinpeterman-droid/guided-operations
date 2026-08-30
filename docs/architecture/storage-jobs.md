@@ -72,6 +72,17 @@ a signed URL is used, make it single-purpose and very short-lived. Treat it as
 an unrevocable bearer until expiry and do not log it or place it in referrer
 paths.
 
+The implemented policy-source path is
+`GET /api/web/v1/policy-sources/{documentVersionId}`. It does not issue a signed
+URL or expose browser Storage access. A session-bound database function first
+authorizes one exact approved content-addressed object. A narrow server-only
+reader uses that same user session, and Storage RLS independently rechecks the
+facility, rights, lifecycle, and object path before download. The server then
+rechecks PDF MIME type, byte count, signature, and SHA-256 before responding
+with non-cacheable same-origin headers. Application browser code has no direct
+Storage client or readable token; anonymous listing and every browser write
+remain denied. Routine reads never use the Supabase secret credential.
+
 ## Authoritative job state
 
 Supabase Queue messages are delivery signals. `app_private.ai_jobs` or a general
@@ -127,6 +138,23 @@ Suggested logical queues:
 - policy-ingestion
 - embeddings
 - document-exports
+
+### Local policy extraction exception
+
+The implemented MinerU policy extractor is a bounded local batch tool, not an
+interactive Vercel job. It runs on the authorized Windows workstation so OCR has
+no per-page cloud API charge and may use the local NVIDIA GPU. Source bytes and
+normalized text never enter a queue message. The local checkpoint records only
+private artifacts under the operator-selected working directory; database
+commits are short, per-document imports performed after extraction and
+validation finish.
+
+Checkpoint identity is the source SHA-256 plus the extraction, normalization,
+and chunking configuration hashes. A completed identity is skipped, an
+interrupted attempt can resume, and a forced attempt creates a new numbered
+directory. Safe database failure fields and batch reports contain collection,
+hashes, counts, timing, and controlled error codes—not policy text, credentials,
+or original absolute paths.
 
 Start with fewer queues if visibility/retry requirements are identical. Split
 only when isolation, concurrency, or alerting requires it.
@@ -211,12 +239,16 @@ reintroduce Google hosting.
 - Corpus source versions follow records-owner retention and legal-hold rules.
 - Derived text/vectors may be regenerated only while original bytes,
   configuration, and provenance remain available.
-- Exports have an explicit short retention unless records policy requires more.
+- Controlled Production exports follow the approved two-year record rule;
+  fictional Preview/local artifacts remain short-lived and contain no real data.
 - Quarantine and abandoned upload intents expire quickly after review.
 - Database backups do not include Storage bytes; back up objects and metadata
   separately and test cross-reconciliation.
 - Deletion is a two-step authorized lifecycle operation with object/database
   reconciliation. No broad recursive delete is part of application code.
+- A database eligibility date or released hold never grants Storage deletion
+  authority. The job must recheck active holds and reconcile every included
+  database row, object, export, and backup before an owner-approved cleanup.
 
 ## Required tests
 

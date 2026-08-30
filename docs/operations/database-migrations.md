@@ -44,7 +44,7 @@ Once the Supabase CLI foundation exists:
    supabase db reset --local
    ```
 
-4. Run database lint, pgTAP/schema/RLS tests, generated-type drift checks,
+4. Run database lint, pgTAP/schema/RLS tests, `npm run db:types:check`,
    application integration tests, and concurrency tests.
 5. Regenerate TypeScript database types from the local schema and commit the
    reviewed result.
@@ -112,6 +112,32 @@ A remote reset is permitted only for the explicitly disposable non-production
 project, with target verification and owner/operator awareness. Never run
 `supabase db reset --linked` against production.
 
+### Shared non-production history reconciliation
+
+If a migration was applied through a provider API that generated its own
+timestamp, the shared non-production history can contain the correct migration
+name and SQL lineage under a different version than the repository. Do not
+blindly run `migration repair`, reset the project, or reapply the SQL.
+
+1. Prove the target is the intended non-production project and contains only
+   fictional or empty data.
+2. Compare the complete ordered local and remote migration inventories.
+3. Confirm each mismatched item has the same name, relative order, affected
+   objects, function behavior, grants, and RLS boundary. Record any metadata or
+   schema drift separately.
+4. When the shared version is the established version and changing the local
+   filename does not reorder migrations, rename the repository migration to that
+   shared version. Do not alter its SQL.
+5. Correct any proven schema or metadata drift with a new forward migration; do
+   not hide it by editing shared SQL or migration history.
+6. Rebuild from zero, rerun lint/pgTAP/types/inventory checks, verify that the
+   remote history is now an exact repository prefix, and then run a linked
+   dry-run before any apply.
+
+This reconciliation path is limited to the shared non-production environment.
+Production history must already be an exact prefix of the approved candidate and
+may be changed only by the protected production workflow.
+
 ## Production sequence
 
 **AUTOMATED:** CI proves replay and compatibility. **OWNER:** approves the exact
@@ -133,6 +159,45 @@ migration set. **MANUAL/AUTOMATED:** a protected production job applies it.
 9. Verify migration history, constraints, RLS, error rate, latency, connections,
    locks and audit events.
 10. Record outcome. Cleanup/contraction migrations occur in a later release.
+
+The per-account AI fair-use migration is intentionally fail-closed during this
+order: its legacy identity-free reservation signature remains callable for
+rolling compatibility but always denies provider capacity. From migration apply
+until the new application is promoted, AI assistance shows the honest
+temporary-unavailable state while authentication, forms, saved records, and
+policy browsing remain available. Schedule and announce this brief maintenance
+window. An application rollback remains safe but keeps AI unavailable; restore
+the fair-use-capable application rather than re-enabling identity-free AI.
+
+### Protected production workflow
+
+`.github/workflows/production-database.yml` is the only repository automation
+allowed to run production migrations. It is manual-only and never runs on a
+push, pull request, schedule, or deployment. The job checks out the exact
+40-character candidate SHA without push credentials and fails unless all of
+these agree:
+
+- the checked-out SHA and clean tree;
+- the candidate's final 14-digit migration version;
+- the protected 20-character Supabase project reference and `us-east-1` region;
+- the dedicated TLS-protected database URL's project identity;
+- the externally configured `PRODUCTION_MIGRATION_ENABLED=true` gate;
+- a bounded owner approval reference; and
+- the exact typed `DRY-RUN <SHA>` or `APPLY <SHA>` confirmation.
+
+Every request first proves the remote migration history is an exact prefix of
+the candidate and runs `supabase db push --dry-run --skip-vault`. Apply is a
+separate manual workflow request and additionally requires references to a
+reviewed dry-run run and verified database-plus-Storage backup. After apply, the
+job requires the remote history to reach the exact candidate head. It retains
+only hashes, byte counts, run identifiers, bounded references, and timestamps;
+raw command output, SQL, project references, connection strings, and data are
+not uploaded.
+
+The workflow is implemented but remains unusable until the owner configures and
+protects the `production-database` GitHub environment. Do not add its variables
+or credential at repository scope, and do not run apply until every preceding
+release and backup gate is satisfied.
 
 ## Recovery
 

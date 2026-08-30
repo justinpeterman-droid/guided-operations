@@ -1,0 +1,1324 @@
+openapi: 3.1.0
+info:
+  title: Guided Operations browser API
+  version: web-v1
+  description: |
+    Same-origin browser API for the private application. This contract documents
+    only implemented endpoints. Non-production content is fictional; Production
+    may hold owner-authorized operational records only after every release gate.
+servers:
+  - url: /
+paths:
+  /api/web/v1/incidents:
+    get:
+      summary: List authorized incident summaries
+      operationId: listIncidents
+      security:
+        - cookieSession: []
+      parameters:
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 50
+      responses:
+        "200":
+          description: Bounded incident summaries for the current account.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncidentListResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      summary: Create the first immutable incident revision
+      operationId: createIncident
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [revision]
+              properties:
+                revision:
+                  $ref: "#/components/schemas/IncidentRevisionInput"
+      responses:
+        "201":
+          description:
+            Incident created once for the authenticated actor and idempotency
+            key.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/IncidentCreatedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/policy-answer:
+    post:
+      summary: Answer a policy question from verified cited evidence
+      operationId: answerPolicyQuestion
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [question]
+              properties:
+                question:
+                  type: string
+                  minLength: 3
+                  maxLength: 2000
+      responses:
+        "200":
+          description:
+            Citation-validated answer or an evidence insufficiency result.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PolicyAnswerResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/reports/{reportId}/print:
+    post:
+      summary: Record a protected request to print the current complete report
+      operationId: recordReportPrintRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: reportId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReportPrintInput"
+      responses:
+        "201":
+          description:
+            The redacted print request was recorded for the exact current
+            complete revision; this does not claim physical or PDF output
+            completed.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReportPrintRecordedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets:
+    get:
+      summary:
+        Load the current account's assigned-shift Count Sheet for one date
+      operationId: getCurrentShiftCountSheet
+      security:
+        - cookieSession: []
+      parameters:
+        - in: query
+          name: work_date
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description:
+            The current immutable revision, or a blank exact approved form when
+            the assigned shift has no revision for that date.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetLoadedResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      summary: Create or append the current assigned shift's Count Sheet
+      operationId: saveCountSheet
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetSaveInput"
+      responses:
+        "201":
+          description:
+            The database created a first immutable revision or appended exactly
+            the next immutable revision for the current account's assigned
+            shift.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetSavedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/revisions:
+    get:
+      summary: List or inspect authorized immutable Count Sheet revisions
+      operationId: getCountSheetRevisions
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: revision_number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description:
+            No more than the latest 100 authorized revision summaries, or one
+            exact authorized saved snapshot when revision_number is present.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                oneOf:
+                  - $ref: "#/components/schemas/CountSheetRevisionListResponse"
+                  - $ref: "#/components/schemas/CountSheetRevisionDetailResponse"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/restore:
+    post:
+      summary: Restore a prior Count Sheet snapshot as a new revision
+      operationId: restoreCountSheetRevision
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetRestoreInput"
+      responses:
+        "201":
+          description: A new immutable revision copied the selected snapshot.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetRestoredResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/count-sheets/{recordId}/print:
+    post:
+      summary: Record a protected request to print the current saved Count Sheet
+      operationId: recordCountSheetPrintRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetPrintInput"
+      responses:
+        "201":
+          description:
+            The redacted print request was recorded for the exact current saved
+            revision; this does not claim physical or PDF output completed.
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                example: private, no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetPrintRecordedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork:
+    get:
+      summary: Open one administrator-only Daily Paperwork form
+      operationId: getDailyPaperwork
+      security:
+        - cookieSession: []
+      parameters:
+        - in: query
+          name: kind
+          required: true
+          schema:
+            $ref: "#/components/schemas/DailyPaperworkKind"
+        - in: query
+          name: work_date
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: shift_code
+          required: true
+          schema:
+            type: string
+            enum: [A, B, C, D, U, F]
+      responses:
+        "200":
+          description:
+            Exact current revision or a server-derived blank approved form.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPaperworkLoadedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+    post:
+      summary: Create or append an administrator-only Daily Paperwork revision
+      operationId: saveDailyPaperwork
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DailyPaperworkSaveInput"
+      responses:
+        "201":
+          description: One immutable revision was appended.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DailyPaperworkSavedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "423":
+          description: The historical template lineage is read-only.
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/revisions:
+    get:
+      summary:
+        List or inspect administrator-authorized Daily Paperwork revisions
+      operationId: getDailyPaperworkRevisions
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: revision_number
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+      responses:
+        "200":
+          description:
+            Bounded revision summaries or one exact historical snapshot.
+          content:
+            application/json:
+              schema:
+                type: object
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "404":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/restore:
+    post:
+      summary: Restore exact Daily Paperwork history as a new revision
+      operationId: restoreDailyPaperworkRevision
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetRestoreInput"
+      responses:
+        "201":
+          description: The prior exact snapshot was appended as a new revision.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetRestoredResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/daily-paperwork/{recordId}/print:
+    post:
+      summary:
+        Record a request to print the current saved Daily Paperwork revision
+      operationId: recordDailyPaperworkPrintRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - in: path
+          name: recordId
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - $ref: "#/components/parameters/IdempotencyKey"
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CountSheetPrintInput"
+      responses:
+        "201":
+          description: A redacted current-revision print request was recorded.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CountSheetPrintRecordedResponse"
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          $ref: "#/components/responses/RevisionConflict"
+        "415":
+          $ref: "#/components/responses/InvalidRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+components:
+  securitySchemes:
+    cookieSession:
+      type: apiKey
+      in: cookie
+      name: sb-<project-ref>-auth-token
+      description:
+        Managed HttpOnly session cookies; clients never read or send a bearer
+        token.
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      schema:
+        type: string
+        pattern: "^[A-Za-z0-9_-]{16,128}$"
+    CsrfToken:
+      name: X-CSRF-Token
+      in: header
+      required: true
+      schema:
+        type: string
+        minLength: 1
+  responses:
+    InvalidRequest:
+      description: The request failed closed validation.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    AuthenticationRequired:
+      description: The current session is missing or not authorized.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RequestNotAllowed:
+      description: The authenticated actor cannot perform this action.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ServiceUnavailable:
+      description: A dependency could not safely complete the request.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RevisionConflict:
+      description:
+        A newer immutable revision exists; no values were overwritten.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+  schemas:
+    DailyPaperworkKind:
+      type: string
+      enum:
+        - assignment_roster
+        - uniform_inspection
+        - metal_detector_test
+        - perimeter_check
+        - random_search_log
+        - detector_sign_out
+    DailyPaperworkPayload:
+      type: object
+      additionalProperties: false
+      required: [schema_version, fields, tables]
+      properties:
+        schema_version:
+          type: integer
+          const: 1
+        fields:
+          type: object
+          additionalProperties:
+            type: [string, integer, boolean, "null"]
+        tables:
+          type: object
+          additionalProperties:
+            type: array
+            maxItems: 500
+            items:
+              type: object
+              additionalProperties:
+                type: [string, integer, boolean, "null"]
+    DailyPaperworkLoadedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          description:
+            Exact private template metadata, bounded field schema, values, and
+            immutable head metadata. The response is administrator-only and
+            private/no-store.
+          required:
+            - kind
+            - title
+            - workDate
+            - shiftCode
+            - templateId
+            - templateVersion
+            - sourceRevision
+            - printOrientation
+            - capabilities
+            - structure
+            - fieldSchema
+            - editable
+            - recordId
+            - currentRevisionNumber
+            - payload
+          properties:
+            kind:
+              $ref: "#/components/schemas/DailyPaperworkKind"
+            title:
+              type: string
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            templateId:
+              type: string
+              format: uuid
+            templateVersion:
+              type: integer
+              minimum: 1
+            sourceRevision:
+              type: string
+            printOrientation:
+              type: string
+              enum: [portrait, landscape]
+            capabilities:
+              type: array
+              items:
+                type: string
+                enum: [screen, print, pdf]
+            structure:
+              type: object
+            fieldSchema:
+              type: object
+            editable:
+              type: boolean
+            recordId:
+              type: [string, "null"]
+              format: uuid
+            currentRevisionNumber:
+              type: integer
+              minimum: 0
+            payload:
+              $ref: "#/components/schemas/DailyPaperworkPayload"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    DailyPaperworkSaveInput:
+      type: object
+      additionalProperties: false
+      required:
+        - kind
+        - workDate
+        - shiftCode
+        - baseRevisionNumber
+        - payload
+        - reason
+      properties:
+        kind:
+          $ref: "#/components/schemas/DailyPaperworkKind"
+        workDate:
+          type: string
+          format: date
+        shiftCode:
+          type: string
+          enum: [A, B, C, D, U, F]
+        baseRevisionNumber:
+          type: integer
+          minimum: 0
+        payload:
+          $ref: "#/components/schemas/DailyPaperworkPayload"
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    DailyPaperworkSavedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recordId, revisionNumber]
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            revisionNumber:
+              type: integer
+              minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    ReportPrintInput:
+      type: object
+      additionalProperties: false
+      required: [revisionNumber]
+      properties:
+        revisionNumber:
+          type: integer
+          minimum: 1
+    ReportPrintRecordedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recorded]
+          properties:
+            recorded:
+              type: boolean
+              const: true
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetLoadedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - recordId
+            - workDate
+            - shiftCode
+            - revisionNumber
+            - structure
+            - payload
+            - validation
+            - updatedAt
+          properties:
+            recordId:
+              type: [string, "null"]
+              format: uuid
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            revisionNumber:
+              type: integer
+              minimum: 0
+            structure:
+              type: object
+            payload:
+              type: object
+            validation:
+              type: object
+            updatedAt:
+              type: [string, "null"]
+              format: date-time
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetSaveInput:
+      type: object
+      additionalProperties: false
+      required: [workDate, baseRevisionNumber, structure, payload, reason]
+      properties:
+        workDate:
+          type: string
+          format: date
+        baseRevisionNumber:
+          type: integer
+          minimum: 0
+        structure:
+          type: object
+          additionalProperties: false
+          required:
+            - schema_version
+            - title
+            - columns
+            - areas
+            - operational_fields
+            - attachment_reminders
+          properties:
+            schema_version:
+              type: integer
+              const: 1
+            title:
+              type: string
+              minLength: 1
+              maxLength: 200
+            columns:
+              type: array
+              minItems: 1
+              maxItems: 64
+              items:
+                type: string
+                minLength: 1
+                maxLength: 160
+            areas:
+              type: array
+              minItems: 1
+              maxItems: 64
+              items:
+                type: string
+                minLength: 1
+                maxLength: 160
+            operational_fields:
+              type: array
+              minItems: 1
+              maxItems: 64
+              items:
+                type: string
+                minLength: 1
+                maxLength: 160
+            attachment_reminders:
+              type: array
+              minItems: 1
+              maxItems: 64
+              items:
+                type: string
+                minLength: 1
+                maxLength: 160
+        payload:
+          type: object
+          description:
+            Closed Count Sheet values matching the submitted structure. Totals
+            are not accepted from the browser and are recomputed by the
+            database.
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    CountSheetSavedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recordId, revisionNumber]
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            revisionNumber:
+              type: integer
+              minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRevisionListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [revisions]
+          properties:
+            revisions:
+              type: array
+              maxItems: 100
+              items:
+                type: object
+                additionalProperties: false
+                required:
+                  - revisionNumber
+                  - reason
+                  - validation
+                  - createdAt
+                  - isCurrent
+                  - restoredFromRevisionNumber
+                properties:
+                  revisionNumber:
+                    type: integer
+                    minimum: 1
+                  reason:
+                    type: string
+                    minLength: 1
+                    maxLength: 500
+                  validation:
+                    type: object
+                  createdAt:
+                    type: string
+                    format: date-time
+                  isCurrent:
+                    type: boolean
+                  restoredFromRevisionNumber:
+                    type: [integer, "null"]
+                    minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRevisionDetailResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required:
+            - recordId
+            - workDate
+            - shiftCode
+            - currentRevisionNumber
+            - revisionNumber
+            - reason
+            - payload
+            - validation
+            - restoredFromRevisionNumber
+            - createdAt
+          properties:
+            recordId:
+              type: string
+              format: uuid
+            workDate:
+              type: string
+              format: date
+            shiftCode:
+              type: string
+              enum: [A, B, C, D, U, F]
+            currentRevisionNumber:
+              type: integer
+              minimum: 1
+            revisionNumber:
+              type: integer
+              minimum: 1
+            reason:
+              type: string
+              minLength: 1
+              maxLength: 500
+            payload:
+              type: object
+            validation:
+              type: object
+            restoredFromRevisionNumber:
+              type: [integer, "null"]
+              minimum: 1
+            createdAt:
+              type: string
+              format: date-time
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetRestoreInput:
+      type: object
+      additionalProperties: false
+      required: [baseRevisionNumber, restoreRevisionNumber, reason]
+      properties:
+        baseRevisionNumber:
+          type: integer
+          minimum: 1
+        restoreRevisionNumber:
+          type: integer
+          minimum: 1
+        reason:
+          type: string
+          minLength: 1
+          maxLength: 500
+    CountSheetRestoredResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [revisionNumber]
+          properties:
+            revisionNumber:
+              type: integer
+              minimum: 1
+        meta:
+          $ref: "#/components/schemas/Meta"
+    CountSheetPrintInput:
+      type: object
+      additionalProperties: false
+      required: [revisionNumber]
+      properties:
+        revisionNumber:
+          type: integer
+          minimum: 1
+    CountSheetPrintRecordedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [recorded]
+          properties:
+            recorded:
+              type: boolean
+              const: true
+        meta:
+          $ref: "#/components/schemas/Meta"
+    IncidentRevisionInput:
+      type: object
+      additionalProperties: false
+      required:
+        - schemaVersion
+        - incidentName
+        - incidentNumber
+        - occurredAt
+        - category
+        - fieldNotes
+        - reviewedFacts
+      properties:
+        schemaVersion:
+          type: integer
+          const: 1
+        incidentName:
+          type: string
+          minLength: 1
+          maxLength: 160
+        incidentNumber:
+          type: string
+          minLength: 1
+          maxLength: 80
+        occurredAt:
+          type: string
+          format: date-time
+        category:
+          type: string
+          minLength: 1
+          maxLength: 100
+        fieldNotes:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, text, recordedAt]
+            properties:
+              id:
+                type: string
+                format: uuid
+              text:
+                type: string
+                minLength: 1
+                maxLength: 20000
+              recordedAt:
+                type: string
+                format: date-time
+        reviewedFacts:
+          type: array
+          maxItems: 300
+          description:
+            Must conform to the discriminated revision schema; confirmed facts
+            cite field-note IDs.
+          items:
+            type: object
+    IncidentSummary:
+      type: object
+      additionalProperties: false
+      required:
+        - incidentId
+        - incidentNumber
+        - displayName
+        - status
+        - occurredAt
+        - category
+        - currentRevisionNumber
+        - updatedAt
+      properties:
+        incidentId:
+          type: string
+          format: uuid
+        incidentNumber:
+          type: string
+        displayName:
+          type: string
+        status:
+          type: string
+        occurredAt:
+          type: string
+          format: date-time
+        category:
+          type: string
+        currentRevisionNumber:
+          type: integer
+          minimum: 1
+        updatedAt:
+          type: string
+          format: date-time
+    Meta:
+      type: object
+      additionalProperties: false
+      required: [request_id, api_version]
+      properties:
+        request_id:
+          type: string
+          format: uuid
+        api_version:
+          type: string
+          const: web-v1
+    IncidentListResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [incidents]
+          properties:
+            incidents:
+              type: array
+              items:
+                $ref: "#/components/schemas/IncidentSummary"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    IncidentCreatedResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [incidentId]
+          properties:
+            incidentId:
+              type: string
+              format: uuid
+        meta:
+          $ref: "#/components/schemas/Meta"
+    SourceCitation:
+      type: object
+      additionalProperties: false
+      required:
+        - documentId
+        - documentVersionId
+        - chunkId
+        - stableKey
+        - title
+        - versionLabel
+        - sourceSha256
+        - pageStart
+        - pageEnd
+        - sectionPath
+        - excerpt
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        documentVersionId:
+          type: string
+          format: uuid
+        chunkId:
+          type: string
+          format: uuid
+        stableKey:
+          type: string
+        title:
+          type: string
+        versionLabel:
+          type: string
+        sourceSha256:
+          type: string
+          pattern: "^[a-f0-9]{64}$"
+        pageStart:
+          type: [integer, "null"]
+        pageEnd:
+          type: [integer, "null"]
+        sectionPath:
+          type: [string, "null"]
+        excerpt:
+          type: string
+          maxLength: 1200
+    GroundedPolicyAnswer:
+      type: object
+      additionalProperties: false
+      required: [status, answer, citations, limitations]
+      properties:
+        status:
+          type: string
+          enum: [answered, insufficient_evidence, conflicting_sources]
+        answer:
+          type: string
+          minLength: 1
+          maxLength: 8000
+        citations:
+          type: array
+          maxItems: 12
+          items:
+            $ref: "#/components/schemas/SourceCitation"
+        limitations:
+          type: array
+          maxItems: 12
+          items:
+            type: string
+            maxLength: 500
+    PolicyAnswerResponse:
+      type: object
+      additionalProperties: false
+      required: [data, meta]
+      properties:
+        data:
+          type: object
+          additionalProperties: false
+          required: [outcome]
+          properties:
+            outcome:
+              oneOf:
+                - type: object
+                  additionalProperties: false
+                  required: [kind, answer]
+                  properties:
+                    kind:
+                      type: string
+                      const: answer
+                    answer:
+                      $ref: "#/components/schemas/GroundedPolicyAnswer"
+                - type: object
+                  additionalProperties: false
+                  required: [kind, answer]
+                  properties:
+                    kind:
+                      type: string
+                      const: insufficient_evidence
+                    answer:
+                      $ref: "#/components/schemas/GroundedPolicyAnswer"
+        meta:
+          $ref: "#/components/schemas/Meta"
+    ErrorResponse:
+      type: object
+      additionalProperties: false
+      required: [error, meta]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+        meta:
+          $ref: "#/components/schemas/Meta"

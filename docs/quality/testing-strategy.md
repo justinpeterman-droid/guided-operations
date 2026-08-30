@@ -12,24 +12,35 @@ under the controls in
 The command names below are target coverage contracts. They are not proof that
 separate scripts or CI jobs currently exist. The repository currently groups
 unit/component tests under npm test and also exposes npm run check, npm run
-test:e2e, and npm run db:test; inspect package.json for the current source of
-truth. As coverage matures, package scripts and CI must use the same underlying
-commands so local and automated results are comparable.
+test:e2e, npm run test:e2e:preview, npm run test:e2e:local-auth, npm run
+db:test, and npm run test:eval; inspect package.json for the current source of
+truth. `test:e2e:preview` runs only the public fictional Preview, accessibility,
+mobile, and print-safety checks and does not require a database.
+`test:e2e:local-auth` is the guarded officer/administrator workflow and requires
+the exact isolated local Supabase target. The synthetic evaluation command runs
+in Web quality CI with fictional passages and deterministic providers. The
+guarded authenticated browser command also runs in its own CI lane against
+isolated local Supabase and fictional qualification identities. Neither lane
+replaces the private approved-corpus or later hosted qualification. As coverage
+matures, package scripts and CI must use the same underlying commands so local
+and automated results are comparable.
 
-| Target           | Purpose                                                                                        |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| lint             | static linting                                                                                 |
-| typecheck        | TypeScript checking without emitting                                                           |
-| test:unit        | pure domain and utility tests                                                                  |
-| test:component   | isolated UI behavior                                                                           |
-| test:integration | Next.js/server adapter and local Supabase integration                                          |
-| test:db          | migrations, constraints, RLS, Auth, and Storage policy tests against local PostgreSQL/Supabase |
-| test:e2e         | authenticated browser workflows                                                                |
-| test:visual      | reviewed visual snapshots                                                                      |
-| test:print       | print/PDF layout and content assertions                                                        |
-| test:a11y        | automated accessibility checks                                                                 |
-| test:eval        | synthetic AI/RAG evaluation                                                                    |
-| build            | production build                                                                               |
+| Target              | Purpose                                                                                        |
+| ------------------- | ---------------------------------------------------------------------------------------------- |
+| lint                | static linting                                                                                 |
+| typecheck           | TypeScript checking without emitting                                                           |
+| test:unit           | pure domain and utility tests                                                                  |
+| test:component      | isolated UI behavior                                                                           |
+| test:integration    | Next.js/server adapter and local Supabase integration                                          |
+| test:db             | migrations, constraints, RLS, Auth, and Storage policy tests against local PostgreSQL/Supabase |
+| test:e2e:preview    | public fictional Preview, accessibility, responsive, and print-safety checks                   |
+| test:e2e            | complete browser set; requires the same environment as every selected test                     |
+| test:e2e:local-auth | guarded authenticated officer/administrator workflows against isolated local Supabase          |
+| test:visual         | reviewed visual snapshots                                                                      |
+| test:print          | print/PDF layout and content assertions                                                        |
+| test:a11y           | automated accessibility checks                                                                 |
+| test:eval           | synthetic AI/RAG evaluation                                                                    |
+| build               | production build                                                                               |
 
 CI must fail explicitly when a required target is absent. It must not silently
 skip a lane because a service, browser, corpus, or credential is unavailable.
@@ -109,10 +120,54 @@ Run critical smoke tests on each preview and the fuller suite on the pinned
 release candidate. Re-run an authenticated smoke against the exact production
 deployment only after owner-authorized promotion.
 
+The guarded `npm run test:e2e:local-auth` qualification command is restricted to
+the fixed loopback Supabase ports and requires the exact local confirmation
+flag. It resets only that disposable local database, provisions unmistakably
+fictional administrator and officer accounts through the private lifecycle
+functions, exercises private password sign-in plus officer report, incident,
+Count Sheet, output, sign-out, and administrator workflows, and resets the local
+database between roles and again after qualification. The Authenticated browser
+quality workflow starts the fixed local Supabase stack before invoking this same
+guarded command. It must never be pointed at Preview, staging, or Production and
+is not a substitute for the later protected hosted-browser qualification.
+State-changing authenticated specifications run once with one worker after a
+fresh reset; CI retries are disabled for those specifications so a failure is
+not hidden by retrying against already-mutated test state. On 2026-08-28 the
+guarded lane passed at commit `49f6413` after completing public mobile/print,
+officer Count Sheet, report/revision/Word-download, incident creation, sign-out,
+and administrator workflows with fictional data. At commit `d821926` the same
+lane also proved that an administrator disabling the fictional officer removes
+that officer's already-authenticated access and rejects the old credential with
+the generic sign-in failure (`33173353133`). At commit `571493c`, the guarded
+lane additionally created a dedicated fictional timing-defense identity and
+proved that known-wrong and unknown employee sign-ins return the same public
+failure and no-store policy with no more than a 300 ms median response-time
+difference in isolated local CI (`33176099890`). At commit `a045a43`, the same
+lane signs one fictional officer into two separate browser contexts, performs
+**Sign out everywhere** in the first, proves the second is immediately denied on
+a protected page, and proves the credential can establish a fresh session
+afterward. The database suite separately proves the two-phase authority changes
+and bounded fail-closed token-hook behavior. At commit `277c942`, that
+qualification additionally replaces the fictional officer's personal passcode,
+proves the other active browser is denied, and signs in again with the
+replacement credential. Database tests prove an overlapping change is rejected
+and the intermediate token generation cannot receive application authority. At
+commit `9a01c92`, the lane first builds the Next.js application and serves the
+built output with the Production-style server instead of relying on the
+development server. Run `33189510850` passed the complete guarded flow,
+including the automated accessibility sweep and the final administrator account
+lifecycle checks. Web quality (`33189510880`), Database quality (`33189510822`),
+and Recovery rehearsal (`33189510855`) also passed on that exact commit.
+
 ## PostgreSQL, RLS, Auth, and Storage matrix
 
 Every protected table, view, RPC, and bucket needs an explicit matrix. At
 minimum test:
+
+`npm run db:lint` checks the application-owned `api`, `app_private`, and
+`public` schemas and fails on warnings. The bundled `extensions` schema is
+excluded because it contains provider-managed pgTAP helper functions used only
+by the database test runner; those helpers are not application code.
 
 | Actor/state                   | Expected checks                                                           |
 | ----------------------------- | ------------------------------------------------------------------------- |
@@ -244,6 +299,15 @@ Automated checks are required but not sufficient. Test:
 The target is WCAG 2.2 AA unless the owner documents a stricter requirement.
 Before pilot, include manual review with representative assistive technology and
 resolve or explicitly owner-accept every known blocker.
+
+The public browser qualification injects the pinned `axe-core` engine into the
+home, sign-in, account, forms, and fictional preview routes. It fails on any
+WCAG 2.0/2.1 A or AA or WCAG 2.2 AA violation, console/page error, or failed
+request. The same qualification requires a visible keyboard focus indicator and
+checks the fictional preview routes at a 390-by-844 viewport with reduced motion
+enabled for horizontal overflow and usable main content. This automated sweep
+does not replace manual screen-reader, 200/400 percent zoom/reflow, visual, or
+print acceptance on the protected release candidate.
 
 ## CI lanes and release execution
 

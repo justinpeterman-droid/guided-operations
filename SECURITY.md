@@ -13,18 +13,27 @@ use real operational/personnel data to demonstrate a finding.
 
 ## Current state versus target
 
-The repository now has a static foundation page, health route, Supabase client
-factories, an initial locked `app_private` migration with fictional seed and
-pgTAP checks, Count Sheet domain tests, and a grounded-policy schema. The empty
-foundation migration is applied to a new Supabase Free project in `us-east-1`,
-and a protected Vercel Preview deployment was created. The application is not
-yet connected to Supabase, the Vercel project is not linked to GitHub, and the
-protected hosted application content has not been remotely verified. The
-migration deliberately grants no runtime role access; authentication, authorized
-RPC/DAL paths, complete RLS policies, queues, corpus ingest/retrieval, exports,
-and most controls below remain implementation work. A missing target control is
-a gap; code that claims to establish a boundary but fails to do so is a security
-finding.
+The repository now has guarded employee-number/passcode authentication,
+current-session authorization, forced/personal passcode changes, logout and
+revocation paths, protected account lifecycle with purpose-bound administrator
+step-up, narrow private RPCs, append-only product records, private Storage
+negative tests, a session-bound content-verified policy PDF reader,
+citation-validated AI routes, complete runtime readiness, secret scanning, and
+strict allowlisted core operational events. Supabase access/refresh sessions are
+now held only by server code inside an authenticated encrypted HttpOnly cookie
+envelope; a fictional browser test proves the alias and raw tokens are not
+browser-readable. Local fictional database-plus-Storage recovery is automated
+and tested.
+
+These controls are not hosted security acceptance. The shared Development
+Supabase project remains empty and behind the repository migration head; no
+hosted account exists. The current candidate still needs hosted
+recovery/email/log/analytics non-exposure proof, cookie expiry and
+revoked-session tests, complete hosted RLS/API/Storage negatives, full
+officer/administrator browser qualification, real-corpus security evaluation,
+hosted recovery, monitoring/alerts, retention/deletion proof, and an isolated
+Production environment. A missing target control is a gap; code that claims to
+establish a boundary but fails to do so is a security finding.
 
 The target is a private, internet-reachable web application:
 
@@ -35,23 +44,25 @@ The target is a private, internet-reachable web application:
 - one facility and no public user registration;
 - no Google hosting or Google Cloud runtime dependency.
 
-Its present use classification is a personal, non-commercial hobby app for a
-small invited group of officers. It is not an agency/facility system, and real
-operational data remains prohibited. Any later official adoption reopens plan,
-vendor, records, privacy, recovery, and security approval.
+Its present target is an isolated private Production deployment for the owner's
+authorized real operational and personal data. This is not a claim of agency,
+legal, regulatory, or vendor compliance. Real-data entry remains blocked until
+the documented release gates pass; see
+[docs/operations/real-data-governance.md](docs/operations/real-data-governance.md).
 
 ## Data classification
 
-| Class                        | Examples                                                                                    | Allowed environments                                                                |
-| ---------------------------- | ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
-| Restricted reference content | Real policy manuals, forms, directives, source PDFs, derived text, embeddings               | Approved Supabase projects and authorized local ingest only                         |
-| Security metadata            | Auth user IDs, employee-number lookup values, roles, account status, session/audit metadata | Environment-specific Supabase Auth/PostgreSQL; never fixtures or logs               |
-| Operational product data     | Incidents, inmate details, reports, field notes, rosters, paperwork                         | Fictional only until a separate owner/security/records approval changes this policy |
-| Public                       | Deliberately public marketing copy, if later added                                          | Public web assets only after review                                                 |
+| Class                        | Examples                                                                                    | Allowed environments                                                                         |
+| ---------------------------- | ------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| Restricted reference content | Real policy manuals, forms, directives, source PDFs, derived text, embeddings               | Approved Supabase projects and authorized local ingest only                                  |
+| Security metadata            | Auth user IDs, employee-number lookup values, roles, account status, session/audit metadata | Environment-specific Supabase Auth/PostgreSQL; never fixtures or logs                        |
+| Operational product data     | Incidents, resident details, reports, field notes, rosters, paperwork                       | Production only after real-data release gates; prohibited in all non-production environments |
+| Public                       | Deliberately public marketing copy, if later added                                          | Public web assets only after review                                                          |
 
-The current product authorization permits real policy/reference content only. It
-does not permit real incident, inmate, report, roster, or operational paperwork
-data.
+The owner authorizes real operational and personal data in Production only.
+Local, CI, Preview, staging, Git, logs, screenshots, and test fixtures remain
+fictional/synthetic. The two-year retention and deletion rules are in
+[docs/operations/real-data-governance.md](docs/operations/real-data-governance.md).
 
 ## Trust boundaries
 
@@ -94,10 +105,25 @@ payload, signed URL, nor AI answer is an authority.
 - Pre-auth account resolution is server-only through a dedicated execute-only
   function/role; it must not use a browser-callable endpoint or the broad
   service role.
-- Session tokens live only in Secure, HttpOnly, SameSite cookies managed on the
-  server. Do not place tokens in localStorage or application logs.
+- Raw session tokens and the synthetic Auth alias live only in server-managed
+  authenticated ciphertext. The browser receives versioned HttpOnly,
+  SameSite=Lax cookies that are Secure outside explicit local development/test;
+  it never receives a decodable access token, refresh token, provider user
+  object, or alias. Do not place those values in localStorage or logs.
+- The session-cookie encryption key is a dedicated 32-byte random secret. It is
+  never reused for lookup, CSRF, or idempotency. Rotation invalidates every
+  existing application cookie and therefore requires a planned sign-in-again
+  event.
 - Session refresh, rotation, expiry, logout-all, disabled-account behavior, and
   credential-change revocation require integration tests.
+- Global sign-out advances the account authority before contacting the Auth
+  provider, denies token issuance during a bounded reconciliation window, and
+  advances authority again before clearing that window. The route must not claim
+  success unless provider revocation and the final database seal both succeed.
+- Personal passcode replacement uses the same bounded reconciliation window. It
+  updates the provider credential and revokes provider sessions before the
+  database seals the new application authority; a partial failure remains fail
+  closed and is never reported as a completed change.
 - Administrative or destructive actions require a recent, purpose-bound step-up
   check. The step-up artifact is short-lived and single-use.
 
@@ -135,8 +161,10 @@ payload, signed URL, nor AI answer is an authority.
 
 - The browser never calls an AI provider directly and never receives provider
   credentials.
-- Only the approved policy/reference corpus may contain real content.
-  Operational prompts and evaluation fixtures remain fictional.
+- Production AI requests may contain the minimum necessary authorized record or
+  policy content only after the provider data-control and retention gate passes.
+  Operational prompts and evaluation fixtures remain fictional outside the
+  isolated Production workflow.
 - Retrieved documents are untrusted data. Instructions inside a source document
   cannot change system policy, tool permissions, or output rules.
 - Policy answers require verifiable source/version/page or section citations.
@@ -210,7 +238,8 @@ infrastructure configuration, prompts, or test utilities.
 
 These conditions are not vulnerabilities by themselves:
 
-- the documented local foundation lacks later target features;
+- the documented implementation candidate lacks later target features or live
+  qualification;
 - a free development project may pause or have small quotas;
 - fictional preview data is visible to authorized preview reviewers;
 - an optional worker provider has not yet been selected.

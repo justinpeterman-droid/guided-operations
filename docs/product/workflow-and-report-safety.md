@@ -23,11 +23,12 @@ official output.
 
 ## A. Data authorization boundary
 
-**SAFE-001 — Fictional operational data only.** Until a separate real-data
-approval is recorded, source control, local/preview/production-like databases,
+**SAFE-001 — Production-only real operational data.** The owner authorized real
+operational and personal data only in the isolated Production environment after
+all release gates pass. Source control, local development, CI, Preview, staging,
 tests, screenshots, traces, support examples, logs, and demos use fictional
-personnel and operational data. The only real content permitted is authorized
-RAG source material.
+personnel and operational data. Authorized RAG source material follows its
+separate corpus-handling rules.
 
 **SAFE-002 — No production fallback fixtures.** Empty or failed authorized
 queries render an honest empty/error state. They never render sample incidents,
@@ -56,6 +57,17 @@ Proposed values cannot populate official output as confirmed facts.
 base incident revision, confirmed values, explicit unknown/not-applicable
 values, and extraction/rule version. A bulk “accept” action must still make the
 reviewed scope clear.
+
+**SAFE-012a — Revision-local provenance.** Each confirmed fact references one or
+more field notes in the same immutable incident revision. A note from a
+different revision cannot provide silent provenance.
+
+**SAFE-012b — Officer-scoped facts.** Each confirmed fact records the selected
+reporting officers whose perspectives may use it. An empty scope means the fact
+is incident-only and cannot enter a generated report. When multiple reporting
+officers are selected, the user must assign every confirmed fact deliberately;
+generation and database storage both reject a fact outside the requested
+officer's scope.
 
 **SAFE-013 — Unknown remains unknown.** Missing values remain blank or
 explicitly Unknown/Not applicable according to the target form. The system
@@ -94,7 +106,8 @@ and generated-output state. The UI identifies what needs review again.
 
 **SAFE-030 — Generation input is pinned.** Every generation request references
 an immutable confirmed-fact revision, reporting officer relationship, report
-type, prompt/template version, and idempotency key.
+type, prompt/template version, and idempotency key. Every selected fact must
+also be explicitly scoped to that reporting officer.
 
 **SAFE-031 — Schema first.** Provider output is parsed into a strict domain
 schema. Unexpected fields, missing provenance, invalid identifiers, or unbounded

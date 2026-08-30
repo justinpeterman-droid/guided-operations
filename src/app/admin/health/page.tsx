@@ -1,0 +1,113 @@
+import Link from "next/link";
+
+import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getAdminSystemHealth } from "@/server/health/admin-system-health";
+
+export const dynamic = "force-dynamic";
+
+/** Protected, truthful status screen for the site and its Supabase connection. */
+export default async function AdminHealthPage() {
+  const result = await loadHealth();
+  if (result.kind === "denied") return <AccessRequired />;
+  if (result.kind === "unavailable") return <Unavailable />;
+
+  return (
+    <main className="reports-page">
+      <header className="workspace-header reports-header">
+        <Link className="workspace-brand" href="/admin">
+          <span className="brand-mark" aria-hidden="true">
+            GO
+          </span>
+          <span>
+            <span className="eyebrow">Guided Operations</span>
+            <strong>System health</strong>
+          </span>
+        </Link>
+        <div className="reports-header-actions">
+          <WorkspaceNavigation current="Home" />
+          <Link className="reports-home-link" href="/account">
+            Account
+          </Link>
+        </div>
+      </header>
+
+      <section className="reports-intro" aria-labelledby="health-title">
+        <p className="eyebrow">Administrator workspace</p>
+        <h1 id="health-title">System health</h1>
+        <p>
+          These are live, limited readiness checks. They do not expose keys,
+          database details, or private records.
+        </p>
+      </section>
+
+      <section className="admin-action-list" aria-label="System status">
+        <HealthItem title="Website" status={result.application} />
+        <HealthItem title="Supabase connection" status={result.supabase} />
+      </section>
+    </main>
+  );
+}
+
+function HealthItem({
+  title,
+  status,
+}: Readonly<{ title: string; status: "ready" | "unavailable" }>) {
+  const ready = status === "ready";
+  return (
+    <article>
+      <span aria-hidden="true">{ready ? "✓" : "!"}</span>
+      <div>
+        <h2>{title}</h2>
+        <p>{ready ? "Ready" : "Unavailable right now"}</p>
+      </div>
+      <em>{ready ? "Ready" : "Check needed"}</em>
+    </article>
+  );
+}
+
+async function loadHealth() {
+  try {
+    return await getAdminSystemHealth(await createSupabaseServerClient());
+  } catch {
+    return { kind: "unavailable" } as const;
+  }
+}
+
+function AccessRequired() {
+  return (
+    <main className="reports-page reports-message-page">
+      <section
+        className="reports-empty-state"
+        aria-labelledby="admin-access-title"
+      >
+        <p className="eyebrow">Private workspace</p>
+        <h1 id="admin-access-title">Administrator access is required.</h1>
+        <p>This system view is available only to a current administrator.</p>
+        <Link className="reports-home-link" href="/home">
+          Return to your workspace
+        </Link>
+      </section>
+    </main>
+  );
+}
+
+function Unavailable() {
+  return (
+    <main className="reports-page reports-message-page">
+      <section
+        className="reports-empty-state"
+        aria-labelledby="health-unavailable-title"
+      >
+        <p className="eyebrow">System health unavailable</p>
+        <h1 id="health-unavailable-title">
+          The status check cannot load right now.
+        </h1>
+        <p>No service settings have been changed.</p>
+        <Link className="reports-home-link" href="/admin">
+          Return to administrator workspace
+        </Link>
+      </section>
+    </main>
+  );
+}

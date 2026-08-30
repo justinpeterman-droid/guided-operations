@@ -246,6 +246,14 @@ Rules:
 
 ## Acquisition and inventory protocol
 
+Use the fail-closed
+[private corpus manifest verifier](private-corpus-manifest-verification.md) to
+bind the custodian-reviewed inventory to the exact original PDF bytes while
+keeping all source metadata and content outside Git and non-Production systems.
+Its value-free evidence is one input to R1 acceptance, not a substitute for
+custodian approval, hosted Storage qualification, retrieval evaluation, or
+restore proof.
+
 ### 1. Freeze a legacy export manifest
 
 From the currently authorized Google-side source/index location, export a
@@ -540,6 +548,40 @@ and revocation limitations. Private Git is still not a corpus access-control
 system.
 
 ## Migration stages and gates
+
+The repository contains the local-only R2 registry foundation in forward
+migration `20260826222000_add_policy_ingestion_provenance.sql`, refined for the
+local MinerU workflow by
+`20260828173000_add_local_policy_ingestion_pipeline.sql`. It records
+rights/current-version decisions, immutable ingestion identity, page evidence,
+canonical collection, extraction/chunking configuration and retry provenance,
+bounded chunk-to-page mappings, and ready-run QA/count checks. The exact source
+collections are `BMU policies`, `BMU Post Orders`, and `SD`; they are explicit
+metadata throughout ingestion and are never reconstructed from filenames.
+Retrieval now excludes non-current, rights-expired, provider-disallowed,
+non-ready, or non-approved page/chunk evidence. This is schema and
+fictional-test evidence only. `tools/policy-ingestion/` now supplies the
+resumable Windows MinerU extraction, validation, deterministic chunking,
+checkpoint, and private direct database-import foundation. No hosted migration,
+real source upload, extraction, corpus acceptance, or production cutover has
+occurred.
+
+Forward migration `20260828220000_enforce_policy_page_range_approval.sql` closes
+the page-QA egress gap. A bounded chunk is eligible only when every physical
+page in its inclusive range exists and is approved. Ready-run validation uses
+the same helper, evidence edits clear stale run/page/chunk QA, and row locks
+serialize those edits with the final provider-egress check. This preserves the
+historical citation/version model while preventing an interior missing or
+pending page from being hidden by approved range endpoints.
+
+Forward migration `20260828200000_add_collection_filtered_policy_retrieval.sql`
+adds the reviewed collection-aware lexical RPC. It keeps session/facility,
+rights, current-version, ready-run, approved-page, and approved-chunk checks in
+the database; rejects empty or unknown collection filters; and returns the
+immutable collection in each passage. The server citation contract now validates
+that collection and Policy Expert can search all collections or one exact
+collection. This remains local fictional-data proof until hosted migration,
+corpus QA, and release gates are completed.
 
 | Stage                      | Work                                                                                        | Exit gate                                                                                                        |
 | -------------------------- | ------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |

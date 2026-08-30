@@ -15,7 +15,9 @@ authorization services.
 
 ## Contract source of truth
 
-- Maintain an OpenAPI document for /api/web/v1.
+- The implemented `/api/web/v1` surface is specified in
+  [openapi-web-v1.yaml](openapi-web-v1.yaml). Expand it in the same change as
+  every implemented browser API endpoint.
 - Generate or validate shared TypeScript request/response types from the
   reviewed schema; do not let implementation types silently define the wire
   contract.
@@ -77,19 +79,21 @@ prompts, answers, or record content.
 
 ### Authentication and account
 
-| Method/path                     | Purpose                              | Special controls                                                          |
-| ------------------------------- | ------------------------------------ | ------------------------------------------------------------------------- |
-| POST /auth/login                | Employee number plus PIN-like login  | Pre-auth rate limits, generic failure, no CSRF requirement before session |
-| GET /auth/session               | Current session/account summary      | No-store; current DB account check                                        |
-| POST /auth/renew                | Server session refresh               | Rotation/revocation tests; no token body                                  |
-| POST /auth/logout               | End current session                  | CSRF                                                                      |
-| POST /account/change-credential | Replace temporary/current credential | CSRF, current secret or approved forced-change flow                       |
-| GET /account/sessions           | List safe session/device metadata    | No tokens                                                                 |
-| DELETE /account/sessions/{id}   | Revoke one session                   | CSRF, ownership                                                           |
-| POST /account/logout-all        | Revoke all sessions                  | CSRF, auth-version increment                                              |
+| Method/path                     | Purpose                                 | Special controls                                                          |
+| ------------------------------- | --------------------------------------- | ------------------------------------------------------------------------- |
+| POST /auth/sign-in              | Employee number plus PIN-like login     | Pre-auth rate limits, generic failure, no CSRF requirement before session |
+| GET /auth/session               | Current session/account summary         | No-store; current DB account check                                        |
+| POST /auth/renew                | Server session refresh                  | Rotation/revocation tests; no token body                                  |
+| POST /auth/sign-out             | End current browser session             | Current-account, same-origin, and session-CSRF proof                      |
+| POST /auth/sign-out-all         | Revoke this account's provider sessions | Current-account, same-origin, session-CSRF proof, no token body           |
+| POST /account/change-credential | Replace temporary/current credential    | CSRF, current secret or approved forced-change flow                       |
+| GET /account/sessions           | List safe session/device metadata       | No tokens                                                                 |
+| DELETE /account/sessions/{id}   | Revoke one session                      | CSRF, ownership                                                           |
+| POST /account/logout-all        | Revoke all sessions                     | CSRF, auth-version increment                                              |
 
-Whether renew is a visible route or fully handled by the supported Supabase SSR
-proxy is an implementation detail; the observable contract must remain tested.
+Renewal is handled by the server-only encrypted-session proxy. It may rotate the
+Supabase refresh token and rewrite only authenticated ciphertext cookies; no
+token, alias, or provider user body is an observable API contract.
 
 ### Workspace and staff
 
@@ -100,6 +104,12 @@ proxy is an implementation detail; the observable contract must remain tested.
 
 Staff search never returns credential, internal alias, lookup digest, full Auth
 metadata, or inactive accounts to ordinary users.
+
+The implemented `GET /api/web/v1/staff` returns at most 100 active same-facility
+selections: opaque staff ID, display name, bounded employee-number hint, shift
+code, and whether the row is the current account. It does not return an
+authentication user ID, sign-in alias, employee lookup digest, passcode state,
+or inactive record.
 
 ### Incidents
 
@@ -114,17 +124,195 @@ metadata, or inactive accounts to ordinary users.
 Create/save/restore use idempotency. Save uses If-Match and
 base_revision_number. Unauthorized records are concealed as not found.
 
+The implemented `GET /api/web/v1/incidents` returns only a bounded,
+authorization-filtered summary list: opaque incident ID, display identifiers,
+status, category, occurrence/update timestamps, and current revision number. It
+never returns field notes, reviewed facts, facility scope, or relationship
+metadata. The current `api.list_incidents` RPC permits officers only their own
+active incidents and permits active administrators facility-scoped summaries.
+
+The first persistence primitive is the private-to-the-server
+`api.create_incident` RPC. It receives the already validated create fields and
+opaque request/idempotency digests, derives the actor from the request JWT, and
+creates the incident plus immutable revision one in one transaction. It is not a
+browser wire contract: the implemented `POST /api/web/v1/incidents` handler
+first establishes current session authority, validates same-origin and
+session-bound CSRF, accepts a closed body plus bounded `Idempotency-Key`, and
+then invokes the RPC with the request-scoped JWT. It returns only an opaque
+incident ID. Direct RPC calls still enforce active facility scope and payload
+provenance. Creation also requires one through twenty reporting officers and
+exactly one preparer. The RPC fixes the preparer to the authenticated account,
+verifies every selected staff member is active in the same facility, and denies
+duplicate or uncontrolled relationships. Schema version two also binds every
+confirmed fact to zero or more selected reporting officers. A fact scoped to an
+unselected person is rejected by the browser contract, server command, and
+database RPC. Hosted-session and browser-workflow integration remain separate
+release gates.
+
+The incident create contract also recognizes the recovered Report Assistant
+checklist candidate by its versioned fact-field marker. In Development, Test,
+and Preview, every candidate checklist answer must match one controlled
+category, one known question, its answer type, dependency rule, and all
+applicable blocking questions. Answered questions become note-backed confirmed
+facts; Unknown and Not applicable remain explicit limited states. Production
+rejects this candidate marker until the operational owner approves the exact
+definition version. Removing the marker does not claim checklist completion.
+
+Before the browser submits that contract, the incident workspace treats the
+selected category as a proposal that the officer must explicitly confirm. The
+protected `POST /api/web/v1/incident-fact-proposals` route accepts only bounded
+notes after current-session, same-origin, and session-CSRF checks. Its
+server-only provider adapter uses non-stored, tool-free strict structured output
+and the shared per-account/global AI circuit breaker. The service accepts only
+an allowlisted category and facts tied to real source-line keys; it restores the
+exact source text itself instead of trusting provider-supplied provenance. It
+returns review suggestions only and does not create, update, or confirm an
+incident.
+
+The officer must confirm or exclude every proposal. Editing a proposal resets
+its decision, and a confirmed AI rewrite or officer edit adds a separate
+officer-review note while retaining the original field note as provenance. Only
+confirmed proposals enter `reviewedFacts`. When AI is disabled, unavailable, or
+invalid, the unchanged one-proposal-per-note-line manual path remains usable.
+Neither path is proof of a server-persisted resumable workflow transition.
+
+The server-only `api.get_incident_revision` RPC is the corresponding narrow read
+primitive for an immutable revision. It returns the incident identifiers,
+revision identity/version, and reviewed facts—but never field notes, facility
+scope, account identities, or relationship metadata. It returns no row for a
+missing, archived, cross-facility, inactive, or unrelated-officer request;
+active same-facility administrators may read a revision, as may its active
+creator, reporting officers, and preparer. Involved and witness labels do not
+grant access. It is not exposed as a browser endpoint yet. Its intended caller
+is a server-side workflow that constructs a report-draft source from explicitly
+selected confirmed facts only.
+
+The protected server-rendered `/incidents/{incidentId}` report workspace uses a
+separate `api.get_incident_report_workspace` RPC. The RPC returns only the
+current authorized revision, reviewed facts, and the minimum display fields for
+active reporting officers selected on that revision. It never returns field
+notes, facility scope, full employee numbers, account IDs, or arbitrary staff.
+The page filters confirmed facts by the chosen reporting officer and submits
+only opaque fact IDs to the existing report-draft boundary. The draft service
+and database repeat the officer/fact checks, so changing browser state cannot
+broaden the source material. Version-one unscoped revisions remain readable but
+cannot request a new draft.
+
 ### Reports
 
 - GET /incidents/{incidentId}/reports
 - GET /reports/{reportId}
 - PATCH /reports/{reportId}
 - GET /reports/{reportId}/revisions
+
+The implemented `POST /api/web/v1/report-drafts` is a versioned, private,
+no-store boundary for generating a review-only candidate. It requires a current
+account, same-origin request, session-bound CSRF proof, a closed JSON body, and
+a bounded idempotency key. The body identifies an incident, immutable source
+revision, one reporting staff member selected on that exact revision, report
+type, and explicit confirmed-fact IDs; it cannot assign an arbitrary actor,
+facility, or source text. The server verifies the selected person is an active
+reporting officer on the revision, removes that identity before provider input,
+requires every requested confirmed fact to be explicitly scoped to that officer,
+removes the identity before provider input, validates the provider output
+against the confirmed facts, and stores an immutable attributed candidate before
+returning only an opaque candidate ID. Both the server source builder and
+database storage RPC fail closed on a cross-officer fact. Immutable schema
+version one facts remain readable but are not eligible for new report
+generation. This is not a final-report endpoint and it never returns generated
+narrative or source facts in the response.
+
+`reportType` is a closed value: `first_person`, `supervisor_summary`,
+`cover_letter`, or `disciplinary`. The same set is enforced at the request,
+generation-source, candidate-read/write, report-read/list, and database-table
+boundaries. A first-person candidate must contain first-person perspective; a
+supervisor summary rejects first-person prose outside quotations. An unknown
+report type fails closed instead of becoming an unreviewed new workflow.
+
+The implemented `POST /api/web/v1/report-drafts/{candidateId}/finalize` is a
+separate versioned, private, no-store boundary. It requires the same current
+account, same-origin, session-CSRF, closed-JSON, and bounded-retry protections,
+plus an explicit `reviewedByOfficer: true` attestation and a replacement
+narrative supplied by the officer. It creates the first immutable report
+revision with candidate provenance, the candidate's selected reporting officer,
+the candidate requester as preparer, and the current finalizer as revision
+editor. It marks the report `complete` and returns only an opaque report ID. It
+does not accept AI output as a final report and it does not let the finalization
+request replace the reporter, facility, or source revision.
+
+The database permits finalization only by the candidate's active selected
+reporting officer or an active same-facility administrator. A different preparer
+or reporting officer receives `403 request_not_allowed`. If the incident
+revision changed after candidate generation, a new finalization is rejected with
+`409 revision_conflict` so the draft must be regenerated and reviewed again. An
+exact retry of an already successful request remains idempotent and returns the
+existing report result.
+
+The server-rendered `/reports/{reportId}` route uses the narrow `api.get_report`
+RPC rather than a browser table query. It returns only the current immutable
+revision to an active report collaborator or active same-facility administrator;
+absent and unauthorized reports are concealed. The draft review screen retrieves
+a fresh session CSRF token, requires an officer-reviewed attestation and
+editable replacement narrative, then redirects only to the opaque report ID
+returned by finalization.
+
+The server-only `api.list_reports` RPC returns a bounded summary list—opaque
+report ID, incident display identifiers, report type/status, current revision,
+and update timestamp—only to an active report collaborator or active
+same-facility administrator. It never returns report narrative, facts, facility
+scope, or account relationship metadata.
+
+The implemented `POST /api/web/v1/reports/{reportId}/revisions` is a private,
+no-store correction boundary. It requires a current authorized account,
+same-origin and session-CSRF validation, a closed bounded JSON body, and an
+idempotency key. The caller must provide the revision number they reviewed; the
+database locks the report and rejects a stale base revision with
+`409 revision_conflict`. A successful request appends a new immutable revision
+and returns only its revision number. It never updates, removes, or exposes an
+earlier report revision. Facility-wide administrator read access does not grant
+correction authority: until the purpose-bound administrator report-edit step-up
+workflow exists, only an active report collaborator may append a correction.
+
+The server-only `api.list_report_revisions` RPC returns a revision-history
+timeline—revision number, correction reason, timestamp, current marker, and
+restore provenance—to an active collaborator or active same-facility
+administrator. It deliberately excludes report narrative from the history
+summary. `api.restore_report_revision` is more restrictive: only the active
+report owner may restore a prior revision. It requires the current base
+revision, a bounded restoration reason, and idempotency data, then creates a new
+immutable revision rather than changing the prior one. Administrative restore
+remains unavailable until the required step-up workflow is implemented.
+
 - GET /reports/{reportId}/revisions/{revisionNumber}
 - POST /reports/{reportId}/restore
-- POST /reports/{reportId}/export
+- POST /api/web/v1/reports/{reportId}/export-docx?revision={revisionNumber}
 
-An export always names an explicit immutable revision and template version.
+An export always names an explicit immutable revision and template version. The
+implemented DOCX route accepts exactly one canonical positive `revision` query
+value, no request body, a bounded retry key, same-origin session CSRF, and an
+active session. It reads only that immutable revision after the database checks
+active same-facility report access. It supports printable first-person reports
+and cover letters; supervisor summaries and disciplinary supplements remain
+copy-only. The server creates deterministic Office Open XML bytes, then rechecks
+authorization and records an idempotent redacted audit containing the revision,
+template version, checksum, and size before returning any bytes. The response is
+`private, no-store`, uses an identifier-only filename, and includes the checksum
+and opaque audit/export ID. This short one-document path does not retain a
+duplicate Storage object; official source-form or bulk artifacts still require
+the controlled artifact lifecycle.
+
+The protected report screen also offers an explicit browser print action for the
+current immutable printable revision.
+`POST /api/web/v1/reports/{reportId}/print` requires the current session,
+same-origin CSRF, a bounded retry key, and the exact current complete revision.
+The database rechecks facility/report access, rejects stale revisions, and
+records one idempotent `report.print.requested` event before the browser opens
+its dialog. The audit holds only opaque references, revision, action, request
+correlation, actor, and facility; it never holds narrative. Print styling
+excludes navigation and mutation controls. The print event records a request,
+not completed physical/PDF output. Neither the reviewed report DOCX nor browser
+print claims to be the official 005/409 form; that output remains blocked on
+approved source templates and fidelity qualification.
 
 ### AI jobs
 
@@ -138,12 +326,39 @@ progress, result references, and error codes rather than provider payloads.
 
 ### Policy Expert
 
-- POST /policy/questions
-- GET /policy/sources/{sourceId}/citation?version=...&page=...
+- POST /api/web/v1/policy-answer
+- GET /api/web/v1/policy-sources/{documentVersionId}
 
-Question input is bounded and idempotent. Answers use a structured citation
-schema. The citation endpoint returns only the authorized excerpt needed to
-verify the answer.
+The implemented answer endpoint is same-origin and session-CSRF protected even
+though it has no durable mutation: this prevents cross-site use of the private
+model/corpus allowance. It accepts a 3–2,000-character question, verifies the
+current account, and may accept at most six 3–2,000-character prior user
+questions as transient follow-up context. It does not accept prior answer text
+from the browser. A likely follow-up may use the latest prior question to make
+retrieval understandable, while generation treats every prior question as
+untrusted context rather than policy evidence. The endpoint retrieves only
+approved indexed passages for that account and returns either a
+citation-validated answer or explicit insufficient evidence. It never retains
+the question, prior questions, answer, passage, provider body, or storage key.
+Provider/retrieval failures are a generic `503`.
+
+The implemented PDF reader accepts only an opaque immutable document-version ID.
+It first verifies the current account, then calls a session-bound database
+function that rechecks facility, approval, rights-review dates, lifecycle,
+current/superseded state, PDF metadata, and the exact content-addressed object
+path. Only after that authorization does a narrow server-only Storage adapter,
+bound to the same user's session, download the private object. Storage RLS
+independently rechecks the same facility, rights, lifecycle, and object path at
+download time. The server verifies byte size, MIME type, PDF signature, and
+SHA-256 before returning an inline `application/pdf` response with
+`private, no-store`, same-origin resource isolation, no-referrer, nosniff, and
+sandbox headers. The browser receives neither a Storage credential nor a
+signed/public URL, and routine reads never use the Supabase secret credential.
+Denied or malformed source IDs are concealed as `404`, and Storage or integrity
+failures are generic `503` responses. Operational events contain only
+event/outcome/request/timing/deployment fields; they exclude source IDs, paths,
+titles, URLs, and content. Page-targeted excerpt/highlight behavior and the
+user-facing full-reader integration remain later implementation items.
 
 ### Forms, packets, and paperwork
 
@@ -157,6 +372,81 @@ verify the answer.
 - POST/DELETE physical acknowledgment routes
 - GET/POST/PATCH revisioned paperwork routes
 - GET/POST print-template preview/action routes
+
+The private Count Sheet read primitives are `api.list_count_sheets(date)` and
+`api.get_count_sheet(record_id)`. `GET /api/web/v1/count-sheets?work_date=...`
+uses them to return only the current account's assigned-shift sheet, or a blank
+copy of the exact approved structure when no revision exists. An active officer
+can receive only the sheet for their administrator-assigned shift; active
+same-facility administrators can oversee all facility shifts through the private
+primitives but the officer workspace still requires their own assigned shift.
+Missing, inactive, cross-facility, unassigned, and malformed results fail
+closed. Read responses are private and `no-store`.
+
+`POST /api/web/v1/count-sheets` is the protected Count Sheet save boundary. It
+requires a current session, same-origin request, session CSRF, closed JSON body,
+a bounded idempotency key, and base revision number. The server validates the
+exact reviewed structure and values; the database rejects any different form,
+revalidates the closed shape, and derives totals. It creates revision one or
+appends exactly the next immutable revision for the current officer's assigned
+shift. A stale base revision returns `409 revision_conflict`; it never
+overwrites newer work. The route does not accept a facility, account, or shift
+from the browser.
+
+`GET /api/web/v1/count-sheets/{recordId}/revisions` returns no more than the
+latest 100 immutable revision summaries after current-session and database
+authorization. Adding `revision_number` returns one exact saved snapshot only.
+Both responses are private and `no-store`; stored structure, values, and totals
+are revalidated before a historical snapshot reaches the browser.
+
+`POST /api/web/v1/count-sheets/{recordId}/restore` requires same-origin CSRF, a
+bounded retry key, the current base revision, the selected prior revision, and a
+reason. Only an active account assigned to the record's facility and shift can
+restore it. The database copies the prior immutable snapshot into a new revision
+with source provenance. It never edits or replaces history, and a stale base
+revision returns `409 revision_conflict`.
+
+`POST /api/web/v1/count-sheets/{recordId}/print` is the deliberate protected
+print-request boundary. It requires same-origin CSRF, a bounded retry key, and
+the exact current saved revision. The database verifies the active account's
+facility and assigned shift, rejects a stale revision, and writes one idempotent
+`count_sheet.print.requested` audit event before the browser opens its print
+dialog. The audit contains only the opaque record reference, revision number,
+action, request correlation, actor, and facility; it never stores Count Sheet
+values. The event records a request and does not falsely claim the user
+completed a physical or PDF print.
+
+The administrator-only Daily Paperwork browser boundary is
+`GET/POST /api/web/v1/daily-paperwork`. A read requires a current administrator
+session and a closed form kind, work date, and shift selection. The database
+returns either the controlling approved private template with a derived blank
+payload or the exact current immutable saved revision. A historical revision
+whose lineage was retired remains reviewable but is marked read-only. Responses
+are private and `no-store`.
+
+A Daily Paperwork save requires same-origin CSRF, a bounded retry key, the
+current base revision, a reason, and values matching the private server-owned
+field schema. The browser cannot submit facility, account, template ID,
+structure, validation results, or source metadata. The database selects the
+controlling template, revalidates every scalar and repeating row, derives
+content-free validation counts, and appends exactly one revision. A stale base
+returns `409 revision_conflict`; a retired or replaced source is not silently
+reassigned.
+
+`GET /api/web/v1/daily-paperwork/{recordId}/revisions` returns at most 100
+content-free revision summaries. Adding `revision_number` returns one exact
+historical payload together with its immutable private template version.
+`POST /api/web/v1/daily-paperwork/{recordId}/restore` copies an exact prior
+snapshot into a new revision after administrator, CSRF, idempotency, and base
+revision checks. This is the only path that may preserve a withdrawn historical
+template, and its database trigger verifies byte-equivalent structure, values,
+validation, and template identity.
+
+`POST /api/web/v1/daily-paperwork/{recordId}/print` accepts only the current
+saved revision of a template approved for printing. It writes one idempotent
+`daily_paperwork.print.requested` event before the browser print dialog opens.
+The event includes only kind, revision and template version, opaque record and
+request IDs, actor, and facility; form values never enter audit metadata.
 
 Form population names the reviewed incident revision and template version.
 Unknown values remain blank/gaps.

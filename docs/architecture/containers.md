@@ -100,6 +100,12 @@ accounts reference Auth user IDs but keep application role, employee-number
 mapping, status, forced-change state, and authorization version in the
 non-exposed `app_private` schema.
 
+Next.js is the only consumer of the raw access/refresh values. It stores the
+Supabase session through a server-only custom adapter in an authenticated
+encrypted HttpOnly cookie envelope. Browser JavaScript has neither a Supabase
+Auth client nor access to the cookie contents. The dedicated envelope key is a
+Vercel environment secret and its rotation signs every browser out.
+
 Public signup and generic email/phone recovery are disabled. The employee-number
 adapter is detailed in [auth-rbac-rls.md](auth-rbac-rls.md) and remains proposed
 until qualified.

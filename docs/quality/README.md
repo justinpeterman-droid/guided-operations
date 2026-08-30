@@ -7,18 +7,25 @@ accessibility, recoverability, and explicit owner control.
 
 ## Current status
 
-These documents define required controls and target automation. They do not
-claim that the tests, CI jobs, provider projects, environments, backups,
-monitoring, or production deployment already exist. The current package scripts
-must be inspected before citing a command as available.
+Web, database, and fictional recovery CI now exist and repeatedly pass on the
+production-readiness branch. Unit/component, pgTAP, secret/dependency, build,
+private-Storage negative, runtime-readiness, and local recovery controls cover
+important implementation slices. A guarded, destructive-local-only browser
+runner is now implemented to create fictional staff through the private
+lifecycle and exercise the officer Count Sheet
+sign-in/save/reopen/print/sign-out path; executing and accepting that browser
+run and the protected hosted proof remain open. Existing evidence does not prove
+full accessibility/print parity, approved-corpus quality, off-provider hosted
+restore, monitoring/alerts, exact release qualification, or Production approval.
+Inspect the exact commit and retained evidence before citing a gate as passed.
 
 ## Documents
 
 - [testing-strategy.md](testing-strategy.md) — test layers, contracts,
   PostgreSQL/RLS/Auth/Storage, concurrency, idempotency, AI evaluation, browser,
   print, and accessibility.
-- [fictional-data-and-rag-content.md](fictional-data-and-rag-content.md) — the
-  strict data boundary and controlled corpus lifecycle.
+- [fictional-data-and-rag-content.md](fictional-data-and-rag-content.md) — data
+  classification, non-production fictional-fixture rule, and corpus lifecycle.
 - [definition-of-done.md](definition-of-done.md) — change, release, deployment,
   and operational-readiness gates.
 
@@ -32,5 +39,5 @@ must be inspected before citing a command as available.
   rights holder, or other third party supplied evidence or approval.
 
 No label substitutes for another. In particular, green automation does not
-authorize a production release, deployment, facility pilot, or the use of real
-operational data.
+authorize a production release, deployment, facility pilot, or Production
+real-data entry.

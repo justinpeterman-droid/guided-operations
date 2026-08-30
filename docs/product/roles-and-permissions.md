@@ -8,9 +8,10 @@ roles: **officer** and **administrator**. “Supervisor,” “reporting officer
 relationships; they do not grant application permissions unless an approved role
 model later says otherwise.
 
-The current build and validation boundary permits fictional operational records
-only. These permissions still need to be implemented and tested as if the data
-were sensitive.
+Build and qualification environments permit fictional operational records only.
+The isolated Production environment may hold owner-authorized real operational
+and personal data only after every release gate passes. These permissions must
+therefore be implemented and tested as sensitive-data controls.
 
 ## Identity model
 
@@ -163,7 +164,9 @@ not an acceptable control.
 
 ## Decisions still required before implementation acceptance
 
-- Exact employee-number normalization and display rules.
+- Owner usability acceptance of the exact employee-number display and passcode
+  wording before any real account is created; the bounded technical contract is
+  defined in ADR-0003.
 - PIN length, retry, lockout/backoff, and reset expiry policy.
 - Officer incident-access rule after handoff, reassignment, or shift change.
 - Whether administrators require step-up on every admin entry or only sensitive
@@ -171,7 +174,16 @@ not an acceptable control.
 - Session maximum age, idle timeout, concurrent-session limit, and
   trusted-device policy.
 - Which minimal staff fields officers may see in pickers.
-- Whether count sheets are officer-private, shift-shared, or
-  administrator-visible.
-- Retention and legal-hold requirements for account, audit, incident, report,
-  and generated-artifact data if real operational use is later approved.
+- Count Sheets are **shift-shared**: active officers with the same
+  administrator-assigned `shift_code` may view and work on the same shift’s
+  sheet. A missing shift assignment grants no Count Sheet access. This decision
+  does not grant unrelated report or administrative access.
+- The initial Count Sheet shift codes are: `A` and `B` for day shift; `C` and
+  `D` for night shift; `U` for five-day week; and `F` for five-day-week field.
+- Protected administrator account creation requires one of those shift codes.
+  The administrator roster shows and changes the assignment only after a fresh,
+  purpose-bound administrator passcode check. A change revokes the target's
+  existing sessions and records only bounded prior/new shift codes in audit.
+- Operational acceptance of the implemented two-year retention, legal-hold,
+  verified deletion, backup-expiry, and evidence procedures for account, audit,
+  incident, report, paperwork, and generated-artifact data.

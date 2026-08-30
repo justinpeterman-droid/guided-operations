@@ -13,20 +13,20 @@ is imported.
 
 ## Current state
 
-As of 2026-08-25, this is an implementation foundation, not a production
-release.
+As of 2026-08-28, this is an implementation candidate, not a production release.
 
-| Area                  | State                                                                                                           |
-| --------------------- | --------------------------------------------------------------------------------------------------------------- |
-| GitHub repository     | Private replacement repository created; web and database CI pass                                                |
-| Web foundation        | Next.js 16 App Router and React 19 scaffolded                                                                   |
-| Accepted appearance   | Guided Operations navy/gold design tokens established                                                           |
-| Migrated product code | Count Sheet calculations, schema parser, types, and tests                                                       |
-| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty     |
-| Authentication        | Employee-number plus personal-passcode design documented; no accounts or connected login                        |
-| RAG corpus            | Not copied; inventory and reconciliation are required first                                                     |
-| Vercel                | Protected preview created; Git linkage, environment variables, and application-content verification remain open |
-| Supabase              | Project healthy; private schemas, forced RLS, private buckets, `pgcrypto`, and `pgvector` established           |
+| Area                  | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub repository     | Private replacement repository created; the production-readiness branch is pushed and receives web, database, recovery, and authenticated fictional-browser CI on applicable commits                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Web foundation        | Next.js 16 App Router, React 19, protected officer/account/report/policy and administrator routes, and local production build                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| Accepted appearance   | Guided Operations navy/gold design tokens established                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| Migrated product code | Protected incident/report review, finalization, correction, conflict recovery, append-only history/restore, audited print, exact-version reviewed-report Word download, and same-facility administrator visibility are locally browser-qualified with fictional data. Policy Expert, account/admin controls, the role-aware Forms Library capability catalog, assigned-shift Count Sheet, and an administrator-only six-form Daily Paperwork engine also exist. The catalog keeps Chain of Custody physical-only and does not advertise unfinished packet actions. Official 005/409 output, the six approved private paperwork definitions, hosted qualification, and release acceptance remain open; no feature is accepted for release |
+| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Authentication        | Guarded sign-in, session, personal passcode, and protected officer/administrator lifecycle controls built; no hosted accounts exist                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| RAG corpus            | Not copied; inventory and reconciliation are required first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Vercel                | Git-connected protected Previews build the branch; exact-commit health checks pass, while protected hosted signed-in qualification and Production configuration remain open                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Supabase              | Hosted project healthy; the newer forward migrations and fictional end-to-end qualification have not been applied to the hosted project                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| Operations            | Local fictional database-plus-Storage recovery, complete readiness validation, secret/dependency scanning, and redacted core telemetry pass; hosted controls remain open                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
 The predecessor repository remains intact. Canonical source provenance and the
 deliberate copy/rewrite/omit decisions live in
@@ -56,16 +56,17 @@ Target services:
 
 ### Cost reality
 
-The current goal is a personal, non-commercial hobby app for a small invited
-group of officers—not an agency or facility system. Vercel Hobby and Supabase
-Free are therefore the starting candidates, provided the exact use remains
-within their current terms and quotas. This does not authorize real operational
-data. Any later official adoption requires a fresh plan, vendor, security,
-records, and recovery review. OpenAI API calls are usage-priced and still need a
-small budget and circuit breaker.
+The current goal is a private, single-facility Production app for a small
+invited group. Any selected Vercel and Supabase plans must have terms,
+protection, recovery, and retention controls that support the authorized use.
+Real operational and personal data are permitted only in isolated Production
+after the release gates pass; see
+[`docs/operations/real-data-governance.md`](docs/operations/real-data-governance.md).
+OpenAI API calls are usage-priced and still need a small budget and circuit
+breaker.
 
-Current plan terms must be rechecked at provisioning time:
-[Vercel Hobby plan](https://vercel.com/docs/plans/hobby),
+Current plan terms and eligibility must be rechecked at provisioning and before
+promotion: [Vercel Hobby plan](https://vercel.com/docs/plans/hobby),
 [Supabase billing](https://supabase.com/docs/guides/platform/billing-on-supabase),
 and [OpenAI API pricing](https://platform.openai.com/pricing).
 
@@ -149,6 +150,8 @@ changes follow
 - Browser code never receives Supabase secret/service credentials or direct
   unrestricted application-table access.
 - Preview and automated-test environments use fictional operational data only.
+- Production records use the owner-approved two-year retention rule, subject to
+  legal hold and verified deletion.
 - A green build is not a deployment, pilot approval, or production
   authorization.
 

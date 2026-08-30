@@ -1,7 +1,9 @@
 # Authentication, RBAC, and RLS
 
-- **Status:** Target design with one unresolved implementation decision
-- **Critical decision:** ADR-0003 must be accepted before production login
+- **Status:** Accepted architecture with release qualification still open
+- **Accepted decision:** ADR-0003 uses the private server-only Supabase Auth
+  alias bridge. Production login remains gated on hosted security evidence,
+  administrator assurance, and owner acceptance of the exact release candidate.
 
 ## Required user experience
 
@@ -14,12 +16,13 @@ There is no email/phone entry, shared facility code, self-signup, or public
 recovery flow.
 
 “PIN-like” describes a fast, familiar interaction. It does not authorize a weak
-four-digit credential. The proposed floor is at least eight randomly resistant
-characters with an approved alphabet, common/sequence/employee-number checks,
-rate limiting, and system-generated temporary credentials. The final alphabet,
-length, admin MFA requirement, and lifecycle require owner/security approval.
+four-digit credential. Personal passcodes contain 8–64 printable non-space ASCII
+characters and retain common/sequence/employee-number checks, rate limiting, and
+system-generated temporary credentials. Employee numbers use the bounded
+NFKC/trim/uppercase contract in ADR-0003. Administrator MFA or an approved
+equivalent, hosted lifecycle proof, and owner usability acceptance remain open.
 
-## Why the implementation is proposed
+## Why the accepted implementation uses an alias bridge
 
 Hosted Supabase password sign-in natively accepts email+password or
 phone+password, not an arbitrary employee-number username. Pretending otherwise
@@ -35,7 +38,9 @@ The preferred spike is a **server-only Auth alias bridge**:
 4. For a missing row, continue through a constant/generic dummy Auth path.
 5. Call Supabase Auth signInWithPassword server-side using the internal alias
    and submitted PIN-like secret.
-6. Establish the supported SSR cookie session.
+6. Persist the Supabase session only in server-managed encrypted cookie storage;
+   the browser receives authenticated ciphertext, not Auth tokens or the
+   provider user object.
 7. Load current account status, role, forced-change state, and auth_version.
 8. Return one generic failure for unknown account, wrong secret, inactive
    account, or disallowed state.
@@ -48,10 +53,17 @@ application functions, is unavailable to browser bundles, and must work through
 the qualified serverless connection pool. Using the broad Supabase service role
 for this routine lookup is prohibited.
 
+Every access token used for an application mutation must carry a positive
+`app_metadata.auth_version` claim written by the reviewed Custom Access Token
+Hook. The server compares that claim to the current-account RPC result before
+authorizing. Missing/malformed hook output is a fail-closed session denial;
+`user_metadata` is never an authorization source. Enabling the hook in the
+hosted project and proving refresh/revocation remain required integration gates.
+
 The spike must prove that a non-deliverable/random alias is supported by the
 hosted Auth lifecycle, remains invisible, does not trigger outbound mail, and
-works with SSR refresh/revocation. If it cannot, use the custom opaque-session
-option in ADR-0003 rather than weakening the boundary.
+works with encrypted-cookie refresh/revocation. If it cannot, use the custom
+opaque-session option in ADR-0003 rather than weakening the boundary.
 
 ## Credential policy
 
@@ -89,10 +101,29 @@ sessions as far as the provider supports. Because access JWTs can remain valid
 until expiry, the BFF checks current account status/auth_version on every
 sensitive request rather than relying solely on token age.
 
+Logout-all uses a two-phase database/provider/database sequence. The first
+database phase advances `auth_version` and opens a ten-minute fail-closed
+reconciliation window in which the Auth token hook emits no usable application
+authority. After provider-wide revocation succeeds, the final database phase
+advances `auth_version` again and closes the window. This prevents a concurrent
+refresh from creating a session that survives a reported successful global
+sign-out. A provider or final-database failure remains fail closed during the
+bounded window and must not be reported as success.
+
+Personal passcode replacement uses the same window. The password update and
+provider-wide session revocation must both succeed before the final database
+phase advances authority and closes the window. Overlapping passcode changes are
+rejected while reconciliation is pending.
+
 The last active administrator cannot be demoted or disabled. First-admin
 bootstrap is allowed only when no application account exists, uses a
 transaction-level advisory lock, generates the temporary secret inside the
 protected operation, and delivers it through an authorized custodian channel.
+The bootstrap database ceremony creates a `pending` administrator first. It is
+not eligible for employee-number sign-in until the server-only delivery adapter
+confirms delivery and activates it. A failed delivery abandons the pending
+application identity before the Auth user is removed; audit entries retain only
+the lifecycle outcome and opaque target ID.
 
 ## Login abuse controls
 
@@ -111,13 +142,22 @@ protected operation, and delivers it through an authorized custodian channel.
 
 ## Session design
 
-- Use the current supported Supabase SSR package/flow.
-- Access and refresh credentials live in Secure, HttpOnly, SameSite=Lax cookies.
+- Use the server-only Supabase JavaScript client with a repository-owned custom
+  storage adapter. Do not create a browser Supabase Auth client.
+- Access and refresh credentials live only inside a versioned authenticated
+  encrypted envelope. Browser cookies contain only ciphertext and are HttpOnly,
+  SameSite=Lax, and Secure outside explicit local development/test.
 - Cookie Domain is omitted unless a reviewed cross-subdomain requirement exists.
-- Cookie Path is as narrow as compatible with the framework/Auth refresh flow.
+- Cookie Path is `/` because every protected application route shares the same
+  session and proxy refresh boundary.
 - Never use localStorage for Auth tokens.
-- A server proxy/refresh boundary verifies tokens using the provider-recommended
-  claims/user call; it is a convenience gate, not the sole authorization layer.
+- A server proxy/refresh boundary decrypts the session, lets the provider client
+  refresh it when necessary, verifies claims using `getClaims()`, and
+  re-encrypts any rotated value. It is a convenience gate, not the sole
+  authorization layer.
+- Malformed, mixed, oversized, noncontiguous, or authentication-failed cookie
+  envelopes are expired and treated as signed out. Rotating the dedicated
+  encryption key intentionally signs out every browser.
 - Logout, refresh rotation/reuse behavior, expiry, disabled account, logout-all,
   and multi-device revocation receive browser integration tests.
 - Authenticated pages and APIs are private/no-store.

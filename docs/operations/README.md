@@ -5,29 +5,47 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 
 ## Current status
 
-- Application hosting configured: **protected Vercel preview created; linkage
-  and application verification incomplete**
-- Supabase projects configured: **new `us-east-1` foundation project healthy; no
-  users or operational data**
-- CI/release automation configured: **GitHub web and database quality workflows
-  pass**
-- Backups and restore exercise: **not established**
-- Monitoring and alerts: **not established**
-- Production domain or traffic: **not established**
-- Intended use: **personal, non-commercial hobby app for selected invited
-  officers; not an official agency/facility system**
+- Application hosting configured: **authoritative Git-connected Vercel project
+  and protected Previews verified; the protected Preview for `06848a1` is
+  `READY` and its public, liveness, readiness, login, officer, and administrator
+  routes answer through authenticated Vercel checks, but the real-browser visual
+  review remains incomplete**
+- Supabase projects configured: **fictional Development project healthy at the
+  verified 62-migration hosted head with one fictional administrator pending
+  personal passcode change; eight repository migrations remain local/CI
+  candidates, the organization remains on Free, and no isolated Production
+  project exists**
+- CI/release automation configured: **GitHub web, database, fictional recovery,
+  and Production-style authenticated browser workflows pass for exact code
+  commit `9a01c92`; commit `907f386` passes the complete local web gate, but
+  GitHub jobs currently fail before a runner or step starts and newer-head
+  database/recovery/browser CI remains unproven**
+- Backups and restore exercise: **local fictional database-plus-Storage
+  rehearsal implemented; encrypted off-provider and isolated hosted restore not
+  established**
+- Monitoring and alerts: **strict redacted core application events implemented;
+  hosted sinks, dashboards, alerts, budgets, access, and retention not
+  established**
+- Production domain or traffic: **older public foundation deployment only; it is
+  not a qualified release candidate and no new Production promotion is
+  authorized**
+- Intended use: **private, single-facility Production app for selected invited
+  officers; not represented as an official agency/facility system**
 - GCP retirement: **not authorized or performed**
-- Real operational-data use: **prohibited**
-- Approved real content: policy/reference corpus only, subject to the corpus
-  handling standard
+- Real operational/personal data: **Production-only after release gates**
+- Production retention: **two years from final revision**, subject to legal hold
 
 No checklist item may be marked complete without dated evidence identifying the
 environment, commit/deployment, actor, command or dashboard observation, result,
 and retained artifact location.
 
 See the dated
-[`2026-08-25 hosted foundation record`](2026-08-25-hosted-foundation.md) for the
-current provider evidence and explicit limitations.
+[`2026-08-28 hosted readiness refresh`](2026-08-28-hosted-readiness-refresh.md)
+for the latest read-only provider evidence, the
+[`2026-08-28 local candidate`](2026-08-28-local-candidate.md) for the latest
+exact-commit CI evidence, and the
+[`2026-08-27 command-center requalification`](2026-08-27-command-center-requalification.md)
+for the preceding provider evidence and explicit limitations.
 
 ## Control labels
 
@@ -40,17 +58,28 @@ current provider evidence and explicit limitations.
 
 ## Document map
 
-| Document                                                     | Purpose                                                                                               |
-| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [`environments-and-secrets.md`](environments-and-secrets.md) | Local, preview, staging-equivalent, and production isolation; regions; secret inventory and rotation. |
-| [`database-migrations.md`](database-migrations.md)           | Supabase migration workflow, RLS review, compatibility, and recovery.                                 |
-| [`release-gates.md`](release-gates.md)                       | Required automated, manual, owner, and external evidence.                                             |
-| [`deployment-and-rollback.md`](deployment-and-rollback.md)   | Vercel/Supabase release order, smoke checks, and application/data rollback.                           |
-| [`backup-and-restore.md`](backup-and-restore.md)             | Database and Supabase Storage backups, corpus recovery, and restore exercises.                        |
-| [`incident-response.md`](incident-response.md)               | Severity, containment, communications, recovery, and post-incident review.                            |
-| [`observability-and-costs.md`](observability-and-costs.md)   | Signals, redaction, alerting, free-plan limitations, and budget controls.                             |
-| [`dependency-maintenance.md`](dependency-maintenance.md)     | Dependency, runtime, lockfile, and supply-chain maintenance.                                          |
-| [`gcp-retirement.md`](gcp-retirement.md)                     | Evidence-gated migration away from all Google hosting and infrastructure.                             |
+| Document                                                                                       | Purpose                                                                                                                 |
+| ---------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| [`2026-08-28-hosted-readiness-refresh.md`](2026-08-28-hosted-readiness-refresh.md)             | Current read-only Vercel access, Supabase migration, advisor, and Production-isolation evidence.                        |
+| [`2026-08-28-development-migration-dry-run.md`](2026-08-28-development-migration-dry-run.md)   | Exact read-only Development pending-migration list and no-apply evidence.                                               |
+| [`2026-08-28-pending-migration-review.md`](2026-08-28-pending-migration-review.md)             | Lock, compatibility, authorization, and rollback review of the exact pending SQL suffix.                                |
+| [`2026-08-28-development-data-boundary.md`](2026-08-28-development-data-boundary.md)           | Value-free proof that Development contains only the exact fictional identity fixture and no operational/Storage data.   |
+| [`2026-08-28-dependency-review.md`](2026-08-28-dependency-review.md)                           | Current locked-package audit, registry-signature evidence, update disposition, and GitHub scanner limitations.          |
+| [`2026-08-28-local-candidate.md`](2026-08-28-local-candidate.md)                               | Exact-commit local/CI qualification evidence and the hosted, content, manual, owner, and promotion limits.              |
+| [`2026-08-27-command-center-requalification.md`](2026-08-27-command-center-requalification.md) | Exact candidate, CI, protected-Preview, Development database, and Production-isolation evidence.                        |
+| [`production-execution-checklist.md`](production-execution-checklist.md)                       | Evidence-backed execution tracker for the gated path from foundation to isolated live Production.                       |
+| [`non-production-migration-reconciliation.md`](non-production-migration-reconciliation.md)     | Evidence and stop conditions for aligning shared non-production migration history without changing the hosted database. |
+| [`environments-and-secrets.md`](environments-and-secrets.md)                                   | Local, preview, staging-equivalent, and production isolation; regions; secret inventory and rotation.                   |
+| [`database-migrations.md`](database-migrations.md)                                             | Supabase migration workflow, RLS review, compatibility, and recovery.                                                   |
+| [`release-gates.md`](release-gates.md)                                                         | Required automated, manual, owner, and external evidence.                                                               |
+| [`deployment-and-rollback.md`](deployment-and-rollback.md)                                     | Vercel/Supabase release order, smoke checks, and application/data rollback.                                             |
+| [`backup-and-restore.md`](backup-and-restore.md)                                               | Database and Supabase Storage backups, corpus recovery, and restore exercises.                                          |
+| [`incident-response.md`](incident-response.md)                                                 | Severity, containment, communications, recovery, and post-incident review.                                              |
+| [`real-data-governance.md`](real-data-governance.md)                                           | Production-only data boundary, two-year retention, deletion, and release conditions.                                    |
+| [`production-data-inventory.md`](production-data-inventory.md)                                 | Machine-checked database, Storage, AI, log, browser, and backup data-surface inventory.                                 |
+| [`observability-and-costs.md`](observability-and-costs.md)                                     | Signals, redaction, alerting, free-plan limitations, and budget controls.                                               |
+| [`dependency-maintenance.md`](dependency-maintenance.md)                                       | Dependency, runtime, lockfile, and supply-chain maintenance.                                                            |
+| [`gcp-retirement.md`](gcp-retirement.md)                                                       | Evidence-gated migration away from all Google hosting and infrastructure.                                               |
 
 ## Operating assumptions
 
@@ -58,11 +87,11 @@ current provider evidence and explicit limitations.
   database-enforced authorization.
 - One facility; the schema should still carry an explicit facility boundary so
   accidental global queries are testable.
-- The initial hosted target is a private hobby release for selected invited
-  officers. Any official organizational adoption is a new scope and approval.
-- No real operational data during development, preview, staging, or initial
-  production qualification.
-- The approved policy/reference corpus is the only real content.
+- Real operational/personal data is permitted only in isolated Production after
+  release gates; development, Preview, staging, and qualification remain
+  fictional.
+- The approved policy/reference corpus and minimum-necessary authorized
+  operational records are the only allowed real content in Production.
 - United States hosting; initial latency-aligned assumption is Supabase
   `us-east-1` and Vercel Functions `iad1`, pending owner confirmation and
   recorded provider availability.
@@ -71,9 +100,8 @@ current provider evidence and explicit limitations.
   out of scope for the replacement.
 - AI integration is provider-neutral. OpenAI may be the first provider, but
   domain code must not depend directly on provider response objects.
-- Free plans are preferred while the product contains no operational data, but
-  plan limitations are explicit release gates rather than hidden risk
-  acceptance.
+- Plan limitations are explicit release gates rather than hidden risk acceptance
+  before the product can hold real data.
 
 ## Source references
 

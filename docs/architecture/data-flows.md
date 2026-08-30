@@ -23,13 +23,14 @@ sequenceDiagram
   A-->>N: access/refresh session or generic failure
   N->>D: verify active account, staff state, role, forced-change state
   N->>AU: append content-free success/failure event
-  N-->>U: Secure HttpOnly cookies + generic response
+  N-->>U: Encrypted HttpOnly session cookies + generic response
 ```
 
 Rules:
 
 - Resolution and Auth failure use a comparable path and one generic message.
-- The internal Auth alias is never returned to the browser or logged.
+- The internal Auth alias, provider user object, and raw access/refresh tokens
+  are never returned to the browser or logged.
 - Public signup and user-supplied email/phone identifiers are unavailable.
 - The browser receives no service credential and stores no token in
   localStorage.
@@ -37,8 +38,9 @@ Rules:
 
 ## 2. Authenticated page read
 
-1. Next.js refreshes/verifies the cookie session using the supported SSR Auth
-   flow.
+1. Next.js decrypts the server-managed session cookie, refreshes it through the
+   Supabase JavaScript client when required, verifies claims, and re-encrypts
+   any rotated session before the request reaches application code.
 2. The DAL loads the current application account by Auth user ID and rejects
    inactive, locked, or forced-change states where appropriate.
 3. The DAL calls a purpose-specific query/RPC using the request identity.
@@ -146,11 +148,14 @@ Corpus bytes and text never enter GitHub Actions artifacts or general logs.
 1. User selects an explicit immutable revision and export format.
 2. Server authenticates, authorizes, validates idempotency, and creates an
    export job tied to that exact revision/template version.
-3. A short qualified path may render immediately. Otherwise the queue/worker
-   produces deterministic bytes.
-4. The result is uploaded once to a content-addressed private object key.
-5. PostgreSQL records checksum, size, media type, template version, creator, and
-   expiry/lifecycle state.
+3. A short qualified path may render deterministic bytes immediately. Otherwise
+   the queue/worker produces them.
+4. A short, single-document response may be streamed without retaining a
+   duplicate object after the database records a redacted checksum/size audit.
+   Durable, official-source, packet, and bulk results are uploaded once to a
+   content-addressed private object key.
+5. For retained artifacts, PostgreSQL records checksum, size, media type,
+   template version, creator, and expiry/lifecycle state.
 6. Download reauthorizes the current user. Restricted output is streamed through
    the app or receives a very short-lived signed URL.
 7. Audit records IDs, format, revision, and result—not document text.

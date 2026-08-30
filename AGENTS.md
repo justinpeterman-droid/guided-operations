@@ -2,16 +2,9 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may
-all differ from your training data. Read the relevant guide in
-`node_modules/next/dist/docs/` (resolved from this file's directory; in
-monorepos the `next` package may not be visible from the repo root) before
-writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
 
-This block is written and re-added by `next dev` — verify at
-`node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a
-diff only re-creates the uncommitted change; committing it with your work keeps
-the tree clean.
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
 
 <!-- END:nextjs-agent-rules -->
 
@@ -20,6 +13,37 @@ the tree clean.
 This file is mandatory for every coding agent. Read it completely before edits,
 then read the task-relevant source-of-truth documents below. If instructions
 conflict, stop and surface the conflict instead of guessing.
+
+## Project reality (read this before assuming anything)
+
+Earlier drafts of these documents assumed a restricted corpus and no agency
+approval. Both assumptions are wrong and have caused agents to add caution that
+does not apply. Confirmed by the owner and recorded as O-021 to O-026 in
+`docs/OWNER_DECISIONS.md`:
+
+- **The corpus is public.** All 236 documents - unit policies, post orders and
+  secretarial directives - are published on the agency public website. They are
+  public records. Do not treat them as restricted.
+- **The project is authorized.** The owner has full authorization from the
+  agency IT Director and owns the project completely.
+- **NCU and BMU are the same facility.** North Central Unit was renamed Benny
+  Magness Unit. Policies numbered `NCU x.xx.x` are this unit's own policies
+  under the former name. Of 160 unit policies, 66 are numbered BMU and 94 NCU,
+  with zero duplicate numbers and zero duplicate subjects, so nothing is
+  superseded or double-counted. Never filter NCU out or treat it as wrong.
+- **The scope is small and deliberate.** A personal hobby tool for a few invited
+  officers, not a department-wide system. Free provider tiers are an accepted
+  decision, not an oversight. Do not propose paid plans unless scope changes.
+- **The application is advisory only.** It never sits in a time-critical path.
+  If it is slow or unavailable, officers use their normal method.
+- **It is not the system of record.** Incident output is a draft writing aid;
+  the official report is filed in the agency's own system.
+- **The corpus is updated once a year, by the owner, by hand.** No automated
+  sync, no freshness checker, and none is wanted. Do not build one.
+
+What is not negotiable is answer accuracy. The failure that would actually harm
+someone is a confident, wrongly-cited answer an officer acts on. Citation
+correctness and honest refusal outrank every other quality concern here.
 
 ## Repository state
 
@@ -48,8 +72,9 @@ source of truth.
 
 ## Product invariants
 
-- The current scope is a personal, non-commercial hobby app for a small invited
-  group of officers. It is not an official agency or facility system.
+- The current scope is a private, single-facility Production application. Real
+  operational and personal data are authorized only in isolated Production after
+  release gates pass; they remain prohibited in all non-production work.
 - The initial product is one private web app for one facility.
 - The UI is calm, practical, readable, keyboard accessible, and review-first.
 - AI may classify, retrieve, summarize, extract, or draft. It may not fabricate
@@ -61,8 +86,8 @@ source of truth.
 - Revisions are append-only. A restore creates a new revision with provenance.
 - Physical-only workflows remain physical-only unless an approved product and
   records decision explicitly changes them.
-- The current repository has no operational production data. Fixtures,
-  screenshots, demos, previews, and seeds must be unmistakably fictional.
+- The repository contains no operational production data. Fixtures, screenshots,
+  demos, previews, CI, and seeds must be unmistakably fictional.
 - The real RAG policy/reference corpus is controlled content. Do not commit
   source files, extracted text, embeddings, questions, answers, or citations
   until the corpus migration protocol expressly permits that artifact.

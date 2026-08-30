@@ -1,0 +1,183 @@
+name: Production database migration
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description:
+          Run a read-only dry-run or apply the already approved additive
+          migrations
+        required: true
+        type: choice
+        options:
+          - dry-run
+          - apply
+      candidate_sha:
+        description: Exact 40-character release-candidate commit SHA
+        required: true
+        type: string
+      candidate_migration_head:
+        description: Exact 14-digit final migration version in the candidate
+        required: true
+        type: string
+      approval_reference:
+        description:
+          Bounded owner approval or change-record reference; no names or record
+          content
+        required: true
+        type: string
+      backup_evidence_reference:
+        description:
+          Required for apply; verified database and Storage backup evidence
+          reference
+        required: false
+        type: string
+      dry_run_evidence_reference:
+        description:
+          Required for apply; separately reviewed dry-run workflow evidence
+          reference
+        required: false
+        type: string
+      confirmation:
+        description: Enter DRY-RUN <SHA> or APPLY <SHA> exactly
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: production-database-migration
+  cancel-in-progress: false
+
+jobs:
+  migration:
+    name: ${{ inputs.operation }} exact candidate
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production-database
+    env:
+      MIGRATION_OPERATION: ${{ inputs.operation }}
+      MIGRATION_CANDIDATE_SHA: ${{ inputs.candidate_sha }}
+      MIGRATION_EXPECTED_HEAD: ${{ inputs.candidate_migration_head }}
+      MIGRATION_APPROVAL_REFERENCE: ${{ inputs.approval_reference }}
+      MIGRATION_BACKUP_REFERENCE: ${{ inputs.backup_evidence_reference }}
+      MIGRATION_DRY_RUN_EVIDENCE: ${{ inputs.dry_run_evidence_reference }}
+      MIGRATION_CONFIRMATION: ${{ inputs.confirmation }}
+      PRODUCTION_MIGRATION_ENABLED: ${{ vars.PRODUCTION_MIGRATION_ENABLED }}
+      SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+      SUPABASE_PROJECT_REGION: ${{ vars.SUPABASE_PROJECT_REGION }}
+      SUPABASE_MIGRATION_DB_URL: ${{ secrets.SUPABASE_MIGRATION_DB_URL }}
+    steps:
+      - name: Check out the exact candidate without push credentials
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.candidate_sha }}
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: 22
+
+      - name: Install pinned Supabase CLI
+        uses: supabase/setup-cli@46f7f98c7f948ad727d22c1e67fab04c223a0520 # v3.0.0
+        with:
+          version: 2.115.0
+
+      - name: Open bounded evidence window
+        shell: bash
+        run: |
+          evidence_dir="$RUNNER_TEMP/production-migration"
+          mkdir -p "$evidence_dir"
+          echo "MIGRATION_COMMAND_EVIDENCE_DIR=$evidence_dir" >> "$GITHUB_ENV"
+          echo "MIGRATION_STARTED_AT=$(date -u +'%Y-%m-%dT%H:%M:%SZ')" >> "$GITHUB_ENV"
+
+      - name: Require protected target configuration
+        shell: bash
+        run: |
+          if [[ -z "$SUPABASE_MIGRATION_DB_URL" || -z "$SUPABASE_PROJECT_REF" || -z "$SUPABASE_PROJECT_REGION" ]]; then
+            echo "::error::Protected production migration configuration is incomplete."
+            exit 1
+          fi
+
+      - name: Validate exact candidate and owner gate
+        id: validate_request
+        run: node scripts/production-migration-guard.mjs
+
+      - name: Verify remote migration history is a candidate prefix
+        shell: bash
+        run: |
+          if ! supabase migration list \
+            --db-url "$SUPABASE_MIGRATION_DB_URL" \
+            --output-format json \
+            > "$MIGRATION_COMMAND_EVIDENCE_DIR/history-before.json" 2>/dev/null; then
+            echo "::error::Unable to read protected migration history."
+            exit 1
+          fi
+          node scripts/verify-production-migration-history.mjs \
+            "$MIGRATION_COMMAND_EVIDENCE_DIR/history-before.json" \
+            "$MIGRATION_EXPECTED_HEAD" \
+            before
+
+      - name: Dry-run exact additive migration set
+        shell: bash
+        run: |
+          if ! supabase db push \
+            --db-url "$SUPABASE_MIGRATION_DB_URL" \
+            --dry-run \
+            --skip-vault \
+            --output-format json \
+            > "$MIGRATION_COMMAND_EVIDENCE_DIR/dry-run.txt" 2>&1; then
+            echo "::error::The production migration dry-run failed."
+            exit 1
+          fi
+
+      - name: Apply exact additive migration set
+        if: inputs.operation == 'apply'
+        shell: bash
+        run: |
+          if ! supabase db push \
+            --db-url "$SUPABASE_MIGRATION_DB_URL" \
+            --skip-vault \
+            --output-format json \
+            > "$MIGRATION_COMMAND_EVIDENCE_DIR/apply.txt" 2>&1; then
+            echo "::error::The production migration apply failed. Begin the reviewed recovery path."
+            exit 1
+          fi
+
+      - name: Verify exact remote migration head after apply
+        if: inputs.operation == 'apply'
+        shell: bash
+        run: |
+          if ! supabase migration list \
+            --db-url "$SUPABASE_MIGRATION_DB_URL" \
+            --output-format json \
+            > "$MIGRATION_COMMAND_EVIDENCE_DIR/history-after.json" 2>/dev/null; then
+            echo "::error::Unable to verify the post-migration history."
+            exit 1
+          fi
+          node scripts/verify-production-migration-history.mjs \
+            "$MIGRATION_COMMAND_EVIDENCE_DIR/history-after.json" \
+            "$MIGRATION_EXPECTED_HEAD" \
+            after
+
+      - name: Write value-free migration evidence
+        if: always() && steps.validate_request.outcome == 'success'
+        env:
+          MIGRATION_RESULT: ${{ job.status }}
+        run: node scripts/write-production-migration-evidence.mjs
+
+      - name: Retain value-free migration evidence
+        if:
+          always() && steps.validate_request.outcome == 'success' &&
+          hashFiles('test-results/production-migration-evidence.json') != ''
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name:
+            production-migration-${{ inputs.operation }}-${{ github.run_id
+            }}-${{ github.run_attempt }}
+          path: test-results/production-migration-evidence.json
+          if-no-files-found: error
+          retention-days: 90

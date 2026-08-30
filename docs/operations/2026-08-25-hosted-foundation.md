@@ -23,12 +23,19 @@ production release, or official facility use.
 - Plan quote confirmed by owner: USD 0 monthly
 - Region: `us-east-1`
 - Observed state after creation: `ACTIVE_HEALTHY`
-- Hosted migration: `20260825125137_foundation`
+- Hosted migrations: `20260825125137_foundation` and
+  `20260825170000_incident_report_foundation`, followed by
+  `20260825222811_account_lifecycle_guards` and
+  `20260825230000_enforce_report_revision_heads`, followed by
+  `20260825233000_add_idempotency_records` and
+  `20260825234000_add_auth_attempt_guards`
 
 Verified after migration:
 
 - the `api` and `app_private` schemas exist;
-- all nine application tables are empty and have RLS enabled and forced;
+- all fourteen application tables are empty and have RLS enabled and forced;
+- incident/report heads, immutable incident/report revisions, and report-access
+  relationships are present but have no application policies or grants yet;
 - `anon` and `authenticated` have zero table grants and zero routine grants in
   `app_private`; no application access policies exist yet;
 - `pgcrypto` and `vector` are installed in `extensions`;
@@ -40,6 +47,34 @@ Verified after migration:
 
 No hosted seed, user account, policy object, embedding, or operational record
 was created.
+
+The account-lifecycle migration is also verified in the Development project: the
+private `user_accounts` trigger exists, its guard has no executable grant to
+public/Data API roles, and it retains the intended default-deny RLS posture. The
+provider security advisor reports only the expected informational no-policy
+notices for the still-unexposed `app_private` foundation tables.
+
+The incident/report revision-head migration is also verified in Development: the
+four private serialized trigger functions use `SECURITY DEFINER` with an empty
+search path and have no execute grants to public or Data API roles. They allow
+only consecutive immutable revisions and advance the matching incident or report
+head after insertion. This is persistence-integrity groundwork only; it does not
+add a browser-accessible mutation path, accounts, records, or RLS policies.
+
+The idempotency migration is also verified in Development: the private retry
+control table has forced default-deny RLS, and its lifecycle guard uses
+`SECURITY DEFINER` with an empty search path and no execute grants to public or
+Data API roles. It preserves opaque request and key digests plus safe result
+metadata only; it stores no request body, narrative, credential, or model
+response content. This is groundwork for a future server-side mutation path; it
+grants no runtime account or browser access.
+
+The authentication-attempt migration is also verified in Development: its
+short-lived private rate-limit metadata accepts only keyed subject digests and
+never raw employee numbers, IP addresses, device identifiers, aliases, or
+passcodes. RLS is enabled and forced, with no table access for anonymous,
+authenticated, or service roles. The provider advisor's no-policy notice is
+expected for this intentionally default-deny internal table.
 
 ## Vercel preview
 
@@ -75,6 +110,31 @@ authoritative project for this repository. Its production deployment
 This is a verified, no-data foundation release. It does not approve accounts,
 operational data, corpus import, or official facility use.
 
+## Connected protected Preview — 2026-08-25
+
+- Application commit: `94dfd61`
+  (`fix: probe public Supabase readiness endpoint`)
+- Deployment ID: `dpl_EkjZg7P2BqZ1CD8Q5Aqner6CtuKJ`
+- Target: protected Vercel Preview; it is not Production traffic.
+- Preview variables are scoped only to Preview: `APP_ENV=preview`, the
+  Development Supabase URL, and its browser-safe publishable key. No database
+  password, service-role key, or other server secret was added.
+- Remote verification through Vercel's authenticated access path returned the
+  intended foundation page, `GET /api/health/live` `200`/`ok`, and
+  `GET /api/health/ready` `200`/`ready`.
+- Readiness deliberately probes Supabase Auth's public settings endpoint. The
+  Data API root correctly rejects publishable keys on this project and is not
+  used as a readiness signal.
+
+Development Supabase Auth was also checked in the hosted dashboard: public
+signup, manual account linking, and anonymous sign-in are disabled; email
+confirmation is enabled. The Site URL is `https://guided-operations.vercel.app`
+and the redirect allow-list contains the canonical Vercel URL, the Vercel
+Preview wildcard, and local development. Supabase does not expose a separate
+hosted toggle that disables password recovery while retaining email/password
+sign-in. The application must therefore never expose or invoke recovery until an
+approved private reset ceremony exists.
+
 ## Secondary Vercel project
 
 An additional project was created under `justin-peterman-s-projects`
@@ -86,9 +146,44 @@ configuration for the authoritative project.
 ## Still open
 
 - Confirm the aligned Vercel function region.
-- Independently recheck the hosted Supabase Auth self-signup setting before any
-  account workflow is built. The owner confirmed it was disabled, but the
-  setting cannot be proven by the database migration.
+- Do not expose or invoke password recovery until the approved private reset
+  ceremony is implemented; hosted Supabase has no separate recovery-disable
+  setting while email/password sign-in remains enabled.
 - Keep sign-in disabled until ADR-0003 and its negative security tests pass.
 - Keep the RAG corpus out of the hosted project until the corpus migration gate
   is approved and reconciled.
+
+## Preview refresh — 2026-08-26
+
+Read-only Vercel CLI verification confirmed the authoritative linked account is
+`justinpeterman-3079` and the project remains `guided-operations`. The newest
+observed protected Preview was ready at
+`https://guided-operations-2hwat2jq2-justinpeterman-3079.vercel.app` and built
+Git commit `dd1bce3` in Vercel region `iad1`.
+
+The Preview variable inventory showed the expected browser-safe Supabase URL and
+publishable key plus server-only credential, CSRF, lookup, and idempotency
+values. Values were not read or recorded. `APP_ORIGIN` was not separately set;
+this is valid for Preview because `getRuntimeEnvironment` derives the exact
+HTTPS origin from Vercel's `VERCEL_URL` only when `APP_ENV=preview`.
+
+This verifies build linkage and configuration inventory only. It does not prove
+that local commits after `dd1bce3`, hosted database migrations, authenticated
+routes, or the application UI are deployed or remotely browser-verified.
+
+## Implementation supersession note — 2026-08-26
+
+Later repository work accepted ADR-0003 for implementation and added the guarded
+authentication/account lifecycle, protected product/admin slices, private RPCs,
+policy provenance, strict readiness, redacted core telemetry, and local
+fictional database-plus-Storage recovery described in `README.md` and
+`ROADMAP.md`. This dated record remains authoritative for what was actually
+observed in the hosted Development foundation; later local/CI implementation
+does not rewrite that evidence.
+
+Sign-in therefore remains disabled on the hosted application until the newer
+forward migrations are explicitly approved for Development, fictional accounts
+are provisioned through the protected ceremony, and the signed-in Auth/RLS/API/
+Storage/browser qualification passes. No statement in this note authorizes a
+hosted migration, identity creation, corpus import, Production promotion, real
+data entry, or traffic change.

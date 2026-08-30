@@ -1,0 +1,224 @@
+.workspace {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.toolbar,
+.status,
+.history,
+.fieldSection,
+.tableSection {
+  border: 1px solid rgba(40, 54, 45, 0.16);
+  border-radius: 1rem;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 1rem 2.5rem rgba(35, 45, 38, 0.07);
+}
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.toolbarActions,
+.historyActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.toolbar button,
+.history button,
+.tableSection button {
+  min-height: 2.65rem;
+  border: 1px solid rgba(32, 65, 44, 0.24);
+  border-radius: 0.7rem;
+  padding: 0.65rem 0.9rem;
+  background: #f7faf6;
+  color: #173923;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.toolbar button:disabled,
+.history button:disabled,
+.tableSection button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.primaryButton {
+  border-color: #1f5b34 !important;
+  background: #1f5b34 !important;
+  color: #fff !important;
+}
+
+.status {
+  padding: 0.9rem 1rem;
+}
+
+.status[data-tone="warning"] {
+  border-color: rgba(143, 91, 15, 0.35);
+  background: #fff8e8;
+}
+
+.formBody {
+  display: grid;
+  gap: 1rem;
+}
+
+.fieldSection,
+.tableSection,
+.history {
+  padding: 1rem;
+}
+
+.fieldGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1rem;
+}
+
+.field {
+  display: grid;
+  align-content: start;
+  gap: 0.4rem;
+  color: #20352a;
+  font-weight: 700;
+}
+
+.field small,
+.muted {
+  color: #657168;
+  font-weight: 500;
+}
+
+.field input,
+.field select,
+.field textarea {
+  width: 100%;
+  min-height: 2.75rem;
+  border: 1px solid rgba(31, 70, 45, 0.25);
+  border-radius: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+  color: #182b20;
+  font: inherit;
+  font-weight: 500;
+}
+
+.field textarea {
+  min-height: 6rem;
+  resize: vertical;
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 44rem;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  border-bottom: 1px solid rgba(40, 54, 45, 0.14);
+  padding: 0.65rem;
+  text-align: left;
+  vertical-align: top;
+}
+
+.table th {
+  color: #526057;
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.tableHeader,
+.historyHeader {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.historyList {
+  display: grid;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.historyItem {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  border-top: 1px solid rgba(40, 54, 45, 0.12);
+  padding-top: 0.75rem;
+}
+
+@media (max-width: 700px) {
+  .toolbar,
+  .tableHeader,
+  .historyHeader,
+  .historyItem {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}
+
+@media print {
+  .workspace[data-orientation="landscape"] {
+    page: daily-paperwork-landscape;
+  }
+
+  .workspace[data-orientation="portrait"] {
+    page: daily-paperwork-portrait;
+  }
+
+  .noPrint,
+  .history,
+  .status {
+    display: none !important;
+  }
+
+  .workspace,
+  .formBody {
+    display: block;
+  }
+
+  .fieldSection,
+  .tableSection {
+    break-inside: avoid;
+    border: 0;
+    box-shadow: none;
+    padding: 0 0 1rem;
+  }
+
+  .field input,
+  .field select,
+  .field textarea {
+    border-color: #666;
+    color: #000;
+  }
+}
+
+@page daily-paperwork-landscape {
+  size: landscape;
+  margin: 0.4in;
+}
+
+@page daily-paperwork-portrait {
+  size: portrait;
+  margin: 0.5in;
+}

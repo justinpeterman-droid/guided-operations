@@ -119,9 +119,9 @@ authentication.
 
 ## 8. Privacy by design
 
-Current development and validation use fictional operational data only. The
-product must minimize collection and retention even if real operational data is
-approved later.
+Development and validation use fictional operational data only. Production may
+hold owner-authorized real data after release gates, but the product must still
+minimize collection and apply the two-year retention and legal-hold rules.
 
 - Do not place narrative text, policy questions, answer excerpts, PINs, tokens,
   session secrets, or generated document bodies in ordinary audit logs.
