@@ -107,7 +107,7 @@ export function ReportRevisionForm({
           ? "Saving correction…"
           : "Create corrected revision"}
       </button>
-      <p aria-live="polite" className="incident-status">
+      <p aria-live="polite" className="workspace-status-message">
         {state === "conflict"
           ? "A newer revision was saved. Your correction is still here; copy it, then reload the report before trying again."
           : state === "failed"

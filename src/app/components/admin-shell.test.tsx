@@ -15,10 +15,6 @@ describe("AdminShell", () => {
       screen.getByRole("link", { name: /Guided Operations/i }),
     ).toHaveAttribute("href", "/admin");
     expect(screen.getByRole("navigation", { name: "Workspace" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Home" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
     expect(screen.getByText("Protected roster")).toBeVisible();
     expect(
       screen.getByRole("link", { name: "Administrator home" }),

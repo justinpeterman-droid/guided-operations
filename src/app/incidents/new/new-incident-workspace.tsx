@@ -727,13 +727,13 @@ export function NewIncidentWorkspace() {
                 </button>
               </div>
               {extractionState === "suggested" ? (
-                <p className="incident-status" role="status">
+                <p className="workspace-status-message" role="status">
                   AI suggestions are ready. Confirm the category, then review
                   every fact one at a time.
                 </p>
               ) : null}
               {extractionState === "unavailable" ? (
-                <p className="incident-status" role="status">
+                <p className="workspace-status-message" role="status">
                   AI suggestions are unavailable. You can continue with manual
                   line-by-line review.
                 </p>
@@ -761,7 +761,7 @@ export function NewIncidentWorkspace() {
                 Confirm category and review facts
               </button>
               {deterministicFactProposals.length > 200 ? (
-                <p className="incident-status" role="alert">
+                <p className="workspace-status-message" role="alert">
                   Field notes have more than 200 non-empty lines. Combine
                   related lines before continuing; nothing has been discarded.
                 </p>
@@ -769,7 +769,7 @@ export function NewIncidentWorkspace() {
               {deterministicFactProposals.some(
                 ({ sourceText }) => sourceText.length > 8_000,
               ) ? (
-                <p className="incident-status" role="alert">
+                <p className="workspace-status-message" role="alert">
                   One field-note line is longer than 8,000 characters. Shorten
                   that line before continuing; nothing has been discarded.
                 </p>
@@ -857,7 +857,7 @@ export function NewIncidentWorkspace() {
                   question={question}
                 />
               ))}
-              <p aria-live="polite" className="incident-status">
+              <p aria-live="polite" className="workspace-status-message">
                 {checklistReview.complete
                   ? "Required missing-information questions are reviewed."
                   : `${checklistReview.issues.length} required or invalid checklist item${checklistReview.issues.length === 1 ? " remains" : "s remain"}.`}
@@ -988,7 +988,7 @@ export function NewIncidentWorkspace() {
               >
                 {saveState === "saving" ? "Saving incident…" : "Save incident"}
               </button>
-              <p aria-live="polite" className="incident-status">
+              <p aria-live="polite" className="workspace-status-message">
                 {saveState === "saved"
                   ? "Incident saved. Return to Reports to view the authorized list."
                   : saveState === "failed"

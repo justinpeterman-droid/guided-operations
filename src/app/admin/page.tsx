@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
+import {
   AdminAccountLink,
   AdminShell,
 } from "@/app/components/admin-shell";
@@ -15,7 +19,14 @@ export const dynamic = "force-dynamic";
  */
 export default async function AdminPage() {
   const access = await loadAdminAccess();
-  if (access === "unavailable") return <Unavailable />;
+  if (access === "unavailable")
+    return (
+      <AdminUnavailableMessage
+        description="No account settings have been changed."
+        eyebrow="Administrator workspace unavailable"
+        title="This page cannot load right now."
+      />
+    );
   if (access === "denied") return <AccessRequired />;
 
   return (
@@ -110,36 +121,6 @@ export async function loadAdminAccess(): Promise<
 
 function AccessRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-access-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="admin-access-title">Administrator access is required.</h1>
-        <p>This area is available only to a current administrator account.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
-  );
-}
-
-function Unavailable() {
-  return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-unavailable-title"
-      >
-        <p className="eyebrow">Administrator workspace unavailable</p>
-        <h1 id="admin-unavailable-title">This page cannot load right now.</h1>
-        <p>No account settings have been changed.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
+    <AdminAccessRequiredMessage description="This area is available only to a current administrator account." />
   );
 }

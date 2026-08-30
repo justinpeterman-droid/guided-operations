@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { getReportTypeDefinition } from "@/features/incidents/report-types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
@@ -22,11 +26,30 @@ export default async function ReportPage({
   const result = await loadReport(reportId);
 
   if (result.kind === "denied")
-    return <Message title="Sign in to view this report." />;
+    return (
+      <OfficerSignInRequiredMessage
+        description="Your existing work has not been changed."
+        title="Sign in to view this report."
+      />
+    );
   if (result.kind === "not_found")
-    return <Message title="Report unavailable." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing work has not been changed."
+        eyebrow="Private workspace"
+        title="Report unavailable."
+      />
+    );
   if (result.kind === "unavailable")
-    return <Message title="Report cannot be loaded right now." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing work has not been changed."
+        eyebrow="Private workspace"
+        title="Report cannot be loaded right now."
+      />
+    );
 
   const reportLabel = getReportTypeDefinition(result.report.reportType).label;
 
@@ -58,7 +81,7 @@ export default async function ReportPage({
         <h1 id="report-title">{reportLabel}</h1>
         <p>
           Revision {result.report.revisionNumber} ·{" "}
-          <span className={`incident-status status-${result.report.status}`}>
+          <span className={`status-badge status-${result.report.status}`}>
             {result.report.status.replace("_", " ")}
           </span>
         </p>
@@ -131,19 +154,4 @@ async function loadReport(reportId: string) {
   } catch {
     return { kind: "unavailable" } as const;
   }
-}
-
-function Message({ title }: { title: string }) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state">
-        <p className="eyebrow">Private workspace</p>
-        <h1>{title}</h1>
-        <p>Your existing work has not been changed.</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
-  );
 }

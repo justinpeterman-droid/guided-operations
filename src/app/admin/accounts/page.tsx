@@ -1,9 +1,11 @@
-import Link from "next/link";
-
 import {
   AdminAccountLink,
   AdminShell,
 } from "@/app/components/admin-shell";
+import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { AccountDisableControl } from "./account-disable-control";
 import { AccountInvitationForm } from "./account-invitation-form";
 import { AccountPasscodeResetControl } from "./account-passcode-reset-control";
@@ -123,38 +125,16 @@ async function loadAccounts() {
 
 function AccessRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-access-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="admin-access-title">Administrator access is required.</h1>
-        <p>This account list is available only to a current administrator.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
+    <AdminAccessRequiredMessage description="This account list is available only to a current administrator." />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="accounts-unavailable-title"
-      >
-        <p className="eyebrow">Accounts unavailable</p>
-        <h1 id="accounts-unavailable-title">
-          The account list cannot load right now.
-        </h1>
-        <p>No account settings have been changed.</p>
-        <Link className="reports-home-link" href="/admin">
-          Return to administrator workspace
-        </Link>
-      </section>
-    </main>
+    <AdminUnavailableMessage
+      description="No account settings have been changed."
+      eyebrow="Accounts unavailable"
+      title="The account list cannot load right now."
+    />
   );
 }
