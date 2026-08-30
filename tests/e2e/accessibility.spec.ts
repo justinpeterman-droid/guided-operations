@@ -109,6 +109,20 @@ test("preview navigation keeps a visible keyboard focus indicator", async ({
   ).toBe(true);
 });
 
+test("the skip link moves keyboard focus into the main content", async ({
+  page,
+}) => {
+  await page.goto("/preview/workspace");
+  await page.keyboard.press("Tab");
+
+  const skipLink = page.getByRole("link", { name: "Skip to main content" });
+  await expect(skipLink).toBeFocused();
+  await expect(skipLink).toBeVisible();
+
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#main-content")).toBeFocused();
+});
+
 test("fictional preview routes remain usable at mobile size and reduced motion", async ({
   page,
 }) => {
