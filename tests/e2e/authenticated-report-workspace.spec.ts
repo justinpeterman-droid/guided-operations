@@ -287,6 +287,9 @@ test("an officer and administrator can use the protected per-officer report work
       name: "Fictional Report Workspace Qualification",
     }),
   ).toBeVisible();
+  // Document Studio opens on Overview. The draft request form, and the officer
+  // and fact controls below, live under Officer Reports.
+  await page.getByRole("tab", { name: /Officer Reports/ }).click();
   await expect(
     page.getByRole("radio", { name: /Fictional Qualification Officer/ }),
   ).toBeChecked();
