@@ -76,7 +76,11 @@ describe("answer report request validation", () => {
       SESSION,
       KEY,
     );
-    expect(result).toMatchObject({ ok: false, status: 403, code: "invalid_origin" });
+    expect(result).toMatchObject({
+      ok: false,
+      status: 403,
+      code: "invalid_origin",
+    });
   });
 
   it("rejects a report without a valid session CSRF token", async () => {
@@ -87,7 +91,11 @@ describe("answer report request validation", () => {
       SESSION,
       KEY,
     );
-    expect(result).toMatchObject({ ok: false, status: 403, code: "csrf_failed" });
+    expect(result).toMatchObject({
+      ok: false,
+      status: 403,
+      code: "csrf_failed",
+    });
   });
 
   it("rejects a non-JSON content type", async () => {
