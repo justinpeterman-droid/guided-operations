@@ -1,4 +1,5 @@
 import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -11,7 +12,7 @@ vi.mock("@/server/incidents/get-incident-report-workspace", () => ({
       incidentId: "11111111-1111-4111-8111-111111111111",
       incidentNumber: "F-PAGE-001",
       displayName: "Fictional protected incident",
-      category: "training",
+      category: "incident_no_disciplinary",
       incidentRevisionId: "22222222-2222-4222-8222-222222222222",
       revisionNumber: 1,
       schemaVersion: 2,
@@ -20,14 +21,34 @@ vi.mock("@/server/incidents/get-incident-report-workspace", () => ({
     },
   }),
 }));
+vi.mock("@/server/incidents/list-incidents", () => ({
+  listIncidentsForCurrentSession: vi.fn().mockResolvedValue({
+    kind: "listed",
+    incidents: [],
+  }),
+}));
+vi.mock("@/server/incidents/list-reports", () => ({
+  listReportsForCurrentSession: vi.fn().mockResolvedValue({
+    kind: "listed",
+    reports: [],
+  }),
+}));
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
+}));
+vi.mock("@/app/incidents/[incidentId]/report-draft-request-form", () => ({
+  ReportDraftRequestForm: () => (
+    <p role="alert">
+      No active reporting officer is available on this revision.
+    </p>
+  ),
 }));
 
 import IncidentReportWorkspacePage from "./page";
 
 describe("IncidentReportWorkspacePage", () => {
-  it("renders the protected current revision without fictional fallback data", async () => {
+  it("renders the Document Studio tabs for the protected current revision", async () => {
+    const user = userEvent.setup();
     render(
       await IncidentReportWorkspacePage({
         params: Promise.resolve({
@@ -39,7 +60,12 @@ describe("IncidentReportWorkspacePage", () => {
     expect(
       screen.getByRole("heading", { name: "Fictional protected incident" }),
     ).toBeVisible();
-    expect(screen.getByText(/F-PAGE-001/)).toBeVisible();
+    expect(screen.getAllByText(/F-PAGE-001/).length).toBeGreaterThan(0);
+    expect(
+      screen.getByRole("tablist", { name: "Document Studio sections" }),
+    ).toBeVisible();
+    expect(screen.getByRole("tab", { name: /Officer Reports/i })).toBeVisible();
+    await user.click(screen.getByRole("tab", { name: /Officer Reports/i }));
     expect(screen.getByText(/No active reporting officer/)).toBeVisible();
   });
 });

@@ -1,10 +1,11 @@
 import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import { DocumentStudio } from "@/features/incidents/document-studio";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
-
-import { ReportDraftRequestForm } from "./report-draft-request-form";
+import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
+import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -26,8 +27,13 @@ export default async function IncidentReportWorkspacePage({
     return <Message title="Report preparation is unavailable right now." />;
   }
 
+  const [incident, reports] = await Promise.all([
+    loadIncidentSummary(incidentId),
+    loadIncidentReports(result.workspace.incidentNumber),
+  ]);
+
   return (
-    <WorkspaceShell current="Reports" title="Report Assistant">
+    <WorkspaceShell current="Reports" title="Document Studio">
       <section className="reports-intro" aria-labelledby="incident-title">
         <p className="eyebrow">Authorized incident · current revision</p>
         <h1 id="incident-title">{result.workspace.displayName}</h1>
@@ -37,13 +43,17 @@ export default async function IncidentReportWorkspacePage({
           {result.workspace.revisionNumber}
         </p>
         <p>
-          Select one officer and only the confirmed facts that belong in that
-          officer&apos;s perspective. The generated copy must still be reviewed
-          and corrected before it becomes a report.
+          Use the tabs below to review packet state, request officer reports,
+          inspect reviewed facts, and open report history without leaving this
+          incident.
         </p>
       </section>
 
-      <ReportDraftRequestForm workspace={result.workspace} />
+      <DocumentStudio
+        incident={incident}
+        reports={reports}
+        workspace={result.workspace}
+      />
     </WorkspaceShell>
   );
 }
@@ -56,6 +66,37 @@ export async function loadIncidentReportWorkspace(incidentId: unknown) {
     );
   } catch {
     return { kind: "unavailable" } as const;
+  }
+}
+
+async function loadIncidentSummary(incidentId: string) {
+  try {
+    const listed = await listIncidentsForCurrentSession(
+      await createSupabaseServerClient(),
+      100,
+    );
+    if (listed.kind !== "listed") return null;
+    return (
+      listed.incidents.find((incident) => incident.incidentId === incidentId) ??
+      null
+    );
+  } catch {
+    return null;
+  }
+}
+
+async function loadIncidentReports(incidentNumber: string) {
+  try {
+    const listed = await listReportsForCurrentSession(
+      await createSupabaseServerClient(),
+      100,
+    );
+    if (listed.kind !== "listed") return [];
+    return listed.reports.filter(
+      (report) => report.incidentNumber === incidentNumber,
+    );
+  } catch {
+    return [];
   }
 }
 
