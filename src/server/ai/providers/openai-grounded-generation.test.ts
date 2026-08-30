@@ -3,6 +3,10 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 
 import { createOpenAiGroundedGenerationProvider } from "./openai-grounded-generation";
+import {
+  POLICY_ANSWER_REASONING_EFFORT,
+  POLICY_ANSWER_REASONING_TOKENS,
+} from "./openai-reasoning";
 
 const citation = {
   documentId: "11111111-1111-4111-8111-111111111111",
@@ -79,7 +83,11 @@ describe("OpenAI grounded generation provider", () => {
     expect(body).toMatchObject({
       model: environment.OPENAI_POLICY_MODEL,
       store: false,
-      max_output_tokens: 2400,
+      // The answer allowance plus a reasoning allowance. Current models spend
+      // invisible reasoning tokens out of this same budget, so a ceiling of
+      // 2400 would let reasoning starve the answer and return nothing.
+      reasoning: { effort: POLICY_ANSWER_REASONING_EFFORT },
+      max_output_tokens: POLICY_ANSWER_REASONING_TOKENS + 2400,
       text: { format: { type: "json_schema", strict: true } },
       input: expect.stringContaining("previousUserQuestions"),
     });

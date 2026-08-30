@@ -53,6 +53,16 @@ The initial Responses adapter is server-only, requires an explicit
 parsed output is still untrusted until the domain citation validator accepts the
 exact retrieved provenance.
 
+The pinned models are the GPT-5.6 family: `gpt-5.6-terra` for policy answers and
+for report drafting, with `gpt-5.6-sol` and `gpt-5.6-luna` as the higher- and
+lower-cost dials. These models reason before answering, and those reasoning
+tokens are billed and counted against `max_output_tokens` without ever appearing
+in `output_text`. Every Responses call therefore pins `reasoning.effort` and
+adds a reasoning allowance on top of its answer allowance; the constants live in
+`server/ai/providers/openai-reasoning.ts`. A budget sized for the visible answer
+alone returns status `incomplete` with nothing in it, which reads as a broken
+provider when it is only an under-funded one.
+
 The domain `PolicyAnswerService` now composes those two interfaces without a
 provider SDK. It validates the question and facility scope, never invokes
 generation when retrieval yields no authorized passages, and validates every

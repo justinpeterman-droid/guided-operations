@@ -13,6 +13,10 @@ import {
   type AiRequestBudgetGuard,
 } from "../ai-request-budget";
 import type { ReportDraftGenerationProvider } from "../contracts";
+import {
+  DRAFTING_REASONING_EFFORT,
+  DRAFTING_REASONING_TOKENS,
+} from "./openai-reasoning";
 
 const responseSchema = z
   .object({
@@ -88,10 +92,14 @@ export function createOpenAiReportDraftGenerationProvider(
                 ruleProfile: REPORT_WRITING_RULE_PROFILE,
                 ...request.source,
               }),
-              max_output_tokens: Math.min(
-                2400,
-                request.maximumParagraphs * request.maximumParagraphCharacters,
-              ),
+              reasoning: { effort: DRAFTING_REASONING_EFFORT },
+              max_output_tokens:
+                DRAFTING_REASONING_TOKENS +
+                Math.min(
+                  2400,
+                  request.maximumParagraphs *
+                    request.maximumParagraphCharacters,
+                ),
               text: {
                 format: {
                   type: "json_schema",

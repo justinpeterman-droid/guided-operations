@@ -12,6 +12,10 @@ import type {
   GroundedGenerationProvider,
   GroundedGenerationRequest,
 } from "../contracts";
+import {
+  POLICY_ANSWER_REASONING_EFFORT,
+  POLICY_ANSWER_REASONING_TOKENS,
+} from "./openai-reasoning";
 
 const responseSchema = z
   .object({
@@ -139,10 +143,10 @@ export function createOpenAiGroundedGenerationProvider(
               store: false,
               instructions: buildInstructions(),
               input: buildInput(request),
-              max_output_tokens: Math.min(
-                2400,
-                request.maximumAnswerCharacters,
-              ),
+              reasoning: { effort: POLICY_ANSWER_REASONING_EFFORT },
+              max_output_tokens:
+                POLICY_ANSWER_REASONING_TOKENS +
+                Math.min(2400, request.maximumAnswerCharacters),
               text: {
                 format: {
                   type: "json_schema",
