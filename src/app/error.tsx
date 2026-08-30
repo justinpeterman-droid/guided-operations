@@ -16,7 +16,10 @@ export default function RootError({
       <header className="workspace-message-header">
         <WorkspaceBrand title="Guided Operations" />
       </header>
-      <section className="reports-empty-state" aria-labelledby="root-error-title">
+      <section
+        className="reports-empty-state"
+        aria-labelledby="root-error-title"
+      >
         <p className="eyebrow">Workspace unavailable</p>
         <h1 id="root-error-title">This page cannot load right now.</h1>
         <p>
