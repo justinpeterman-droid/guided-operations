@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import {
+  AdminAccountLink,
+  AdminShell,
+} from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminSystemHealth } from "@/server/health/admin-system-health";
 
@@ -13,25 +16,7 @@ export default async function AdminHealthPage() {
   if (result.kind === "unavailable") return <Unavailable />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>System health</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link className="reports-home-link" href="/account">
-            Account
-          </Link>
-        </div>
-      </header>
-
+    <AdminShell actions={<AdminAccountLink />} title="System health">
       <section className="reports-intro" aria-labelledby="health-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="health-title">System health</h1>
@@ -45,7 +30,7 @@ export default async function AdminHealthPage() {
         <HealthItem title="Website" status={result.application} />
         <HealthItem title="Supabase connection" status={result.supabase} />
       </section>
-    </main>
+    </AdminShell>
   );
 }
 

@@ -1,6 +1,9 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import {
+  AdminAccountLink,
+  AdminShell,
+} from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAuditEventsForCurrentSession } from "@/server/auth/list-admin-audit-events";
 
@@ -13,25 +16,7 @@ export default async function AdminAuditPage() {
   if (result.kind === "unavailable") return <Unavailable />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Activity log</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link className="reports-home-link" href="/account">
-            Account
-          </Link>
-        </div>
-      </header>
-
+    <AdminShell actions={<AdminAccountLink />} title="Activity log">
       <section className="reports-intro" aria-labelledby="audit-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="audit-title">Activity log</h1>
@@ -77,7 +62,7 @@ export default async function AdminAuditPage() {
           </div>
         </section>
       )}
-    </main>
+    </AdminShell>
   );
 }
 

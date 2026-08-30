@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AdminShell } from "@/app/components/admin-shell";
 import {
   dailyPaperworkKindSchema,
   shiftCodeSchema,
@@ -47,29 +47,20 @@ export default async function DailyPaperworkFormPage({
     );
 
   return (
-    <main className="reports-page daily-paperwork-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Daily Paperwork</strong>
-          </span>
+    <AdminShell
+      actions={
+        <Link
+          className="reports-home-link"
+          href={`/admin/paperwork/daily?workDate=${encodeURIComponent(workDate)}&shiftCode=${shiftCode.data}`}
+        >
+          All Daily Paperwork
         </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link
-            className="reports-home-link"
-            href={`/admin/paperwork/daily?workDate=${encodeURIComponent(workDate)}&shiftCode=${shiftCode.data}`}
-          >
-            All Daily Paperwork
-          </Link>
-        </div>
-      </header>
+      }
+      className="reports-page daily-paperwork-page"
+      title="Daily Paperwork"
+    >
       <DailyPaperworkWorkspace initialPaperwork={result.paperwork} />
-    </main>
+    </AdminShell>
   );
 }
 
