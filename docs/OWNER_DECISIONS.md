@@ -114,6 +114,17 @@ resource.
 
 ## Known operational issues
 
+- **One policy is missing from the corpus (2026-08-30):**
+  `SD 2022-01 Revised COVID Visitation Directive.pdf` failed its production
+  import. Its page 5 screening checklist draws checkboxes with a symbol font
+  whose glyph is character `0x00`, and PostgreSQL rejects NUL in text columns.
+  The fix belongs in normalization, but `normalization_version` is part of the
+  configuration hash for every bundle, so changing it re-keys all 236 and
+  implies a full re-extraction. The owner deferred that on 2026-08-30; the
+  annual refresh in O-026 is the natural moment to bump it. Until then the
+  directive is not searchable and a question about it returns no sources.
+  Recorded in `docs/operations/2026-08-30-production-corpus-import.md`.
+
 - **GitHub Actions exhausted (2026-08-29):** every workflow run on this private
   repository has failed in 3-5 seconds since 2026-08-28 16:34 UTC. Failed jobs
   are assigned no runner and execute zero steps. Actions is enabled and the
