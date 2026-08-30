@@ -2,6 +2,11 @@ import Link from "next/link";
 
 import { OfficerCommandCenter } from "@/app/components/workspace-command-center";
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  HOME_ACTION,
+  SIGN_IN_ACTION,
+  WorkspaceMessage,
+} from "@/app/components/workspace-message";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
@@ -71,64 +76,33 @@ async function loadAccess() {
 
 function PasscodeChangeRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="home-passcode-change-title"
-      >
-        <p className="eyebrow">Account security</p>
-        <h1 id="home-passcode-change-title">
-          Change your temporary passcode to open your workspace.
-        </h1>
-        <p>
-          Your sign-in was accepted. Choose a personal passcode before using the
-          workspace.
-        </p>
-        <Link className="reports-home-link" href="/account">
-          Change temporary passcode
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[{ href: "/account", label: "Change temporary passcode" }]}
+      description="Your sign-in was accepted. Choose a personal passcode before using the workspace."
+      eyebrow="Account security"
+      title="Change your temporary passcode to open your workspace."
+    />
   );
 }
 
 function SignInRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="home-login-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="home-login-title">Sign in to open your workspace.</h1>
-        <p>
-          Your home screen is available only after the app confirms your
-          account.
-        </p>
-        <Link className="reports-home-link" href="/login">
-          Sign in
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[SIGN_IN_ACTION]}
+      description="Your home screen is available only after the app confirms your account."
+      eyebrow="Private workspace"
+      title="Sign in to open your workspace."
+    />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="home-unavailable-title"
-      >
-        <p className="eyebrow">Workspace unavailable</p>
-        <h1 id="home-unavailable-title">
-          Your workspace cannot load right now.
-        </h1>
-        <p>Your work has not been changed. Please try again later.</p>
-        <Link className="reports-home-link" href="/home">
-          Return home
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[HOME_ACTION]}
+      description="Your work has not been changed. Please try again later."
+      eyebrow="Workspace unavailable"
+      title="Your workspace cannot load right now."
+    />
   );
 }

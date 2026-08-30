@@ -137,7 +137,7 @@ export function ReportHistory({
           </button>
         </form>
       ) : null}
-      <p aria-live="polite" className="incident-status">
+      <p aria-live="polite" className="workspace-status-message">
         {message}
       </p>
     </section>

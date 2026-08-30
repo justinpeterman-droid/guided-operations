@@ -1,9 +1,11 @@
-import Link from "next/link";
-
 import {
   AdminAccountLink,
   AdminShell,
 } from "@/app/components/admin-shell";
+import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAuditEventsForCurrentSession } from "@/server/auth/list-admin-audit-events";
 
@@ -94,38 +96,16 @@ async function loadAuditEvents() {
 
 function AccessRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-access-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="admin-access-title">Administrator access is required.</h1>
-        <p>This activity log is available only to a current administrator.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
+    <AdminAccessRequiredMessage description="This activity log is available only to a current administrator." />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="audit-unavailable-title"
-      >
-        <p className="eyebrow">Activity log unavailable</p>
-        <h1 id="audit-unavailable-title">
-          The activity log cannot load right now.
-        </h1>
-        <p>No existing activity entries have been changed.</p>
-        <Link className="reports-home-link" href="/admin">
-          Return to administrator workspace
-        </Link>
-      </section>
-    </main>
+    <AdminUnavailableMessage
+      description="No existing activity entries have been changed."
+      eyebrow="Activity log unavailable"
+      title="The activity log cannot load right now."
+    />
   );
 }

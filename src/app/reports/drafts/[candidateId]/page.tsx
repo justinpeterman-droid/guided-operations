@@ -1,6 +1,10 @@
 import Link from "next/link";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportDraftCandidateForCurrentSession } from "@/server/ai/get-report-draft-candidate";
 
@@ -97,42 +101,31 @@ async function loadCandidate(candidateId: string) {
 
 function SignInRequired() {
   return (
-    <Message
+    <OfficerSignInRequiredMessage
+      description="Draft candidates are available only to an authorized private account."
       title="Sign in to review a draft."
-      detail="Draft candidates are available only to an authorized private account."
     />
   );
 }
 
 function NotFound() {
   return (
-    <Message
+    <OfficerUnavailableMessage
+      actions={[{ href: "/reports", label: "Return to reports" }]}
+      description="This draft does not exist or is not available to this account."
+      eyebrow="Private workspace"
       title="Draft unavailable."
-      detail="This draft does not exist or is not available to this account."
     />
   );
 }
 
 function Unavailable() {
   return (
-    <Message
+    <OfficerUnavailableMessage
+      actions={[{ href: "/reports", label: "Return to reports" }]}
+      description="Your existing work has not been changed. Please try again later."
+      eyebrow="Private workspace"
       title="Draft review is unavailable."
-      detail="Your existing work has not been changed. Please try again later."
     />
-  );
-}
-
-function Message({ title, detail }: { title: string; detail: string }) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state">
-        <p className="eyebrow">Private workspace</p>
-        <h1>{title}</h1>
-        <p>{detail}</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
   );
 }
