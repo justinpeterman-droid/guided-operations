@@ -1,4 +1,8 @@
+import sys
 import unittest
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from guided_policy_ingestion.extractors.mineru import _apply_banner_page_labels
 from guided_policy_ingestion.models import RawBlock
