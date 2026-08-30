@@ -26,6 +26,12 @@ class BatchSummary:
     total_pages: int = 0
     total_chunks: int = 0
     collections: dict[str, dict[str, int]] = field(default_factory=dict)
+    # Distinct safe failure reasons with how many sources hit each. A count of
+    # failures with no reason attached tells the operator nothing actionable.
+    failure_reasons: dict[str, int] = field(default_factory=dict)
+
+    def note_failure(self, reason: str) -> None:
+        self.failure_reasons[reason] = self.failure_reasons.get(reason, 0) + 1
 
     def count(self, collection: str, key: str, amount: int = 1) -> None:
         bucket = self.collections.setdefault(
@@ -33,6 +39,21 @@ class BatchSummary:
             {"discovered": 0, "processed": 0, "skipped": 0, "awaiting_review": 0, "failed": 0, "pages": 0, "chunks": 0},
         )
         bucket[key] += amount
+
+
+def _safe_pipeline_reason(error: BaseException) -> str:
+    """Name a pipeline failure without printing a source path.
+
+    OSError carries the filename it choked on, and the tool must not log
+    absolute source paths, so only its errno is reported. The remaining types
+    raise messages this code or a parser wrote, which name structure rather
+    than content.
+    """
+    name = type(error).__name__
+    if isinstance(error, OSError):
+        return f"{name}; errno {error.errno}"
+    detail = str(error).strip().splitlines()[0] if str(error).strip() else ""
+    return f"{name}: {detail[:200]}" if detail else name
 
 
 def _load_bundle(attempt_dir: Path) -> tuple[tuple[NormalizedPage, ...], tuple[PolicyChunk, ...]]:
@@ -74,8 +95,17 @@ class IngestionPipeline:
         dry_run: bool = False,
         limit: int | None = None,
         validate_only: bool = False,
+        import_only: bool = False,
         source_sha: str | None = None,
     ) -> BatchSummary:
+        """Run the pipeline.
+
+        `import_only` covers the case where extraction finished in an earlier
+        session and the documents were registered afterwards. Without it the
+        only way to import an already-extracted corpus is `--force`, which
+        re-runs the extractor over every file - hours of work to reproduce
+        bundles that are already on disk and already validated.
+        """
         sources = discover_sources(root, collection=collection, source_sha=source_sha)
         if limit is not None:
             sources = sources[:limit]
@@ -85,7 +115,7 @@ class IngestionPipeline:
             if dry_run:
                 continue
             plan = self.checkpoints.plan(source, self.configuration_hash, resume=resume, force=force)
-            if plan.skip and not validate_only:
+            if plan.skip and not validate_only and not import_only:
                 summary.skipped_unchanged += 1
                 summary.count(source.collection, "skipped")
                 continue
@@ -94,8 +124,10 @@ class IngestionPipeline:
             plan.directory.mkdir(parents=True, exist_ok=True)
             try:
                 prior_state = self.checkpoints.read_state(plan.directory)
-                reuse_bundle = validate_only or (
-                    resume and prior_state.get("status") == "import_failed"
+                reuse_bundle = (
+                    validate_only
+                    or import_only
+                    or (resume and prior_state.get("status") == "import_failed")
                 )
                 if reuse_bundle:
                     pages, chunks = _load_bundle(plan.directory)
@@ -188,14 +220,21 @@ class IngestionPipeline:
                             extraction_model_version,
                             plan.attempt_number,
                         )
-                    except ImportErrorSafe:
+                    except ImportErrorSafe as error:
+                        # ImportErrorSafe messages are written to be printable -
+                        # that is the whole point of the type - so recording and
+                        # showing one costs nothing and saves the operator from
+                        # a failure count with no cause attached.
+                        reason = str(error)
                         self.checkpoints.write_state(
                             plan.directory,
                             status="import_failed",
                             failure_code="supabase_import_failed",
+                            failure_reason=reason,
                             page_count=len(pages),
                             chunk_count=len(chunks),
                         )
+                        summary.note_failure(reason)
                         summary.failed += 1
                         summary.count(source.collection, "failed")
                         continue
@@ -216,7 +255,14 @@ class IngestionPipeline:
                 summary.count(source.collection, "chunks", len(chunks))
             except (ExtractionError, OSError, ValueError, json.JSONDecodeError) as error:
                 code = error.code if isinstance(error, ExtractionError) else "pipeline_failed"
-                self.checkpoints.write_state(plan.directory, status="failed", failure_code=code)
+                reason = _safe_pipeline_reason(error)
+                self.checkpoints.write_state(
+                    plan.directory,
+                    status="failed",
+                    failure_code=code,
+                    failure_reason=reason,
+                )
+                summary.note_failure(reason)
                 summary.failed += 1
                 summary.count(source.collection, "failed")
         return summary
