@@ -1,7 +1,4 @@
-import {
-  AdminAccountLink,
-  AdminShell,
-} from "@/app/components/admin-shell";
+import { AdminAccountLink, AdminShell } from "@/app/components/admin-shell";
 import {
   AdminAccessRequiredMessage,
   AdminUnavailableMessage,

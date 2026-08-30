@@ -128,9 +128,7 @@ export function ReportsList({
                     <strong>{incident.displayName}</strong>
                   </th>
                   <td>
-                    <span
-                      className={`.status-badge status-${incident.status}`}
-                    >
+                    <span className={`.status-badge status-${incident.status}`}>
                       {incident.status.replace("_", " ")}
                     </span>
                   </td>

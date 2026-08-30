@@ -21,7 +21,10 @@ export function DailyPaperworkCatalog({
   canManagePackages?: boolean;
 }>) {
   return (
-    <AdminShell className="reports-page daily-paperwork-page" title="Daily Paperwork">
+    <AdminShell
+      className="reports-page daily-paperwork-page"
+      title="Daily Paperwork"
+    >
       <section className="reports-intro" aria-labelledby="daily-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="daily-title">Daily Paperwork</h1>
