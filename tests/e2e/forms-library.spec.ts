@@ -1,14 +1,15 @@
 import { expect, test } from "@playwright/test";
 
+import { collectFailedRequests } from "./support/failed-requests";
+
 test("keeps the real Forms Library behind a verified account", async ({
   page,
 }) => {
   const consoleErrors: string[] = [];
-  const failedAssets: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
-  page.on("requestfailed", (request) => failedAssets.push(request.url()));
+  const failedAssets = collectFailedRequests(page);
 
   await page.goto("/forms");
 
@@ -27,12 +28,11 @@ test("shows only honest fictional form availability in the public preview", asyn
   page,
 }) => {
   const consoleErrors: string[] = [];
-  const failedAssets: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") consoleErrors.push(message.text());
   });
   page.on("pageerror", (error) => consoleErrors.push(error.message));
-  page.on("requestfailed", (request) => failedAssets.push(request.url()));
+  const failedAssets = collectFailedRequests(page);
 
   await page.goto("/preview/forms-library");
 

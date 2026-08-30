@@ -18,7 +18,7 @@ export type WorkspaceMessageProps = Readonly<{
 
 export const SIGN_IN_ACTION: WorkspaceMessageAction = {
   href: "/login",
-  label: "Sign in",
+  label: "Go to sign in",
 };
 
 export const HOME_ACTION: WorkspaceMessageAction = {
