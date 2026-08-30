@@ -21,6 +21,8 @@ must be inspected before citing a command as available.
   strict data boundary and controlled corpus lifecycle.
 - [definition-of-done.md](definition-of-done.md) — change, release, deployment,
   and operational-readiness gates.
+- [2026-08-30-authentication-adversarial-security-review.md](2026-08-30-authentication-adversarial-security-review.md)
+  — open adversarial findings for Milestone 1 opaque authentication (PR #4).
 
 ## Evidence labels
 
