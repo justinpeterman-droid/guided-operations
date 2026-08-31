@@ -64,19 +64,58 @@ def _load_bundle(
     return pages, chunks
 
 
-def _extractor_page_count(manifest: object) -> int:
+def _manifest_page_count(
+    manifest: object,
+    key: str,
+    error_code: str,
+    detail: str,
+) -> int:
     if not isinstance(manifest, dict):
         raise ExtractionError(
-            "missing_extracted_page_count_evidence",
+            error_code,
             "Stored bundle manifest is not a JSON object",
         )
-    value = manifest.get("extracted_page_count")
+    value = manifest.get(key)
     if isinstance(value, bool) or not isinstance(value, int) or value < 1:
-        raise ExtractionError(
-            "missing_extracted_page_count_evidence",
-            "Stored bundle is missing original extractor page-count evidence",
-        )
+        raise ExtractionError(error_code, detail)
     return value
+
+
+def _extractor_page_count(manifest: object) -> int:
+    return _manifest_page_count(
+        manifest,
+        "extracted_page_count",
+        "missing_extracted_page_count_evidence",
+        "Stored bundle is missing original extractor page-count evidence",
+    )
+
+
+def _observed_page_count(manifest: object) -> int:
+    return _manifest_page_count(
+        manifest,
+        "observed_page_count",
+        "missing_observed_page_count_evidence",
+        "Stored bundle is missing observed extraction page-count evidence",
+    )
+
+
+def _validate_stored_page_counts(
+    manifest: object,
+    pages: tuple[NormalizedPage, ...],
+) -> int:
+    declared_page_count = _extractor_page_count(manifest)
+    observed_page_count = _observed_page_count(manifest)
+    if declared_page_count != observed_page_count:
+        raise ExtractionError(
+            "extracted_page_count_mismatch",
+            "Stored extractor-declared and observed page counts differ",
+        )
+    if len(pages) != observed_page_count:
+        raise ExtractionError(
+            "stored_page_count_mismatch",
+            "Stored normalized pages do not match observed extraction evidence",
+        )
+    return declared_page_count
 
 
 class IngestionPipeline:
@@ -152,13 +191,16 @@ class IngestionPipeline:
                     or (resume and prior_state.get("status") == "import_failed")
                 )
                 if reuse_bundle:
-                    pages, chunks = _load_bundle(plan.directory)
                     manifest = json.loads(
                         (plan.directory / "manifest.json").read_text(
                             encoding="utf-8"
                         )
                     )
-                    expected_page_count = _extractor_page_count(manifest)
+                    pages, chunks = _load_bundle(plan.directory)
+                    expected_page_count = _validate_stored_page_counts(
+                        manifest,
+                        pages,
+                    )
                     extraction_tool = str(
                         manifest.get("extraction_tool", "existing-bundle")
                     )
@@ -184,12 +226,18 @@ class IngestionPipeline:
                     extraction = self.provider.extract(
                         source, plan.directory / "extraction"
                     )
+                    observed_page_count = (
+                        extraction.observed_page_count
+                        if extraction.observed_page_count is not None
+                        else extraction.page_count
+                    )
                     pages = normalize_extraction(source, extraction)
                     self.checkpoints.write_state(
                         plan.directory,
                         status="chunking",
                         page_count=len(pages),
                         extracted_page_count=extraction.page_count,
+                        observed_page_count=observed_page_count,
                     )
                     chunks = chunk_pages(
                         source,
@@ -221,6 +269,7 @@ class IngestionPipeline:
                             "chunking_config_sha256": self.chunking_config.sha256,
                             "configuration_sha256": self.configuration_hash,
                             "extracted_page_count": extraction.page_count,
+                            "observed_page_count": observed_page_count,
                             "page_count": len(pages),
                             "chunk_count": len(chunks),
                         },
