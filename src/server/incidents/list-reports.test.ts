@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { listReportsForCurrentSession } from "./list-reports";
+import {
+  listIncidentReportsForCurrentSession,
+  listReportsForCurrentSession,
+} from "./list-reports";
 
 const account = {
   auth_user_id: "11111111-1111-4111-8111-111111111111",
@@ -97,5 +100,24 @@ describe("listReportsForCurrentSession", () => {
         50,
       ),
     ).resolves.toEqual({ kind: "unavailable" });
+  });
+});
+
+describe("listIncidentReportsForCurrentSession", () => {
+  it("loads all authorized reports for the requested incident directly", async () => {
+    const incidentId = "55555555-5555-4555-8555-555555555555";
+    const sessionClient = client();
+    await expect(
+      listIncidentReportsForCurrentSession(incidentId, sessionClient),
+    ).resolves.toMatchObject({
+      kind: "listed",
+      reports: [{ reportId: row.report_id }],
+    });
+    expect(sessionClient.rpc).toHaveBeenLastCalledWith(
+      "list_incident_reports",
+      {
+        p_incident_id: incidentId,
+      },
+    );
   });
 });

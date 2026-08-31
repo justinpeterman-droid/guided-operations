@@ -33,10 +33,18 @@ const goodBody = {
   answerText: "At a minimum of once every hour.",
   citations: [
     {
+      documentId: "11111111-1111-4111-8111-111111111111",
       documentVersionId: "22222222-2222-4222-8222-222222222222",
+      chunkId: "33333333-3333-4333-8333-333333333333",
+      stableKey: "count-principles",
       title: "Count Principles and Procedures",
+      versionLabel: "Version 1",
+      sourceSha256: "a".repeat(64),
       collection: "BMU policies",
       pageStart: 4,
+      pageEnd: 4,
+      sectionPath: "Trustee verification",
+      excerpt: "Trustees are checked at least once every hour.",
     },
   ],
 };
@@ -148,6 +156,58 @@ describe("answer report request validation", () => {
       makeRequest({
         ...goodBody,
         citations: Array.from({ length: 21 }, () => goodBody.citations[0]),
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("rejects oversized optional citation text", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [{ ...goodBody.citations[0], excerpt: "x".repeat(1_201) }],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("rejects nested citation data outside the bounded citation contract", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [
+          { ...goodBody.citations[0], metadata: { nested: { tooDeep: true } } },
+        ],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("bounds the combined serialized citation payload", async () => {
+    validCsrf.mockReturnValue(true);
+    const maximumCitation = {
+      ...goodBody.citations[0],
+      stableKey: "s".repeat(128),
+      title: "t".repeat(300),
+      versionLabel: "v".repeat(120),
+      sectionPath: "p".repeat(300),
+      excerpt: "e".repeat(1_200),
+    };
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: Array.from({ length: 20 }, () => maximumCitation),
       }),
       ORIGIN,
       SESSION,

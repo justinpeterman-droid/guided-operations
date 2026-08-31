@@ -27,6 +27,10 @@ type IncidentListRpcClient = Readonly<{
     functionName: "list_incidents",
     arguments_: Readonly<{ p_limit: number }>,
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
+  rpc(
+    functionName: "get_incident_summary",
+    arguments_: Readonly<{ p_incident_id: string }>,
+  ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
 export type ListIncidentsSessionClient = CurrentSessionClient &
@@ -48,6 +52,27 @@ export type ListIncidentsResult =
   | Readonly<{ kind: "denied" }>
   | Readonly<{ kind: "unavailable" }>;
 
+export type GetIncidentSummaryResult =
+  | Readonly<{ kind: "found"; incident: IncidentSummary }>
+  | Readonly<{ kind: "denied" }>
+  | Readonly<{ kind: "not_found" }>
+  | Readonly<{ kind: "unavailable" }>;
+
+function mapIncidentSummary(
+  row: z.infer<typeof incidentSummaryRowsSchema>[number],
+): IncidentSummary {
+  return {
+    incidentId: row.incident_id,
+    incidentNumber: row.incident_number,
+    displayName: row.display_name,
+    status: row.status,
+    occurredAt: row.occurred_at,
+    category: row.category,
+    currentRevisionNumber: row.current_revision_number,
+    updatedAt: row.updated_at,
+  };
+}
+
 /**
  * Resolves the current account first, then maps a narrow RPC to safe list
  * summaries. The browser never receives notes, facts, or facility scope.
@@ -68,17 +93,32 @@ export async function listIncidentsForCurrentSession(
 
     return {
       kind: "listed",
-      incidents: rows.data.map((row) => ({
-        incidentId: row.incident_id,
-        incidentNumber: row.incident_number,
-        displayName: row.display_name,
-        status: row.status,
-        occurredAt: row.occurred_at,
-        category: row.category,
-        currentRevisionNumber: row.current_revision_number,
-        updatedAt: row.updated_at,
-      })),
+      incidents: rows.data.map(mapIncidentSummary),
     };
+  } catch {
+    return { kind: "unavailable" };
+  }
+}
+
+/** Loads one authorized incident without depending on a capped global list. */
+export async function getIncidentSummaryForCurrentSession(
+  incidentIdCandidate: unknown,
+  client: ListIncidentsSessionClient,
+): Promise<GetIncidentSummaryResult> {
+  const incidentId = z.uuid().safeParse(incidentIdCandidate);
+  if (!incidentId.success) return { kind: "not_found" };
+
+  const session = await authorizeCurrentSession(client);
+  if (!session.allowed) return { kind: "denied" };
+  try {
+    const result = await client.rpc("get_incident_summary", {
+      p_incident_id: incidentId.data,
+    });
+    if (result.error) return { kind: "unavailable" };
+    const rows = incidentSummaryRowsSchema.max(1).safeParse(result.data);
+    if (!rows.success) return { kind: "unavailable" };
+    if (rows.data.length === 0) return { kind: "not_found" };
+    return { kind: "found", incident: mapIncidentSummary(rows.data[0]) };
   } catch {
     return { kind: "unavailable" };
   }

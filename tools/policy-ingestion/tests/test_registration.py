@@ -12,6 +12,7 @@ from guided_policy_ingestion.registration import (
     RegistrationErrorSafe,
     RightsAttestation,
     load_manifests,
+    production_tls_options,
     slugify,
     stable_keys_for,
     with_byte_sizes,
@@ -59,10 +60,10 @@ class StableKeyTests(unittest.TestCase):
             PolicySource("b" * 64, "SD", "SD 03-04 Visitation.pdf", "application/pdf", 3),
         )
         keys = stable_keys_for(sources)
-        self.assertEqual(keys["a" * 64], "sd-01-02-grievances")
-        self.assertEqual(keys["b" * 64], "sd-03-04-visitation")
+        self.assertEqual(keys["a" * 64], f"sd-01-02-grievances-{'a' * 64}")
+        self.assertEqual(keys["b" * 64], f"sd-03-04-visitation-{'b' * 64}")
 
-    def test_only_the_colliding_keys_take_a_hash_suffix(self):
+    def test_keys_remain_unique_across_separate_registration_runs(self):
         sources = (
             PolicySource("a" * 64, "SD", "Count Sheet.pdf", "application/pdf", 1),
             PolicySource("b" * 64, "BMU policies", "Count  Sheet!.pdf", "application/pdf", 1),
@@ -70,8 +71,11 @@ class StableKeyTests(unittest.TestCase):
         )
         keys = stable_keys_for(sources)
         self.assertNotEqual(keys["a" * 64], keys["b" * 64])
-        self.assertTrue(keys["a" * 64].endswith("aaaaaaaa"))
-        self.assertEqual(keys["c" * 64], "unique-title")
+        self.assertTrue(keys["a" * 64].endswith("a" * 64))
+        self.assertTrue(keys["b" * 64].endswith("b" * 64))
+        separate_run_key = stable_keys_for((sources[0],))["a" * 64]
+        self.assertEqual(separate_run_key, keys["a" * 64])
+        self.assertNotEqual(separate_run_key, stable_keys_for((sources[1],))["b" * 64])
 
     def test_a_filename_with_no_usable_characters_still_gets_a_key(self):
         sources = (PolicySource("d" * 64, "SD", "!!!.pdf", "application/pdf", 1),)
@@ -87,6 +91,27 @@ class StoragePathTests(unittest.TestCase):
         )
         self.assertEqual(source.storage_path, f"bmu-post-orders/{'e' * 64}.pdf")
         self.assertNotIn("Tower", source.storage_path)
+
+
+class ProductionTlsOptionsTests(unittest.TestCase):
+    def test_requires_verify_full_with_the_supplied_root_certificate(self):
+        self.assertEqual(
+            production_tls_options("postgresql://db.example/app", "/safe/root.crt"),
+            {"sslmode": "verify-full", "sslrootcert": "/safe/root.crt"},
+        )
+
+    def test_preserves_verify_full_and_root_certificate_from_the_url(self):
+        self.assertEqual(
+            production_tls_options(
+                "postgresql://db.example/app?sslmode=verify-full&sslrootcert=%2Fsafe%2Furl.crt",
+                "/safe/other.crt",
+            ),
+            {},
+        )
+
+    def test_refuses_production_without_ca_configuration(self):
+        with self.assertRaisesRegex(RegistrationErrorSafe, "ROOT_CERT"):
+            production_tls_options("postgresql://db.example/app", None)
 
 
 class ManifestLoadingTests(unittest.TestCase):

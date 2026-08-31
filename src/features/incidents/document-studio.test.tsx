@@ -99,13 +99,14 @@ describe("DocumentStudio", () => {
         root.getByRole("tab", { name: new RegExp(tab.label, "i") }),
       );
       const panel = root.getByRole("tabpanel");
-      for (const button of root.getAllByRole("tab")) {
-        expect(
-          view.container.querySelector(
-            `#${button.getAttribute("aria-controls")}`,
-          ),
-        ).toBe(panel);
-      }
+      const selectedTab = root.getByRole("tab", {
+        name: new RegExp(tab.label, "i"),
+      });
+      expect(
+        view.container.querySelector(
+          `#${selectedTab.getAttribute("aria-controls")}`,
+        ),
+      ).toBe(panel);
       expect(panel).toHaveAttribute(
         "aria-labelledby",
         `document-studio-tab-${tab.id}`,

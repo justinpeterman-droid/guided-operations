@@ -49,6 +49,19 @@ describe("safe operational events", () => {
     expect(sink).not.toHaveBeenCalled();
   });
 
+  it("accepts the answer-report citation limit", () => {
+    expect(
+      buildSafeOperationalEvent(
+        {
+          ...baseEvent,
+          event_name: "answer_report.request",
+          citation_count: 20,
+        },
+        { environment: {} },
+      ).citation_count,
+    ).toBe(20);
+  });
+
   it("rejects arbitrary fields that could carry protected content", () => {
     expect(() =>
       buildSafeOperationalEvent(

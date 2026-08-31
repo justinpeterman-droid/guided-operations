@@ -8,6 +8,7 @@ describe("assessOfficial005409Fidelity", () => {
       assessOfficial005409Fidelity({
         sourceRevision: null,
         sourceSha256: null,
+        sourceKind: "example_material",
         fieldMapApproved: false,
         renderedFidelityApproved: false,
       }),
@@ -16,10 +17,22 @@ describe("assessOfficial005409Fidelity", () => {
       blockers: [
         "approved_source_revision",
         "source_sha256",
+        "authoritative_source_kind",
         "approved_field_map",
         "rendered_fidelity",
       ],
     });
+  });
+
+  it("blocks runtime input that omits the source kind even when every other gate passes", () => {
+    expect(
+      assessOfficial005409Fidelity({
+        sourceRevision: "ADC 005/409 rev 2026-08",
+        sourceSha256: "b".repeat(64),
+        fieldMapApproved: true,
+        renderedFidelityApproved: true,
+      } as never),
+    ).toEqual({ ready: false, blockers: ["authoritative_source_kind"] });
   });
 
   it("does not treat narrative/example material as an approved official source", () => {

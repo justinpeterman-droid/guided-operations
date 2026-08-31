@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { listIncidentsForCurrentSession } from "./list-incidents";
+import {
+  getIncidentSummaryForCurrentSession,
+  listIncidentsForCurrentSession,
+} from "./list-incidents";
 
 const accountRow = {
   auth_user_id: "11111111-1111-4111-8111-111111111111",
@@ -92,5 +95,32 @@ describe("listIncidentsForCurrentSession", () => {
         50,
       ),
     ).resolves.toEqual({ kind: "unavailable" });
+  });
+});
+
+describe("getIncidentSummaryForCurrentSession", () => {
+  it("loads the requested incident directly instead of filtering a capped list", async () => {
+    const sessionClient = client();
+    await expect(
+      getIncidentSummaryForCurrentSession(
+        incidentRow.incident_id,
+        sessionClient,
+      ),
+    ).resolves.toMatchObject({
+      kind: "found",
+      incident: { incidentId: incidentRow.incident_id },
+    });
+    expect(sessionClient.rpc).toHaveBeenLastCalledWith("get_incident_summary", {
+      p_incident_id: incidentRow.incident_id,
+    });
+  });
+
+  it("returns not found for an absent authorized incident", async () => {
+    await expect(
+      getIncidentSummaryForCurrentSession(
+        incidentRow.incident_id,
+        client({ incidents: [] }),
+      ),
+    ).resolves.toEqual({ kind: "not_found" });
   });
 });

@@ -188,6 +188,19 @@ export type Database = {
           schema_version: number
         }[]
       }
+      get_incident_summary: {
+        Args: { p_incident_id: string }
+        Returns: {
+          category: string
+          current_revision_number: number
+          display_name: string
+          incident_id: string
+          incident_number: string
+          occurred_at: string
+          status: string
+          updated_at: string
+        }[]
+      }
       get_incident_revision: {
         Args: { p_incident_id: string; p_revision_number: number }
         Returns: {
@@ -359,6 +372,18 @@ export type Database = {
           incident_id: string
           incident_number: string
           occurred_at: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      list_incident_reports: {
+        Args: { p_incident_id: string }
+        Returns: {
+          current_revision_number: number
+          incident_name: string
+          incident_number: string
+          report_id: string
+          report_type: string
           status: string
           updated_at: string
         }[]

@@ -4,14 +4,14 @@ The real corpus reached the production database on this date. Extraction had
 finished earlier; registration and import are separate owner-driven steps and
 both ran today.
 
-## Result
+## Authoritative registration/import result
 
-| Collection      | Registered | Imported | Pages | Chunks |
-| --------------- | ---------- | -------- | ----- | ------ |
-| BMU policies    | 160        | 160      | 796   | 735    |
-| BMU Post Orders | 42         | 42       | 249   | 234    |
-| SD              | 34         | 33       | 265   | 255    |
-| **Total**       | **236**    | **235**  | 1,310 | 1,224  |
+| Collection      | Registered | Imported | Pages     | Chunks    |
+| --------------- | ---------- | -------- | --------- | --------- |
+| BMU policies    | 160        | 160      | 796       | 735       |
+| BMU Post Orders | 42         | 42       | 249       | 234       |
+| SD              | 34         | 33       | 265       | 255       |
+| **Total**       | **236**    | **235**  | **1,310** | **1,224** |
 
 All 236 are registered as `classification = public`,
 `rights_status = approved_full_reader`, `external_ai_allowed = true`, reviewed

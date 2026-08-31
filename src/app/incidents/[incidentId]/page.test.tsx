@@ -22,13 +22,22 @@ vi.mock("@/server/incidents/get-incident-report-workspace", () => ({
   }),
 }));
 vi.mock("@/server/incidents/list-incidents", () => ({
-  listIncidentsForCurrentSession: vi.fn().mockResolvedValue({
-    kind: "listed",
-    incidents: [],
+  getIncidentSummaryForCurrentSession: vi.fn().mockResolvedValue({
+    kind: "found",
+    incident: {
+      incidentId: "11111111-1111-4111-8111-111111111111",
+      incidentNumber: "F-PAGE-001",
+      displayName: "Fictional protected incident",
+      status: "draft",
+      occurredAt: "2026-08-30T12:00:00Z",
+      category: "incident_no_disciplinary",
+      currentRevisionNumber: 1,
+      updatedAt: "2026-08-30T12:00:00Z",
+    },
   }),
 }));
 vi.mock("@/server/incidents/list-reports", () => ({
-  listReportsForCurrentSession: vi.fn().mockResolvedValue({
+  listIncidentReportsForCurrentSession: vi.fn().mockResolvedValue({
     kind: "listed",
     reports: [],
   }),

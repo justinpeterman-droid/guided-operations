@@ -15,7 +15,7 @@ export type Official005409Mapping = Readonly<{
 }>;
 
 const OFFSET_TIMESTAMP_PATTERN =
-  /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-]\d{2}:\d{2})$/;
+  /^\d{4}-\d{2}-\d{2}T(\d{2}):(\d{2})(?::\d{2}(?:\.\d{1,9})?)?(?:Z|[+-](?:[01]\d|2[0-3]):[0-5]\d)$/;
 
 function formatApproximateTime(occurredAt: string): string {
   const match = OFFSET_TIMESTAMP_PATTERN.exec(occurredAt);

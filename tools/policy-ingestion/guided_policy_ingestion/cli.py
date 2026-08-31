@@ -237,7 +237,12 @@ def _run_registration(args: argparse.Namespace) -> RegistrationSummary:
             database_url,
             os.environ.get("SUPABASE_PROJECT_REF", ""),
         )
-    return PolicyRegistrar(database_url, facility_id, args.target_environment).register(
+    return PolicyRegistrar(
+        database_url,
+        facility_id,
+        args.target_environment,
+        os.environ.get("SUPABASE_DB_ROOT_CERT"),
+    ).register(
         sources,
         RightsAttestation(
             reviewer_staff_member_id=reviewer,

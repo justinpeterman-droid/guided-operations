@@ -216,6 +216,7 @@ import, plus the reviewer, set only in the current private PowerShell window:
 
 ```powershell
 $env:SUPABASE_DB_URL = "<private direct Supabase PostgreSQL connection string>"
+$env:SUPABASE_DB_ROOT_CERT = "<path to the trusted Supabase database CA certificate>"
 $env:GUIDED_OPERATIONS_FACILITY_ID = "<facility uuid>"
 $env:SUPABASE_PROJECT_REF = "<approved Production Supabase project reference>"
 $env:GUIDED_OPERATIONS_RIGHTS_REVIEWER_ID = "<reviewing staff member uuid>"

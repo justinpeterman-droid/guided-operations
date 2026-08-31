@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 import { z } from "zod";
 
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
@@ -129,6 +130,24 @@ export function createOpenAiGroundedGenerationProvider(
       const lease = await budgetGuard.reserve("policy_answer");
       try {
         const environment = getOpenAiPolicyEnvironment(options.environment);
+        const responseRequest = {
+          model: environment.OPENAI_POLICY_MODEL,
+          store: false,
+          instructions: buildInstructions(),
+          input: buildInput(request),
+          reasoning: { effort: POLICY_ANSWER_REASONING_EFFORT },
+          max_output_tokens:
+            POLICY_ANSWER_REASONING_TOKENS +
+            Math.min(2400, request.maximumAnswerCharacters),
+          text: {
+            format: {
+              type: "json_schema",
+              name: "grounded_policy_answer",
+              strict: true,
+              schema: answerJsonSchema,
+            },
+          },
+        } satisfies ResponseCreateParamsNonStreaming;
         const response = await fetchImplementation(
           "https://api.openai.com/v1/responses",
           {
@@ -138,24 +157,7 @@ export function createOpenAiGroundedGenerationProvider(
               "Content-Type": "application/json",
             },
             signal: AbortSignal.timeout(lease.providerTimeoutMs),
-            body: JSON.stringify({
-              model: environment.OPENAI_POLICY_MODEL,
-              store: false,
-              instructions: buildInstructions(),
-              input: buildInput(request),
-              reasoning: { effort: POLICY_ANSWER_REASONING_EFFORT },
-              max_output_tokens:
-                POLICY_ANSWER_REASONING_TOKENS +
-                Math.min(2400, request.maximumAnswerCharacters),
-              text: {
-                format: {
-                  type: "json_schema",
-                  name: "grounded_policy_answer",
-                  strict: true,
-                  schema: answerJsonSchema,
-                },
-              },
-            }),
+            body: JSON.stringify(responseRequest),
           },
         );
 

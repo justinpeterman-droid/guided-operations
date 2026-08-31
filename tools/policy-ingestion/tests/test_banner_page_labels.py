@@ -38,14 +38,28 @@ def _labels_by_page(blocks):
     return found
 
 
+def _set_banner(blocks, page_index, banner_page, banner_total):
+    blocks[page_index] = RawBlock(
+        page_index=page_index,
+        kind="table",
+        text="",
+        table_html=(
+            "<table><tr><td>Benny Magness Unit</td>"
+            "<td>PAGE NUMBER %s OF %s</td></tr></table>"
+            % (banner_page, banner_total)
+        ),
+    )
+
+
 def _surviving_text(blocks):
     """Text normalization would keep: blocks WITHOUT a printed page label."""
     return [b.text for b in blocks if not b.printed_page_label and b.text]
 
 
 class BannerPageLabelTests(unittest.TestCase):
-    def test_labels_every_page_from_a_single_leading_banner(self):
+    def test_labels_every_page_from_repeated_banners(self):
         blocks = _blocks(4, banner_page=1, banner_total=4)
+        _set_banner(blocks, 1, 2, 4)
         _apply_banner_page_labels(blocks, 4, [])
         self.assertEqual(
             _labels_by_page(blocks), {0: "1", 1: "2", 2: "3", 3: "4"}
@@ -55,13 +69,15 @@ class BannerPageLabelTests(unittest.TestCase):
         # Regression: labelling content blocks made normalization skip their
         # text, emptying every page and producing zero chunks.
         blocks = _blocks(4, banner_page=1, banner_total=4)
+        _set_banner(blocks, 1, 2, 4)
         before = _surviving_text(blocks)
         _apply_banner_page_labels(blocks, 4, [])
         self.assertEqual(_surviving_text(blocks), before)
-        self.assertEqual(len(before), 3)
+        self.assertEqual(len(before), 2)
 
     def test_labels_a_banner_found_on_a_later_page(self):
         blocks = _blocks(3, banner_page=3, banner_total=3, banner_on=2)
+        _set_banner(blocks, 0, 1, 3)
         _apply_banner_page_labels(blocks, 3, [])
         self.assertEqual(_labels_by_page(blocks), {0: "1", 1: "2", 2: "3"})
 
@@ -69,6 +85,7 @@ class BannerPageLabelTests(unittest.TestCase):
         # "PAGE NUMBER 5 OF 3" is self-contradictory. Refuse rather than guess.
         warnings = []
         blocks = _blocks(3, banner_page=5, banner_total=3, banner_on=0)
+        _set_banner(blocks, 1, 6, 3)
         _apply_banner_page_labels(blocks, 3, warnings)
         self.assertEqual(_labels_by_page(blocks), {})
         self.assertIn("printed_page_out_of_range", warnings)
@@ -76,6 +93,7 @@ class BannerPageLabelTests(unittest.TestCase):
     def test_refuses_to_guess_when_the_declared_total_disagrees(self):
         warnings = []
         blocks = _blocks(3, banner_page=1, banner_total=9)
+        _set_banner(blocks, 1, 2, 9)
         _apply_banner_page_labels(blocks, 3, warnings)
         self.assertEqual(_labels_by_page(blocks), {})
         self.assertIn("printed_page_total_mismatch", warnings)
@@ -83,12 +101,7 @@ class BannerPageLabelTests(unittest.TestCase):
     def test_refuses_when_two_banners_disagree_on_the_offset(self):
         warnings = []
         blocks = _blocks(3, banner_page=1, banner_total=3)
-        blocks[2] = RawBlock(
-            page_index=2,
-            kind="table",
-            text="",
-            table_html="<table><tr><td>PAGE NUMBER 9 OF 3</td></tr></table>",
-        )
+        _set_banner(blocks, 2, 9, 3)
         _apply_banner_page_labels(blocks, 3, warnings)
         self.assertEqual(_labels_by_page(blocks), {})
         self.assertIn("printed_page_anchors_inconsistent", warnings)

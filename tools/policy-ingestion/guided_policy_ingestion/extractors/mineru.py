@@ -196,6 +196,11 @@ def _apply_banner_page_labels(
         warnings.append("printed_page_total_mismatch")
         return
 
+    # One match can be ordinary body text (for example, "Page 1 of 4"). A
+    # repeated header must independently anchor at least two extracted pages.
+    if len(anchors) < 2:
+        return
+
     anchor_index = min(anchors)
     offset = anchors[anchor_index] - anchor_index
     # Every anchor we found must agree with the same offset.

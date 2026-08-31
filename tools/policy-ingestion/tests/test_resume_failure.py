@@ -11,6 +11,7 @@ from guided_policy_ingestion.checkpoints import CheckpointStore
 from guided_policy_ingestion.config import ChunkingConfig, ExtractionConfig
 from guided_policy_ingestion.extractors.base import ExtractionError
 from guided_policy_ingestion.extractors.mineru import parse_mineru_content
+from guided_policy_ingestion.models import ExtractionResult, RawBlock
 from guided_policy_ingestion.pipeline import IngestionPipeline
 
 
@@ -31,6 +32,19 @@ class FailingProvider:
 
     def extract(self, source, output_dir):
         raise ExtractionError("fictional_extraction_failure", "Fictional extraction failed")
+
+
+class MismatchedPageCountProvider:
+    name = "mismatched"
+
+    def extract(self, source, output_dir):
+        return ExtractionResult(
+            blocks=(RawBlock(page_index=0, kind="text", text="fictional policy text"),),
+            page_count=0,
+            extraction_tool="fictional",
+            extraction_version="fictional-v1",
+            extraction_model_version=None,
+        )
 
 
 def make_root(base: Path) -> Path:
@@ -76,6 +90,28 @@ class ResumeFailureTests(unittest.TestCase):
             self.assertEqual(provider.calls, 2)
             attempts = sorted((base / "work").rglob("attempt-*"))
             self.assertEqual([attempt.name for attempt in attempts], ["attempt-0001", "attempt-0002"])
+
+    def test_import_only_preserves_a_prior_extractor_page_count_mismatch(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            pipeline = IngestionPipeline(
+                MismatchedPageCountProvider(),
+                CheckpointStore(base / "work"),
+                ExtractionConfig(),
+                ChunkingConfig(),
+            )
+            first = pipeline.run(make_root(base), resume=True)
+            second = pipeline.run(
+                base / "policies", resume=True, import_only=True
+            )
+
+            self.assertEqual(first.failed, 1)
+            self.assertEqual(second.failed, 1)
+            validation_path = next((base / "work").rglob("validation.json"))
+            self.assertIn(
+                "extracted_page_count_mismatch",
+                validation_path.read_text(encoding="utf-8"),
+            )
 
 
 if __name__ == "__main__":

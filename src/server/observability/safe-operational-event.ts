@@ -85,7 +85,7 @@ const safeOperationalEventInputSchema = z
     request_id: z.uuid(),
     status_code: z.number().int().min(100).max(599),
     duration_ms: z.number().int().nonnegative().max(3_600_000),
-    citation_count: z.number().int().nonnegative().max(12).optional(),
+    citation_count: z.number().int().nonnegative().max(20).optional(),
     environment: z.enum(["development", "preview", "production", "test"]),
     corpus_version: safeIdentifierSchema.optional(),
   })

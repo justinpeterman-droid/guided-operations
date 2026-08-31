@@ -2,6 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
+import { sourceCitationSchema } from "@/features/policy/grounding";
 import type { Json } from "@/lib/supabase/database.generated";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
 
@@ -11,19 +12,28 @@ import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
  * retrieval may not reproduce the same answer by the time a report is reviewed.
  * Without the shown text, a report cannot be investigated.
  */
-const citationSchema = z
-  .object({
-    documentVersionId: z.string().trim().min(1).max(200),
-    title: z.string().trim().min(1).max(400),
-    collection: z.string().trim().min(1).max(120),
-  })
-  .passthrough();
+const MAX_CITATIONS_SERIALIZED_BYTES = 32_000;
+
+const citationsSchema = z
+  .array(sourceCitationSchema)
+  .max(20)
+  .superRefine((citations, context) => {
+    const bytes = new TextEncoder().encode(
+      JSON.stringify(citations),
+    ).byteLength;
+    if (bytes > MAX_CITATIONS_SERIALIZED_BYTES) {
+      context.addIssue({
+        code: "custom",
+        message: "Citations exceed the serialized payload limit.",
+      });
+    }
+  });
 
 const requestSchema = z
   .object({
     question: z.string().trim().min(3).max(2_000),
     answerText: z.string().trim().min(1).max(20_000),
-    citations: z.array(citationSchema).max(20).default([]),
+    citations: citationsSchema.default([]),
   })
   .strict();
 
@@ -65,9 +75,8 @@ export async function validateAnswerReportRequest(
           question: parsed.data.question,
           answerText: parsed.data.answerText,
           // Citations came straight out of request.json(), so they are JSON by
-          // construction. The schema passes unknown keys through on purpose:
-          // page labels and snippets are what make a report investigable, and
-          // stripping them would defeat the point of storing what was shown.
+          // construction. The strict source schema preserves every displayed
+          // provenance field while bounding each value, nesting, and total bytes.
           citations: parsed.data.citations as Json[],
         }
       : { ok: false, status: 400, code: "invalid_request" };

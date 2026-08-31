@@ -19,6 +19,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from .collections import COLLECTION_SLUGS, canonical_collection
 from .diagnostics import safe_database_detail as _safe_database_detail
@@ -76,30 +77,50 @@ def slugify(value: str) -> str:
 def stable_keys_for(sources: tuple[PolicySource, ...]) -> dict[str, str]:
     """Map each source hash to a unique, deterministic stable key.
 
-    Readable keys are worth having, but two policies can share a slug once
-    punctuation is stripped. Rather than make every key ugly to defend against
-    the few that clash, only the clashing ones take a hash suffix.
+    The immutable source hash suffix prevents a readable filename slug from
+    colliding with an identity created by another collection or registration run.
     """
-    proposed: dict[str, str] = {}
+    resolved: dict[str, str] = {}
     for source in sources:
         stem = Path(source.source_filename).stem
-        slug = slugify(stem) or f"policy-{source.source_sha256[:12]}"
+        slug = slugify(stem) or "policy"
         if len(slug) < 2:
-            slug = f"policy-{source.source_sha256[:12]}"
-        proposed[source.source_sha256] = slug
-
-    counts: dict[str, int] = {}
-    for slug in proposed.values():
-        counts[slug] = counts.get(slug, 0) + 1
-
-    resolved: dict[str, str] = {}
-    for source_sha256, slug in proposed.items():
-        if counts[slug] > 1:
-            slug = f"{slug[:119]}-{source_sha256[:8]}"
-        if not _STABLE_KEY.match(slug):
-            slug = f"policy-{source_sha256[:12]}"
-        resolved[source_sha256] = slug
+            slug = "policy"
+        stable_key = f"{slug[:63]}-{source.source_sha256}"
+        if not _STABLE_KEY.fullmatch(stable_key):
+            stable_key = f"policy-{source.source_sha256}"
+        resolved[source.source_sha256] = stable_key
     return resolved
+
+
+def production_tls_options(
+    database_url: str, root_certificate: str | None
+) -> dict[str, str]:
+    """Require hostname-verified TLS and an explicit CA for Production."""
+    try:
+        query = parse_qs(urlsplit(database_url).query, keep_blank_values=True)
+    except ValueError as error:
+        raise RegistrationErrorSafe(
+            "SUPABASE_DB_URL is not a valid PostgreSQL connection URL"
+        ) from error
+    ssl_modes = query.get("sslmode", [])
+    ssl_mode = ssl_modes[-1].strip().lower() if ssl_modes else ""
+    url_root_certificates = query.get("sslrootcert", [])
+    url_root_certificate = (
+        url_root_certificates[-1].strip() if url_root_certificates else ""
+    )
+    certificate = url_root_certificate or (root_certificate or "").strip()
+    if not certificate:
+        raise RegistrationErrorSafe(
+            "Production registration requires SUPABASE_DB_ROOT_CERT or sslrootcert in SUPABASE_DB_URL"
+        )
+
+    options: dict[str, str] = {}
+    if ssl_mode != "verify-full":
+        options["sslmode"] = "verify-full"
+    if not url_root_certificate:
+        options["sslrootcert"] = certificate
+    return options
 
 
 def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[PolicySource, ...]:
@@ -213,10 +234,17 @@ class PolicyRegistrar:
     version or silently changes one that already exists.
     """
 
-    def __init__(self, database_url: str, facility_id: str, environment: str):
+    def __init__(
+        self,
+        database_url: str,
+        facility_id: str,
+        environment: str,
+        root_certificate: str | None = None,
+    ):
         self.database_url = database_url
         self.facility_id = facility_id
         self.environment = environment
+        self.root_certificate = root_certificate
 
     def register(
         self,
@@ -242,7 +270,11 @@ class PolicyRegistrar:
 
         keys = stable_keys_for(sources)
         reviewed_at = datetime.now(timezone.utc)
-        options = {"sslmode": "require"} if self.environment == "production" else {}
+        options = (
+            production_tls_options(self.database_url, self.root_certificate)
+            if self.environment == "production"
+            else {}
+        )
         try:
             with psycopg.connect(self.database_url, **options) as connection:
                 for source in sources:
