@@ -37,6 +37,7 @@ resource.
 | O-026 | The corpus is replaced once a year, by the owner, by hand. There is no automated sync and no freshness checker, and none is wanted.                                                                                                                                                                                                                                                                                                                                           | 2026-08-30    |
 | O-027 | Pinned models, verified current against OpenAI's published model list on 2026-08-30: `gpt-5.6-terra` for policy answers and report drafting, `text-embedding-3-small` for embeddings. `gpt-5.6-sol` and `gpt-5.6-luna` are the accuracy and cost dials. Because these models spend billed reasoning tokens out of `max_output_tokens`, every Responses call pins `reasoning.effort` and adds a reasoning allowance on top of its answer allowance.                            | 2026-08-30    |
 | O-028 | The owner attests that all three collections - unit policies, post orders and secretarial directives - are published on the agency public website, and authorises registering all 236 documents as `classification = public`, `rights_status = approved_full_reader`, `external_ai_allowed = true`, with the owner as rights reviewer and O-021/O-022 as the evidence reference. The review is recorded as current for one year, matching the annual manual refresh in O-026. | 2026-08-30    |
+| O-029 | On the official 005/409 form, `UNIT/DIVISION` reading "Benny Magness Unit" is part of the form and is printed as a constant, not filled as a field. No domain value maps to it and no code path may substitute a different unit; using the tool at another facility would be a new form revision with a new source hash.                                                                                                                                                      | 2026-08-30    |
 
 ## Required before hosted development linkage
 
@@ -112,6 +113,17 @@ resource.
       purchased. See O-019. Revisit if real data is ever authorized.
 
 ## Known operational issues
+
+- **One policy is missing from the corpus (2026-08-30):**
+  `SD 2022-01 Revised COVID Visitation Directive.pdf` failed its production
+  import. Its page 5 screening checklist draws checkboxes with a symbol font
+  whose glyph is character `0x00`, and PostgreSQL rejects NUL in text columns.
+  The fix belongs in normalization, but `normalization_version` is part of the
+  configuration hash for every bundle, so changing it re-keys all 236 and
+  implies a full re-extraction. The owner deferred that on 2026-08-30; the
+  annual refresh in O-026 is the natural moment to bump it. Until then the
+  directive is not searchable and a question about it returns no sources.
+  Recorded in `docs/operations/2026-08-30-production-corpus-import.md`.
 
 - **GitHub Actions exhausted (2026-08-29):** every workflow run on this private
   repository has failed in 3-5 seconds since 2026-08-28 16:34 UTC. Failed jobs

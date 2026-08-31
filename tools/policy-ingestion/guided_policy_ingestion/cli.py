@@ -49,6 +49,11 @@ def _parser() -> argparse.ArgumentParser:
         default="auto",
     )
     ingest.add_argument("--import-supabase", action="store_true")
+    ingest.add_argument(
+        "--import-only",
+        action="store_true",
+        help="Import already-extracted bundles without re-running the extractor",
+    )
     ingest.add_argument("--target-environment", choices=("local", "production"), default="local")
     ingest.add_argument("--source-data", choices=("fictional", "controlled-policy"), default="controlled-policy")
     ingest.add_argument("--confirm-controlled-production-import", action="store_true")
@@ -266,6 +271,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.limit is not None and args.limit < 1:
         print("--limit must be at least 1", file=sys.stderr)
         return 2
+    if args.import_only and not args.import_supabase:
+        print("--import-only has nothing to do without --import-supabase", file=sys.stderr)
+        return 2
+    if args.import_only:
+        # Locating the existing attempt is exactly what resume does; without it
+        # the planner would open a fresh attempt directory with no bundle in it.
+        args.resume = True
     tool_root = Path(__file__).resolve().parent.parent
     try:
         extraction = ExtractionConfig(backend=args.mineru_backend)
@@ -284,6 +296,7 @@ def main(argv: list[str] | None = None) -> int:
             dry_run=args.dry_run,
             limit=args.limit,
             validate_only=args.validate_only,
+            import_only=args.import_only,
             source_sha=args.source_sha,
         )
         report_path = args.work_dir.resolve() / "batch-report.json"

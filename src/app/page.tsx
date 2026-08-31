@@ -21,6 +21,7 @@ export default async function PublicLandingPage() {
           <p className="eyebrow">One facility · one trusted workspace</p>
           <p className="brand-name">Guided Operations</p>
         </div>
+        <span className="foundation-badge">Advisory only</span>
       </header>
 
       <section className="foundation-grid" aria-labelledby="page-title">
@@ -62,33 +63,35 @@ export default async function PublicLandingPage() {
           <p className="eyebrow">Secure access</p>
           <h2 id="sign-in-title">Sign in to your facility</h2>
           <p className="supporting-copy">
-            Use your employee number and personal passcode. This private
-            workspace does not offer public registration or password recovery.
+            Sign in with your employee number and personal passcode. Accounts
+            are issued by the unit administrator.
           </p>
 
-          <Link className="sign-in-action" href="/login">
-            Sign in
+          <Link className="primary-action" href="/login">
+            Go to sign in
           </Link>
 
-          <p className="connection-status" role="status">
-            Fictional training previews below use sample data only. They never
-            create or change real work.
+          <p className="connection-status" id="connection-status" role="status">
+            This is a working tool, not the system of record. Reports and
+            paperwork you finish here are still filed through the agency&rsquo;s
+            own system.
           </p>
 
+          <p className="eyebrow">Sample views · fictional data</p>
           <Link className="preview-link" href="/preview/workspace">
-            View the officer workspace layout
-          </Link>
-          <Link className="preview-link" href="/preview/report-assistant">
-            View the fictional report workspace
+            Officer workspace
           </Link>
           <Link className="preview-link" href="/preview/count-sheet">
-            Try the fictional Count Sheet
+            Count sheet
+          </Link>
+          <Link className="preview-link" href="/preview/report-assistant">
+            Report workspace
           </Link>
         </aside>
       </section>
 
       <footer className="foundation-footer">
-        <span>Private officer workspace</span>
+        <span>Guided Operations</span>
         <span>Next.js · Vercel · Supabase</span>
       </footer>
     </main>
