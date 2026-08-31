@@ -300,9 +300,13 @@ test("an officer and administrator can use the protected per-officer report work
       name: "Fictional Report Workspace Qualification",
     }),
   ).toBeVisible();
-  // Document Studio opens on Overview. The draft request form, and the officer
-  // and fact controls below, live under Officer Reports.
-  await page.getByRole("tab", { name: /Officer Reports/ }).click();
+  await expect(page.getByRole("tab", { name: /^Reports/ })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  await expect(
+    page.getByText(/request the first officer report/i),
+  ).toBeVisible();
   await expect(
     page.getByRole("radio", { name: /Fictional Qualification Officer/ }),
   ).toBeChecked();
@@ -324,6 +328,12 @@ test("an officer and administrator can use the protected per-officer report work
   ).toBeEnabled();
 
   await page.setViewportSize({ width: 390, height: 844 });
+  await expect(
+    page.getByRole("combobox", { name: "Document Studio section" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("tablist", { name: "Document Studio sections" }),
+  ).toBeHidden();
   await expect
     .poll(() =>
       page.evaluate(
@@ -516,8 +526,8 @@ test("an officer and administrator can use the protected per-officer report work
       name: "Fictional Report Workspace Qualification",
     }),
   ).toBeVisible();
-  // Reviewed facts moved under Notes & Facts when Document Studio landed.
-  // Reading them still has to stay scoped to the reporting officer.
+  // Reviewed facts remain under Notes & Facts and stay scoped to a reporting
+  // officer rather than exposing an unattributed confirmed fact.
   await page.getByRole("tab", { name: /Notes & Facts/ }).click();
   await expect(page.getByText("Officer observation")).toBeVisible();
   await expect(page.getByText("Unassigned observation")).toHaveCount(0);
