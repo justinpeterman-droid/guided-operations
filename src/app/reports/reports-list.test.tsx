@@ -9,7 +9,7 @@ afterEach(cleanup);
 describe("ReportsList", () => {
   it("filters only the authorized summaries it was given", async () => {
     const user = userEvent.setup();
-    render(
+    const view = render(
       <ReportsList
         incidents={[
           {
@@ -60,5 +60,10 @@ describe("ReportsList", () => {
       "href",
       "/incidents/two",
     );
+
+    expect(view.container.querySelectorAll(".status-badge")).toHaveLength(2);
+    expect(
+      view.container.querySelectorAll('[class~=".status-badge"]'),
+    ).toHaveLength(0);
   });
 });

@@ -41,6 +41,16 @@ describe("WorkspaceNavigation", () => {
     expect(toggle).toHaveAccessibleName("Close menu");
     expect(toggle).toHaveAttribute("aria-expanded", "true");
 
+    const dismiss = within(view.container).getByRole("button", {
+      name: "Dismiss navigation menu",
+    });
+    expect(dismiss).toBeVisible();
+    await user.click(dismiss);
+
+    expect(toggle).toHaveAccessibleName("Menu");
+    expect(toggle).toHaveAttribute("aria-expanded", "false");
+
+    await user.click(toggle);
     await user.click(
       within(view.container).getByRole("link", { name: "Reports" }),
     );

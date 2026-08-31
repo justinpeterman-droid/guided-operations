@@ -53,4 +53,18 @@ describe("buildOfficial005409Mapping", () => {
       }),
     ).toThrow("occurredAt must include an explicit timezone offset");
   });
+
+  it.each([
+    "2026-08-30T21:50:00+24:60",
+    "2026-08-30T21:50:00-24:00",
+    "2026-08-30T21:50:00+05:99",
+  ])("rejects an invalid timezone offset in %s", (occurredAt) => {
+    expect(() =>
+      buildOfficial005409Mapping({
+        category: "contraband",
+        occurredAt,
+        location: "NCU Barracks 1",
+      }),
+    ).toThrow("occurredAt must include an explicit timezone offset");
+  });
 });
