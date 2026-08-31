@@ -98,6 +98,44 @@ class AnswerKeyVerificationTests(unittest.TestCase):
         self.assertEqual(summary.owner_approved, ())
         self.assertEqual(summary.issues[0].reason, "QUOTE NOT IN POLICY")
 
+    def test_citation_page_labels_are_canonicalized(self):
+        questions = verify_answer_key.parse_answer_key(
+            self.markdown(owner_review="KEEP").replace("page 3", "page 003")
+        )
+
+        summary = verify_answer_key.verify_answer_key(questions, self.corpus())
+
+        self.assertEqual(summary.source_verified, ("Q5",))
+        self.assertEqual(summary.owner_approved, ("Q5",))
+        self.assertEqual(summary.issues, ())
+
+    def test_every_quote_fragment_must_appear_on_a_cited_page(self):
+        questions = verify_answer_key.parse_answer_key(
+            self.markdown(
+                owner_review="KEEP",
+                quote=(
+                    "Photographs will be taken during an immediate use of force"
+                    "...A separate incident narrative must be reviewed by the "
+                    "shift supervisor"
+                ),
+            )
+        )
+        corpus = {
+            "NCU9.26.0": {
+                "3": "Photographs will be taken during an immediate use of force.",
+                "4": (
+                    "A separate incident narrative must be reviewed by the "
+                    "shift supervisor."
+                ),
+            }
+        }
+
+        summary = verify_answer_key.verify_answer_key(questions, corpus)
+
+        self.assertEqual(summary.source_verified, ())
+        self.assertEqual(summary.owner_approved, ())
+        self.assertEqual(summary.issues[0].reason, "WRONG PAGE")
+
     def test_load_corpus_normalizes_numeric_pages_and_skips_page_less_chunks(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
@@ -188,6 +226,21 @@ class AnswerKeyVerificationTests(unittest.TestCase):
                     ["--corpus-root", str(root / "corpus"), "--key", str(key)]
                 ),
                 1,
+            )
+
+    def test_main_rejects_an_answer_key_without_questions(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            key = root / "answer-key.md"
+            key.write_text("# Empty answer key\n", encoding="utf-8")
+            corpus_root = root / "corpus"
+            corpus_root.mkdir()
+
+            self.assertEqual(
+                verify_answer_key.main(
+                    ["--corpus-root", str(corpus_root), "--key", str(key)]
+                ),
+                2,
             )
 
 
