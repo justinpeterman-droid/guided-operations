@@ -71,7 +71,7 @@ def normalize(value: str) -> str:
 
 
 def canonical_policy_number(value: str) -> str:
-    return re.sub(r"\s+", "", value).upper()
+    return re.sub(r"[\s-]+", "", value).upper()
 
 
 def _canonical_printed_page(value: object) -> str | None:
