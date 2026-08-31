@@ -6,8 +6,8 @@ import {
 import { DocumentStudio } from "@/features/incidents/document-studio";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
-import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
-import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
+import { getIncidentSummaryForCurrentSession } from "@/server/incidents/get-incident-summary";
+import { listReportsForIncidentForCurrentSession } from "@/server/incidents/list-incident-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -50,7 +50,7 @@ export default async function IncidentReportWorkspacePage({
 
   const [incident, reports] = await Promise.all([
     loadIncidentSummary(incidentId),
-    loadIncidentReports(result.workspace.incidentNumber),
+    loadIncidentReports(incidentId),
   ]);
 
   return (
@@ -90,32 +90,25 @@ export async function loadIncidentReportWorkspace(incidentId: unknown) {
   }
 }
 
-async function loadIncidentSummary(incidentId: string) {
+export async function loadIncidentSummary(incidentId: string) {
   try {
-    const listed = await listIncidentsForCurrentSession(
+    const result = await getIncidentSummaryForCurrentSession(
+      incidentId,
       await createSupabaseServerClient(),
-      100,
     );
-    if (listed.kind !== "listed") return null;
-    return (
-      listed.incidents.find((incident) => incident.incidentId === incidentId) ??
-      null
-    );
+    return result.kind === "found" ? result.incident : null;
   } catch {
     return null;
   }
 }
 
-async function loadIncidentReports(incidentNumber: string) {
+export async function loadIncidentReports(incidentId: string) {
   try {
-    const listed = await listReportsForCurrentSession(
+    const result = await listReportsForIncidentForCurrentSession(
+      incidentId,
       await createSupabaseServerClient(),
-      100,
     );
-    if (listed.kind !== "listed") return [];
-    return listed.reports.filter(
-      (report) => report.incidentNumber === incidentNumber,
-    );
+    return result.kind === "listed" ? result.reports : [];
   } catch {
     return [];
   }
