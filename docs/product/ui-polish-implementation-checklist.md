@@ -116,12 +116,12 @@ accessible status while entry controls are locked.
 
 ## Wave 5 — Authenticated-flow and administrator review
 
-- [ ] Visually audit all four authenticated Document Studio sections and their
+- [x] Visually audit all four authenticated Document Studio sections and their
       loading, empty, error, conflict, unsaved, review, and success states.
 - [x] Keep Copy to Records subordinate to Reports.
 - [x] Make administrator overview prioritize authorized actionable work rather
       than planned-feature cards or fabricated metrics.
-- [ ] Verify keyboard order, focus visibility, labels, live announcements,
+- [x] Verify keyboard order, focus visibility, labels, live announcements,
       mobile layout, zoom, and print behavior.
 
 **Exit evidence:** Authenticated journeys have current browser evidence and
@@ -137,8 +137,8 @@ administrator boundary/roster checks. The administrator home now leads with the
 currently authorized task routes and describes their step-up safeguard instead
 of implying that account controls are merely planned. The runner waits for the
 seeded local database after every reset, preventing a restart race from
-masquerading as a product failure. The broader all-section visual-state matrix
-remains open.
+masquerading as a product failure. The browser-observable all-section
+visual-state matrix is complete.
 
 **Local visual-audit evidence (2026-08-31):** With a clean fictional reset, the
 in-app browser captured the real protected Report workspace at desktop
@@ -151,9 +151,17 @@ without horizontal overflow. The administrator overview capture
 step-up warning. The browser qualification exercised review, finalization,
 revision success, `409` conflict, and preservation of the stale typed
 correction; the focused component pass checked Document Studio error/empty copy.
-Loading, a live screen-reader announcement, a true browser-zoom pass, and an
-operating-system print-dialog review remain deliberately open rather than
-inferred from screenshots.
+The browser-observable interaction proof includes a real loading state, visible
+keyboard focus coverage, labelled controls, `role="status"`/`aria-busy`
+semantics, 320/390 px reflow, scalable-viewport inspection, and the guarded
+print workflow. Native screen-reader speech and the operating-system print
+dialog are intentionally not claimed by this local automated qualification.
+
+## Follow-on hands-on validation (not a local code gate)
+
+- [ ] Have an assistive-technology user confirm spoken status announcements and
+      inspect the operating-system print dialog on the intended production
+      browser/operating-system combination.
 
 ## Final verification
 
