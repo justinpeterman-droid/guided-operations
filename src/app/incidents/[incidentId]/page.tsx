@@ -97,11 +97,11 @@ async function loadIncidentReports(incidentNumber: string) {
       await createSupabaseServerClient(),
       100,
     );
-    if (listed.kind !== "listed") return [];
+    if (listed.kind !== "listed") return null;
     return listed.reports.filter(
       (report) => report.incidentNumber === incidentNumber,
     );
   } catch {
-    return [];
+    return null;
   }
 }
