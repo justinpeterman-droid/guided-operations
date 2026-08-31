@@ -57,6 +57,9 @@ describe("CountSheetWorkspace", () => {
     expect(
       await screen.findByText(/No saved sheet exists for this date/),
     ).toBeVisible();
+    expect(
+      screen.getByText("Incomplete — enter known values to reconcile."),
+    ).toBeVisible();
     await user.type(screen.getByRole("textbox", { name: "Chow Hall, 1" }), "2");
     await user.type(
       screen.getByRole("textbox", { name: "In housing, 1" }),

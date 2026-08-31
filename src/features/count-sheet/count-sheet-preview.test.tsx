@@ -17,6 +17,17 @@ const structure: CountSheetStructure = {
 afterEach(cleanup);
 
 describe("CountSheetPreview", () => {
+  it("does not call a blank training sheet reconciled", () => {
+    render(<CountSheetPreview structure={structure} />);
+
+    expect(
+      screen.getByText("Incomplete — enter known values to reconcile."),
+    ).toBeVisible();
+    expect(
+      screen.queryByText("Reconciled — review before any future save."),
+    ).not.toBeInTheDocument();
+  });
+
   it("calculates a fictional reconciliation locally without claiming a save", async () => {
     const user = userEvent.setup();
     render(<CountSheetPreview structure={structure} />);
@@ -38,6 +49,7 @@ describe("CountSheetPreview", () => {
     const user = userEvent.setup();
     render(<CountSheetPreview structure={structure} />);
 
+    await user.type(screen.getByLabelText("Dining, 1"), "0");
     await user.type(screen.getByLabelText("In housing, 1"), "8");
     await user.type(screen.getByLabelText("Operational total, on site"), "5");
 

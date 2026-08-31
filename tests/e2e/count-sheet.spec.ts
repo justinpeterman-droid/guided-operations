@@ -65,6 +65,9 @@ test("renders and calculates the approved Count Sheet with fictional browser-onl
   await expect(
     page.getByRole("rowheader", { name: "Chow Hall" }),
   ).toBeVisible();
+  await expect(
+    page.getByText("Incomplete — enter known values to reconcile."),
+  ).toBeVisible();
   await page
     .getByRole("textbox", { name: "Chow Hall, 1", exact: true })
     .fill("2");
@@ -75,7 +78,7 @@ test("renders and calculates the approved Count Sheet with fictional browser-onl
     .getByRole("textbox", { name: "Operational total, on site" })
     .fill("10");
   await expect(
-    page.getByText("Reconciled — review before any future save."),
+    page.getByText("Incomplete — enter known values to reconcile."),
   ).toBeVisible();
   expect(browserErrors).toEqual([]);
   expect(failedRequests).toEqual([]);

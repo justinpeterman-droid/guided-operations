@@ -110,6 +110,26 @@ export function parseCountValue(value: string): CountValue {
   return parsed;
 }
 
+/**
+ * A zero difference is meaningful only after every approved count input has a
+ * value. Blank and zero are intentionally different in the Count Sheet.
+ */
+export function isCountSheetReconciliationComplete(
+  structure: CountSheetStructure,
+  payload: CountSheetPayload,
+): boolean {
+  validateCountPayload(structure, payload);
+  return (
+    structure.areas.every((area) =>
+      structure.columns.every((column) => payload.cells[area][column] !== null),
+    ) &&
+    structure.columns.every((column) => payload.in_housing[column] !== null) &&
+    structure.operational_fields.every(
+      (field) => payload.operational[field] !== null,
+    )
+  );
+}
+
 export function calculateCountTotals(
   structure: CountSheetStructure,
   payload: CountSheetPayload,

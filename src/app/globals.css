@@ -2050,6 +2050,11 @@ a:focus-visible,
   border-color: var(--gow-gold-500);
 }
 
+.is-incomplete {
+  color: #315c78;
+  border-color: #6b9ab6;
+}
+
 .operational-inputs {
   display: grid;
   gap: 12px;

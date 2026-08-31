@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   calculateCountTotals,
   createBlankCountPayload,
+  isCountSheetReconciliationComplete,
   parseCountValue,
 } from "./calculations";
 import printStyles from "./count-sheet-print.module.css";
@@ -68,6 +69,15 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
     () => calculateCountTotals(structure, payload),
     [payload, structure],
   );
+  const reconciliationComplete = useMemo(
+    () => isCountSheetReconciliationComplete(structure, payload),
+    [payload, structure],
+  );
+  const reconciliationState = !reconciliationComplete
+    ? "incomplete"
+    : totals.reconciled
+      ? "reconciled"
+      : "open";
 
   function handleCountChange(target: CountCellTarget, rawValue: string) {
     try {
@@ -200,22 +210,34 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               <dt>Operational total</dt>
               <dd>{totals.operational_total}</dd>
             </div>
-            <div className={totals.reconciled ? "is-reconciled" : "is-open"}>
+            <div
+              className={
+                reconciliationState === "reconciled"
+                  ? "is-reconciled"
+                  : reconciliationState === "open"
+                    ? "is-open"
+                    : "is-incomplete"
+              }
+            >
               <dt>Difference</dt>
               <dd>{totals.difference}</dd>
             </div>
           </dl>
           <p
             className={
-              totals.reconciled
+              reconciliationState === "reconciled"
                 ? "count-status is-reconciled"
-                : "count-status is-open"
+                : reconciliationState === "open"
+                  ? "count-status is-open"
+                  : "count-status is-incomplete"
             }
             role="status"
           >
-            {totals.reconciled
+            {reconciliationState === "reconciled"
               ? "Reconciled — review before any future save."
-              : "Open difference — review the values; do not balance by guessing."}
+              : reconciliationState === "open"
+                ? "Open difference — review the values; do not balance by guessing."
+                : "Incomplete — enter known values to reconcile."}
           </p>
           <div className="operational-inputs">
             <h2>Operational total</h2>

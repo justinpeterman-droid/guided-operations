@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateCountTotals,
   createBlankCountPayload,
+  isCountSheetReconciliationComplete,
   parseCountValue,
 } from "./calculations";
 import type { CountSheetStructure } from "./types";
@@ -66,6 +67,22 @@ describe("Count Sheet calculations", () => {
     expect(calculateCountTotals(STRUCTURE, payload).difference).toBe(-2);
     expect(payload.in_housing["1"]).toBe(20);
     expect(payload.operational.on_site).toBe(22);
+  });
+
+  it("distinguishes incomplete inputs from a completed zero-difference count", () => {
+    const blank = createBlankCountPayload(STRUCTURE);
+    expect(isCountSheetReconciliationComplete(STRUCTURE, blank)).toBe(false);
+    expect(calculateCountTotals(STRUCTURE, blank).reconciled).toBe(true);
+
+    for (const area of STRUCTURE.areas) {
+      for (const column of STRUCTURE.columns) blank.cells[area][column] = 0;
+    }
+    for (const column of STRUCTURE.columns) blank.in_housing[column] = 0;
+    for (const field of STRUCTURE.operational_fields)
+      blank.operational[field] = 0;
+
+    expect(isCountSheetReconciliationComplete(STRUCTURE, blank)).toBe(true);
+    expect(calculateCountTotals(STRUCTURE, blank).reconciled).toBe(true);
   });
 
   it("accepts blank or whole-number text and rejects non-digits", () => {
