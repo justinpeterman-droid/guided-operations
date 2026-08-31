@@ -25,18 +25,18 @@ resource.
 | O-014 | The owner is the first/main administrator and is the only initial authority for additional-account creation, credential resets, unlocks, and temporary-secret delivery. Temporary passcodes are handed to the recipient in person.                                                                                                                                                                                                                                            | 2026-08-26    |
 | O-015 | The owner authorizes production use of real operational and personal data and is accountable for product, security, records, privacy, retention, incident response, backup, billing, and production approval.                                                                                                                                                                                                                                                                 | 2026-08-26    |
 | O-016 | Production records and controlled production copies are retained for two years from final revision, unless a legal hold, incident investigation, or later written records decision requires longer retention.                                                                                                                                                                                                                                                                 | 2026-08-26    |
-| O-017 | The development and demonstration corpus is a generated fictional set of 22 documents (12 policies, 6 post orders, 4 directives) for an invented "Riverbend Training Unit". Every page is stamped as fictional test data. This is the only corpus approved for extraction, embedding, or any transmission to an AI provider.                                                                                                                                                  | 2026-08-29    |
-| O-018 | The real policy corpus is identified and located, but is NOT authorized for extraction, embedding, or transmission to any AI provider. It remains outside Git, CI, Preview, and all non-production environments until OQ-009 is answered. **Superseded on 2026-08-30 by O-021 and O-022: the corpus is public record and the project is authorized. The environment boundary survives - real documents still never enter Git, CI, or Preview.**                               | 2026-08-29    |
+| O-017 | The development and demonstration corpus is a generated fictional set of 22 documents (12 policies, 6 post orders, 4 directives) for an invented "Riverbend Training Unit". Every page is stamped as fictional test data. It remains the only corpus authorized for local development, CI, Preview, shared non-production, screenshots, and test fixtures. O-022 and O-028 separately authorize the real 236-document corpus for isolated Production processing.                         | 2026-08-29    |
+| O-018 | The real policy corpus was identified and initially withheld from extraction, embedding, and AI transmission. O-021, O-022, and O-028 supersede that initial restriction for isolated Production only. The surviving environment boundary is unchanged: real documents never enter Git, local development, CI, Preview, shared non-production, screenshots, logs, support tools, or test fixtures.                                                                               | 2026-08-29    |
 | O-019 | Application authentication alone is accepted as sufficient protection for the publicly reachable Production URL. This closes OQ-017.                                                                                                                                                                                                                                                                                                                                          | 2026-08-29    |
 | O-020 | Administrator second-factor assurance is deferred for the fictional-data demonstration phase; password-only administration is accepted for that phase only. O-013 remains an open release gate and must be satisfied before any real data.                                                                                                                                                                                                                                    | 2026-08-29    |
 | O-021 | The owner holds full authorization from the agency IT Director and owns the project completely. The project is not paid work and is not represented as an official agency system.                                                                                                                                                                                                                                                                                             | 2026-08-30    |
-| O-022 | The real policy corpus is public record: all 236 documents are published on the agency public website. They may be extracted, embedded, and sent to the AI provider. This closes OQ-009 and supersedes the restriction in O-018. Corpus composition is settled: NCU and BMU are the same facility under its former and current names, with zero duplicate policy numbers or subjects, so NCU-numbered policies are never filtered out or treated as superseded.               | 2026-08-30    |
+| O-022 | The real policy corpus is public record: all 236 documents are published on the agency public website. They may be extracted, embedded, and sent to the AI provider in the isolated Production workflow. This closes OQ-009 and supersedes the initial restriction in O-018. Corpus composition is settled: NCU and BMU are the same facility under its former and current names, with zero duplicate policy numbers or subjects, so NCU-numbered policies are never filtered out or treated as superseded. | 2026-08-30    |
 | O-023 | Scope is deliberately small: a personal hobby tool for a few invited officers, not a department-wide system. Free provider tiers are an accepted decision rather than an oversight. This closes OQ-004.                                                                                                                                                                                                                                                                       | 2026-08-30    |
 | O-024 | The application is advisory only and never sits in a time-critical path. If it is slow or unavailable, officers use their normal method.                                                                                                                                                                                                                                                                                                                                      | 2026-08-30    |
 | O-025 | The application is not the system of record. Incident output is a draft writing aid; the official report is filed in the agency's own system.                                                                                                                                                                                                                                                                                                                                 | 2026-08-30    |
 | O-026 | The corpus is replaced once a year, by the owner, by hand. There is no automated sync and no freshness checker, and none is wanted.                                                                                                                                                                                                                                                                                                                                           | 2026-08-30    |
 | O-027 | Pinned models, verified current against OpenAI's published model list on 2026-08-30: `gpt-5.6-terra` for policy answers and report drafting, `text-embedding-3-small` for embeddings. `gpt-5.6-sol` and `gpt-5.6-luna` are the accuracy and cost dials. Because these models spend billed reasoning tokens out of `max_output_tokens`, every Responses call pins `reasoning.effort` and adds a reasoning allowance on top of its answer allowance.                            | 2026-08-30    |
-| O-028 | The owner attests that all three collections - unit policies, post orders and secretarial directives - are published on the agency public website, and authorises registering all 236 documents as `classification = public`, `rights_status = approved_full_reader`, `external_ai_allowed = true`, with the owner as rights reviewer and O-021/O-022 as the evidence reference. The review is recorded as current for one year, matching the annual manual refresh in O-026. | 2026-08-30    |
+| O-028 | The owner attests that all three collections — unit policies, post orders and secretarial directives — are published on the agency public website, and authorizes registering all 236 documents as `classification = public`, `rights_status = approved_full_reader`, `external_ai_allowed = true`, with the owner as rights reviewer and O-021/O-022 as the evidence reference. The review is recorded as current for one year, matching the annual manual refresh in O-026. | 2026-08-30    |
 | O-029 | On the official 005/409 form, `UNIT/DIVISION` reading "Benny Magness Unit" is part of the form and is printed as a constant, not filled as a field. No domain value maps to it and no code path may substitute a different unit; using the tool at another facility would be a new form revision with a new source hash.                                                                                                                                                      | 2026-08-30    |
 
 ## Required before hosted development linkage
@@ -52,13 +52,11 @@ resource.
       displayed as "Guided Operations" and uses `guided-operations` in host and
       project naming. No real facility name appears in the display name, the
       URL, or any public metadata. No real roster is added.
-- [x] **OQ-004 (CLOSED 2026-08-30 by O-023 - scope limited to a few invited
-      officers)** ~~ — Plan eligibility:** confirm the intended invited-officer
-      use continues to fit Vercel Hobby's personal/non-commercial terms and
-      Supabase Free limits; otherwise approve the needed plan before deployment.
-      The 2026-08-28 provider refresh confirms the organization is still
-      Supabase Free and Vercel Hobby, so real-data availability, backup,
-      support, and Production-domain protection remain unresolved.
+- [x] **OQ-004 — Plan eligibility (closed 2026-08-30 by O-023):** the owner
+      accepts the small personal, non-commercial scope for a few invited
+      officers and the current Vercel Hobby/Supabase Free plan choice. This does
+      not waive real-data availability, backup, support, security, or provider
+      limit gates, and the decision must be revisited if scope or terms change.
 
 ## Authentication implementation constraints
 
@@ -85,19 +83,19 @@ resource.
 
 ## Required before RAG migration
 
-- [x] **OQ-008 — Corpus location:** answered 2026-08-29. The authoritative real
-      source set is identified: 236 PDFs assembled 2026-05-28, comprising BMU
-      Policies (160), BMU Post Orders (42), and SD (34); BMU Forms (55) are
-      deliberately excluded. The owner considers them current as of May 2026.
-      Identification is not authorization — see O-018. The location is recorded
-      outside Git.
-- [x] **OQ-009 (CLOSED 2026-08-30 by O-022 - the corpus is public record)** ~~ —
-      Corpus custodian:** name who can approve source rights, current versus
-      superseded status, retention, full-document display, and external AI
-      processing. **Still open and now the critical path.** As of 2026-08-29 no
-      agency approval exists; the owner confirms this remains a personal project
-      (see O-010). The post-order subset is security-sensitive and must not be
-      transmitted to any AI provider pending this approval.
+- [x] **OQ-008 — Corpus location:** answered 2026-08-29. The authoritative
+      source set is 236 PDFs assembled 2026-05-28: BMU Policies (160), BMU Post
+      Orders (42), and SD (34); BMU Forms (55) are deliberately excluded. The
+      owner considers the set current as of May 2026. O-022 and O-028 provide
+      the later rights and AI-processing authorization. The sources remain
+      outside Git, local development, CI, Preview, shared non-production,
+      screenshots, logs, support tools, and test fixtures.
+- [x] **OQ-009 — Corpus custodian and processing rights (closed 2026-08-30 by
+      O-021, O-022, and O-028):** the owner records agency authorization, public
+      source status, collection scope, full-reader rights, external-AI approval,
+      and the annual review period. All three approved collections, including
+      post orders, may be processed only through the authorized isolated
+      Production workflow; the surviving environment exclusions still apply.
 - [ ] **OQ-010 — Google boundary:** confirm whether Google AI APIs are also
       prohibited. The current target uses no Google hosting or Google-specific
       AI runtime either way.
