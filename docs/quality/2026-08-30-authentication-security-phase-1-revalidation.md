@@ -1,18 +1,21 @@
 # Authentication security — Phase 1 current-main revalidation
 
 - **Date:** 2026-08-30
-- **Target:** `main` at/after 005/409 mapping merge
-  `7ca6711fdc375aaac0a14e548f854c6a3dabe021`
-- **Method:** static current-main reproduction review against the historical PR
-  #4 hypotheses
+- **Exact snapshot reviewed:** `7ca6711fdc375aaac0a14e548f854c6a3dabe021`
+- **Later audit relationship:** the reviewed snapshot is an ancestor of the
+  frozen CodeRabbit audit head
+  `32f6b35a6c537ef83c5cf6da4fc02fff63d9f47e`; this record does not claim that
+  the later head received the same static revalidation
+- **Method:** static reproduction review against the historical PR #4
+  hypotheses at the exact snapshot named above
 - **Boundary:** no production fixes in this phase; hosted-only claims remain
   unproven until hosted tests run
 
 ## Executive result
 
 The historical PR #4 report does **not** reproduce its two Critical claims
-against current `main`. The current implementation has materially changed.
-Several former findings are directly closed by code evidence, while timing,
+against the reviewed snapshot. The implementation had materially changed.
+Several former findings were directly closed by code evidence, while timing,
 hosted abuse, complete RLS/grant coverage, and provider lifecycle behavior still
 require dynamic/hosted qualification.
 
@@ -72,9 +75,9 @@ require dynamic/hosted qualification.
 
 ## Phase 1 disposition
 
-No Critical current-main vulnerability was reproduced from the historical PR #4
-report during this static revalidation. H-1, M-2, L-5 and the core C-2 concern
-are closed by direct current-code evidence. Several architecture-specific
+No Critical vulnerability was reproduced from the historical PR #4 report at
+the exact reviewed snapshot. H-1, M-2, L-5 and the core C-2 concern are closed
+by direct code evidence at that snapshot. Several architecture-specific
 findings are superseded. The remaining meaningful risks are qualification gaps:
 hosted timing/abuse/provider lifecycle, exhaustive route authorization coverage,
 and the database grant/RLS negative matrix.
