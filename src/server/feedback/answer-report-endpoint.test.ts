@@ -200,9 +200,29 @@ describe("answer report request validation", () => {
       excerpt: "e".repeat(1_200),
     };
     const citations = Array.from({ length: 20 }, () => largeCitation);
-    expect(new TextEncoder().encode(JSON.stringify(citations)).byteLength).toBeGreaterThan(
-      MAX_ANSWER_REPORT_CITATION_BYTES,
+    expect(
+      new TextEncoder().encode(JSON.stringify(citations)).byteLength,
+    ).toBeGreaterThan(MAX_ANSWER_REPORT_CITATION_BYTES);
+
+    const result = await validateAnswerReportRequest(
+      makeRequest({ ...goodBody, citations }),
+      ORIGIN,
+      SESSION,
+      KEY,
     );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("measures the spaced jsonb representation at the citation byte boundary", async () => {
+    validCsrf.mockReturnValue(true);
+    const boundaryCitation = {
+      ...goodCitation,
+      excerpt: "e".repeat(1_150),
+    };
+    const citations = Array.from({ length: 20 }, () => boundaryCitation);
+    expect(
+      new TextEncoder().encode(JSON.stringify(citations)).byteLength,
+    ).toBeLessThanOrEqual(MAX_ANSWER_REPORT_CITATION_BYTES);
 
     const result = await validateAnswerReportRequest(
       makeRequest({ ...goodBody, citations }),

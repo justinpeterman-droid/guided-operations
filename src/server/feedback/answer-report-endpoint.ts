@@ -35,8 +35,28 @@ export type AnswerReportEndpointValidation =
       code: "invalid_request" | "invalid_origin" | "csrf_failed";
     }>;
 
+function postgresJsonbText(value: unknown): string {
+  if (Array.isArray(value)) {
+    return `[${value.map(postgresJsonbText).join(", ")}]`;
+  }
+  if (value !== null && typeof value === "object") {
+    return `{${Object.entries(value)
+      .map(
+        ([key, nestedValue]) =>
+          `${JSON.stringify(key)}: ${postgresJsonbText(nestedValue)}`,
+      )
+      .join(", ")}}`;
+  }
+
+  const serialized = JSON.stringify(value);
+  if (serialized === undefined) {
+    throw new TypeError("Value is not JSON serializable");
+  }
+  return serialized;
+}
+
 function serializedByteLength(value: unknown): number {
-  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+  return new TextEncoder().encode(postgresJsonbText(value)).byteLength;
 }
 
 /** Validates a same-origin, session-CSRF-protected answer report. */

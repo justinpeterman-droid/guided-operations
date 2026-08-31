@@ -81,6 +81,39 @@ describe("listReportsForIncidentForCurrentSession", () => {
     ).resolves.toEqual({ kind: "listed", reports: [] });
   });
 
+  it("accepts a report with no revisions yet", async () => {
+    await expect(
+      listReportsForIncidentForCurrentSession(
+        incidentId,
+        client({
+          reports: [{ ...reportRow, current_revision_number: 0 }],
+        }),
+      ),
+    ).resolves.toMatchObject({
+      kind: "listed",
+      reports: [{ currentRevisionNumber: 0 }],
+    });
+  });
+
+  it.each([-1, 1.5])(
+    "rejects an invalid revision number of %s",
+    async (currentRevisionNumber) => {
+      await expect(
+        listReportsForIncidentForCurrentSession(
+          incidentId,
+          client({
+            reports: [
+              {
+                ...reportRow,
+                current_revision_number: currentRevisionNumber,
+              },
+            ],
+          }),
+        ),
+      ).resolves.toEqual({ kind: "unavailable" });
+    },
+  );
+
   it("denies an untrusted session before the scoped RPC", async () => {
     const sessionClient = client({ claims: {} });
 

@@ -78,8 +78,7 @@ class SupabaseImporter:
         except ImportError as error:
             raise ImportErrorSafe("Install the policy-ingestion import dependency before importing") from error
         try:
-            connection_options = {"sslmode": "require"} if self.environment == "production" else {}
-            with psycopg.connect(self.database_url, **connection_options) as connection:
+            with psycopg.connect(self.database_url) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """

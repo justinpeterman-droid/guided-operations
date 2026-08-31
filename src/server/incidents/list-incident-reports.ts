@@ -18,7 +18,7 @@ const rowsSchema = z.array(
       incident_name: z.string().min(1).max(160),
       report_type: reportTypeSchema,
       status: z.enum(["draft", "in_review", "complete", "archived"]),
-      current_revision_number: z.number().int().positive(),
+      current_revision_number: z.number().int().nonnegative(),
       updated_at: z.iso.datetime({ offset: true }),
     })
     .strict(),
