@@ -1,41 +1,29 @@
 export type DocumentStudioTabId =
-  | "overview"
-  | "officer-reports"
-  | "copy-to-records"
-  | "required-paperwork"
+  | "reports"
   | "notes-facts"
-  | "history";
+  | "paperwork"
+  | "incident-record";
 
 export const DOCUMENT_STUDIO_TABS = [
   {
-    id: "overview",
-    label: "Overview",
-    description: "Incident and packet state",
-  },
-  {
-    id: "officer-reports",
-    label: "Officer Reports",
-    description: "Attributed drafts and finalized reports",
-  },
-  {
-    id: "copy-to-records",
-    label: "Copy to Records",
-    description: "Plain copy-only text",
-  },
-  {
-    id: "required-paperwork",
-    label: "Required Paperwork",
-    description: "Required, suggested, and physical-only items",
+    id: "reports",
+    label: "Reports",
+    description: "Draft, review, and report history",
   },
   {
     id: "notes-facts",
     label: "Notes & Facts",
-    description: "Reviewed facts from the current revision",
+    description: "Reviewed facts from this revision",
   },
   {
-    id: "history",
-    label: "History",
-    description: "Revision and report history",
+    id: "paperwork",
+    label: "Paperwork",
+    description: "Digital, physical, and unavailable forms",
+  },
+  {
+    id: "incident-record",
+    label: "Incident Record",
+    description: "Incident details and revision heads",
   },
 ] as const satisfies ReadonlyArray<{
   id: DocumentStudioTabId;
