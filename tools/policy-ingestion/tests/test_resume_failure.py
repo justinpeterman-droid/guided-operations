@@ -144,6 +144,7 @@ class ResumeFailureTests(unittest.TestCase):
             self.assertEqual(
                 manifest["extracted_page_count"], len(pages) + 1
             )
+            self.assertEqual(manifest["observed_page_count"], len(pages))
 
             retried = pipeline.run(root, resume=True, import_only=True)
 
@@ -153,7 +154,10 @@ class ResumeFailureTests(unittest.TestCase):
             state = json.loads(
                 (attempt / "state.json").read_text(encoding="utf-8")
             )
-            self.assertEqual(state["failure_code"], "validation_failed")
+            self.assertEqual(
+                state["failure_code"],
+                "extracted_page_count_mismatch",
+            )
 
     def test_import_only_rejects_legacy_manifest_without_page_evidence(
         self,
@@ -191,6 +195,44 @@ class ResumeFailureTests(unittest.TestCase):
             self.assertEqual(
                 state["failure_code"],
                 "missing_extracted_page_count_evidence",
+            )
+
+    def test_import_only_rejects_manifest_without_observed_page_evidence(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            provider = FictionalProvider(self.fixture())
+            pipeline = IngestionPipeline(
+                provider,
+                CheckpointStore(base / "work"),
+                ExtractionConfig(),
+                ChunkingConfig(),
+            )
+            root = make_root(base)
+            first = pipeline.run(root, resume=True)
+            self.assertEqual(first.awaiting_review, 1)
+
+            attempt = next((base / "work").rglob("attempt-*"))
+            manifest_path = attempt / "manifest.json"
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            manifest.pop("observed_page_count")
+            manifest_path.write_text(
+                json.dumps(manifest),
+                encoding="utf-8",
+            )
+
+            retried = pipeline.run(root, resume=True, import_only=True)
+
+            self.assertEqual(retried.failed, 1)
+            self.assertEqual(retried.awaiting_review, 0)
+            self.assertEqual(provider.calls, 1)
+            state = json.loads(
+                (attempt / "state.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(
+                state["failure_code"],
+                "missing_observed_page_count_evidence",
             )
 
 
