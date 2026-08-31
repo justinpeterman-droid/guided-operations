@@ -10,6 +10,19 @@ import {
   type LocalQualificationCredentials,
 } from "./support/local-qualification-account";
 
+/**
+ * The report page names its type in the heading that labels the intro region,
+ * and shows the revision number beside a status badge below it. Scoping to the
+ * region asserts both halves: the right report type, at the right revision.
+ */
+async function expectCurrentRevision(page: Page, revisionNumber: number) {
+  await expect(
+    page
+      .getByRole("region", { name: "First-person report" })
+      .getByText(new RegExp(`^Revision ${revisionNumber} ·`)),
+  ).toBeVisible();
+}
+
 test.describe.configure({ mode: "serial" });
 
 let accounts: LocalQualificationAccounts;
@@ -343,7 +356,7 @@ test("an officer and administrator can use the protected per-officer report work
   const reportId = reportUrl.pathname.split("/").at(-1);
   expect(reportId).toMatch(/^[0-9a-f-]{36}$/);
   if (!reportId) throw new Error("Fictional report ID is missing.");
-  await expect(page.getByText("Revision 1 · first_person")).toBeVisible();
+  await expectCurrentRevision(page, 1);
   await expect(
     page
       .locator(
@@ -359,7 +372,7 @@ test("an officer and administrator can use the protected per-officer report work
     .getByLabel("Correction reason")
     .fill("Fictional wording correction.");
   await page.getByRole("button", { name: "Create corrected revision" }).click();
-  await expect(page.getByText("Revision 2 · first_person")).toBeVisible();
+  await expectCurrentRevision(page, 2);
   await expect(
     page
       .locator(
@@ -394,7 +407,7 @@ test("an officer and administrator can use the protected per-officer report work
   );
   expectingRevisionConflict = false;
   await page.reload();
-  await expect(page.getByText("Revision 3 · first_person")).toBeVisible();
+  await expectCurrentRevision(page, 3);
   await expect(
     page
       .locator(
@@ -413,7 +426,7 @@ test("an officer and administrator can use the protected per-officer report work
     .getByLabel("Restore reason")
     .fill("Fictional recovery of the officer-reviewed version.");
   await page.getByRole("button", { name: "Create restored revision" }).click();
-  await expect(page.getByText("Revision 4 · first_person")).toBeVisible();
+  await expectCurrentRevision(page, 4);
   await expect(
     page
       .locator(
