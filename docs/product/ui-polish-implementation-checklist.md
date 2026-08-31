@@ -122,13 +122,13 @@ preserve review-first, source-visible workflow rules.
 
 ## Final verification
 
-- [ ] Run formatting, lint, typecheck, focused tests, full tests when practical,
+- [x] Run formatting, lint, typecheck, focused tests, full tests when practical,
       preview browser tests, production build, and security-diff review.
-- [ ] Inspect browser console errors and failed assets on changed routes.
+- [x] Inspect browser console errors and failed assets on changed routes.
 - [ ] Compare before/after desktop and mobile screenshots instead of blindly
       regenerating baselines.
-- [ ] Record any unresolved local environment requirement without credentials.
-- [ ] Keep commit/push, pull request, deployment, migration, pilot, and
+- [x] Record any unresolved local environment requirement without credentials.
+- [x] Keep commit/push, pull request, deployment, migration, pilot, and
       production decisions separate for owner approval.
 
 **Current quality evidence (2026-08-31):** Formatting, lint, typecheck, the
@@ -137,4 +137,9 @@ audit pass. The full test gate reports 764 passing and one intentionally skipped
 test, and the operations guard suite passes. The reset-free local public browser
 qualification passes all 25 official checks, including unauthenticated account,
 forms, Count Sheet print, and report-output gates. The broader local
-authenticated qualification remains deliberately reset-gated.
+authenticated qualification remains deliberately reset-gated. After the latest
+shared-preview check, formatting, lint, typecheck, the full unit suite, the
+66-test operations guard suite, a production build, tracked-secret scan,
+runtime-logging scan, and the focused 15-check browser accessibility suite all
+pass. Browser checks report no console errors or failed assets on the reviewed
+routes.
