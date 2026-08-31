@@ -47,7 +47,7 @@ describe("PublicLandingPage", () => {
     render(await PublicLandingPage());
 
     expect(redirect).not.toHaveBeenCalled();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Go to sign in" })).toHaveAttribute(
       "href",
       "/login",
     );
