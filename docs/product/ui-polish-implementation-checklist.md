@@ -142,4 +142,6 @@ shared-preview check, formatting, lint, typecheck, the full unit suite, the
 66-test operations guard suite, a production build, tracked-secret scan,
 runtime-logging scan, and the focused 15-check browser accessibility suite all
 pass. Browser checks report no console errors or failed assets on the reviewed
-routes.
+routes. The local high-severity dependency audit currently finds zero
+vulnerabilities; GitHub still reports six Dependabot alerts on the default
+branch, which requires separate hosted-alert triage before any release decision.
