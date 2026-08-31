@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -10,6 +11,7 @@ SCRIPT_PATH = Path(__file__).with_name("verify-answer-key.py")
 SPEC = importlib.util.spec_from_file_location("verify_answer_key", SCRIPT_PATH)
 assert SPEC is not None and SPEC.loader is not None
 verify_answer_key = importlib.util.module_from_spec(SPEC)
+sys.modules[SPEC.name] = verify_answer_key
 SPEC.loader.exec_module(verify_answer_key)
 
 
@@ -129,7 +131,38 @@ class AnswerKeyVerificationTests(unittest.TestCase):
             self.assertIn("3", corpus["NCU9.26.0"])
             self.assertNotIn("None", corpus["NCU9.26.0"])
             self.assertNotIn("003", corpus["NCU9.26.0"])
+            self.assertNotIn(
+                "Page-less metadata.", corpus["NCU9.26.0"]["3"]
+            )
             self.assertIn("Additional page three text", corpus["NCU9.26.0"]["3"])
+
+    def test_load_corpus_skips_unicode_digits_rejected_by_int(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            bundle = root / "private" / "attempt-0001"
+            bundle.mkdir(parents=True)
+            (bundle / "chunks.json").write_text(
+                json.dumps(
+                    [
+                        {
+                            "printed_page_start": 3,
+                            "content": "NUMBER: NCU 9.26.0. Numbered page.",
+                        },
+                        {
+                            "printed_page_start": "²",
+                            "content": "Malformed Unicode page.",
+                        },
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            corpus = verify_answer_key.load_corpus(root)
+
+            self.assertEqual(set(corpus["NCU9.26.0"]), {"3"})
+            self.assertNotIn(
+                "Malformed Unicode page.", corpus["NCU9.26.0"]["3"]
+            )
 
     def test_main_stays_red_until_answer_claims_are_owner_approved(self):
         with tempfile.TemporaryDirectory() as raw:

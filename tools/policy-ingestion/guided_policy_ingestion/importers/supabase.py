@@ -17,6 +17,12 @@ class ImportErrorSafe(RuntimeError):
     pass
 
 
+def _connection_options(environment: str) -> dict[str, str]:
+    if environment == "production":
+        return {"sslmode": "verify-full"}
+    return {}
+
+
 def _git_commit(repository_root: Path) -> str:
     configured = os.environ.get("GUIDED_OPERATIONS_CODE_COMMIT_SHA", "").strip().lower()
     if len(configured) == 40 and all(character in "0123456789abcdef" for character in configured):
@@ -78,7 +84,10 @@ class SupabaseImporter:
         except ImportError as error:
             raise ImportErrorSafe("Install the policy-ingestion import dependency before importing") from error
         try:
-            with psycopg.connect(self.database_url) as connection:
+            with psycopg.connect(
+                self.database_url,
+                **_connection_options(self.environment),
+            ) as connection:
                 with connection.cursor() as cursor:
                     cursor.execute(
                         """

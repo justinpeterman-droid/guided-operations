@@ -81,7 +81,12 @@ def _canonical_printed_page(value: object) -> str | None:
         return str(value) if value >= 0 else None
     if isinstance(value, str):
         stripped = value.strip()
-        return str(int(stripped)) if stripped.isdigit() else None
+        if not stripped.isdigit():
+            return None
+        try:
+            return str(int(stripped))
+        except ValueError:
+            return None
     return None
 
 
