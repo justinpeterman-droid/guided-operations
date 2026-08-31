@@ -260,8 +260,8 @@ python ingest.py ingest "D:\Policy\ADC Policies" --resume --import-supabase --ta
 The import refuses controlled policy data for a local/Development target. It
 also verifies that the direct or pooler database URL contains the exact approved
 Production project reference, forces `sslmode=verify-full`, and refuses a source
-that is not uniquely pre-registered or whose registered collection differs.
-Each document imports in a short transaction as `awaiting_review`; chunks remain
+that is not uniquely pre-registered or whose registered collection differs. Each
+document imports in a short transaction as `awaiting_review`; chunks remain
 `pending` and `qa_approved = false`.
 
 ## Resumable embeddings after QA

@@ -101,7 +101,11 @@ describe("DocumentStudio", () => {
 
   it("withholds report actions when report summaries are unavailable", () => {
     const view = render(
-      <DocumentStudio incident={incident} reports={null} workspace={workspace} />,
+      <DocumentStudio
+        incident={incident}
+        reports={null}
+        workspace={workspace}
+      />,
     );
     const root = within(view.container);
 
@@ -181,6 +185,12 @@ describe("DocumentStudio", () => {
     reportsTab.focus();
     await user.keyboard("{ArrowRight}");
     expect(root.getByRole("tab", { name: /Notes & Facts/i })).toHaveFocus();
+    await waitFor(() => {
+      expect(root.getByRole("tab", { name: /Notes & Facts/i })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
     expect(root.getByText("8 Barracks")).toBeVisible();
   });
 
@@ -203,7 +213,9 @@ describe("DocumentStudio", () => {
     expect(
       root.getByText("Revision 1 is the active revision for this incident."),
     ).toBeVisible();
-    expect(root.getByRole("link", { name: "Open report history" })).toBeVisible();
+    expect(
+      root.getByRole("link", { name: "Open report history" }),
+    ).toBeVisible();
   });
 
   it("groups paperwork by honest digital capability", async () => {

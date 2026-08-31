@@ -76,7 +76,10 @@ export async function loadIncidentReportWorkspace(
   client: IncidentPageClient,
 ) {
   try {
-    return await getIncidentReportWorkspaceForCurrentSession(incidentId, client);
+    return await getIncidentReportWorkspaceForCurrentSession(
+      incidentId,
+      client,
+    );
   } catch {
     return { kind: "unavailable" } as const;
   }
@@ -87,7 +90,10 @@ export async function loadIncidentSummary(
   client: IncidentPageClient,
 ) {
   try {
-    const result = await getIncidentSummaryForCurrentSession(incidentId, client);
+    const result = await getIncidentSummaryForCurrentSession(
+      incidentId,
+      client,
+    );
     return result.kind === "found" ? result.incident : null;
   } catch {
     return null;

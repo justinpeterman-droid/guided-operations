@@ -1,8 +1,5 @@
 export type DocumentStudioTabId =
-  | "reports"
-  | "notes-facts"
-  | "paperwork"
-  | "incident-record";
+  "reports" | "notes-facts" | "paperwork" | "incident-record";
 
 export const DOCUMENT_STUDIO_TABS = [
   {

@@ -101,10 +101,16 @@ describe("IncidentReportWorkspacePage", () => {
       INCIDENT_ID,
       serverClient,
     );
-
-    expect(screen.getByRole("tab", { name: /Officer Reports/i })).toBeVisible();
-    await user.click(screen.getByRole("tab", { name: /Officer Reports/i }));
     expect(screen.getByText(/No active reporting officer/)).toBeVisible();
     expect(screen.getByText(/cannot be attributed yet/i)).toBeVisible();
+
+    await user.click(screen.getByRole("tab", { name: /Notes & Facts/i }));
+    expect(screen.getByRole("tab", { name: /Notes & Facts/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.getByText("No reviewed facts are stored on the current revision."),
+    ).toBeVisible();
   });
 });

@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useCallback, useState, type KeyboardEvent } from "react";
+import {
+  useCallback,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type KeyboardEvent,
+} from "react";
 
 import { ReportDraftRequestForm } from "@/app/incidents/[incidentId]/report-draft-request-form";
 import { getReportChecklistCategory } from "@/features/incidents/report-assistant-checklist";
@@ -35,8 +41,7 @@ const PAPERWORK_GROUPS = [
   {
     capability: "available_in_reports",
     title: "Available through Officer Reports",
-    description:
-      "Create supported report outputs through the Reports section.",
+    description: "Create supported report outputs through the Reports section.",
   },
   {
     capability: "physical_only",
@@ -152,7 +157,9 @@ function ReportsPanel({ reports, workspace }: DocumentStudioProps) {
         </p>
       )}
 
-      {reports !== null ? <ReportDraftRequestForm workspace={workspace} /> : null}
+      {reports !== null ? (
+        <ReportDraftRequestForm workspace={workspace} />
+      ) : null}
 
       <section
         className={styles.subsection}
@@ -463,8 +470,9 @@ function IncidentRecordPanel({
 
 /** Four-section Document Studio shell for one authorized incident revision. */
 export function DocumentStudio(props: DocumentStudioProps) {
-  const [activeTab, setActiveTab] =
-    useState<DocumentStudioTabId>("reports");
+  const [activeTab, setActiveTab] = useState<DocumentStudioTabId>("reports");
+  const pendingTabFocus = useRef<DocumentStudioTabId | null>(null);
+  const rootRef = useRef<HTMLDivElement>(null);
   const nextAction = deriveIncidentNextAction({
     reviewedFacts: props.workspace.reviewedFacts,
     reportingOfficerCount: props.workspace.reportingOfficers.length,
@@ -472,8 +480,18 @@ export function DocumentStudio(props: DocumentStudioProps) {
   });
 
   const focusTab = useCallback((tabId: DocumentStudioTabId) => {
-    document.getElementById(`document-studio-tab-${tabId}`)?.focus();
+    rootRef.current
+      ?.querySelector<HTMLButtonElement>(`#document-studio-tab-${tabId}`)
+      ?.focus();
   }, []);
+
+  useLayoutEffect(() => {
+    const tabId = pendingTabFocus.current;
+    if (tabId === null) return;
+
+    pendingTabFocus.current = null;
+    focusTab(tabId);
+  }, [activeTab, focusTab]);
 
   function activateTab(tabId: DocumentStudioTabId, focusHeading = false) {
     setActiveTab(tabId);
@@ -515,12 +533,12 @@ export function DocumentStudio(props: DocumentStudioProps) {
 
     event.preventDefault();
     const nextTab = DOCUMENT_STUDIO_TABS[nextIndex];
+    pendingTabFocus.current = nextTab.id;
     activateTab(nextTab.id);
-    focusTab(nextTab.id);
   }
 
   return (
-    <div className={styles.root}>
+    <div ref={rootRef} className={styles.root}>
       <IncidentWorkHeader
         incident={props.incident}
         nextAction={nextAction}
@@ -579,9 +597,7 @@ export function DocumentStudio(props: DocumentStudioProps) {
         role="tabpanel"
       >
         {activeTab === "reports" ? <ReportsPanel {...props} /> : null}
-        {activeTab === "notes-facts" ? (
-          <NotesAndFactsPanel {...props} />
-        ) : null}
+        {activeTab === "notes-facts" ? <NotesAndFactsPanel {...props} /> : null}
         {activeTab === "paperwork" ? <PaperworkPanel {...props} /> : null}
         {activeTab === "incident-record" ? (
           <IncidentRecordPanel {...props} />

@@ -1,43 +1,65 @@
 # Document Studio Guided Workflow Implementation Plan
 
-> **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
+> **For agentic workers:** REQUIRED SUB-SKILL: Use
+> superpowers:subagent-driven-development (recommended) or
+> superpowers:executing-plans to implement this plan task-by-task. Steps use
+> checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Replace the equal-weight six-tab Document Studio with a truthful four-section, next-action-guided workspace that is quieter on desktop and clearer on mobile.
+**Goal:** Replace the equal-weight six-tab Document Studio with a truthful
+four-section, next-action-guided workspace that is quieter on desktop and
+clearer on mobile.
 
-**Architecture:** Keep the existing Next.js App Router page and server reads unchanged. Add one pure next-action derivation module, one client-presentational incident header, and consolidate the existing panels inside the current client Document Studio boundary. Use the existing global design tokens and ARIA tab behavior; add a native mobile section select bound to the same state.
+**Architecture:** Keep the existing Next.js App Router page and server reads
+unchanged. Add one pure next-action derivation module, one client-presentational
+incident header, and consolidate the existing panels inside the current client
+Document Studio boundary. Use the existing global design tokens and ARIA tab
+behavior; add a native mobile section select bound to the same state.
 
-**Tech Stack:** Next.js 16.3.2 App Router, React 19.2.8, TypeScript 5.9.3, Vitest 4.1.11, Testing Library, Playwright 1.62.1, global CSS.
+**Tech Stack:** Next.js 16.3.2 App Router, React 19.2.8, TypeScript 5.9.3,
+Vitest 4.1.11, Testing Library, Playwright 1.62.1, global CSS.
 
-**Spec:** `docs/superpowers/specs/2026-08-31-document-studio-guided-workflow-design.md`
+**Spec:**
+`docs/superpowers/specs/2026-08-31-document-studio-guided-workflow-design.md`
 
 ## Global Constraints
 
-- Preserve the owner-approved cool blue-gray, navy, restrained-gold design system in `docs/product/experience-design-brief.md`.
-- Use React Server Components by default and keep `"use client"` at the existing Document Studio interactive boundary.
-- Display only authorized incident, report, revision, fact, officer, timestamp, status, and count values.
-- Never infer packet completeness, filing, submission, synchronization, or system-of-record state.
+- Preserve the owner-approved cool blue-gray, navy, restrained-gold design
+  system in `docs/product/experience-design-brief.md`.
+- Use React Server Components by default and keep `"use client"` at the existing
+  Document Studio interactive boundary.
+- Display only authorized incident, report, revision, fact, officer, timestamp,
+  status, and count values.
+- Never infer packet completeness, filing, submission, synchronization, or
+  system-of-record state.
 - Keep Copy to Records explicitly unavailable and subordinate to Reports.
 - Keep physical-only paperwork physical-only.
-- Preserve 44 CSS-pixel targets, keyboard tab behavior, focus visibility, reduced motion, 320-pixel width support, and 200% text support.
-- Do not change server services, database schema, authorization, migrations, provider configuration, or deployment traffic.
+- Preserve 44 CSS-pixel targets, keyboard tab behavior, focus visibility,
+  reduced motion, 320-pixel width support, and 200% text support.
+- Do not change server services, database schema, authorization, migrations,
+  provider configuration, or deployment traffic.
 
 ---
 
 ### Task 1: Define the four-section catalog and deterministic next action
 
 **Files:**
+
 - Modify: `src/features/incidents/document-studio-catalog.ts`
 - Create: `src/features/incidents/derive-incident-next-action.ts`
 - Create: `src/features/incidents/derive-incident-next-action.test.ts`
 
 **Interfaces:**
-- Produces: `DocumentStudioTabId = "reports" | "notes-facts" | "paperwork" | "incident-record"`.
+
+- Produces:
+  `DocumentStudioTabId = "reports" | "notes-facts" | "paperwork" | "incident-record"`.
 - Produces: `deriveIncidentNextAction(input): IncidentNextAction`.
-- Consumes: `StoredReviewedFact` and `ReportSummary` read-only values already authorized by server services.
+- Consumes: `StoredReviewedFact` and `ReportSummary` read-only values already
+  authorized by server services.
 
 - [ ] **Step 1: Write failing catalog and derivation tests**
 
-Create `derive-incident-next-action.test.ts` with table-driven cases for all priority branches:
+Create `derive-incident-next-action.test.ts` with table-driven cases for all
+priority branches:
 
 ```ts
 import { describe, expect, it } from "vitest";
@@ -77,7 +99,11 @@ describe("Document Studio guidance", () => {
   it.each([
     {
       name: "missing reporting officer",
-      input: { reviewedFacts: [confirmedFact], reportingOfficerCount: 0, reports: [] },
+      input: {
+        reviewedFacts: [confirmedFact],
+        reportingOfficerCount: 0,
+        reports: [],
+      },
       destination: "incident-record",
     },
     {
@@ -105,7 +131,11 @@ describe("Document Studio guidance", () => {
     },
     {
       name: "first report",
-      input: { reviewedFacts: [confirmedFact], reportingOfficerCount: 1, reports: [] },
+      input: {
+        reviewedFacts: [confirmedFact],
+        reportingOfficerCount: 1,
+        reports: [],
+      },
       destination: "reports",
     },
     {
@@ -140,18 +170,17 @@ Run:
 npx vitest run src/features/incidents/derive-incident-next-action.test.ts
 ```
 
-Expected: FAIL because the new module does not exist and the catalog still exposes six section ids.
+Expected: FAIL because the new module does not exist and the catalog still
+exposes six section ids.
 
 - [ ] **Step 3: Implement the four-section catalog**
 
-Replace only the section id and `DOCUMENT_STUDIO_TABS` definitions at the top of `document-studio-catalog.ts`:
+Replace only the section id and `DOCUMENT_STUDIO_TABS` definitions at the top of
+`document-studio-catalog.ts`:
 
 ```ts
 export type DocumentStudioTabId =
-  | "reports"
-  | "notes-facts"
-  | "paperwork"
-  | "incident-record";
+  "reports" | "notes-facts" | "paperwork" | "incident-record";
 
 export const DOCUMENT_STUDIO_TABS = [
   {
@@ -297,19 +326,24 @@ git commit -m "feat: derive truthful Document Studio guidance"
 ### Task 2: Add the incident work header and activate its destination
 
 **Files:**
+
 - Create: `src/features/incidents/incident-work-header.tsx`
 - Modify: `src/features/incidents/document-studio.tsx`
 - Modify: `src/features/incidents/document-studio.test.tsx`
 - Modify: `src/app/incidents/[incidentId]/page.tsx`
 
 **Interfaces:**
-- Consumes: `IncidentNextAction`, `IncidentSummary | null`, and `IncidentReportWorkspace`.
+
+- Consumes: `IncidentNextAction`, `IncidentSummary | null`, and
+  `IncidentReportWorkspace`.
 - Produces: `IncidentWorkHeader` with `onActivateSection(sectionId)`.
-- Document Studio owns active-section state so the header action and navigation never diverge.
+- Document Studio owns active-section state so the header action and navigation
+  never diverge.
 
 - [ ] **Step 1: Rewrite the component test for the approved first viewport**
 
-Update the first Document Studio test so it expects Reports selected by default, the incident header, exactly four sections, and a working next-action control:
+Update the first Document Studio test so it expects Reports selected by default,
+the incident header, exactly four sections, and a working next-action control:
 
 ```ts
 it("starts in Reports and keeps truthful incident guidance attached", async () => {
@@ -344,7 +378,8 @@ Run:
 npx vitest run src/features/incidents/document-studio.test.tsx
 ```
 
-Expected: FAIL because the page header is still outside Document Studio, Overview is selected, and six tabs remain.
+Expected: FAIL because the page header is still outside Document Studio,
+Overview is selected, and six tabs remain.
 
 - [ ] **Step 3: Create `IncidentWorkHeader`**
 
@@ -352,7 +387,8 @@ Implement a client-presentational component with:
 
 - a `Back to reports` link;
 - the incident name as `h1`;
-- incident number, category, revision, and optional status as a wrapping metadata list;
+- incident number, category, revision, and optional status as a wrapping
+  metadata list;
 - a `Next action` section containing summary and a button;
 - the button calling `onActivateSection(nextAction.destination)`.
 
@@ -363,12 +399,15 @@ Use no local data fallback and no stored state.
 In `document-studio.tsx`:
 
 - start `activeTab` at `"reports"`;
-- derive the next action from `workspace.reviewedFacts`, `workspace.reportingOfficers.length`, and `reports`;
+- derive the next action from `workspace.reviewedFacts`,
+  `workspace.reportingOfficers.length`, and `reports`;
 - render `IncidentWorkHeader` before the section navigation;
 - add a `sectionHeadingId` map;
-- on header activation, set active section and focus the active panel heading with `tabIndex={-1}` after React commits the panel.
+- on header activation, set active section and focus the active panel heading
+  with `tabIndex={-1}` after React commits the panel.
 
-In `src/app/incidents/[incidentId]/page.tsx`, remove the old `reports-intro` section and render only the `DocumentStudio` inside `WorkspaceShell`.
+In `src/app/incidents/[incidentId]/page.tsx`, remove the old `reports-intro`
+section and render only the `DocumentStudio` inside `WorkspaceShell`.
 
 - [ ] **Step 5: Run the component test and confirm GREEN**
 
@@ -378,7 +417,8 @@ Run:
 npx vitest run src/features/incidents/document-studio.test.tsx
 ```
 
-Expected: PASS for default section, header identity, four-section count, and next-action focus.
+Expected: PASS for default section, header identity, four-section count, and
+next-action focus.
 
 - [ ] **Step 6: Commit the task**
 
@@ -393,11 +433,14 @@ git commit -m "feat: guide officers from the incident header"
 ### Task 3: Consolidate the panels without losing supported work
 
 **Files:**
+
 - Modify: `src/features/incidents/document-studio.tsx`
 - Modify: `src/features/incidents/document-studio.test.tsx`
 
 **Interfaces:**
-- Reports panel owns linked reports, draft request, and unavailable Copy to Records.
+
+- Reports panel owns linked reports, draft request, and unavailable Copy to
+  Records.
 - Paperwork panel groups existing catalog entries by capability.
 - Incident Record owns overview values and report revision heads.
 
@@ -406,8 +449,10 @@ git commit -m "feat: guide officers from the incident header"
 Add tests that:
 
 - assert no top-level `Copy to Records`, `Overview`, or `History` tab exists;
-- open Reports and find both the draft request placeholder and Copy to Records unavailable message;
-- open Incident Record and find incident number plus `Current incident revision` and report revision-head content;
+- open Reports and find both the draft request placeholder and Copy to Records
+  unavailable message;
+- open Incident Record and find incident number plus `Current incident revision`
+  and report revision-head content;
 - open Paperwork and find the approved capability group headings;
 - preserve the unattributed confirmed-fact exclusion in Notes & Facts.
 
@@ -423,7 +468,8 @@ Expected: FAIL until the old panel routing is consolidated.
 
 - [ ] **Step 3: Consolidate Reports**
 
-Rename `OfficerReportsPanel` to `ReportsPanel`. Keep the linked-report table and `ReportDraftRequestForm`. Append a nested section:
+Rename `OfficerReportsPanel` to `ReportsPanel`. Keep the linked-report table and
+`ReportDraftRequestForm`. Append a nested section:
 
 ```tsx
 <section
@@ -444,7 +490,9 @@ Delete the old top-level CopyToRecords panel.
 
 - [ ] **Step 4: Group Paperwork by capability**
 
-Map required form keys through `describeDocumentStudioForm`, group by `available_in_reports`, `physical_only`, and `not_yet_available`, and render only non-empty groups under these exact headings:
+Map required form keys through `describeDocumentStudioForm`, group by
+`available_in_reports`, `physical_only`, and `not_yet_available`, and render
+only non-empty groups under these exact headings:
 
 - `Available through Officer Reports`
 - `Physical form required`
@@ -454,17 +502,27 @@ Keep every item label and detail unchanged.
 
 - [ ] **Step 5: Merge overview and history into Incident Record**
 
-Replace `OverviewPanel` and `HistoryPanel` with `IncidentRecordPanel`. Preserve the overview definition list, the current incident revision card, report revision-head table, missing-incident-summary state, and no-history empty state.
+Replace `OverviewPanel` and `HistoryPanel` with `IncidentRecordPanel`. Preserve
+the overview definition list, the current incident revision card, report
+revision-head table, missing-incident-summary state, and no-history empty state.
 
 - [ ] **Step 6: Update the section switch**
 
 Render only:
 
 ```tsx
-{activeTab === "reports" ? <ReportsPanel {...props} /> : null}
-{activeTab === "notes-facts" ? <NotesAndFactsPanel {...props} /> : null}
-{activeTab === "paperwork" ? <PaperworkPanel {...props} /> : null}
-{activeTab === "incident-record" ? <IncidentRecordPanel {...props} /> : null}
+{
+  activeTab === "reports" ? <ReportsPanel {...props} /> : null;
+}
+{
+  activeTab === "notes-facts" ? <NotesAndFactsPanel {...props} /> : null;
+}
+{
+  activeTab === "paperwork" ? <PaperworkPanel {...props} /> : null;
+}
+{
+  activeTab === "incident-record" ? <IncidentRecordPanel {...props} /> : null;
+}
 ```
 
 - [ ] **Step 7: Run focused tests and confirm GREEN**
@@ -490,13 +548,16 @@ git commit -m "refactor: consolidate Document Studio work areas"
 ### Task 4: Implement the quieter desktop surface and mobile section selector
 
 **Files:**
+
 - Modify: `src/features/incidents/document-studio.tsx`
 - Modify: `src/features/incidents/document-studio.test.tsx`
 - Modify: `src/app/globals.css`
 
 **Interfaces:**
+
 - Desktop retains the ARIA tab list.
-- Mobile exposes `select[aria-label="Document Studio section"]` bound to the same `activeTab`.
+- Mobile exposes `select[aria-label="Document Studio section"]` bound to the
+  same `activeTab`.
 
 - [ ] **Step 1: Add a failing mobile-control test**
 
@@ -556,13 +617,18 @@ Before the desktop tab list, render:
 
 Update the Document Studio CSS so:
 
-- `.incident-work-header` is an open, document-oriented surface with fine dividers and no large shadow;
-- `.incident-next-action` uses a navy action button and a restrained gold orientation rule;
+- `.incident-work-header` is an open, document-oriented surface with fine
+  dividers and no large shadow;
+- `.incident-next-action` uses a navy action button and a restrained gold
+  orientation rule;
 - `.document-studio-tabs` remains visible above the mobile breakpoint;
-- `.document-studio-mobile-select` is hidden by default and displayed at the mobile breakpoint;
-- the old `overflow-x: auto`, tab minimum width, and hidden tab-description mobile rules are removed;
+- `.document-studio-mobile-select` is hidden by default and displayed at the
+  mobile breakpoint;
+- the old `overflow-x: auto`, tab minimum width, and hidden tab-description
+  mobile rules are removed;
 - `.document-studio-panel` uses a smaller radius and no large shadow;
-- nested `.document-studio-subsection` and paperwork capability groups use divider-led layout rather than nested cards;
+- nested `.document-studio-subsection` and paperwork capability groups use
+  divider-led layout rather than nested cards;
 - `prefers-reduced-motion` disables tab/button travel;
 - 44-pixel control minimums and visible focus outlines remain.
 
@@ -588,35 +654,45 @@ git commit -m "style: quiet Document Studio and clarify mobile sections"
 ### Task 5: Update authenticated browser expectations and run the full gate
 
 **Files:**
+
 - Modify: `tests/e2e/authenticated-report-workspace.spec.ts`
 - Modify: `docs/product/experience-design-brief.md`
 
 **Interfaces:**
+
 - Browser qualification expects Reports as the initial section.
-- Product documentation records the four-section Document Studio hierarchy and truthful next-action rule.
+- Product documentation records the four-section Document Studio hierarchy and
+  truthful next-action rule.
 
 - [ ] **Step 1: Update the authenticated browser flow**
 
-Replace the comments and obsolete click that assume Overview is initial. After opening the incident, assert:
+Replace the comments and obsolete click that assume Overview is initial. After
+opening the incident, assert:
 
 ```ts
-await expect(
-  page.getByRole("tab", { name: /^Reports/ }),
-).toHaveAttribute("aria-selected", "true");
+await expect(page.getByRole("tab", { name: /^Reports/ })).toHaveAttribute(
+  "aria-selected",
+  "true",
+);
 await expect(page.getByText(/request the first officer report/i)).toBeVisible();
 ```
 
-Keep the existing radio, fact scoping, checkbox, mobile overflow, report finalization, revision, export, print, and administrator checks. Continue clicking Notes & Facts for the later scoping assertion.
+Keep the existing radio, fact scoping, checkbox, mobile overflow, report
+finalization, revision, export, print, and administrator checks. Continue
+clicking Notes & Facts for the later scoping assertion.
 
 - [ ] **Step 2: Update the approved experience brief**
 
 Add a short Document Studio subsection stating:
 
-- four top-level sections are Reports, Notes & Facts, Paperwork, and Incident Record;
+- four top-level sections are Reports, Notes & Facts, Paperwork, and Incident
+  Record;
 - Reports opens first;
 - Copy to Records stays subordinate while unavailable;
-- next action must be derived from authorized state and must not claim completion or filing;
-- mobile uses a labeled section selector rather than a horizontal scrolling tab rail.
+- next action must be derived from authorized state and must not claim
+  completion or filing;
+- mobile uses a labeled section selector rather than a horizontal scrolling tab
+  rail.
 
 - [ ] **Step 3: Run formatting and focused verification**
 
@@ -641,9 +717,11 @@ Run:
 npm run check
 ```
 
-Expected: formatting, ESLint, TypeScript, all Vitest and operations tests, and the optimized Next.js production build exit 0.
+Expected: formatting, ESLint, TypeScript, all Vitest and operations tests, and
+the optimized Next.js production build exit 0.
 
-- [ ] **Step 5: Run authenticated browser qualification when the local Supabase stack is available**
+- [ ] **Step 5: Run authenticated browser qualification when the local Supabase
+      stack is available**
 
 Run:
 
@@ -651,9 +729,12 @@ Run:
 npm run test:e2e:local-auth
 ```
 
-Expected: the authenticated report workspace flow passes at desktop and 390-pixel mobile width with no browser console errors, failed requests, or horizontal page overflow.
+Expected: the authenticated report workspace flow passes at desktop and
+390-pixel mobile width with no browser console errors, failed requests, or
+horizontal page overflow.
 
-If the local stack is unavailable, record that exact infrastructure limitation in the pull request and do not claim authenticated browser qualification.
+If the local stack is unavailable, record that exact infrastructure limitation
+in the pull request and do not claim authenticated browser qualification.
 
 - [ ] **Step 6: Review the final diff against the design spec**
 

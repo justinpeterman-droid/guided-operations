@@ -118,12 +118,12 @@ Its top-level navigation has four task-oriented sections in this order:
 
 1. **Reports** — the default section for supported draft, review, finalize, and
    report-history work.
-2. **Notes & Facts** — reviewed fact states from the current authorized
-   incident revision.
+2. **Notes & Facts** — reviewed fact states from the current authorized incident
+   revision.
 3. **Paperwork** — required items grouped by available digital work,
    physical-form requirement, and unavailable digital support.
-4. **Incident Record** — current incident details, the active incident
-   revision, and linked report revision heads.
+4. **Incident Record** — current incident details, the active incident revision,
+   and linked report revision heads.
 
 Copy to Records remains a subordinate Reports subsection while it is
 unavailable. It must not receive equal top-level prominence or fake print, Word,

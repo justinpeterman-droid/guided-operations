@@ -11,11 +11,7 @@ import "server-only";
  */
 export const OPENAI_RESPONSES_CONTRACT_VERSION = "openai-node@7.8.0";
 
-export type OpenAiReasoningEffort =
-  | "minimal"
-  | "low"
-  | "medium"
-  | "high";
+export type OpenAiReasoningEffort = "minimal" | "low" | "medium" | "high";
 
 export type OpenAiJsonSchema = Readonly<Record<string, unknown>>;
 
