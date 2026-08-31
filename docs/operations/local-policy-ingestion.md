@@ -42,6 +42,23 @@ nvidia-smi
 winget install --id astral-sh.uv -e
 ```
 
+## Installed MinerU extras
+
+The `mineru` extra requests `mineru[pipeline,vlm]`, not `mineru[all]`. Both
+extraction backends this tool uses stay available: `pipeline` and the
+transformers VLM path. What `all` added was the vLLM and LMDeploy serving
+engines and the Gradio web interface, none of which this tool ever invokes — it
+shells out to the `mineru` command line. Dropping them takes the locked
+environment from 237 packages to 110 and removes every vLLM, LMDeploy, Gradio,
+and xgrammar advisory.
+
+Extraction output is unchanged. `ExtractionConfig` in
+`guided_policy_ingestion/config.py` pins `provider_version` to `3.4.5`, and that
+version is part of the configuration hash that names every bundle on disk. This
+change does not touch it, so bundles already extracted stay valid and resumable.
+Upgrading MinerU itself would change that hash and require re-extracting the
+whole corpus.
+
 ## One-time installation
 
 Open PowerShell in the repository and run:
