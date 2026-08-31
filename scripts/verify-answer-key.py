@@ -141,6 +141,8 @@ def parse_answer_key(markdown: str) -> tuple[AnswerKeyQuestion, ...]:
                 ),
             )
         )
+    if not questions:
+        raise ValueError("Answer key contains no question headings")
     return tuple(questions)
 
 
@@ -194,7 +196,11 @@ def verify_answer_key(
             continue
 
         policy_number = canonical_policy_number(citation_match.group(1))
-        cited_pages = set(re.findall(r"\d+", citation_match.group(2)))
+        cited_pages = {
+            page
+            for raw_page in re.findall(r"\d+", citation_match.group(2))
+            if (page := _canonical_printed_page(raw_page)) is not None
+        }
         pages = corpus.get(policy_number, {})
         if not pages:
             issues.append(
@@ -211,6 +217,7 @@ def verify_answer_key(
         }
         quote_pages: set[str] = set()
         missing_fragment: str | None = None
+        wrong_page_fragment: str | None = None
         for fragment in fragments:
             hits = {
                 page
@@ -221,6 +228,11 @@ def verify_answer_key(
                 missing_fragment = fragment[:50]
                 break
             quote_pages.update(hits)
+            if (
+                wrong_page_fragment is None
+                and not cited_pages.intersection(hits)
+            ):
+                wrong_page_fragment = fragment[:50]
 
         if missing_fragment:
             issues.append(
@@ -231,7 +243,7 @@ def verify_answer_key(
                 )
             )
             continue
-        if not cited_pages.intersection(quote_pages):
+        if wrong_page_fragment:
             issues.append(
                 VerificationIssue(
                     question.question_id,
@@ -239,6 +251,7 @@ def verify_answer_key(
                     (
                         f"cited {','.join(sorted(cited_pages))}; "
                         f"quote found {','.join(sorted(quote_pages))}; "
+                        f"unsupported fragment {wrong_page_fragment}; "
                         f"{policy_number}"
                     ),
                 )
