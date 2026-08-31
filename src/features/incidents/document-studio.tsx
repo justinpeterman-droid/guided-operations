@@ -57,7 +57,7 @@ const PAPERWORK_GROUPS = [
 
 export type DocumentStudioProps = Readonly<{
   incident: IncidentSummary | null;
-  reports: readonly ReportSummary[];
+  reports: readonly ReportSummary[] | null;
   workspace: IncidentReportWorkspace;
 }>;
 
@@ -105,7 +105,12 @@ function ReportsPanel({ reports, workspace }: DocumentStudioProps) {
         every step.
       </p>
 
-      {reports.length > 0 ? (
+      {reports === null ? (
+        <p className="document-studio-empty" role="status">
+          Reports cannot load right now. Existing report work has not been
+          changed, and a new draft cannot be requested from this view.
+        </p>
+      ) : reports.length > 0 ? (
         <div className="reports-table-wrap document-studio-table">
           <table>
             <caption>Reports linked to this incident</caption>
@@ -147,7 +152,7 @@ function ReportsPanel({ reports, workspace }: DocumentStudioProps) {
         </p>
       )}
 
-      <ReportDraftRequestForm workspace={workspace} />
+      {reports !== null ? <ReportDraftRequestForm workspace={workspace} /> : null}
 
       <section
         className={styles.subsection}
@@ -379,7 +384,7 @@ function IncidentRecordPanel({
             </div>
             <div>
               <dt>Reports on this incident</dt>
-              <dd>{reports.length}</dd>
+              <dd>{reports?.length ?? "Unavailable"}</dd>
             </div>
           </dl>
           <p className="document-studio-footnote">
@@ -412,7 +417,12 @@ function IncidentRecordPanel({
             </p>
           </article>
 
-          {reports.length > 0 ? (
+          {reports === null ? (
+            <p className="document-studio-empty" role="status">
+              Report revision history cannot load right now. Existing report
+              work has not been changed.
+            </p>
+          ) : reports.length > 0 ? (
             <div className="reports-table-wrap document-studio-table">
               <table>
                 <caption>Report revision heads</caption>
