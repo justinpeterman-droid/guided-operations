@@ -140,6 +140,7 @@ def parse_mineru_content(path: Path, version: str) -> ExtractionResult:
         extraction_tool="mineru",
         extraction_version=version,
         extraction_model_version=None,
+        observed_page_count=page_count,
         warnings=tuple(warnings),
         layout_reference=path.name,
         layout_metadata_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
