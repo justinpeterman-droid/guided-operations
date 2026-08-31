@@ -92,6 +92,16 @@ describe("Document Studio guidance", () => {
     });
   });
 
+  it("does not invent a report action when report summaries are unavailable", () => {
+    expect(
+      deriveIncidentNextAction({
+        reviewedFacts: [confirmedFact],
+        reportingOfficerCount: 1,
+        reports: null,
+      }),
+    ).toBeNull();
+  });
+
   it("routes the first supported report request to Reports", () => {
     expect(
       deriveIncidentNextAction({
