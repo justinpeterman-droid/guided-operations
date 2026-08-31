@@ -12,6 +12,8 @@ no accepted complete migrated product route.
 - [Experience Design Brief](experience-design-brief.md) — owner-approved visual
   direction, command-center hierarchy, responsive behavior, and design
   acceptance checklist.
+- [UI Polish Implementation Checklist](ui-polish-implementation-checklist.md) —
+  active, source-linked execution waves for the approved UI audit findings.
 - [Roles and Permissions](roles-and-permissions.md) — identity concepts,
   officer/admin matrix, RLS/server enforcement, and open decisions.
 - [Feature Catalog and Parity](feature-catalog-and-parity.md) — old canonical
