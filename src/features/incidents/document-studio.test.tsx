@@ -12,6 +12,7 @@ vi.mock("@/app/incidents/[incidentId]/report-draft-request-form", () => ({
   ),
 }));
 
+import { DOCUMENT_STUDIO_TABS } from "./document-studio-catalog";
 import { DocumentStudio } from "./document-studio";
 
 const workspace = {
@@ -74,5 +75,69 @@ describe("DocumentStudio", () => {
     expect(
       root.getByText(/Copy-to-records output is not yet available/i),
     ).toBeVisible();
+  });
+  it("lets the tab list own its tabs", () => {
+    const view = render(
+      <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
+    );
+    const root = within(view.container);
+
+    const tablist = root.getByRole("tablist");
+    expect(tablist.tagName).toBe("UL");
+    expect(root.getAllByRole("tab")).toHaveLength(DOCUMENT_STUDIO_TABS.length);
+  });
+
+  it("keeps every tab pointed at a tab panel that is really in the document", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
+    );
+    const root = within(view.container);
+
+    for (const tab of DOCUMENT_STUDIO_TABS) {
+      await user.click(
+        root.getByRole("tab", { name: new RegExp(tab.label, "i") }),
+      );
+      const panel = root.getByRole("tabpanel");
+      for (const button of root.getAllByRole("tab")) {
+        expect(
+          view.container.querySelector(
+            `#${button.getAttribute("aria-controls")}`,
+          ),
+        ).toBe(panel);
+      }
+      expect(panel).toHaveAttribute(
+        "aria-labelledby",
+        `document-studio-tab-${tab.id}`,
+      );
+    }
+  });
+  it("keeps a fact that belongs to no reporting officer off Notes & Facts", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio
+        incident={incident}
+        reports={[]}
+        workspace={{
+          ...workspace,
+          reviewedFacts: [
+            ...workspace.reviewedFacts,
+            {
+              id: "66666666-6666-4666-8666-666666666666",
+              field: "Unassigned observation",
+              state: "confirmed" as const,
+              value: "Confirmed fact that is not assigned to any reporter.",
+              sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
+              reportingStaffMemberIds: [],
+            },
+          ],
+        }}
+      />,
+    );
+    const root = within(view.container);
+
+    await user.click(root.getByRole("tab", { name: /Notes & Facts/i }));
+    expect(root.getByText("Location")).toBeVisible();
+    expect(root.queryByText("Unassigned observation")).toBeNull();
   });
 });

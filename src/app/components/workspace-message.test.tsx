@@ -24,7 +24,7 @@ describe("WorkspaceMessage", () => {
     expect(
       screen.getByRole("heading", { name: "Sign in to view reports." }),
     ).toBeVisible();
-    expect(screen.getByRole("link", { name: "Sign in" })).toHaveAttribute(
+    expect(screen.getByRole("link", { name: "Go to sign in" })).toHaveAttribute(
       "href",
       "/login",
     );

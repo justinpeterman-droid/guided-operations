@@ -17,6 +17,9 @@ import type { IncidentSummary } from "@/server/incidents/list-incidents";
 import type { IncidentReportWorkspace } from "@/server/incidents/get-incident-report-workspace";
 import type { ReportSummary } from "@/server/incidents/list-reports";
 
+/** The tab panel is rendered once and reused, so every tab controls this id. */
+const DOCUMENT_STUDIO_PANEL_ID = "document-studio-panel";
+
 export type DocumentStudioProps = Readonly<{
   incident: IncidentSummary | null;
   reports: readonly ReportSummary[];
@@ -263,8 +266,24 @@ function RequiredPaperworkPanel({ workspace }: DocumentStudioProps) {
   );
 }
 
+/**
+ * The server hands back every fact stored on the revision; scoping to a
+ * reporting officer has always happened where facts are displayed. A confirmed
+ * version-two fact with an empty scope belongs to no reporter, so it is not
+ * shown here, the same way the draft request form never offers it.
+ */
+function scopedFacts(
+  facts: readonly StoredReviewedFact[],
+): readonly StoredReviewedFact[] {
+  return facts.filter((fact) => {
+    if (fact.state !== "confirmed") return true;
+    if (!("reportingStaffMemberIds" in fact)) return true;
+    return fact.reportingStaffMemberIds.length > 0;
+  });
+}
+
 function NotesAndFactsPanel({ workspace }: DocumentStudioProps) {
-  const facts = workspace.reviewedFacts;
+  const facts = scopedFacts(workspace.reviewedFacts);
 
   return (
     <section
@@ -426,16 +445,12 @@ export function DocumentStudio(props: DocumentStudioProps) {
 
   return (
     <div className="document-studio">
-      <nav
-        aria-label="Document Studio sections"
-        className="document-studio-tabs"
-        role="tablist"
-      >
-        <ul>
+      <div className="document-studio-tabs">
+        <ul aria-label="Document Studio sections" role="tablist">
           {DOCUMENT_STUDIO_TABS.map((tab) => (
             <li key={tab.id} role="presentation">
               <button
-                aria-controls={`document-studio-panel-${tab.id}`}
+                aria-controls={DOCUMENT_STUDIO_PANEL_ID}
                 aria-selected={activeTab === tab.id}
                 className={activeTab === tab.id ? "is-current" : undefined}
                 id={`document-studio-tab-${tab.id}`}
@@ -451,12 +466,12 @@ export function DocumentStudio(props: DocumentStudioProps) {
             </li>
           ))}
         </ul>
-      </nav>
+      </div>
 
       <div
         aria-labelledby={`document-studio-tab-${activeTab}`}
         className="document-studio-panel-wrap"
-        id={`document-studio-panel-${activeTab}`}
+        id={DOCUMENT_STUDIO_PANEL_ID}
         role="tabpanel"
       >
         {activeTab === "overview" ? <OverviewPanel {...props} /> : null}
