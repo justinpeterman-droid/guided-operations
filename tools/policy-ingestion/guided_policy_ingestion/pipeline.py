@@ -7,11 +7,11 @@ from pathlib import Path
 from .checkpoints import CheckpointStore, atomic_json
 from .chunking import chunk_pages
 from .config import ChunkingConfig, ExtractionConfig, canonical_json_hash
+from .diagnostics import safe_pipeline_reason as _safe_pipeline_reason
 from .discovery import discover_sources
 from .extractors.base import ExtractionError, ExtractionProvider
 from .importers.supabase import ImportErrorSafe, SupabaseImporter
-from .models import NormalizedPage, PolicyChunk, SourceFile, ValidationResult, jsonable
-from .diagnostics import safe_pipeline_reason as _safe_pipeline_reason
+from .models import NormalizedPage, PolicyChunk, SourceFile, jsonable
 from .normalization import NORMALIZATION_VERSION, normalize_extraction
 from .validation import validate_document
 
@@ -37,17 +37,46 @@ class BatchSummary:
     def count(self, collection: str, key: str, amount: int = 1) -> None:
         bucket = self.collections.setdefault(
             collection,
-            {"discovered": 0, "processed": 0, "skipped": 0, "awaiting_review": 0, "failed": 0, "pages": 0, "chunks": 0},
+            {
+                "discovered": 0,
+                "processed": 0,
+                "skipped": 0,
+                "awaiting_review": 0,
+                "failed": 0,
+                "pages": 0,
+                "chunks": 0,
+            },
         )
         bucket[key] += amount
 
 
-def _load_bundle(attempt_dir: Path) -> tuple[tuple[NormalizedPage, ...], tuple[PolicyChunk, ...]]:
-    pages_payload = json.loads((attempt_dir / "pages.json").read_text(encoding="utf-8"))
-    chunks_payload = json.loads((attempt_dir / "chunks.json").read_text(encoding="utf-8"))
+def _load_bundle(
+    attempt_dir: Path,
+) -> tuple[tuple[NormalizedPage, ...], tuple[PolicyChunk, ...]]:
+    pages_payload = json.loads(
+        (attempt_dir / "pages.json").read_text(encoding="utf-8")
+    )
+    chunks_payload = json.loads(
+        (attempt_dir / "chunks.json").read_text(encoding="utf-8")
+    )
     pages = tuple(NormalizedPage(**page) for page in pages_payload)
     chunks = tuple(PolicyChunk(**chunk) for chunk in chunks_payload)
     return pages, chunks
+
+
+def _extractor_page_count(manifest: object) -> int:
+    if not isinstance(manifest, dict):
+        raise ExtractionError(
+            "missing_extracted_page_count_evidence",
+            "Stored bundle manifest is not a JSON object",
+        )
+    value = manifest.get("extracted_page_count")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+        raise ExtractionError(
+            "missing_extracted_page_count_evidence",
+            "Stored bundle is missing original extractor page-count evidence",
+        )
+    return value
 
 
 class IngestionPipeline:
@@ -92,7 +121,9 @@ class IngestionPipeline:
         re-runs the extractor over every file - hours of work to reproduce
         bundles that are already on disk and already validated.
         """
-        sources = discover_sources(root, collection=collection, source_sha=source_sha)
+        sources = discover_sources(
+            root, collection=collection, source_sha=source_sha
+        )
         if limit is not None:
             sources = sources[:limit]
         summary = BatchSummary(total_files_discovered=len(sources))
@@ -100,7 +131,12 @@ class IngestionPipeline:
             summary.count(source.collection, "discovered")
             if dry_run:
                 continue
-            plan = self.checkpoints.plan(source, self.configuration_hash, resume=resume, force=force)
+            plan = self.checkpoints.plan(
+                source,
+                self.configuration_hash,
+                resume=resume,
+                force=force,
+            )
             if plan.skip and not validate_only and not import_only:
                 summary.skipped_unchanged += 1
                 summary.count(source.collection, "skipped")
@@ -117,15 +153,24 @@ class IngestionPipeline:
                 )
                 if reuse_bundle:
                     pages, chunks = _load_bundle(plan.directory)
-                    expected_page_count = len(pages)
                     manifest = json.loads(
-                        (plan.directory / "manifest.json").read_text(encoding="utf-8")
+                        (plan.directory / "manifest.json").read_text(
+                            encoding="utf-8"
+                        )
                     )
-                    extraction_tool = str(manifest.get("extraction_tool", "existing-bundle"))
+                    expected_page_count = _extractor_page_count(manifest)
+                    extraction_tool = str(
+                        manifest.get("extraction_tool", "existing-bundle")
+                    )
                     extraction_version = str(
-                        manifest.get("extraction_version", self.extraction_config.provider_version)
+                        manifest.get(
+                            "extraction_version",
+                            self.extraction_config.provider_version,
+                        )
                     )
-                    extraction_model_version = manifest.get("extraction_model_version")
+                    extraction_model_version = manifest.get(
+                        "extraction_model_version"
+                    )
                 else:
                     self.checkpoints.write_state(
                         plan.directory,
@@ -136,9 +181,16 @@ class IngestionPipeline:
                         attempt_number=plan.attempt_number,
                         resumes_attempt=plan.resumes_attempt,
                     )
-                    extraction = self.provider.extract(source, plan.directory / "extraction")
+                    extraction = self.provider.extract(
+                        source, plan.directory / "extraction"
+                    )
                     pages = normalize_extraction(source, extraction)
-                    self.checkpoints.write_state(plan.directory, status="chunking", page_count=len(pages))
+                    self.checkpoints.write_state(
+                        plan.directory,
+                        status="chunking",
+                        page_count=len(pages),
+                        extracted_page_count=extraction.page_count,
+                    )
                     chunks = chunk_pages(
                         source,
                         pages,
@@ -168,11 +220,14 @@ class IngestionPipeline:
                             "chunking_version": self.chunking_config.version,
                             "chunking_config_sha256": self.chunking_config.sha256,
                             "configuration_sha256": self.configuration_hash,
+                            "extracted_page_count": extraction.page_count,
                             "page_count": len(pages),
                             "chunk_count": len(chunks),
                         },
                     )
-                self.checkpoints.write_state(plan.directory, status="validating")
+                self.checkpoints.write_state(
+                    plan.directory, status="validating"
+                )
                 validation = validate_document(
                     source,
                     pages,
@@ -180,7 +235,9 @@ class IngestionPipeline:
                     self.chunking_config,
                     expected_page_count=expected_page_count,
                 )
-                atomic_json(plan.directory / "validation.json", jsonable(validation))
+                atomic_json(
+                    plan.directory / "validation.json", jsonable(validation)
+                )
                 if validation.status == "failed":
                     summary.failed += 1
                     summary.count(source.collection, "failed")
@@ -239,8 +296,17 @@ class IngestionPipeline:
                 summary.count(source.collection, "awaiting_review")
                 summary.count(source.collection, "pages", len(pages))
                 summary.count(source.collection, "chunks", len(chunks))
-            except (ExtractionError, OSError, ValueError, json.JSONDecodeError) as error:
-                code = error.code if isinstance(error, ExtractionError) else "pipeline_failed"
+            except (
+                ExtractionError,
+                OSError,
+                ValueError,
+                json.JSONDecodeError,
+            ) as error:
+                code = (
+                    error.code
+                    if isinstance(error, ExtractionError)
+                    else "pipeline_failed"
+                )
                 reason = _safe_pipeline_reason(error)
                 self.checkpoints.write_state(
                     plan.directory,
