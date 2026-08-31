@@ -1,8 +1,8 @@
 import Link from "next/link";
 
 import { getReportChecklistCategory } from "@/features/incidents/report-assistant-checklist";
-import type { IncidentSummary } from "@/server/incidents/list-incidents";
 import type { IncidentReportWorkspace } from "@/server/incidents/get-incident-report-workspace";
+import type { IncidentSummary } from "@/server/incidents/list-incidents";
 
 import type { DocumentStudioTabId } from "./document-studio-catalog";
 import styles from "./document-studio.module.css";
@@ -10,7 +10,7 @@ import type { IncidentNextAction } from "./derive-incident-next-action";
 
 type IncidentWorkHeaderProps = Readonly<{
   incident: IncidentSummary | null;
-  nextAction: IncidentNextAction;
+  nextAction: IncidentNextAction | null;
   onActivateSection: (section: DocumentStudioTabId) => void;
   workspace: IncidentReportWorkspace;
 }>;
@@ -73,15 +73,20 @@ export function IncidentWorkHeader({
       >
         <div>
           <h2 id="incident-next-action-title">Next action</h2>
-          <p>{nextAction.summary}</p>
+          <p>
+            {nextAction?.summary ??
+              "Report status cannot load right now, so the next report action is unavailable."}
+          </p>
         </div>
-        <button
-          onClick={() => onActivateSection(nextAction.destination)}
-          type="button"
-        >
-          {nextAction.label}
-          <ArrowIcon direction="right" />
-        </button>
+        {nextAction ? (
+          <button
+            onClick={() => onActivateSection(nextAction.destination)}
+            type="button"
+          >
+            {nextAction.label}
+            <ArrowIcon direction="right" />
+          </button>
+        ) : null}
       </section>
     </header>
   );
