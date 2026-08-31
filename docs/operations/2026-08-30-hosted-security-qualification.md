@@ -2,7 +2,8 @@
 
 - **Environment:** fictional-data Development Supabase project `guided-operations`
 - **Project ref:** `mfkunfqhosmrjbreythc`
-- **Repository baseline:** current `main` at `05349fa410705100a5958206e174a3016f24bc14`
+- **Exact repository snapshot tested:** `05349fa410705100a5958206e174a3016f24bc14`
+- **Relationship to later review:** the tested snapshot is an ancestor of the frozen CodeRabbit audit head `32f6b35a6c537ef83c5cf6da4fc02fff63d9f47e`; this record does not claim that later head received the same hosted dynamic checks
 - **Purpose:** continue Phase 1 authentication/database qualification without changing Production or using real operational data
 
 ## Migration state
@@ -11,7 +12,7 @@ The hosted Development database is current through:
 
 `20260830090000_add_answer_reports`
 
-No repository migration is presently pending on the hosted Development project.
+No repository migration was pending on the hosted Development project at the time of this qualification.
 
 ## Hosted fictional-workflow readiness
 
@@ -84,6 +85,6 @@ A synthetic SQL-session JWT injection attempt through the database management co
 
 ## Current disposition
 
-No direct database privilege bypass was found in this hosted pass. The Development database is migration-current. The remaining security work is primarily the controlled fictional account ceremony, authenticated browser/abuse qualification, and the leaked-password-protection configuration gate.
+No direct database privilege bypass was found in this hosted pass. The Development database was migration-current at the tested snapshot. The remaining security work is primarily the controlled fictional account ceremony, authenticated browser/abuse qualification, and the leaked-password-protection configuration gate.
 
 This document does not authorize Production or real-data use.

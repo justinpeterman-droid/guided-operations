@@ -19,6 +19,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from .collections import COLLECTION_SLUGS, canonical_collection
 from .diagnostics import safe_database_detail as _safe_database_detail
@@ -31,6 +32,7 @@ _MEDIA_EXTENSIONS = {"application/pdf": "pdf", "text/plain": "txt"}
 
 # app_private.policy_documents.stable_key is checked against this exact shape.
 _STABLE_KEY = re.compile(r"^[a-z0-9][a-z0-9_-]{1,127}$")
+_HASH_SUFFIX_LENGTHS = (8, 12, 16, 24, 32, 48, 64)
 
 
 class RegistrationErrorSafe(RuntimeError):
@@ -52,7 +54,10 @@ class PolicySource:
     def storage_path(self) -> str:
         """Content-addressed, so the path cannot collide or leak a filename."""
         extension = _MEDIA_EXTENSIONS.get(self.media_type, "bin")
-        return f"{COLLECTION_SLUGS[self.collection]}/{self.source_sha256}.{extension}"
+        return (
+            f"{COLLECTION_SLUGS[self.collection]}/"
+            f"{self.source_sha256}.{extension}"
+        )
 
 
 @dataclass
@@ -74,11 +79,10 @@ def slugify(value: str) -> str:
 
 
 def stable_keys_for(sources: tuple[PolicySource, ...]) -> dict[str, str]:
-    """Map each source hash to a unique, deterministic stable key.
+    """Map each source hash to a unique, deterministic proposed stable key.
 
-    Readable keys are worth having, but two policies can share a slug once
-    punctuation is stripped. Rather than make every key ugly to defend against
-    the few that clash, only the clashing ones take a hash suffix.
+    This resolves collisions inside one invocation. The registrar also checks
+    the database so separate collection runs cannot merge unrelated policies.
     """
     proposed: dict[str, str] = {}
     for source in sources:
@@ -102,7 +106,60 @@ def stable_keys_for(sources: tuple[PolicySource, ...]) -> dict[str, str]:
     return resolved
 
 
-def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[PolicySource, ...]:
+def _production_connection_options(
+    database_url: str,
+    environment: str,
+    ssl_root_cert: str | None,
+) -> dict[str, str]:
+    """Return only parameters needed to reach authenticated Production TLS.
+
+    Psycopg keyword parameters override values embedded in the connection URL,
+    so a configured `verify-full` URL must be preserved rather than replaced.
+    """
+    if environment != "production":
+        return {}
+
+    try:
+        parsed = urlsplit(database_url)
+    except ValueError as error:
+        raise RegistrationErrorSafe(
+            "SUPABASE_DB_URL is not a valid PostgreSQL connection URL"
+        ) from error
+    if parsed.scheme not in {"postgres", "postgresql"} or not parsed.hostname:
+        raise RegistrationErrorSafe(
+            "SUPABASE_DB_URL is not a valid PostgreSQL connection URL"
+        )
+
+    query = parse_qs(parsed.query, keep_blank_values=True)
+    ssl_modes = [value.strip().lower() for value in query.get("sslmode", [])]
+    if len(ssl_modes) > 1 or (ssl_modes and ssl_modes[0] != "verify-full"):
+        raise RegistrationErrorSafe(
+            "Production policy registration requires sslmode=verify-full"
+        )
+
+    roots = [value.strip() for value in query.get("sslrootcert", []) if value.strip()]
+    explicit_root = (ssl_root_cert or "").strip()
+    if len(roots) > 1:
+        raise RegistrationErrorSafe(
+            "Production policy registration requires one trusted root certificate"
+        )
+    if not roots and not explicit_root:
+        raise RegistrationErrorSafe(
+            "SUPABASE_DB_SSLROOTCERT or sslrootcert is required for Production registration"
+        )
+
+    options: dict[str, str] = {}
+    if not ssl_modes:
+        options["sslmode"] = "verify-full"
+    if not roots:
+        options["sslrootcert"] = explicit_root
+    return options
+
+
+def load_manifests(
+    work_dir: Path,
+    collection: str | None = None,
+) -> tuple[PolicySource, ...]:
     """Read every extraction manifest under a work directory.
 
     A manifest exists only for a source that finished extraction, so this
@@ -111,7 +168,9 @@ def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[Polic
     import json
 
     if not work_dir.exists():
-        raise RegistrationErrorSafe("The extraction work directory does not exist")
+        raise RegistrationErrorSafe(
+            "The extraction work directory does not exist"
+        )
 
     slugs = (
         [COLLECTION_SLUGS[canonical_collection(collection)]]
@@ -123,12 +182,18 @@ def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[Polic
     for slug in slugs:
         for manifest_path in sorted((work_dir / slug).rglob("manifest.json")):
             try:
-                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest = json.loads(
+                    manifest_path.read_text(encoding="utf-8")
+                )
             except (OSError, ValueError) as error:
-                raise RegistrationErrorSafe("An extraction manifest could not be read") from error
+                raise RegistrationErrorSafe(
+                    "An extraction manifest could not be read"
+                ) from error
             source_sha256 = str(manifest.get("source_sha256", ""))
             if len(source_sha256) != 64:
-                raise RegistrationErrorSafe("An extraction manifest has no usable source hash")
+                raise RegistrationErrorSafe(
+                    "An extraction manifest has no usable source hash"
+                )
             # A re-extraction writes a second attempt for the same source. The
             # identity being registered is the source, not the attempt, so the
             # first manifest seen for a hash is enough.
@@ -136,7 +201,9 @@ def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[Polic
                 continue
             sources[source_sha256] = PolicySource(
                 source_sha256=source_sha256,
-                collection=canonical_collection(str(manifest.get("collection", ""))),
+                collection=canonical_collection(
+                    str(manifest.get("collection", ""))
+                ),
                 source_filename=str(manifest.get("source_filename", "")),
                 media_type=str(manifest.get("media_type", "")),
                 page_count=manifest.get("page_count"),
@@ -195,13 +262,17 @@ class RightsAttestation:
             "approved_internal_search",
             "approved_full_reader",
         ):
-            raise RegistrationErrorSafe("Unsupported rights status for registration")
+            raise RegistrationErrorSafe(
+                "Unsupported rights status for registration"
+            )
         if self.rights_status == "pending" and self.external_ai_allowed:
             raise RegistrationErrorSafe(
                 "External AI processing cannot be allowed while rights remain pending"
             )
         if self.rights_status != "pending" and not self.evidence_ref.strip():
-            raise RegistrationErrorSafe("An approved rights status requires an evidence reference")
+            raise RegistrationErrorSafe(
+                "An approved rights status requires an evidence reference"
+            )
 
 
 class PolicyRegistrar:
@@ -213,10 +284,17 @@ class PolicyRegistrar:
     version or silently changes one that already exists.
     """
 
-    def __init__(self, database_url: str, facility_id: str, environment: str):
+    def __init__(
+        self,
+        database_url: str,
+        facility_id: str,
+        environment: str,
+        ssl_root_cert: str | None = None,
+    ):
         self.database_url = database_url
         self.facility_id = facility_id
         self.environment = environment
+        self.ssl_root_cert = ssl_root_cert
 
     def register(
         self,
@@ -242,7 +320,11 @@ class PolicyRegistrar:
 
         keys = stable_keys_for(sources)
         reviewed_at = datetime.now(timezone.utc)
-        options = {"sslmode": "require"} if self.environment == "production" else {}
+        options = _production_connection_options(
+            self.database_url,
+            self.environment,
+            self.ssl_root_cert,
+        )
         try:
             with psycopg.connect(self.database_url, **options) as connection:
                 for source in sources:
@@ -282,6 +364,114 @@ class PolicyRegistrar:
         )
         return cursor.fetchone() is not None
 
+    def _find_document_by_identity(
+        self,
+        cursor,
+        title: str,
+        collection: str,
+    ) -> tuple[object, str] | None:
+        cursor.execute(
+            """
+            select document.id, document.stable_key
+            from app_private.policy_documents as document
+            where document.facility_id = %s
+              and document.collection = %s
+              and document.title = %s
+            order by document.id
+            """,
+            (self.facility_id, collection, title),
+        )
+        rows = cursor.fetchall()
+        if len(rows) > 1:
+            raise RegistrationErrorSafe(
+                "The policy document identity is ambiguous in this collection"
+            )
+        return rows[0] if rows else None
+
+    def _find_document_by_key(self, cursor, stable_key: str):
+        cursor.execute(
+            """
+            select document.id, document.title, document.collection::text
+            from app_private.policy_documents as document
+            where document.facility_id = %s
+              and document.stable_key = %s
+            """,
+            (self.facility_id, stable_key),
+        )
+        return cursor.fetchone()
+
+    @staticmethod
+    def _collision_keys(proposed_key: str, source_sha256: str):
+        yield proposed_key
+        for suffix_length in _HASH_SUFFIX_LENGTHS:
+            suffix = source_sha256[:suffix_length]
+            yield f"{proposed_key[: 127 - suffix_length]}-{suffix}"
+
+    def _resolve_document(
+        self,
+        cursor,
+        source: PolicySource,
+        proposed_key: str,
+        title: str,
+        classification: str,
+    ) -> tuple[object, str]:
+        existing_identity = self._find_document_by_identity(
+            cursor,
+            title,
+            source.collection,
+        )
+        if existing_identity is not None:
+            return existing_identity
+
+        for stable_key in self._collision_keys(
+            proposed_key,
+            source.source_sha256,
+        ):
+            existing_key = self._find_document_by_key(cursor, stable_key)
+            if existing_key is not None:
+                _, existing_title, existing_collection = existing_key
+                if (
+                    existing_title == title
+                    and existing_collection == source.collection
+                ):
+                    return existing_key[0], stable_key
+                continue
+
+            cursor.execute(
+                """
+                insert into app_private.policy_documents (
+                    facility_id, stable_key, title, collection,
+                    classification, status
+                ) values (%s, %s, %s, %s, %s, 'approved')
+                on conflict (facility_id, stable_key) do nothing
+                returning id
+                """,
+                (
+                    self.facility_id,
+                    stable_key,
+                    title,
+                    source.collection,
+                    classification,
+                ),
+            )
+            inserted = cursor.fetchone()
+            if inserted is not None:
+                return inserted[0], stable_key
+
+            # A concurrent registrar may have won between the read and insert.
+            # Re-read and reuse only if it created this exact identity.
+            concurrent = self._find_document_by_key(cursor, stable_key)
+            if (
+                concurrent is not None
+                and concurrent[1] == title
+                and concurrent[2] == source.collection
+            ):
+                return concurrent[0], stable_key
+
+        raise RegistrationErrorSafe(
+            "A unique policy document key could not be allocated"
+        )
+
     def _insert(
         self,
         cursor,
@@ -292,44 +482,52 @@ class PolicyRegistrar:
         reviewed_at: datetime,
     ) -> None:
         title = Path(source.source_filename).stem[:300] or stable_key
-        # A re-run after a partial failure can find the document already there
-        # without its version, so the document insert has to tolerate that.
+        document_id, _ = self._resolve_document(
+            cursor,
+            source,
+            stable_key,
+            title,
+            attestation.classification,
+        )
+
         cursor.execute(
             """
-            insert into app_private.policy_documents (
-                facility_id, stable_key, title, collection, classification, status
-            ) values (%s, %s, %s, %s, %s, 'approved')
-            on conflict (facility_id, stable_key) do update
-                set title = excluded.title
-            returning id
+            select version.id
+            from app_private.policy_document_versions as version
+            where version.document_id = %s
+              and version.is_current
+            for update
             """,
-            (
-                self.facility_id,
-                stable_key,
-                title,
-                source.collection,
-                attestation.classification,
-            ),
+            (document_id,),
         )
-        row = cursor.fetchone()
-        if row is None:
-            raise RegistrationErrorSafe("The policy document identity could not be created")
-        document_id = row[0]
+        current = cursor.fetchone()
+        supersedes_version_id = current[0] if current is not None else None
+        if supersedes_version_id is not None:
+            cursor.execute(
+                """
+                update app_private.policy_document_versions
+                set is_current = false,
+                    lifecycle_status = 'superseded'
+                where id = %s
+                  and is_current
+                """,
+                (supersedes_version_id,),
+            )
 
         cursor.execute(
             """
             insert into app_private.policy_document_versions (
                 document_id, version_label, source_sha256, storage_bucket,
                 storage_path, media_type, page_count, source_filename, byte_size,
-                rights_status, rights_evidence_ref, rights_reviewed_by,
-                rights_reviewed_at, rights_review_due_at,
+                supersedes_version_id, rights_status, rights_evidence_ref,
+                rights_reviewed_by, rights_reviewed_at, rights_review_due_at,
                 allowed_processing_regions, external_ai_allowed,
                 lifecycle_status, is_current
             ) values (
                 %s, %s, %s, 'policy-sources',
                 %s, %s, %s, %s, %s,
                 %s, %s, %s,
-                %s, %s,
+                %s, %s, %s,
                 %s, %s,
                 'active', true
             )
@@ -343,6 +541,7 @@ class PolicyRegistrar:
                 source.page_count,
                 source.source_filename[:1024],
                 source.byte_size,
+                supersedes_version_id,
                 attestation.rights_status,
                 attestation.evidence_ref,
                 attestation.reviewer_staff_member_id,

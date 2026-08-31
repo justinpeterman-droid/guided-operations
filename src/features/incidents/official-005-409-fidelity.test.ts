@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import { assessOfficial005409Fidelity } from "./official-005-409-fidelity";
+import {
+  assessOfficial005409Fidelity,
+  type Official005409FidelityInput,
+} from "./official-005-409-fidelity";
 
 describe("assessOfficial005409Fidelity", () => {
   it("blocks official output when no approved source revision is registered", () => {
@@ -8,6 +11,7 @@ describe("assessOfficial005409Fidelity", () => {
       assessOfficial005409Fidelity({
         sourceRevision: null,
         sourceSha256: null,
+        sourceKind: "authoritative_form",
         fieldMapApproved: false,
         renderedFidelityApproved: false,
       }),
@@ -32,6 +36,20 @@ describe("assessOfficial005409Fidelity", () => {
         renderedFidelityApproved: true,
       }),
     ).toEqual({ ready: false, blockers: ["authoritative_source_kind"] });
+  });
+
+  it("fails closed when an untyped caller omits the authoritative source kind", () => {
+    const incompleteInput = {
+      sourceRevision: "ADC 005/409 rev 2026-08",
+      sourceSha256: "b".repeat(64),
+      fieldMapApproved: true,
+      renderedFidelityApproved: true,
+    } as unknown as Official005409FidelityInput;
+
+    expect(assessOfficial005409Fidelity(incompleteInput)).toEqual({
+      ready: false,
+      blockers: ["authoritative_source_kind"],
+    });
   });
 
   it("allows the official-output path only after every fidelity gate is satisfied", () => {

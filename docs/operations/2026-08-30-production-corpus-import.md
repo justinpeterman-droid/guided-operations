@@ -27,7 +27,7 @@ the owner approves it.
 
 `SD 2022-01 Revised COVID Visitation Directive.pdf`, page 5 of 5.
 
-```
+```text
 Supabase import failed: DataError; PostgreSQL text fields cannot contain NUL (0x00) bytes
 ```
 
@@ -35,7 +35,7 @@ Page 5 is a symptom screening checklist. The PDF draws its checkboxes with a
 symbol font whose empty-checkbox glyph is character `0x00`, so the extracted
 text reads:
 
-```
+```text
 ...the following symptoms in the past 72 hours?
 [NUL] Fever (>=100.4 F) [NUL] Nausea or Diarrhea [NUL] Chills...
 ```
@@ -46,12 +46,14 @@ rather than a pipeline defect. PostgreSQL rejects NUL in `text` columns, and the
 import failed at the last document.
 
 **The correct fix is in normalization.** A normalizer declaring
-`unicode-nfkc-lines-v1` should strip C0 control characters and raise a warning
-code on the page, so a reviewer knows characters were removed rather than
-silently losing the checkboxes. It is not fixed at the import boundary, because
-each chunk records a `content_sha256` over its own text; sanitising during
-import would store text that no longer matches its recorded hash, which is
-exactly the provenance guarantee a citation tool cannot give up.
+`unicode-nfkc-lines-v1` must preserve tab, newline, and carriage-return
+separators while removing only disallowed C0 controls such as NUL. Every removal
+must add a warning code to the affected page so a reviewer knows characters were
+removed rather than silently losing the checkboxes. It is not fixed at the
+import boundary, because each chunk records a `content_sha256` over its own
+text; sanitising during import would store text that no longer matches its
+recorded hash, which is exactly the provenance guarantee a citation tool cannot
+give up.
 
 **Deferred by owner decision on 2026-08-30.** `normalization_version` is part of
 the configuration hash identifying every bundle on disk, so changing it re-keys

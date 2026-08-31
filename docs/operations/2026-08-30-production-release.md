@@ -49,15 +49,27 @@ to `gpt-5.6-terra`, verified current against OpenAI's published model list on
 this date. `OPENAI_EMBEDDING_MODEL` remains `text-embedding-3-small`, also still
 current. See O-027.
 
-## Known state at release
+## State at the application-release checkpoint
 
-**The production corpus is empty.** Production holds the facility, the staff
-roster, accounts and audit events, but no policy documents, pages, chunks or
-embeddings. The policy expert will report that it has no sources rather than
-answer, which is the designed refusal behaviour and not a fault. Ingesting the
-236 real documents is the next step and requires `OPENAI_API_KEY` in the
-ingestion machine's environment; the key currently exists only in Vercel.
+**The production corpus was empty when the application release completed.** At
+that checkpoint, Production held the facility, staff roster, accounts and audit
+events, but no policy documents, pages, chunks or embeddings. The Policy Expert
+therefore reported that it had no sources rather than answering, which was the
+designed refusal behavior and not a fault.
 
-No live provider request has been made against `gpt-5.6-terra` yet. The first
-real policy question will be the first exercise of that pin and of the
+No live provider request had been made against `gpt-5.6-terra` at that release
+checkpoint. The first real policy question would exercise that pin and the
 reasoning-token budget added alongside it.
+
+## Later the same day: corpus registration and import
+
+After the application-release checkpoint, the separate owner-driven corpus
+operation registered all **236** approved documents and imported **235** of
+them. One document, `SD 2022-01 Revised COVID Visitation Directive.pdf`, failed
+because its extracted checkbox glyphs contained NUL bytes that PostgreSQL text
+columns reject. That failure and the deliberate annual-refresh remediation are
+recorded in `docs/operations/2026-08-30-production-corpus-import.md`.
+
+This sequence is intentional: the empty-corpus statement describes the earlier
+application release, while the 236-registered/235-imported state describes the
+later same-day ingestion operation.
