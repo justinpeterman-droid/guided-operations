@@ -96,14 +96,16 @@ mobile and print test passes.
       recurs; avoid route-local duplicates and broad rewrites.
 - [ ] Ensure status, error, busy, and unavailable states are truthful,
       accessible, and preserve visible user input.
-- [ ] Keep fictional-preview labels unmistakable.
+- [x] Keep fictional-preview labels unmistakable.
 
 **Exit evidence:** Repeated states align across pages without changing route or
 business behavior.
 
 **Progress evidence:** The shared recovery surface now handles both recovery
 links and the bounded root-error retry action (`3755547`), with component tests
-and a production build passing. Authenticated state coverage remains in Wave 5.
+and a production build passing. The mobile reduced-motion browser check now
+verifies the shared `Fictional training preview` label on every public preview
+route. Authenticated state coverage remains in Wave 5.
 
 ## Wave 5 — Authenticated-flow and administrator review
 

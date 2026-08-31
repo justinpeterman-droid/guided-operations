@@ -131,6 +131,9 @@ test("fictional preview routes remain usable at mobile size and reduced motion",
 
   for (const route of routes.filter((value) => value.startsWith("/preview/"))) {
     await page.goto(route);
+    await expect(page.locator(".preview-status")).toHaveText(
+      "Fictional training preview",
+    );
     await expect
       .poll(() =>
         page.evaluate(
