@@ -1,6 +1,6 @@
 begin;
 
-select plan(10);
+select plan(11);
 
 select ok(
   exists (
@@ -19,6 +19,17 @@ select ok(
       and conrelid = 'app_private.answer_reports'::regclass
   ),
   'the database bounds serialized citation payloads'
+);
+
+select ok(
+  exists (
+    select 1
+    from pg_constraint
+    where conname = 'answer_reports_citations_payload_bounded'
+      and conrelid = 'app_private.answer_reports'::regclass
+      and convalidated
+  ),
+  'the citation payload bound also validates historical answer reports'
 );
 
 select ok(
