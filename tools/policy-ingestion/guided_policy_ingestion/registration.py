@@ -21,6 +21,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 from .collections import COLLECTION_SLUGS, canonical_collection
+from .diagnostics import safe_database_detail as _safe_database_detail
 
 # The corpus is replaced by hand once a year (O-026), so a review that is
 # current for a year matches the real refresh cycle rather than inventing one.
@@ -261,9 +262,9 @@ class PolicyRegistrar:
                             summary.registered += 1
         except RegistrationErrorSafe:
             raise
-        except Exception as error:  # noqa: BLE001 - message is deliberately opaque
+        except Exception as error:  # noqa: BLE001 - reported without row values
             raise RegistrationErrorSafe(
-                "Registration failed; private details were not printed"
+                f"Registration failed: {_safe_database_detail(error)}"
             ) from error
         return summary
 

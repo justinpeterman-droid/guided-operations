@@ -7,6 +7,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from guided_policy_ingestion.registration import (
+    _safe_database_detail,
     PolicySource,
     RegistrationErrorSafe,
     RightsAttestation,
@@ -191,6 +192,56 @@ class RightsAttestationTests(unittest.TestCase):
             external_ai_allowed=False,
         )
         self.assertFalse(attestation.external_ai_allowed)
+
+
+class _Diagnostics:
+    def __init__(self, table=None, column=None, constraint=None):
+        self.table_name = table
+        self.column_name = column
+        self.constraint_name = constraint
+
+
+class _DatabaseError(Exception):
+    def __init__(self, message, sqlstate=None, diag=None):
+        super().__init__(message)
+        self.sqlstate = sqlstate
+        self.diag = diag
+
+
+class SafeDatabaseDetailTests(unittest.TestCase):
+    """A failure has to be diagnosable without quoting the offending row."""
+
+    def test_reports_the_code_table_and_constraint(self):
+        error = _DatabaseError(
+            'insert violates foreign key; DETAIL: Key (id)=(BMU 1.03.0 Roles) is absent',
+            sqlstate="23503",
+            diag=_Diagnostics(
+                table="policy_document_versions",
+                constraint="policy_document_versions_rights_reviewed_by_fkey",
+            ),
+        )
+        detail = _safe_database_detail(error)
+        self.assertIn("23503", detail)
+        self.assertIn("policy_document_versions", detail)
+        self.assertIn("rights_reviewed_by_fkey", detail)
+
+    def test_never_echoes_the_offending_value(self):
+        error = _DatabaseError(
+            'duplicate key; DETAIL: Key (stable_key)=(bmu-1-03-0-roles-of-consultants) exists',
+            sqlstate="23505",
+            diag=_Diagnostics(table="policy_documents", constraint="policy_documents_key"),
+        )
+        detail = _safe_database_detail(error)
+        self.assertNotIn("bmu-1-03-0", detail)
+        self.assertNotIn("DETAIL", detail)
+
+    def test_a_plain_error_still_says_something_useful(self):
+        detail = _safe_database_detail(ValueError("badly formed UUID"))
+        self.assertIn("ValueError", detail)
+        self.assertIn("badly formed UUID", detail)
+
+    def test_an_empty_error_does_not_produce_a_dangling_separator(self):
+        self.assertEqual(_safe_database_detail(RuntimeError("")), "RuntimeError")
 
 
 if __name__ == "__main__":

@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-test("labels the public landing honestly and links to sign in", async ({
+test("labels the workspace honestly and routes to sign in", async ({
   page,
 }) => {
   const browserErrors: string[] = [];
@@ -19,12 +19,11 @@ test("labels the public landing honestly and links to sign in", async ({
       name: "Clear guidance for the work that has to be right.",
     }),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Sign in" })).toHaveAttribute(
-    "href",
-    "/login",
-  );
   await expect(
-    page.getByText("Fictional training previews below use sample data only"),
+    page.getByRole("link", { name: "Go to sign in" }),
+  ).toHaveAttribute("href", "/login");
+  await expect(
+    page.getByText("This is a working tool, not the system of record"),
   ).toBeVisible();
   expect(browserErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
