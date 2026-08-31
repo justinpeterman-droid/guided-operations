@@ -1,4 +1,4 @@
-import { render, within } from "@testing-library/react";
+import { render, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
@@ -54,29 +54,89 @@ const incident = {
   updatedAt: "2026-08-27T12:30:00.000Z",
 };
 
+const report = {
+  reportId: "66666666-6666-4666-8666-666666666666",
+  incidentNumber: workspace.incidentNumber,
+  incidentName: workspace.displayName,
+  reportType: "first_person" as const,
+  status: "complete" as const,
+  currentRevisionNumber: 2,
+  updatedAt: "2026-08-27T13:00:00.000Z",
+};
+
 describe("DocumentStudio", () => {
-  it("shows overview data and switches tabs without losing the incident context", async () => {
+  it("starts in Reports and keeps truthful incident guidance attached", async () => {
     const user = userEvent.setup();
     const view = render(
       <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
     );
     const root = within(view.container);
 
-    expect(root.getByText("Incident (No Disciplinary)")).toBeVisible();
-    expect(root.getByText("F-PAGE-001")).toBeVisible();
-
-    await user.click(root.getByRole("tab", { name: /Notes & Facts/i }));
-    expect(root.getByText("8 Barracks")).toBeVisible();
-    expect(root.getByText(/Raw field notes stay server-side/i)).toBeVisible();
-
-    await user.click(root.getByRole("tab", { name: /Officer Reports/i }));
-    await user.keyboard("{ArrowRight}");
-    expect(root.getByRole("tab", { name: /Copy to Records/i })).toHaveFocus();
+    expect(
+      root.getByRole("heading", { name: workspace.displayName }),
+    ).toBeVisible();
+    expect(root.getByText(workspace.incidentNumber)).toBeVisible();
+    expect(root.getByText(/Revision 1/)).toBeVisible();
+    expect(root.getByRole("tab", { name: /^Reports/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(root.getAllByRole("tab")).toHaveLength(4);
+    expect(root.getByText(/request the first officer report/i)).toBeVisible();
+    expect(root.getByRole("note")).toHaveTextContent(
+      "Draft request form placeholder",
+    );
     expect(
       root.getByText(/Copy-to-records output is not yet available/i),
     ).toBeVisible();
+    expect(root.queryByRole("tab", { name: /Overview/i })).toBeNull();
+    expect(root.queryByRole("tab", { name: /Copy to Records/i })).toBeNull();
+    expect(root.queryByRole("tab", { name: /^History/i })).toBeNull();
+
+    await user.click(root.getByRole("button", { name: "Open Reports" }));
+    await waitFor(() =>
+      expect(root.getByRole("heading", { name: "Reports" })).toHaveFocus(),
+    );
   });
-  it("lets the tab list own its tabs", () => {
+
+  it("withholds report actions when report summaries are unavailable", () => {
+    const view = render(
+      <DocumentStudio
+        incident={incident}
+        reports={null}
+        workspace={workspace}
+      />,
+    );
+    const root = within(view.container);
+
+    expect(
+      root.getByText(/the next report action is unavailable/i),
+    ).toBeVisible();
+    expect(root.getByText(/Reports cannot load right now/i)).toBeVisible();
+    expect(root.queryByRole("note")).toBeNull();
+    expect(root.queryByRole("button", { name: /Open Reports/i })).toBeNull();
+  });
+
+  it("keeps a native mobile section control synchronized with desktop tabs", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
+    );
+    const root = within(view.container);
+    const select = root.getByRole("combobox", {
+      name: "Document Studio section",
+    });
+
+    expect(select).toHaveValue("reports");
+    await user.selectOptions(select, "notes-facts");
+    expect(root.getByRole("tab", { name: /Notes & Facts/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(root.getByText("8 Barracks")).toBeVisible();
+  });
+
+  it("lets the tab list own exactly the four approved tabs", () => {
     const view = render(
       <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
     );
@@ -85,9 +145,10 @@ describe("DocumentStudio", () => {
     const tablist = root.getByRole("tablist");
     expect(tablist.tagName).toBe("UL");
     expect(root.getAllByRole("tab")).toHaveLength(DOCUMENT_STUDIO_TABS.length);
+    expect(DOCUMENT_STUDIO_TABS).toHaveLength(4);
   });
 
-  it("keeps every tab pointed at a tab panel that is really in the document", async () => {
+  it("keeps every section control pointed at the rendered tab panel", async () => {
     const user = userEvent.setup();
     const view = render(
       <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
@@ -112,6 +173,78 @@ describe("DocumentStudio", () => {
       );
     }
   });
+
+  it("supports keyboard movement across the four task sections", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio incident={incident} reports={[]} workspace={workspace} />,
+    );
+    const root = within(view.container);
+    const reportsTab = root.getByRole("tab", { name: /^Reports/i });
+
+    reportsTab.focus();
+    await user.keyboard("{ArrowRight}");
+    expect(root.getByRole("tab", { name: /Notes & Facts/i })).toHaveFocus();
+    await waitFor(() => {
+      expect(root.getByRole("tab", { name: /Notes & Facts/i })).toHaveAttribute(
+        "aria-selected",
+        "true",
+      );
+    });
+    expect(root.getByText("8 Barracks")).toBeVisible();
+  });
+
+  it("combines incident overview and report revision heads in Incident Record", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio
+        incident={incident}
+        reports={[report]}
+        workspace={workspace}
+      />,
+    );
+    const root = within(view.container);
+
+    await user.click(root.getByRole("tab", { name: /Incident Record/i }));
+    expect(
+      root.getByRole("heading", { name: "Incident Record" }),
+    ).toBeVisible();
+    expect(root.getByText("Current incident revision")).toBeVisible();
+    expect(
+      root.getByText("Revision 1 is the active revision for this incident."),
+    ).toBeVisible();
+    expect(
+      root.getByRole("link", { name: "Open report history" }),
+    ).toBeVisible();
+  });
+
+  it("groups paperwork by honest digital capability", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio
+        incident={{ ...incident, category: "contraband" }}
+        reports={[]}
+        workspace={{ ...workspace, category: "contraband" }}
+      />,
+    );
+    const root = within(view.container);
+
+    await user.click(root.getByRole("tab", { name: /^Paperwork/i }));
+    expect(
+      root.getByRole("heading", {
+        name: "Available through Officer Reports",
+      }),
+    ).toBeVisible();
+    expect(
+      root.getByRole("heading", { name: "Physical form required" }),
+    ).toBeVisible();
+    expect(
+      root.getByRole("heading", {
+        name: "Digital support not yet available",
+      }),
+    ).toBeVisible();
+  });
+
   it("keeps a fact that belongs to no reporting officer off Notes & Facts", async () => {
     const user = userEvent.setup();
     const view = render(
@@ -123,7 +256,7 @@ describe("DocumentStudio", () => {
           reviewedFacts: [
             ...workspace.reviewedFacts,
             {
-              id: "66666666-6666-4666-8666-666666666666",
+              id: "99999999-9999-4999-8999-999999999999",
               field: "Unassigned observation",
               state: "confirmed" as const,
               value: "Confirmed fact that is not assigned to any reporter.",

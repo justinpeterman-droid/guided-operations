@@ -62,21 +62,6 @@ export default async function IncidentReportWorkspacePage({
 
   return (
     <WorkspaceShell current="Reports" title="Document Studio">
-      <section className="reports-intro" aria-labelledby="incident-title">
-        <p className="eyebrow">Authorized incident · current revision</p>
-        <h1 id="incident-title">{result.workspace.displayName}</h1>
-        <p>
-          <strong>{result.workspace.incidentNumber}</strong> ·{" "}
-          {result.workspace.category} · revision{" "}
-          {result.workspace.revisionNumber}
-        </p>
-        <p>
-          Use the tabs below to review packet state, request officer reports,
-          inspect reviewed facts, and open report history without leaving this
-          incident.
-        </p>
-      </section>
-
       <DocumentStudio
         incident={incident}
         reports={reports}
@@ -91,7 +76,10 @@ export async function loadIncidentReportWorkspace(
   client: IncidentPageClient,
 ) {
   try {
-    return await getIncidentReportWorkspaceForCurrentSession(incidentId, client);
+    return await getIncidentReportWorkspaceForCurrentSession(
+      incidentId,
+      client,
+    );
   } catch {
     return { kind: "unavailable" } as const;
   }
@@ -102,7 +90,10 @@ export async function loadIncidentSummary(
   client: IncidentPageClient,
 ) {
   try {
-    const result = await getIncidentSummaryForCurrentSession(incidentId, client);
+    const result = await getIncidentSummaryForCurrentSession(
+      incidentId,
+      client,
+    );
     return result.kind === "found" ? result.incident : null;
   } catch {
     return null;

@@ -68,10 +68,9 @@ describe("getIncidentSummaryForCurrentSession", () => {
         updatedAt: incidentRow.updated_at,
       },
     });
-    expect(sessionClient.rpc).toHaveBeenLastCalledWith(
-      "get_incident_summary",
-      { p_incident_id: incidentRow.incident_id },
-    );
+    expect(sessionClient.rpc).toHaveBeenLastCalledWith("get_incident_summary", {
+      p_incident_id: incidentRow.incident_id,
+    });
   });
 
   it("denies an untrusted session before the scoped RPC", async () => {
