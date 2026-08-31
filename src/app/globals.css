@@ -2093,6 +2093,19 @@ a:focus-visible,
     table-layout: fixed;
   }
 
+  .count-sheet-table-wrap thead th {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    box-shadow:
+      0 1px 0 #cbd7e1,
+      0 8px 14px rgba(42, 69, 91, 0.09);
+  }
+
+  .count-sheet-table-wrap thead th:first-child {
+    z-index: 3;
+  }
+
   .count-sheet-table-wrap th,
   .count-sheet-table-wrap td {
     min-width: 0;

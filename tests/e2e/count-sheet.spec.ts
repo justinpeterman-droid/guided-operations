@@ -76,6 +76,19 @@ test("renders and calculates the approved Count Sheet with fictional browser-onl
     }));
   expect(desktopFit.scrollWidth).toBeLessThanOrEqual(desktopFit.clientWidth);
   await expect(page.getByText("Swipe to view all units")).toBeHidden();
+  const firstUnitHeader = page.getByRole("columnheader", {
+    exact: true,
+    name: "1",
+  });
+  await expect(firstUnitHeader).toHaveCSS("position", "sticky");
+  await page
+    .getByRole("textbox", { name: "Mental Health, 1", exact: true })
+    .scrollIntoViewIfNeeded();
+  const stickyHeaderTop = await firstUnitHeader.evaluate(
+    (header) => header.getBoundingClientRect().top,
+  );
+  expect(stickyHeaderTop).toBeGreaterThanOrEqual(0);
+  expect(stickyHeaderTop).toBeLessThanOrEqual(1);
   await page
     .getByRole("textbox", { name: "Chow Hall, 1", exact: true })
     .fill("2");

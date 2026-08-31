@@ -93,6 +93,8 @@ mobile and print test passes.
       Iso, Inf, and Area total remain visible without horizontal scrolling.
 - [x] Move reconciliation and sheet details below the table on desktop instead
       of narrowing the primary entry surface.
+- [x] Keep the desktop unit-number header visible while the officer scrolls
+      vertically through the long sheet.
 - [x] Keep the existing internal horizontal scroll, swipe cue, and sticky area
       names at tablet and mobile widths.
 - [x] Add a browser regression assertion that desktop table width does not
@@ -103,7 +105,9 @@ table and its visible region both measure 1,178 px, the first and last headers
 remain inside the region, and the region reports no horizontal overflow. At the
 375 px mobile content width, page-level overflow remains absent while the table
 retains its 1,712 px internal working width, automatic horizontal scrolling, the
-visible swipe cue, and sticky area labels.
+visible swipe cue, and sticky area labels. At a 1,450 px desktop page scroll,
+the complete unit-number header remains pinned at the viewport's 0 px top edge
+while the table continues beneath it; the mobile unit headers remain non-sticky.
 
 ## Wave 4 — Shared UI consistency
 
