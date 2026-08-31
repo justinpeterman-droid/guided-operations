@@ -516,6 +516,9 @@ test("an officer and administrator can use the protected per-officer report work
       name: "Fictional Report Workspace Qualification",
     }),
   ).toBeVisible();
+  // Reviewed facts moved under Notes & Facts when Document Studio landed.
+  // Reading them still has to stay scoped to the reporting officer.
+  await page.getByRole("tab", { name: /Notes & Facts/ }).click();
   await expect(page.getByText("Officer observation")).toBeVisible();
   await expect(page.getByText("Unassigned observation")).toHaveCount(0);
   await signOut(page);
