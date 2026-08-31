@@ -444,7 +444,7 @@ export function CountSheetWorkspace({
 
       <div className="count-sheet-grid">
         <div
-          aria-label="Count entries by area and unit. Scroll horizontally to view all units."
+          aria-label="Count entries by area and unit"
           className="count-sheet-table-wrap"
           role="region"
         >

@@ -68,6 +68,14 @@ test("renders and calculates the approved Count Sheet with fictional browser-onl
   await expect(
     page.getByText("Incomplete — enter known values to reconcile."),
   ).toBeVisible();
+  const desktopFit = await page
+    .getByRole("region", { name: "Count entries by fictional area and unit" })
+    .evaluate((region) => ({
+      clientWidth: region.clientWidth,
+      scrollWidth: region.scrollWidth,
+    }));
+  expect(desktopFit.scrollWidth).toBeLessThanOrEqual(desktopFit.clientWidth);
+  await expect(page.getByText("Swipe to view all units")).toBeHidden();
   await page
     .getByRole("textbox", { name: "Chow Hall, 1", exact: true })
     .fill("2");

@@ -87,6 +87,24 @@ unchanged information priority across sizes (`5617bf1`, `ae52874`). Browser
 checks covered 320, 390, 768, and desktop widths; the focused reduced-motion
 mobile and print test passes.
 
+### Owner-requested desktop Count Sheet fit
+
+- [x] Give the Count Sheet table the full desktop work area so columns 1–14,
+      Iso, Inf, and Area total remain visible without horizontal scrolling.
+- [x] Move reconciliation and sheet details below the table on desktop instead
+      of narrowing the primary entry surface.
+- [x] Keep the existing internal horizontal scroll, swipe cue, and sticky area
+      names at tablet and mobile widths.
+- [x] Add a browser regression assertion that desktop table width does not
+      exceed its visible region.
+
+**Local evidence (2026-08-31):** At the 1,265 px browser content width, the
+table and its visible region both measure 1,178 px, the first and last headers
+remain inside the region, and the region reports no horizontal overflow. At the
+375 px mobile content width, page-level overflow remains absent while the table
+retains its 1,712 px internal working width, automatic horizontal scrolling, the
+visible swipe cue, and sticky area labels.
+
 ## Wave 4 — Shared UI consistency
 
 - [x] Inventory the existing shared header, notice, status, empty, and error

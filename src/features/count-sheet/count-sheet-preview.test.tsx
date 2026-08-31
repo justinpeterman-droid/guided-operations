@@ -28,7 +28,7 @@ describe("CountSheetPreview", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.getByRole("region", {
-        name: "Count entries by fictional area and unit. Scroll horizontally to view all units.",
+        name: "Count entries by fictional area and unit",
       }),
     ).toHaveTextContent("Swipe to view all units");
   });

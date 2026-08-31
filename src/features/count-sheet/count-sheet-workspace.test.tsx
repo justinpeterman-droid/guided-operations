@@ -68,7 +68,7 @@ describe("CountSheetWorkspace", () => {
     );
     expect(
       screen.getByRole("region", {
-        name: "Count entries by area and unit. Scroll horizontally to view all units.",
+        name: "Count entries by area and unit",
       }),
     ).toHaveTextContent("Swipe to view all units");
     await user.type(screen.getByRole("textbox", { name: "Chow Hall, 1" }), "2");
