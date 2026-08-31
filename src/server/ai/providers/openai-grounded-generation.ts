@@ -16,6 +16,7 @@ import {
   POLICY_ANSWER_REASONING_EFFORT,
   POLICY_ANSWER_REASONING_TOKENS,
 } from "./openai-reasoning";
+import { createOpenAiStructuredResponseRequest } from "./openai-responses-contract";
 
 const responseSchema = z
   .object({
@@ -129,6 +130,17 @@ export function createOpenAiGroundedGenerationProvider(
       const lease = await budgetGuard.reserve("policy_answer");
       try {
         const environment = getOpenAiPolicyEnvironment(options.environment);
+        const requestBody = createOpenAiStructuredResponseRequest({
+          model: environment.OPENAI_POLICY_MODEL,
+          instructions: buildInstructions(),
+          input: buildInput(request),
+          reasoningEffort: POLICY_ANSWER_REASONING_EFFORT,
+          maximumOutputTokens:
+            POLICY_ANSWER_REASONING_TOKENS +
+            Math.min(2400, request.maximumAnswerCharacters),
+          schemaName: "grounded_policy_answer",
+          schema: answerJsonSchema,
+        });
         const response = await fetchImplementation(
           "https://api.openai.com/v1/responses",
           {
@@ -138,24 +150,7 @@ export function createOpenAiGroundedGenerationProvider(
               "Content-Type": "application/json",
             },
             signal: AbortSignal.timeout(lease.providerTimeoutMs),
-            body: JSON.stringify({
-              model: environment.OPENAI_POLICY_MODEL,
-              store: false,
-              instructions: buildInstructions(),
-              input: buildInput(request),
-              reasoning: { effort: POLICY_ANSWER_REASONING_EFFORT },
-              max_output_tokens:
-                POLICY_ANSWER_REASONING_TOKENS +
-                Math.min(2400, request.maximumAnswerCharacters),
-              text: {
-                format: {
-                  type: "json_schema",
-                  name: "grounded_policy_answer",
-                  strict: true,
-                  schema: answerJsonSchema,
-                },
-              },
-            }),
+            body: JSON.stringify(requestBody),
           },
         );
 
