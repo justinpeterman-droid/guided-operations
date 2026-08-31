@@ -1,5 +1,7 @@
 import { expect, test } from "@playwright/test";
 
+import { collectFailedRequests } from "./support/failed-requests";
+
 test("rejects a guessed operational print request without a current account", async ({
   request,
 }) => {
@@ -25,12 +27,11 @@ test("keeps the operational Count Sheet behind current account and shift checks"
   page,
 }) => {
   const browserErrors: string[] = [];
-  const failedRequests: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  const failedRequests = collectFailedRequests(page);
 
   await page.goto("/count-sheet");
 
@@ -49,12 +50,11 @@ test("renders and calculates the approved Count Sheet with fictional browser-onl
   page,
 }) => {
   const browserErrors: string[] = [];
-  const failedRequests: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  const failedRequests = collectFailedRequests(page);
 
   await page.goto("/preview/count-sheet");
 
@@ -85,12 +85,11 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
   page,
 }) => {
   const browserErrors: string[] = [];
-  const failedRequests: string[] = [];
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  const failedRequests = collectFailedRequests(page);
   await page.setViewportSize({ height: 844, width: 390 });
   await page.emulateMedia({ reducedMotion: "reduce" });
 

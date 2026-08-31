@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import { PreviewShell } from "@/app/components/preview-shell";
 import {
   chainOfCustodyGuidance,
   countSheetCapabilities,
@@ -13,20 +14,7 @@ import {
  */
 export default function FormsLibraryPreviewPage() {
   return (
-    <main className="forms-library-page">
-      <header className="workspace-preview-header">
-        <Link className="workspace-brand" href="/preview/workspace">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Forms Library</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell className="forms-library-page" title="Forms Library">
       <section className="forms-library-intro" aria-labelledby="forms-title">
         <p className="eyebrow">Forms Library</p>
         <h1 id="forms-title">Find the right paperwork.</h1>
@@ -127,7 +115,7 @@ export default function FormsLibraryPreviewPage() {
           ))}
         </div>
       </section>
-    </main>
+    </PreviewShell>
   );
 }
 

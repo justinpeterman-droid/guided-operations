@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportDraftCandidateForCurrentSession } from "@/server/ai/get-report-draft-candidate";
 
@@ -20,22 +25,7 @@ export default async function ReportDraftReviewPage({
   if (result.kind === "not_found") return <NotFound />;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/reports">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Report review</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/reports">
-          Reports
-        </Link>
-      </header>
-
+    <WorkspaceShell current="Reports" title="Report review">
       <section className="reports-intro" aria-labelledby="draft-title">
         <p className="eyebrow">Review-only candidate</p>
         <h1 id="draft-title">Review every drafted statement.</h1>
@@ -43,6 +33,14 @@ export default async function ReportDraftReviewPage({
           This is not a submitted report. Each paragraph names the confirmed
           fact IDs it used. You may edit the narrative and explicitly create a
           final report only after your review.
+        </p>
+        <p>
+          <Link
+            className="reports-home-link"
+            href={`/incidents/${result.candidate.incidentId}`}
+          >
+            Open Document Studio for this incident
+          </Link>
         </p>
       </section>
 
@@ -86,7 +84,7 @@ export default async function ReportDraftReviewPage({
             .join("\n\n")}
         />
       </section>
-    </main>
+    </WorkspaceShell>
   );
 }
 
@@ -103,42 +101,31 @@ async function loadCandidate(candidateId: string) {
 
 function SignInRequired() {
   return (
-    <Message
+    <OfficerSignInRequiredMessage
+      description="Draft candidates are available only to an authorized private account."
       title="Sign in to review a draft."
-      detail="Draft candidates are available only to an authorized private account."
     />
   );
 }
 
 function NotFound() {
   return (
-    <Message
+    <OfficerUnavailableMessage
+      actions={[{ href: "/reports", label: "Return to reports" }]}
+      description="This draft does not exist or is not available to this account."
+      eyebrow="Private workspace"
       title="Draft unavailable."
-      detail="This draft does not exist or is not available to this account."
     />
   );
 }
 
 function Unavailable() {
   return (
-    <Message
+    <OfficerUnavailableMessage
+      actions={[{ href: "/reports", label: "Return to reports" }]}
+      description="Your existing work has not been changed. Please try again later."
+      eyebrow="Private workspace"
       title="Draft review is unavailable."
-      detail="Your existing work has not been changed. Please try again later."
     />
-  );
-}
-
-function Message({ title, detail }: { title: string; detail: string }) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state">
-        <p className="eyebrow">Private workspace</p>
-        <h1>{title}</h1>
-        <p>{detail}</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
   );
 }

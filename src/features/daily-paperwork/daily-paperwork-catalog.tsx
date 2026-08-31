@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-import { WorkspaceNavigation } from "@/app/components/workspace-navigation";
+import { AdminShell } from "@/app/components/admin-shell";
 import {
   dailyPaperworkCatalog,
   SHIFT_OPTIONS,
@@ -21,25 +21,10 @@ export function DailyPaperworkCatalog({
   canManagePackages?: boolean;
 }>) {
   return (
-    <main className="reports-page daily-paperwork-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Daily Paperwork</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <WorkspaceNavigation current="Home" />
-          <Link className="reports-home-link" href="/admin">
-            Administrator home
-          </Link>
-        </div>
-      </header>
-
+    <AdminShell
+      className="reports-page daily-paperwork-page"
+      title="Daily Paperwork"
+    >
       <section className="reports-intro" aria-labelledby="daily-title">
         <p className="eyebrow">Administrator workspace</p>
         <h1 id="daily-title">Daily Paperwork</h1>
@@ -113,7 +98,7 @@ export function DailyPaperworkCatalog({
           })}
         </div>
       </section>
-    </main>
+    </AdminShell>
   );
 }
 

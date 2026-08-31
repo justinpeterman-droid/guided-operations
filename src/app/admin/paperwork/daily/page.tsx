@@ -1,5 +1,8 @@
-import Link from "next/link";
-
+import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
+import { WorkspaceMessage } from "@/app/components/workspace-message";
 import { DailyPaperworkCatalog } from "@/features/daily-paperwork/daily-paperwork-catalog";
 import type { ShiftCode } from "@/features/daily-paperwork/catalog";
 import { resolveDailyPaperworkSelection } from "@/features/daily-paperwork/selection";
@@ -59,66 +62,33 @@ function centralWorkDate(): string {
 
 function AccessRequired() {
   return (
-    <MessagePage
-      eyebrow="Private workspace"
-      title="Administrator access is required."
-      copy="Daily Paperwork is available only to a current administrator account."
-      href="/home"
-      action="Return to your workspace"
-    />
+    <AdminAccessRequiredMessage description="Daily Paperwork is available only to a current administrator account." />
   );
 }
 
 function InvalidSelection() {
   return (
-    <MessagePage
+    <WorkspaceMessage
+      actions={[
+        {
+          href: "/admin/paperwork/daily",
+          label: "Use today's date and shift A",
+        },
+      ]}
+      description="No paperwork was opened or changed."
       eyebrow="Date or shift not recognized"
       title="Choose a valid Daily Paperwork work period."
-      copy="No paperwork was opened or changed."
-      href="/admin/paperwork/daily"
-      action="Use today's date and shift A"
+      variant="admin"
     />
   );
 }
 
 function Unavailable() {
   return (
-    <MessagePage
+    <AdminUnavailableMessage
+      description="No existing paperwork has been changed."
       eyebrow="Daily Paperwork unavailable"
       title="The Daily Paperwork list cannot load right now."
-      copy="No existing paperwork has been changed."
-      href="/admin"
-      action="Return to administrator workspace"
     />
-  );
-}
-
-function MessagePage({
-  eyebrow,
-  title,
-  copy,
-  href,
-  action,
-}: Readonly<{
-  eyebrow: string;
-  title: string;
-  copy: string;
-  href: string;
-  action: string;
-}>) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="daily-message-title"
-      >
-        <p className="eyebrow">{eyebrow}</p>
-        <h1 id="daily-message-title">{title}</h1>
-        <p>{copy}</p>
-        <Link className="reports-home-link" href={href}>
-          {action}
-        </Link>
-      </section>
-    </main>
   );
 }

@@ -1,7 +1,11 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  HOME_ACTION,
+  SIGN_IN_ACTION,
+  WorkspaceMessage,
+} from "@/app/components/workspace-message";
 
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
@@ -64,7 +68,11 @@ function PasscodeChangeRequired({
   csrfToken,
 }: Readonly<{ csrfToken: string | null }>) {
   return (
-    <main className="reports-page account-page">
+    <WorkspaceShell
+      className="reports-page account-page"
+      current="Account"
+      title="Account"
+    >
       <section
         className="reports-intro"
         aria-labelledby="passcode-change-title"
@@ -77,41 +85,28 @@ function PasscodeChangeRequired({
         </p>
       </section>
       <TemporaryPasscodeChangeForm csrfToken={csrfToken} />
-    </main>
+    </WorkspaceShell>
   );
 }
 
 function SignInRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state" aria-labelledby="sign-in-title">
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="sign-in-title">Sign in to manage account safety.</h1>
-        <p>Account session controls are available only to a current account.</p>
-        <Link className="reports-home-link" href="/login">
-          Go to sign in
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[SIGN_IN_ACTION]}
+      description="Account session controls are available only to a current account."
+      eyebrow="Private workspace"
+      title="Sign in to manage account safety."
+    />
   );
 }
 
 function AccountUnavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="account-unavailable-title"
-      >
-        <p className="eyebrow">Account unavailable</p>
-        <h1 id="account-unavailable-title">
-          Account safety cannot load right now.
-        </h1>
-        <p>Your sessions have not been changed. Please try again later.</p>
-        <Link className="reports-home-link" href="/home">
-          Return home
-        </Link>
-      </section>
-    </main>
+    <WorkspaceMessage
+      actions={[HOME_ACTION]}
+      description="Your sessions have not been changed. Please try again later."
+      eyebrow="Account unavailable"
+      title="Account safety cannot load right now."
+    />
   );
 }

@@ -1,5 +1,10 @@
 import Link from "next/link";
 
+import {
+  AdminAccessRequiredMessage,
+  AdminUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
+import { AdminAccountLink, AdminShell } from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
@@ -11,26 +16,22 @@ export const dynamic = "force-dynamic";
  */
 export default async function AdminPage() {
   const access = await loadAdminAccess();
-  if (access === "unavailable") return <Unavailable />;
+  if (access === "unavailable")
+    return (
+      <AdminUnavailableMessage
+        description="No account settings have been changed."
+        eyebrow="Administrator workspace unavailable"
+        title="This page cannot load right now."
+      />
+    );
   if (access === "denied") return <AccessRequired />;
 
   return (
-    <main className="workspace-preview-page admin-preview-page">
-      <header className="workspace-preview-header">
-        <Link className="workspace-brand" href="/home">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Administrator workspace</strong>
-          </span>
-        </Link>
-        <Link className="reports-home-link" href="/account">
-          Account
-        </Link>
-      </header>
-
+    <AdminShell
+      actions={<AdminAccountLink />}
+      className="workspace-preview-page admin-preview-page"
+      title="Administrator workspace"
+    >
       <section className="admin-preview-hero" aria-labelledby="admin-title">
         <p className="eyebrow">Administrator home</p>
         <h1 id="admin-title">
@@ -97,7 +98,7 @@ export default async function AdminPage() {
           </Link>
         </article>
       </section>
-    </main>
+    </AdminShell>
   );
 }
 
@@ -117,36 +118,6 @@ export async function loadAdminAccess(): Promise<
 
 function AccessRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-access-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="admin-access-title">Administrator access is required.</h1>
-        <p>This area is available only to a current administrator account.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
-  );
-}
-
-function Unavailable() {
-  return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="admin-unavailable-title"
-      >
-        <p className="eyebrow">Administrator workspace unavailable</p>
-        <h1 id="admin-unavailable-title">This page cannot load right now.</h1>
-        <p>No account settings have been changed.</p>
-        <Link className="reports-home-link" href="/home">
-          Return to your workspace
-        </Link>
-      </section>
-    </main>
+    <AdminAccessRequiredMessage description="This area is available only to a current administrator account." />
   );
 }

@@ -1,12 +1,22 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+import { GuidedMark } from "@/app/components/workspace-brand";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { authorizeCurrentSession } from "@/server/auth/current-session";
+
+export const dynamic = "force-dynamic";
+
+/** Public entry: signed-in officers go to /home; everyone else sees sign-in. */
+export default async function PublicLandingPage() {
+  const access = await loadLandingAccess();
+  if (access === "authorized") redirect("/home");
+  if (access === "passcode_change_required") redirect("/account");
+
   return (
     <main className="foundation-page">
       <header className="brand-bar">
-        <span className="brand-mark" aria-hidden="true">
-          GO
-        </span>
+        <GuidedMark />
         <div>
           <p className="eyebrow">One facility · one trusted workspace</p>
           <p className="brand-name">Guided Operations</p>
@@ -86,4 +96,21 @@ export default function Home() {
       </footer>
     </main>
   );
+}
+
+async function loadLandingAccess(): Promise<
+  "authorized" | "passcode_change_required" | "signed_out"
+> {
+  try {
+    const session = await authorizeCurrentSession(
+      await createSupabaseServerClient(),
+      { allowForcedPasscodeChange: true },
+    );
+    if (!session.allowed) return "signed_out";
+    return session.account.mustChangePasscode
+      ? "passcode_change_required"
+      : "authorized";
+  } catch {
+    return "signed_out";
+  }
 }

@@ -1,5 +1,7 @@
-import Link from "next/link";
-
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
@@ -30,44 +32,19 @@ async function loadPolicyExpertAccess(): Promise<
 
 function SignInRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="policy-sign-in-title"
-      >
-        <p className="eyebrow">Private workspace</p>
-        <h1 id="policy-sign-in-title">Sign in to use Policy Expert.</h1>
-        <p>
-          Policy questions and cited guidance are available only after the app
-          verifies your current account and permissions.
-        </p>
-        <Link className="reports-home-link" href="/login">
-          Sign in
-        </Link>
-      </section>
-    </main>
+    <OfficerSignInRequiredMessage
+      description="Policy questions and cited guidance are available only after the app verifies your current account and permissions."
+      title="Sign in to use Policy Expert."
+    />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="policy-unavailable-title"
-      >
-        <p className="eyebrow">Policy Expert unavailable</p>
-        <h1 id="policy-unavailable-title">
-          Cited guidance cannot be loaded right now.
-        </h1>
-        <p>
-          Your question has not been submitted or retained. Please try again
-          later.
-        </p>
-        <Link className="reports-home-link" href="/">
-          Return home
-        </Link>
-      </section>
-    </main>
+    <OfficerUnavailableMessage
+      description="Your question has not been submitted or retained. Please try again later."
+      eyebrow="Policy Expert unavailable"
+      title="Cited guidance cannot be loaded right now."
+    />
   );
 }

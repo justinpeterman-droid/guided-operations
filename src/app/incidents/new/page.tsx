@@ -1,5 +1,7 @@
-import Link from "next/link";
-
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
@@ -29,36 +31,20 @@ async function loadIncidentAccess(): Promise<
 
 function SignInRequired() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="incident-login-title"
-      >
-        <h1 id="incident-login-title">Sign in to start an incident.</h1>
-        <p>
-          New incidents are available only to an authorized private account.
-        </p>
-        <Link className="reports-home-link" href="/login">
-          Sign in
-        </Link>
-      </section>
-    </main>
+    <OfficerSignInRequiredMessage
+      description="New incidents are available only to an authorized private account."
+      title="Sign in to start an incident."
+    />
   );
 }
 
 function Unavailable() {
   return (
-    <main className="reports-page reports-message-page">
-      <section
-        className="reports-empty-state"
-        aria-labelledby="incident-unavailable-title"
-      >
-        <h1 id="incident-unavailable-title">New incident is unavailable.</h1>
-        <p>No incident has been created. Please try again later.</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
+    <OfficerUnavailableMessage
+      actions={[{ href: "/reports", label: "Return to reports" }]}
+      description="No incident has been created. Please try again later."
+      eyebrow="New incident unavailable"
+      title="New incident is unavailable."
+    />
   );
 }

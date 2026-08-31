@@ -226,7 +226,7 @@ export function ReportDraftRequestForm({
           ? "Creating review draft…"
           : "Create review draft"}
       </button>
-      <p aria-live="polite" className="incident-status">
+      <p aria-live="polite" className="workspace-status-message">
         {submitState === "failed"
           ? "The draft could not be created. Your incident was not changed."
           : "Generated text remains a review-only draft until an officer corrects and finalizes it."}

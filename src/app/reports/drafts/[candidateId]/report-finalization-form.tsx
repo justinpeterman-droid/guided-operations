@@ -106,7 +106,7 @@ export function ReportFinalizationForm({
       >
         {state === "saving" ? "Creating final report…" : "Create final report"}
       </button>
-      <p aria-live="polite" className="incident-status">
+      <p aria-live="polite" className="workspace-status-message">
         {state === "failed"
           ? "The final report could not be created. Nothing was changed."
           : null}

@@ -1,16 +1,17 @@
 import { expect, test } from "@playwright/test";
 
+import { collectFailedRequests } from "./support/failed-requests";
+
 test("labels the workspace honestly and routes to sign in", async ({
   page,
 }) => {
   const browserErrors: string[] = [];
-  const failedRequests: string[] = [];
 
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  const failedRequests = collectFailedRequests(page);
 
   await page.goto("/");
 
@@ -33,13 +34,12 @@ test("keeps account session controls behind the current-account gate", async ({
   page,
 }) => {
   const browserErrors: string[] = [];
-  const failedRequests: string[] = [];
 
   page.on("console", (message) => {
     if (message.type() === "error") browserErrors.push(message.text());
   });
   page.on("pageerror", (error) => browserErrors.push(error.message));
-  page.on("requestfailed", (request) => failedRequests.push(request.url()));
+  const failedRequests = collectFailedRequests(page);
 
   await page.goto("/account");
 

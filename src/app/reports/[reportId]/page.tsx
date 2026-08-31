@@ -1,5 +1,11 @@
 import Link from "next/link";
 
+import { WorkspaceShell } from "@/app/components/workspace-shell";
+import {
+  OfficerSignInRequiredMessage,
+  OfficerUnavailableMessage,
+} from "@/app/components/workspace-message-presets";
+import { getReportTypeDefinition } from "@/features/incidents/report-types";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getReportForCurrentSession } from "@/server/incidents/get-report";
 import { listReportRevisionsForCurrentSession } from "@/server/incidents/list-report-revisions";
@@ -20,51 +26,72 @@ export default async function ReportPage({
   const result = await loadReport(reportId);
 
   if (result.kind === "denied")
-    return <Message title="Sign in to view this report." />;
+    return (
+      <OfficerSignInRequiredMessage
+        description="Your existing work has not been changed."
+        title="Sign in to view this report."
+      />
+    );
   if (result.kind === "not_found")
-    return <Message title="Report unavailable." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing work has not been changed."
+        eyebrow="Private workspace"
+        title="Report unavailable."
+      />
+    );
   if (result.kind === "unavailable")
-    return <Message title="Report cannot be loaded right now." />;
+    return (
+      <OfficerUnavailableMessage
+        actions={[{ href: "/reports", label: "Return to reports" }]}
+        description="Your existing work has not been changed."
+        eyebrow="Private workspace"
+        title="Report cannot be loaded right now."
+      />
+    );
+
+  const reportLabel = getReportTypeDefinition(result.report.reportType).label;
 
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/reports">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Final report</strong>
-          </span>
-        </Link>
-        <div className="reports-header-actions">
-          <Link className="reports-home-link" href="/reports">
-            Reports
-          </Link>
-          {isPrintableReport(result.report.reportType) ? (
-            <>
-              <DownloadReportButton
-                current
-                reportId={result.report.reportId}
-                revisionNumber={result.report.revisionNumber}
-              />
-              <PrintReportButton
-                reportId={result.report.reportId}
-                revisionNumber={result.report.revisionNumber}
-              />
-            </>
-          ) : null}
-        </div>
-      </header>
+    <WorkspaceShell
+      actions={
+        isPrintableReport(result.report.reportType) ? (
+          <>
+            <DownloadReportButton
+              current
+              reportId={result.report.reportId}
+              revisionNumber={result.report.revisionNumber}
+            />
+            <PrintReportButton
+              reportId={result.report.reportId}
+              revisionNumber={result.report.revisionNumber}
+            />
+          </>
+        ) : null
+      }
+      current="Reports"
+      title={reportLabel}
+    >
       <section
         className="reports-intro report-print-heading"
         aria-labelledby="report-title"
       >
         <p className="eyebrow">Human-reviewed record</p>
-        <h1 id="report-title">Final report</h1>
+        <h1 id="report-title">{reportLabel}</h1>
         <p>
-          Revision {result.report.revisionNumber} · {result.report.reportType}
+          Revision {result.report.revisionNumber} ·{" "}
+          <span className={`status-badge status-${result.report.status}`}>
+            {result.report.status.replace("_", " ")}
+          </span>
+        </p>
+        <p>
+          <Link
+            className="reports-home-link"
+            href={`/incidents/${result.report.incidentId}`}
+          >
+            Open Document Studio for this incident
+          </Link>
         </p>
       </section>
       <article
@@ -98,7 +125,7 @@ export default async function ReportPage({
           revisions={await loadHistory(reportId)}
         />
       </article>
-    </main>
+    </WorkspaceShell>
   );
 }
 
@@ -127,19 +154,4 @@ async function loadReport(reportId: string) {
   } catch {
     return { kind: "unavailable" } as const;
   }
-}
-
-function Message({ title }: { title: string }) {
-  return (
-    <main className="reports-page reports-message-page">
-      <section className="reports-empty-state">
-        <p className="eyebrow">Private workspace</p>
-        <h1>{title}</h1>
-        <p>Your existing work has not been changed.</p>
-        <Link className="reports-home-link" href="/reports">
-          Return to reports
-        </Link>
-      </section>
-    </main>
-  );
 }

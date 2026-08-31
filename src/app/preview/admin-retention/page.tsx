@@ -1,22 +1,16 @@
 import Link from "next/link";
 
+import { PreviewShell } from "@/app/components/preview-shell";
+
 /** Fictional visual contract only. Every control is deliberately inert. */
 export default function AdminRetentionPreviewPage() {
   return (
-    <main className="reports-page">
-      <header className="workspace-header reports-header">
-        <Link className="workspace-brand" href="/preview/admin">
-          <span className="brand-mark" aria-hidden="true">
-            GO
-          </span>
-          <span>
-            <span className="eyebrow">Guided Operations</span>
-            <strong>Records controls</strong>
-          </span>
-        </Link>
-        <span className="preview-status">Fictional training preview</span>
-      </header>
-
+    <PreviewShell
+      brandHref="/preview/admin"
+      className="reports-page"
+      headerClassName="workspace-header reports-header"
+      title="Records controls"
+    >
       <section
         className="reports-intro"
         aria-labelledby="preview-retention-title"
@@ -173,6 +167,6 @@ export default function AdminRetentionPreviewPage() {
       <Link className="workspace-return-link" href="/preview/admin">
         ← Return to administrator preview
       </Link>
-    </main>
+    </PreviewShell>
   );
 }
