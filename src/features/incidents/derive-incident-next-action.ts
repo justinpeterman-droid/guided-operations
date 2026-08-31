@@ -12,7 +12,7 @@ export type IncidentNextAction = Readonly<{
 export type IncidentNextActionInput = Readonly<{
   reviewedFacts: readonly StoredReviewedFact[];
   reportingOfficerCount: number;
-  reports: readonly ReportSummary[];
+  reports: readonly ReportSummary[] | null;
 }>;
 
 function isVisibleConfirmedFact(fact: StoredReviewedFact): boolean {
@@ -23,7 +23,7 @@ function isVisibleConfirmedFact(fact: StoredReviewedFact): boolean {
 
 export function deriveIncidentNextAction(
   input: IncidentNextActionInput,
-): IncidentNextAction {
+): IncidentNextAction | null {
   if (input.reportingOfficerCount === 0) {
     return {
       destination: "incident-record",
@@ -53,6 +53,8 @@ export function deriveIncidentNextAction(
       summary: "No confirmed facts are available for an officer report.",
     };
   }
+
+  if (input.reports === null) return null;
 
   if (input.reports.length === 0) {
     return {
