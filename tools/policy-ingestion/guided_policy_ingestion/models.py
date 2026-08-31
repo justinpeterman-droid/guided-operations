@@ -40,6 +40,7 @@ class ExtractionResult:
     warnings: tuple[str, ...] = ()
     layout_reference: str | None = None
     layout_metadata_sha256: str | None = None
+    observed_page_count: int | None = None
 
 
 @dataclass(frozen=True)

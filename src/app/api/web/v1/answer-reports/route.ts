@@ -18,6 +18,7 @@ export const runtime = "nodejs";
 
 const API_VERSION = "web-v1";
 const NO_STORE_HEADERS = { "Cache-Control": "private, no-store" };
+const REPORT_LIMIT_SQLSTATE = "54000";
 
 /**
  * Records an officer's report that a shown policy answer was wrong or doubtful.
@@ -85,6 +86,27 @@ export async function POST(request: Request): Promise<Response> {
     });
 
     if (result.error) {
+      if (hasErrorCode(result.error, REPORT_LIMIT_SQLSTATE)) {
+        return observedResponse(
+          errorResponse(
+            429,
+            "report_limit_reached",
+            requestId,
+            "Too many answer reports were submitted recently. Try again later.",
+            { "Retry-After": "3600" },
+          ),
+          {
+            event_name: "answer_report.request",
+            outcome: "request_not_allowed",
+            reason_code: "budget_exhausted",
+            request_id: requestId,
+            status_code: 429,
+            duration_ms: boundedDuration(startedAt),
+            environment: appEnvironment,
+          },
+        );
+      }
+
       return observedResponse(
         errorResponse(503, "service_unavailable", requestId),
         {
@@ -132,6 +154,15 @@ export async function POST(request: Request): Promise<Response> {
   }
 }
 
+function hasErrorCode(error: unknown, expectedCode: string): boolean {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "code" in error &&
+    (error as { code?: unknown }).code === expectedCode
+  );
+}
+
 function boundedDuration(startedAt: number): number {
   return Math.min(3_600_000, Math.max(0, Date.now() - startedAt));
 }
@@ -149,12 +180,13 @@ function errorResponse(
   code: string,
   requestId: string,
   message = "Request could not be completed.",
+  headers: Record<string, string> = {},
 ): Response {
   return Response.json(
     {
       error: { code, message },
       meta: { request_id: requestId, api_version: API_VERSION },
     },
-    { status, headers: NO_STORE_HEADERS },
+    { status, headers: { ...NO_STORE_HEADERS, ...headers } },
   );
 }

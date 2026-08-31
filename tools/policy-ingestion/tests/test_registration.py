@@ -235,10 +235,17 @@ class SafeDatabaseDetailTests(unittest.TestCase):
         self.assertNotIn("bmu-1-03-0", detail)
         self.assertNotIn("DETAIL", detail)
 
-    def test_a_plain_error_still_says_something_useful(self):
+    def test_a_plain_error_reports_only_its_type(self):
         detail = _safe_database_detail(ValueError("badly formed UUID"))
-        self.assertIn("ValueError", detail)
-        self.assertIn("badly formed UUID", detail)
+        self.assertEqual(detail, "ValueError")
+        self.assertNotIn("badly formed UUID", detail)
+
+    def test_an_os_error_reports_errno_without_exposing_its_path(self):
+        private_path = "/private/policies/employee-record.pdf"
+        detail = _safe_database_detail(FileNotFoundError(2, "missing", private_path))
+        self.assertEqual(detail, "FileNotFoundError; errno 2")
+        self.assertNotIn(private_path, detail)
+        self.assertNotIn("employee-record.pdf", detail)
 
     def test_an_empty_error_does_not_produce_a_dangling_separator(self):
         self.assertEqual(_safe_database_detail(RuntimeError("")), "RuntimeError")

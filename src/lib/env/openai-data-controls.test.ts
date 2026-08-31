@@ -102,7 +102,7 @@ describe("fictional corpus exemption", () => {
     ).toThrow();
   });
 
-  it("does not let a fictional classification weaken a real attestation", () => {
+  it("accepts a complete attestation for a restricted corpus", () => {
     expect(
       getOpenAiDataControlsEnvironment({
         POLICY_CORPUS_CLASSIFICATION: "restricted",

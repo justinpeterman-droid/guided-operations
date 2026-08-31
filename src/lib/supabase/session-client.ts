@@ -7,7 +7,7 @@ import {
   type EncryptedSupabaseSessionStorage,
 } from "@/server/auth/encrypted-supabase-session-storage";
 
-import type { Database } from "./database.generated";
+import type { Database } from "./database";
 
 /** One server-only Supabase client contract for sign-in, refresh, and RLS calls. */
 export function createSupabaseSessionClient(

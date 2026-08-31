@@ -1,25 +1,28 @@
-# Authentication security — Phase 1 current-main revalidation
+# Authentication security — Phase 1 reviewed-snapshot revalidation
 
 - **Date:** 2026-08-30
-- **Target:** `main` at/after 005/409 mapping merge
-  `7ca6711fdc375aaac0a14e548f854c6a3dabe021`
-- **Method:** static current-main reproduction review against the historical PR
-  #4 hypotheses
+- **Exact snapshot reviewed:** `7ca6711fdc375aaac0a14e548f854c6a3dabe021`
+- **Later audit relationship:** the reviewed snapshot is an ancestor of the
+  frozen CodeRabbit audit head
+  `32f6b35a6c537ef83c5cf6da4fc02fff63d9f47e`; this record does not claim that
+  the later head received the same static revalidation
+- **Method:** static reproduction review against the historical PR #4
+  hypotheses at the exact snapshot named above
 - **Boundary:** no production fixes in this phase; hosted-only claims remain
   unproven until hosted tests run
 
 ## Executive result
 
 The historical PR #4 report does **not** reproduce its two Critical claims
-against current `main`. The current implementation has materially changed.
-Several former findings are directly closed by code evidence, while timing,
+against the reviewed snapshot. The implementation had materially changed.
+Several former findings were directly closed by code evidence, while timing,
 hosted abuse, complete RLS/grant coverage, and provider lifecycle behavior still
 require dynamic/hosted qualification.
 
 ## Revalidation results
 
-| Hypothesis                                              | Result                                       | Current-main evidence                                                                                                                                                                                                                                                                                                                                     |
-| ------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Hypothesis                                              | Result                                       | Reviewed-snapshot evidence                                                                                                                                                                                                                                                                                                                                  |
+| ------------------------------------------------------- | -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | C-1 arbitrary session minting through app DB credential | **NOT REPRODUCED / architecture superseded** | Current pre-auth path performs only a private active alias lookup, then requires Supabase password authentication. Current session authority comes from provider claims plus authoritative account/auth-version checking. Direct DB credential/network restriction remains an operational hardening gate.                                                 |
 | C-2 admin authority equals stolen session               | **NOT REPRODUCED**                           | Purpose-bound 5-minute step-up tokens exist. Consumption binds account, session, auth_version, purpose, request ID and keyed token digest; the store is expected to consume once. Purpose-specific admin routes exist. Dynamic replay/wrong-purpose/expiry tests remain part of release qualification.                                                    |
 | H-1 stolen session can change personal passcode         | **CLOSED BY CURRENT CODE**                   | `changePersonalPasscode` requires `currentPasscode`, verifies it against the provider identity, verifies employee identity digest, validates the new passcode against the employee number, then updates password and performs provider-wide sign-out before sealing success.                                                                              |
@@ -32,7 +35,7 @@ require dynamic/hosted qualification.
 | M-3 authenticated responses cacheable                   | **CLOSED FOR GLOBAL PROXY + sampled APIs**   | Session proxy sets `Cache-Control: private, no-store, max-age=0`, `Pragma: no-cache`, and `Expires: 0`; sampled auth/API routes also use private/no-store. Browser/header qualification should verify all protected surfaces.                                                                                                                             |
 | M-4 global auth DoS                                     | **OPEN — HOSTED ABUSE TEST**                 | A global opaque attempt subject intentionally exists. Policy behavior is bounded, but distributed abuse and edge/origin saturation require hosted testing/monitoring evidence.                                                                                                                                                                            |
 | M-5 scrypt CPU exhaustion                               | **SUPERSEDED / OPEN AS GENERAL ABUSE COST**  | Current application delegates password verification to Supabase Auth; it no longer runs the PR #4 scrypt verifier on every request. Provider/origin cost under abuse remains a hosted concern.                                                                                                                                                            |
-| M-6 browser Supabase client trust trap                  | **NOT REPRODUCED BY SEARCH**                 | No current `createBrowserClient`/browser Supabase client was found in the current-main search. Continue enforcing server-only DAL boundaries and CI/static guardrails.                                                                                                                                                                                    |
+| M-6 browser Supabase client trust trap                  | **NOT REPRODUCED BY SEARCH**                 | No current `createBrowserClient`/browser Supabase client was found in the reviewed-snapshot search. Continue enforcing server-only DAL boundaries and CI/static guardrails.                                                                                                                                                                               |
 | M-7 security-definer pre-auth caller attestation        | **SUPERSEDED / DB GRANT TEST REQUIRED**      | Current private pre-auth implementation is a server-only direct SQL alias lookup, not the seven PR #4 session-mint functions. Dedicated credential grants and direct negative access still require database qualification.                                                                                                                                |
 | M-8 bootstrap/reset/unlock absent                       | **NOT REPRODUCED**                           | First-admin bootstrap implementation exists with generated temporary passcode, random internal alias, staging/activation, delivery-before-activation and cleanup. Purpose-bound admin unlock/reset UI/routes also exist. Hosted operator rehearsal remains required.                                                                                      |
 | M-9 auth-table RLS negative tests missing               | **OPEN QUALIFICATION GATE**                  | Current architecture requires direct anon/authenticated/dedicated-role negative tests. Static review here does not prove the full database matrix.                                                                                                                                                                                                        |
@@ -72,9 +75,9 @@ require dynamic/hosted qualification.
 
 ## Phase 1 disposition
 
-No Critical current-main vulnerability was reproduced from the historical PR #4
-report during this static revalidation. H-1, M-2, L-5 and the core C-2 concern
-are closed by direct current-code evidence. Several architecture-specific
+No Critical vulnerability was reproduced from the historical PR #4 report at
+the exact reviewed snapshot. H-1, M-2, L-5 and the core C-2 concern are closed
+by direct code evidence at that snapshot. Several architecture-specific
 findings are superseded. The remaining meaningful risks are qualification gaps:
 hosted timing/abuse/provider lifecycle, exhaustive route authorization coverage,
 and the database grant/RLS negative matrix.

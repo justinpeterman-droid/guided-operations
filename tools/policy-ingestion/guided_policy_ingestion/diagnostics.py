@@ -18,7 +18,7 @@ _MAX_DETAIL = 200
 
 
 def safe_database_detail(error: BaseException) -> str:
-    """Name a database failure by its structured diagnostics."""
+    """Name a database failure without echoing message text or local paths."""
     parts: list[str] = [type(error).__name__]
     sqlstate = getattr(error, "sqlstate", None)
     if sqlstate:
@@ -32,12 +32,8 @@ def safe_database_detail(error: BaseException) -> str:
         value = getattr(diagnostics, attribute, None) if diagnostics else None
         if value:
             parts.append(f"{label} {value}")
-    if len(parts) == 1:
-        # Not a database error - a bad UUID or similar, whose message is our
-        # own argument handling rather than row content.
-        detail = _first_line(error)
-        if detail:
-            parts.append(detail)
+    if len(parts) == 1 and isinstance(error, OSError) and error.errno is not None:
+        parts.append(f"errno {error.errno}")
     return "; ".join(parts)
 
 
