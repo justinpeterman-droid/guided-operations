@@ -49,7 +49,10 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
         <button
           aria-label="Dismiss navigation menu"
           className="workspace-navigation-scrim"
-          onClick={() => setOpen(false)}
+          onClick={() => {
+            setOpen(false);
+            toggleRef.current?.focus();
+          }}
           type="button"
         />
       ) : null}
