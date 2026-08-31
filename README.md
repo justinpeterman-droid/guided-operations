@@ -103,6 +103,18 @@ npm run dev
 The liveness endpoint is `/api/health/live`. A successful liveness response does
 not prove database, authentication, AI, or RAG readiness.
 
+When local Supabase is already running, this reset-free check builds a temporary
+local server with only the local public Supabase settings and verifies public
+previews plus unauthenticated protected-route gates. It does not create data or
+reset the local database:
+
+```powershell
+npm run test:e2e:local-public
+```
+
+`npm run test:e2e:local-auth` remains the separate, broader fictional
+authenticated qualification and deliberately resets the local database.
+
 ## Local database checks
 
 The Supabase commands require Docker and must never target a hosted production

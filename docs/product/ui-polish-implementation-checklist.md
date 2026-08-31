@@ -47,21 +47,22 @@ saved revisions do not need a data migration.
 
 ## Wave 2 — Safe local protected-route readiness
 
-- [ ] Follow the existing approved local-auth/Supabase documentation to find the
+- [x] Follow the existing approved local-auth/Supabase documentation to find the
       intended non-secret development configuration.
-- [ ] Restore intended sign-in gating for `/account`, `/forms`, protected Count
+- [x] Restore intended sign-in gating for `/account`, `/forms`, protected Count
       Sheet routes, and report output routes.
-- [ ] Verify unauthenticated protected APIs return 401 rather than a 500 runtime
+- [x] Verify unauthenticated protected APIs return 401 rather than a 500 runtime
       error.
-- [ ] Never insert production credentials or bypass server authorization.
-- [ ] Rerun the seven browser checks that were blocked by absent local public
+- [x] Never insert production credentials or bypass server authorization.
+- [x] Rerun the seven browser checks that were blocked by absent local public
       Supabase configuration.
 
-**Current gate (2026-08-31):** The running local preview lacks its public
-Supabase variables and local status reports required services stopped. The
-approved qualification runner is restricted to the expected local target, but
-intentionally resets the fictional local database several times; it awaits owner
-confirmation before that reset occurs. No hosted service was touched.
+**Completed (2026-08-31):** `npm run test:e2e:local-public` now reads only the
+verified local public Supabase values, builds a temporary local server, and runs
+the public-preview plus unauthenticated protected-route checks without resetting
+the local database. All 25 checks pass, including the seven that formerly failed
+before sign-in or a 401 response. The broader authenticated runner remains
+separately reset-gated. No hosted service was touched.
 
 **Exit evidence:** Protected local routes reach their designed authentication
 state, or a precise external configuration blocker is recorded.
@@ -131,8 +132,7 @@ preserve review-first, source-visible workflow rules.
 **Current quality evidence (2026-08-31):** Formatting, lint, typecheck, the
 production build, tracked-secret scan, runtime-logging scan, and dependency
 audit pass. The full test gate reports 764 passing and one intentionally skipped
-test, and the operations guard suite passes. The current preview browser suite
-has 20 passing checks and the same seven protected-route checks blocked by the
-missing local public Supabase configuration; all remaining failures are the
-recorded Wave 2 gate, not visual or accessibility regressions in public
-previews.
+test, and the operations guard suite passes. The reset-free local public browser
+qualification passes all 25 official checks, including unauthenticated account,
+forms, Count Sheet print, and report-output gates. The broader local
+authenticated qualification remains deliberately reset-gated.
