@@ -88,10 +88,10 @@ mobile and print test passes.
 
 ## Wave 4 — Shared UI consistency
 
-- [ ] Inventory the existing shared header, notice, status, empty, and error
+- [x] Inventory the existing shared header, notice, status, empty, and error
       implementations.
-- [ ] Reuse existing visual tokens and focus treatment.
-- [ ] Create or extend a shared primitive only when the behavior genuinely
+- [x] Reuse existing visual tokens and focus treatment.
+- [x] Create or extend a shared primitive only when the behavior genuinely
       recurs; avoid route-local duplicates and broad rewrites.
 - [ ] Ensure status, error, busy, and unavailable states are truthful,
       accessible, and preserve visible user input.
@@ -99,6 +99,10 @@ mobile and print test passes.
 
 **Exit evidence:** Repeated states align across pages without changing route or
 business behavior.
+
+**Progress evidence:** The shared recovery surface now handles both recovery
+links and the bounded root-error retry action (`3755547`), with component tests
+and a production build passing. Authenticated state coverage remains in Wave 5.
 
 ## Wave 5 — Authenticated-flow and administrator review
 
