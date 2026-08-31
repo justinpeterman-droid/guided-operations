@@ -243,6 +243,37 @@ class AnswerKeyVerificationTests(unittest.TestCase):
                 2,
             )
 
+    def test_main_rejects_a_question_heading_without_an_identifier(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            key = root / "answer-key.md"
+            key.write_text(
+                """# Draft
+
+### 
+
+**Question:** Malformed question without an identifier.
+
+**Expected answer:** It must not pass verification.
+
+**Citation:** NCU 9.26.0, page 3
+
+> "Photographs will be taken of any inmate that has been contaminated with OC during an immediate use of force."
+
+**Owner review:** KEEP
+""",
+                encoding="utf-8",
+            )
+            corpus_root = root / "corpus"
+            corpus_root.mkdir()
+
+            self.assertEqual(
+                verify_answer_key.main(
+                    ["--corpus-root", str(corpus_root), "--key", str(key)]
+                ),
+                2,
+            )
+
 
 if __name__ == "__main__":
     unittest.main()
