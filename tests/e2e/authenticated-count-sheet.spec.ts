@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 
 import {
   createLocalQualificationOfficer,
@@ -8,6 +8,25 @@ import {
 test.describe.configure({ mode: "serial" });
 
 let officer: LocalQualificationCredentials;
+
+async function enterKnownZeroes(page: Page) {
+  await page
+    .locator(
+      ".count-sheet-table-wrap input, .operational-inputs input[type='text']",
+    )
+    .evaluateAll((inputs) => {
+      const valueSetter = Object.getOwnPropertyDescriptor(
+        HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      if (!valueSetter) throw new Error("Count input value setter is missing.");
+      for (const input of inputs) {
+        valueSetter.call(input, "0");
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        input.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+}
 
 test.beforeAll(async () => {
   officer = await createLocalQualificationOfficer();
@@ -106,6 +125,7 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
 
   await page.getByLabel("Count started").fill("08:00");
   await page.getByLabel("Count ended").fill("08:15");
+  await enterKnownZeroes(page);
   await page.getByLabel("Chow Hall, 1", { exact: true }).fill("2");
   await page.getByLabel("In housing, 1", { exact: true }).fill("8");
   await page.getByLabel("Operational total, on site").fill("10");

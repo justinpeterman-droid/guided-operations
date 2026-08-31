@@ -313,6 +313,32 @@ test("an officer and administrator can use the protected per-officer report work
   await expect(page.getByText("Officer observation")).toBeVisible();
   await expect(page.getByText("Unassigned observation")).toHaveCount(0);
   await expect(page.getByText(/raw note that must not reach/)).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Copy to Records" }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Copy to Records" })).toHaveCount(
+    0,
+  );
+
+  await page.getByRole("tab", { name: /Notes & Facts/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Notes & Facts" }),
+  ).toBeVisible();
+  await expect(page.getByText("Officer observation")).toBeVisible();
+  await page.getByRole("tab", { name: /^Paperwork/ }).click();
+  await expect(page.getByRole("heading", { name: "Paperwork" })).toBeVisible();
+  await expect(
+    page.getByText(
+      /(No approved paperwork catalog matches|Digital capability stays explicit)/i,
+    ),
+  ).toBeVisible();
+  await page.getByRole("tab", { name: "Incident Record" }).click();
+  await expect(
+    page.getByRole("heading", { name: "Incident Record" }),
+  ).toBeVisible();
+  await expect(page.getByText("Current incident details")).toBeVisible();
+  await page.getByRole("tab", { name: /^Reports/ }).click();
+  await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
 
   const checkbox = page.getByRole("checkbox", {
     name: /Officer observation/,
@@ -334,6 +360,14 @@ test("an officer and administrator can use the protected per-officer report work
   await expect(
     page.getByRole("tablist", { name: "Document Studio sections" }),
   ).toBeHidden();
+  await page
+    .getByRole("combobox", { name: "Document Studio section" })
+    .selectOption("paperwork");
+  await expect(page.getByRole("heading", { name: "Paperwork" })).toBeVisible();
+  await page
+    .getByRole("combobox", { name: "Document Studio section" })
+    .selectOption("reports");
+  await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
   await expect
     .poll(() =>
       page.evaluate(
@@ -341,6 +375,10 @@ test("an officer and administrator can use the protected per-officer report work
       ),
     )
     .toBe(true);
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(
+    page.getByRole("tablist", { name: "Document Studio sections" }),
+  ).toBeVisible();
 
   const finalNarrative =
     "Fictional officer-reviewed narrative created during local qualification.";

@@ -38,10 +38,9 @@ export default async function AdminPage() {
           Support the team without losing the safeguards.
         </h1>
         <p>
-          This page is available only to a current administrator account. The
-          roster and account controls are being added with extra checks so a
-          person cannot accidentally enable, disable, or reset the wrong
-          account.
+          Choose the protected task you need below. Each destination rechecks
+          current administrator authority, and account-changing actions require
+          a deliberate passcode confirmation before anything changes.
         </p>
       </section>
 

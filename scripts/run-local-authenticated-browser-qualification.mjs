@@ -1,5 +1,8 @@
 import { spawnSync } from "node:child_process";
+import { createConnection } from "node:net";
 import { resolve } from "node:path";
+import { setTimeout as delay } from "node:timers/promises";
+import postgres from "postgres";
 
 import { validateLocalBrowserQualificationRequest } from "./local-authenticated-browser-qualification-guard.mjs";
 
@@ -67,11 +70,60 @@ function readLocalSupabaseStatus() {
   }
 }
 
-function resetLocalDatabase() {
+function waitForDatabaseSocket(databaseUrl) {
+  const target = new URL(databaseUrl);
+  const port = Number(target.port);
+  return new Promise((resolve, reject) => {
+    const socket = createConnection({ host: target.hostname, port });
+    socket.setTimeout(1_000);
+    socket.once("connect", () => {
+      socket.end();
+      resolve();
+    });
+    socket.once("error", reject);
+    socket.once("timeout", () => {
+      socket.destroy();
+      reject(new Error("Local database connection timed out."));
+    });
+  });
+}
+
+async function localSeedIsReady(databaseUrl) {
+  const sql = postgres(databaseUrl, {
+    connect_timeout: 1,
+    idle_timeout: 1,
+    max: 1,
+    prepare: false,
+  });
+  try {
+    const rows = await sql.unsafe(
+      "select exists (select 1 from app_private.facilities where singleton_key = 1) as ready",
+    );
+    return rows[0]?.ready === true;
+  } finally {
+    await sql.end({ timeout: 1 });
+  }
+}
+
+async function waitForLocalDatabase(databaseUrl) {
+  for (let attempt = 0; attempt < 120; attempt += 1) {
+    try {
+      await waitForDatabaseSocket(databaseUrl);
+      if (await localSeedIsReady(databaseUrl)) return;
+    } catch {
+      // The restarted local database may be listening before its seed is ready.
+    }
+    await delay(250);
+  }
+  throw new Error("The local database seed did not become ready after reset.");
+}
+
+async function resetLocalDatabase(databaseUrl) {
   const result = command(supabaseCli, ["db", "reset"]);
   if (result.status !== 0) {
     throw new Error("The guarded local database reset failed.");
   }
+  await waitForLocalDatabase(databaseUrl);
 }
 
 let target;
@@ -133,7 +185,7 @@ if (target) {
     if (buildResult.status !== 0) {
       throw new Error("The production-style browser build failed.");
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const sessionResult = command(
       vitestCli,
       ["run", "src/lib/supabase/local-encrypted-session.integration.test.ts"],
@@ -142,7 +194,7 @@ if (target) {
     if (sessionResult.status !== 0) {
       throw new Error("The encrypted local session integration check failed.");
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const signInResistanceResult = command(
       playwrightCli,
       [
@@ -156,7 +208,7 @@ if (target) {
     if (signInResistanceResult.status !== 0) {
       throw new Error("The sign-in resistance qualification failed.");
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const sessionRevocationResult = command(
       playwrightCli,
       [
@@ -172,7 +224,7 @@ if (target) {
         "The multi-device session revocation qualification failed.",
       );
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const publicBrowserResult = command(
       playwrightCli,
       ["test", ...publicBrowserQualificationSpecs],
@@ -181,7 +233,7 @@ if (target) {
     if (publicBrowserResult.status !== 0) {
       throw new Error("The public local browser qualification failed.");
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const result = command(
       playwrightCli,
       [
@@ -195,7 +247,7 @@ if (target) {
     if (result.status !== 0) {
       throw new Error("The authenticated Officer qualification failed.");
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const reportWorkspaceResult = command(
       playwrightCli,
       [
@@ -211,7 +263,7 @@ if (target) {
         "The authenticated Report Assistant qualification failed.",
       );
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const incidentCreationResult = command(
       playwrightCli,
       [
@@ -227,7 +279,7 @@ if (target) {
         "The authenticated incident creation qualification failed.",
       );
     }
-    resetLocalDatabase();
+    await resetLocalDatabase(target.databaseUrl);
     const adminResult = command(
       playwrightCli,
       [
@@ -247,7 +299,7 @@ if (target) {
     );
   } finally {
     try {
-      resetLocalDatabase();
+      await resetLocalDatabase(target.databaseUrl);
       cleanupStatus = 0;
     } catch (error) {
       console.error(

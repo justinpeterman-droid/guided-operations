@@ -100,6 +100,18 @@ test("a fictional administrator uses the protected roster and status pages", asy
       name: "Support the team without losing the safeguards.",
     }),
   ).toBeVisible();
+  await expect(
+    page.getByText(/Choose the protected task you need below/i),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "View Daily Paperwork" }),
+  ).toBeVisible();
+  await expect(page.getByRole("link", { name: "View accounts" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View activity" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "View health" })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: "View records controls" }),
+  ).toBeVisible();
 
   await page.goto("/forms");
   await expect(

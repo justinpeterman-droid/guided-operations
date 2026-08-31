@@ -111,14 +111,27 @@ route. Authenticated state coverage remains in Wave 5.
 
 - [ ] Visually audit all four authenticated Document Studio sections and their
       loading, empty, error, conflict, unsaved, review, and success states.
-- [ ] Keep Copy to Records subordinate to Reports.
-- [ ] Make administrator overview prioritize authorized actionable work rather
+- [x] Keep Copy to Records subordinate to Reports.
+- [x] Make administrator overview prioritize authorized actionable work rather
       than planned-feature cards or fabricated metrics.
 - [ ] Verify keyboard order, focus visibility, labels, live announcements,
       mobile layout, zoom, and print behavior.
 
 **Exit evidence:** Authenticated journeys have current browser evidence and
 preserve review-first, source-visible workflow rules.
+
+**Progress evidence (2026-08-31):** The explicit fictional-only reset lane now
+passes end to end: encrypted-session integration; sign-in resistance;
+multi-device session revocation; 25 public checks; protected Count Sheet save,
+reopen, and print; the officer/admin Report Assistant lifecycle (including all
+four Document Studio sections, subordinate Copy to Records, mobile section
+navigation, and desktop tab navigation); protected incident creation; and three
+administrator boundary/roster checks. The administrator home now leads with
+the currently authorized task routes and describes their step-up safeguard
+instead of implying that account controls are merely planned. The runner waits
+for the seeded local database after every reset, preventing a restart race from
+masquerading as a product failure. The broader all-section visual-state matrix
+remains open.
 
 ## Final verification
 
@@ -150,4 +163,6 @@ branch. They are three `transformers` alerts (two high, one medium) and three
 any release decision. Matching-viewport desktop and mobile captures were
 compared against the original public workspace review images; no visual
 regression was found in the public workspace (`31-workspace-913x667-current.png`
-and `32-workspace-375x812-current.png`).
+and `32-workspace-375x812-current.png`). The complete guarded authenticated
+qualification now also passes after a fictional-only reset; it remains local
+evidence only and does not imply hosted readiness.
