@@ -1935,7 +1935,14 @@ a:focus-visible,
 }
 
 .count-sheet-table-wrap {
+  position: relative;
   overflow-x: auto;
+  scrollbar-color: #6b9ab6 #edf4f8;
+  scrollbar-width: thin;
+}
+
+.count-sheet-scroll-cue {
+  display: none;
 }
 
 .count-sheet-table-wrap table {
@@ -2677,6 +2684,10 @@ a:focus-visible,
   .count-sheet-grid {
     grid-template-columns: minmax(0, 1fr) 0.35fr;
     gap: 14px;
+  }
+
+  .count-sheet-scroll-cue {
+    display: none;
   }
 
   .count-sheet-table-wrap input,
@@ -3925,6 +3936,52 @@ a:focus-visible,
   .count-sheet-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .count-sheet-heading-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    justify-items: stretch;
+  }
+
+  .count-sheet-heading-actions .not-saved-label {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+
+  .count-sheet-heading-actions .count-sheet-print-button {
+    min-height: 44px;
+    width: 100%;
+  }
+
+  .count-sheet-scroll-cue {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    display: block;
+    width: max-content;
+    margin: 12px 12px -4px;
+    padding: 6px 9px;
+    color: #315c78;
+    background: #edf4f8;
+    border: 1px solid #b9c9d5;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    font-weight: 800;
+  }
+
+  .count-sheet-table-wrap thead th:first-child,
+  .count-sheet-table-wrap tbody th {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: #fff;
+    box-shadow: 4px 0 8px rgba(42, 69, 91, 0.08);
+  }
+
+  .count-sheet-table-wrap thead th:first-child {
+    z-index: 2;
+    background: #edf4f8;
   }
 
   .workflow-steps ol,

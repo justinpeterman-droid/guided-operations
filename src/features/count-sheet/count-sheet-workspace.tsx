@@ -443,7 +443,12 @@ export function CountSheetWorkspace({
       </div>
 
       <div className="count-sheet-grid">
-        <div className="count-sheet-table-wrap">
+        <div
+          aria-label="Count entries by area and unit. Scroll horizontally to view all units."
+          className="count-sheet-table-wrap"
+          role="region"
+        >
+          <p className="count-sheet-scroll-cue">Swipe to view all units</p>
           <table>
             <caption>Out-of-housing count by area and unit</caption>
             <thead>

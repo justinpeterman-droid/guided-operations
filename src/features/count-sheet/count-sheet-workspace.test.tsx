@@ -60,6 +60,11 @@ describe("CountSheetWorkspace", () => {
     expect(
       screen.getByText("Incomplete — enter known values to reconcile."),
     ).toBeVisible();
+    expect(
+      screen.getByRole("region", {
+        name: "Count entries by area and unit. Scroll horizontally to view all units.",
+      }),
+    ).toHaveTextContent("Swipe to view all units");
     await user.type(screen.getByRole("textbox", { name: "Chow Hall, 1" }), "2");
     await user.type(
       screen.getByRole("textbox", { name: "In housing, 1" }),

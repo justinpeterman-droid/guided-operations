@@ -26,6 +26,11 @@ describe("CountSheetPreview", () => {
     expect(
       screen.queryByText("Reconciled — review before any future save."),
     ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("region", {
+        name: "Count entries by fictional area and unit. Scroll horizontally to view all units.",
+      }),
+    ).toHaveTextContent("Swipe to view all units");
   });
 
   it("calculates a fictional reconciliation locally without claiming a save", async () => {
