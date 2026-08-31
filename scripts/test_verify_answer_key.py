@@ -60,6 +60,16 @@ class AnswerKeyVerificationTests(unittest.TestCase):
         )
         self.assertNotIn("C:\\Users\\", str(verify_answer_key.DEFAULT_KEY_PATH))
 
+    def test_dashed_and_spaced_policy_numbers_share_one_canonical_key(self):
+        self.assertEqual(
+            verify_answer_key.canonical_policy_number("NCU-9.26.0"),
+            verify_answer_key.canonical_policy_number("NCU 9.26.0"),
+        )
+        self.assertEqual(
+            verify_answer_key.canonical_policy_number("NCU-9.26.0"),
+            "NCU9.26.0",
+        )
+
     def test_quote_and_page_match_does_not_approve_the_answer_claim(self):
         questions = verify_answer_key.parse_answer_key(self.markdown())
 
