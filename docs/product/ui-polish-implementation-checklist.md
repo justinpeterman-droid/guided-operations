@@ -125,7 +125,7 @@ preserve review-first, source-visible workflow rules.
 - [x] Run formatting, lint, typecheck, focused tests, full tests when practical,
       preview browser tests, production build, and security-diff review.
 - [x] Inspect browser console errors and failed assets on changed routes.
-- [ ] Compare before/after desktop and mobile screenshots instead of blindly
+- [x] Compare before/after desktop and mobile screenshots instead of blindly
       regenerating baselines.
 - [x] Record any unresolved local environment requirement without credentials.
 - [x] Keep commit/push, pull request, deployment, migration, pilot, and
@@ -147,4 +147,7 @@ vulnerabilities; GitHub still reports six Dependabot alerts on the default
 branch. They are three `transformers` alerts (two high, one medium) and three
 `torch` alerts (one medium, two low), all in the optional policy-ingestion
 `uv.lock`; they require separate dependency and ingestion qualification before
-any release decision.
+any release decision. Matching-viewport desktop and mobile captures were
+compared against the original public workspace review images; no visual
+regression was found in the public workspace (`31-workspace-913x667-current.png`
+and `32-workspace-375x812-current.png`).
