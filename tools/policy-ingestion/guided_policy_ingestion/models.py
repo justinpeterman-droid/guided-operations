@@ -37,10 +37,10 @@ class ExtractionResult:
     extraction_tool: str
     extraction_version: str
     extraction_model_version: str | None
-    observed_page_count: int | None = None
     warnings: tuple[str, ...] = ()
     layout_reference: str | None = None
     layout_metadata_sha256: str | None = None
+    observed_page_count: int | None = None
 
 
 @dataclass(frozen=True)
