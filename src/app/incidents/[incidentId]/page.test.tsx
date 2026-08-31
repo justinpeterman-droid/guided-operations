@@ -1,5 +1,4 @@
 import { render, screen } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
 vi.mock("@/lib/supabase/server", () => ({
@@ -47,8 +46,7 @@ vi.mock("@/app/incidents/[incidentId]/report-draft-request-form", () => ({
 import IncidentReportWorkspacePage from "./page";
 
 describe("IncidentReportWorkspacePage", () => {
-  it("renders the Document Studio tabs for the protected current revision", async () => {
-    const user = userEvent.setup();
+  it("renders the guided four-section workspace for the protected revision", async () => {
     render(
       await IncidentReportWorkspacePage({
         params: Promise.resolve({
@@ -64,8 +62,15 @@ describe("IncidentReportWorkspacePage", () => {
     expect(
       screen.getByRole("tablist", { name: "Document Studio sections" }),
     ).toBeVisible();
-    expect(screen.getByRole("tab", { name: /Officer Reports/i })).toBeVisible();
-    await user.click(screen.getByRole("tab", { name: /Officer Reports/i }));
+    expect(screen.getAllByRole("tab")).toHaveLength(4);
+    expect(screen.getByRole("tab", { name: /^Reports/i })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.getByRole("combobox", { name: "Document Studio section" }),
+    ).toHaveValue("reports");
     expect(screen.getByText(/No active reporting officer/)).toBeVisible();
+    expect(screen.getByText(/cannot be attributed yet/i)).toBeVisible();
   });
 });
