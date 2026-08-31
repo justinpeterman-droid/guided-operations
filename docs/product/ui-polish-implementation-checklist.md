@@ -127,3 +127,12 @@ preserve review-first, source-visible workflow rules.
 - [ ] Record any unresolved local environment requirement without credentials.
 - [ ] Keep commit/push, pull request, deployment, migration, pilot, and
       production decisions separate for owner approval.
+
+**Current quality evidence (2026-08-31):** Formatting, lint, typecheck, the
+production build, tracked-secret scan, runtime-logging scan, and dependency
+audit pass. The full test gate reports 764 passing and one intentionally skipped
+test, and the operations guard suite passes. The current preview browser suite
+has 20 passing checks and the same seven protected-route checks blocked by the
+missing local public Supabase configuration; all remaining failures are the
+recorded Wave 2 gate, not visual or accessibility regressions in public
+previews.
