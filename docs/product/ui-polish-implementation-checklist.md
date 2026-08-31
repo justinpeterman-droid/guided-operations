@@ -144,4 +144,7 @@ runtime-logging scan, and the focused 15-check browser accessibility suite all
 pass. Browser checks report no console errors or failed assets on the reviewed
 routes. The local high-severity dependency audit currently finds zero
 vulnerabilities; GitHub still reports six Dependabot alerts on the default
-branch, which requires separate hosted-alert triage before any release decision.
+branch. They are three `transformers` alerts (two high, one medium) and three
+`torch` alerts (one medium, two low), all in the optional policy-ingestion
+`uv.lock`; they require separate dependency and ingestion qualification before
+any release decision.
