@@ -285,24 +285,6 @@ a:focus-visible,
   font-weight: 800;
 }
 
-.sign-in-card .sign-in-action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  min-height: 44px;
-  margin-top: 14px;
-  padding: 12px 16px;
-  color: #fff;
-  background: linear-gradient(180deg, var(--gow-navy-800), var(--gow-navy-950));
-  border: 1px solid rgba(231, 189, 90, 0.45);
-  border-radius: var(--gow-radius-control);
-  box-shadow: 0 10px 22px rgba(7, 31, 56, 0.16);
-  font-weight: 800;
-  text-align: center;
-  text-decoration: none;
-}
-
 .brand-bar .workspace-guided-mark {
   width: 46px;
   height: 46px;
