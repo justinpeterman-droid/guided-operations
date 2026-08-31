@@ -127,6 +127,8 @@ def parse_answer_key(markdown: str) -> tuple[AnswerKeyQuestion, ...]:
     for block in markdown.split("\n### ")[1:]:
         heading = block.split("\n", 1)[0].strip()
         question_id = heading.split(" ", 1)[0].strip()
+        if not heading or not question_id:
+            raise ValueError("Answer key question heading has no identifier")
         review_match = OWNER_REVIEW_PATTERN.search(block)
         questions.append(
             AnswerKeyQuestion(
