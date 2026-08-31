@@ -94,7 +94,7 @@ mobile and print test passes.
 - [x] Reuse existing visual tokens and focus treatment.
 - [x] Create or extend a shared primitive only when the behavior genuinely
       recurs; avoid route-local duplicates and broad rewrites.
-- [ ] Ensure status, error, busy, and unavailable states are truthful,
+- [x] Ensure status, error, busy, and unavailable states are truthful,
       accessible, and preserve visible user input.
 - [x] Keep fictional-preview labels unmistakable.
 
@@ -105,7 +105,11 @@ business behavior.
 links and the bounded root-error retry action (`3755547`), with component tests
 and a production build passing. The mobile reduced-motion browser check now
 verifies the shared `Fictional training preview` label on every public preview
-route. Authenticated state coverage remains in Wave 5.
+route. A focused component pass now confirms truthful Document Studio
+unavailable/empty copy and the revision form's conflict recovery; the latter
+keeps the officer's typed correction visible after the server returns `409`. The
+same pattern is used for loading and status messaging through `aria-busy`,
+`role="status"`, and polite live regions rather than fabricated success states.
 
 ## Wave 5 — Authenticated-flow and administrator review
 
@@ -126,12 +130,27 @@ multi-device session revocation; 25 public checks; protected Count Sheet save,
 reopen, and print; the officer/admin Report Assistant lifecycle (including all
 four Document Studio sections, subordinate Copy to Records, mobile section
 navigation, and desktop tab navigation); protected incident creation; and three
-administrator boundary/roster checks. The administrator home now leads with
-the currently authorized task routes and describes their step-up safeguard
-instead of implying that account controls are merely planned. The runner waits
-for the seeded local database after every reset, preventing a restart race from
+administrator boundary/roster checks. The administrator home now leads with the
+currently authorized task routes and describes their step-up safeguard instead
+of implying that account controls are merely planned. The runner waits for the
+seeded local database after every reset, preventing a restart race from
 masquerading as a product failure. The broader all-section visual-state matrix
 remains open.
+
+**Local visual-audit evidence (2026-08-31):** With a clean fictional reset, the
+in-app browser captured the real protected Report workspace at desktop
+(`34-document-studio-reports-desktop.png`) and reviewed its four actual
+sections: Reports, Notes & Facts, Paperwork, and Incident Record (`35`–`37`).
+The 390 px browser capture (`39-document-studio-reports-mobile-viewport.png`)
+confirms that the same section switcher becomes a labelled select control
+without horizontal overflow. The administrator overview capture
+(`41-admin-overview-desktop.png`) shows only protected actionable routes and its
+step-up warning. The browser qualification exercised review, finalization,
+revision success, `409` conflict, and preservation of the stale typed
+correction; the focused component pass checked Document Studio error/empty copy.
+Loading, a live screen-reader announcement, a true browser-zoom pass, and an
+operating-system print-dialog review remain deliberately open rather than
+inferred from screenshots.
 
 ## Final verification
 
