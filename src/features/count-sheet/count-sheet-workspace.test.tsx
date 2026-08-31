@@ -61,6 +61,12 @@ describe("CountSheetWorkspace", () => {
       screen.getByText("Incomplete — enter known values to reconcile."),
     ).toBeVisible();
     expect(
+      screen.getByRole("region", { name: "North Central Unit Count Sheet" }),
+    ).toHaveAttribute("aria-busy", "false");
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /No saved sheet exists for this date.*Do not guess a number/i,
+    );
+    expect(
       screen.getByRole("region", {
         name: "Count entries by area and unit. Scroll horizontally to view all units.",
       }),
@@ -159,6 +165,9 @@ describe("CountSheetWorkspace", () => {
     expect(
       await screen.findByText(/Recording the print request/),
     ).toBeVisible();
+    expect(screen.getByRole("status")).toHaveTextContent(
+      /Recording the print request/i,
+    );
     expect(
       screen.getByRole("textbox", { name: "Chow Hall, 1" }),
     ).toBeDisabled();

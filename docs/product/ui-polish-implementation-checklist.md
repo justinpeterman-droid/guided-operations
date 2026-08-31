@@ -110,6 +110,9 @@ unavailable/empty copy and the revision form's conflict recovery; the latter
 keeps the officer's typed correction visible after the server returns `409`. The
 same pattern is used for loading and status messaging through `aria-busy`,
 `role="status"`, and polite live regions rather than fabricated success states.
+The focused Count Sheet tests also now require the loaded blank sheet to expose
+its truthful status, and require the print-audit busy state to remain an
+accessible status while entry controls are locked.
 
 ## Wave 5 — Authenticated-flow and administrator review
 
