@@ -5,8 +5,11 @@ begin;
 -- this constraint protects direct RPC callers and every future write path.
 alter table app_private.answer_reports
   add constraint answer_reports_citations_payload_bounded
-  check (octet_length(citations::text) <= 32768)
-  not valid;
+  check (octet_length(citations::text) <= 32768);
+
+-- Do not rewrite historical 'as shown' citations. Adding the constraint as valid
+-- verifies every existing row and fails the migration if an owner must review one.
+-- New and historical records therefore share the same storage guarantee.
 
 create or replace function api.report_policy_answer(
   p_question text,
