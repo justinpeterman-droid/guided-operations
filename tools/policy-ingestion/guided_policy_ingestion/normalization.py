@@ -30,7 +30,10 @@ def normalize_extraction(source: SourceFile, extraction: ExtractionResult) -> tu
     by_page: dict[int, list] = defaultdict(list)
     for block in extraction.blocks:
         by_page[block.page_index].append(block)
-    page_count = extraction.page_count or (max(by_page) + 1 if by_page else 0)
+    if extraction.observed_page_count is not None:
+        page_count = extraction.observed_page_count
+    else:
+        page_count = extraction.page_count or (max(by_page) + 1 if by_page else 0)
     heading_stack: list[str] = []
     pages: list[NormalizedPage] = []
     for zero_based_index in range(page_count):
