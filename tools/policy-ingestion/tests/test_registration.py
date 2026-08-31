@@ -7,11 +7,12 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from guided_policy_ingestion.registration import (
-    _safe_database_detail,
     PolicySource,
     RegistrationErrorSafe,
     RightsAttestation,
+    _safe_database_detail,
     load_manifests,
+    production_connection_options,
     slugify,
     stable_keys_for,
     with_byte_sizes,
@@ -20,7 +21,9 @@ from guided_policy_ingestion.registration import (
 _STABLE_KEY_ALPHABET = set("abcdefghijklmnopqrstuvwxyz0123456789_-")
 
 
-def _manifest(root: Path, slug: str, sha: str, filename: str, collection: str, pages: int = 4):
+def _manifest(
+    root: Path, slug: str, sha: str, filename: str, collection: str, pages: int = 4
+):
     directory = root / slug / sha / "config" / "attempt-0001"
     directory.mkdir(parents=True, exist_ok=True)
     (directory / "manifest.json").write_text(
@@ -55,23 +58,29 @@ class SlugTests(unittest.TestCase):
 class StableKeyTests(unittest.TestCase):
     def test_readable_keys_stay_readable_when_nothing_collides(self):
         sources = (
-            PolicySource("a" * 64, "SD", "SD 01-02 Grievances.pdf", "application/pdf", 3),
-            PolicySource("b" * 64, "SD", "SD 03-04 Visitation.pdf", "application/pdf", 3),
+            PolicySource(
+                "a" * 64, "SD", "SD 01-02 Grievances.pdf", "application/pdf", 3
+            ),
+            PolicySource(
+                "b" * 64, "SD", "SD 03-04 Visitation.pdf", "application/pdf", 3
+            ),
         )
         keys = stable_keys_for(sources)
-        self.assertEqual(keys["a" * 64], "sd-01-02-grievances")
-        self.assertEqual(keys["b" * 64], "sd-03-04-visitation")
+        self.assertEqual(keys["a" * 64], "sd-01-02-grievances-aaaaaaaa")
+        self.assertEqual(keys["b" * 64], "sd-03-04-visitation-bbbbbbbb")
 
-    def test_only_the_colliding_keys_take_a_hash_suffix(self):
+    def test_hash_suffixes_distinguish_collisions_across_separate_runs(self):
         sources = (
             PolicySource("a" * 64, "SD", "Count Sheet.pdf", "application/pdf", 1),
-            PolicySource("b" * 64, "BMU policies", "Count  Sheet!.pdf", "application/pdf", 1),
+            PolicySource(
+                "b" * 64, "BMU policies", "Count  Sheet!.pdf", "application/pdf", 1
+            ),
             PolicySource("c" * 64, "SD", "Unique Title.pdf", "application/pdf", 1),
         )
         keys = stable_keys_for(sources)
         self.assertNotEqual(keys["a" * 64], keys["b" * 64])
         self.assertTrue(keys["a" * 64].endswith("aaaaaaaa"))
-        self.assertEqual(keys["c" * 64], "unique-title")
+        self.assertEqual(keys["c" * 64], "unique-title-cccccccc")
 
     def test_a_filename_with_no_usable_characters_still_gets_a_key(self):
         sources = (PolicySource("d" * 64, "SD", "!!!.pdf", "application/pdf", 1),)
@@ -87,6 +96,39 @@ class StoragePathTests(unittest.TestCase):
         )
         self.assertEqual(source.storage_path, f"bmu-post-orders/{'e' * 64}.pdf")
         self.assertNotIn("Tower", source.storage_path)
+
+
+class ProductionConnectionOptionsTests(unittest.TestCase):
+    def test_requires_a_ca_certificate_for_production(self):
+        with self.assertRaises(RegistrationErrorSafe):
+            production_connection_options(
+                "postgresql://fictional@example.invalid/postgres",
+                None,
+            )
+
+    def test_upgrades_tls_and_supplies_the_ca_certificate(self):
+        with tempfile.NamedTemporaryFile() as certificate:
+            self.assertEqual(
+                production_connection_options(
+                    "postgresql://fictional@example.invalid/postgres?sslmode=require",
+                    certificate.name,
+                ),
+                {
+                    "sslmode": "verify-full",
+                    "sslrootcert": certificate.name,
+                },
+            )
+
+    def test_preserves_verify_full_and_ca_settings_from_the_url(self):
+        with tempfile.NamedTemporaryFile() as certificate:
+            self.assertEqual(
+                production_connection_options(
+                    "postgresql://fictional@example.invalid/postgres"
+                    f"?sslmode=verify-full&sslrootcert={certificate.name}",
+                    None,
+                ),
+                {},
+            )
 
 
 class ManifestLoadingTests(unittest.TestCase):
@@ -134,7 +176,8 @@ class ManifestLoadingTests(unittest.TestCase):
             directory = root / "sd" / "short" / "config" / "attempt-0001"
             directory.mkdir(parents=True, exist_ok=True)
             (directory / "manifest.json").write_text(
-                json.dumps({"collection": "SD", "source_sha256": "abc"}), encoding="utf-8"
+                json.dumps({"collection": "SD", "source_sha256": "abc"}),
+                encoding="utf-8",
             )
             with self.assertRaises(RegistrationErrorSafe):
                 load_manifests(root)
@@ -213,7 +256,7 @@ class SafeDatabaseDetailTests(unittest.TestCase):
 
     def test_reports_the_code_table_and_constraint(self):
         error = _DatabaseError(
-            'insert violates foreign key; DETAIL: Key (id)=(BMU 1.03.0 Roles) is absent',
+            "insert violates foreign key; DETAIL: Key (id)=(BMU 1.03.0 Roles) is absent",
             sqlstate="23503",
             diag=_Diagnostics(
                 table="policy_document_versions",
@@ -227,9 +270,11 @@ class SafeDatabaseDetailTests(unittest.TestCase):
 
     def test_never_echoes_the_offending_value(self):
         error = _DatabaseError(
-            'duplicate key; DETAIL: Key (stable_key)=(bmu-1-03-0-roles-of-consultants) exists',
+            "duplicate key; DETAIL: Key (stable_key)=(bmu-1-03-0-roles-of-consultants) exists",
             sqlstate="23505",
-            diag=_Diagnostics(table="policy_documents", constraint="policy_documents_key"),
+            diag=_Diagnostics(
+                table="policy_documents", constraint="policy_documents_key"
+            ),
         )
         detail = _safe_database_detail(error)
         self.assertNotIn("bmu-1-03-0", detail)

@@ -19,7 +19,7 @@ export default async function AdminPage() {
   if (access === "unavailable")
     return (
       <AdminUnavailableMessage
-        description="No account settings have been changed."
+        description="The administrator workspace is unavailable right now."
         eyebrow="Administrator workspace unavailable"
         title="This page cannot load right now."
       />

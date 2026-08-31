@@ -6,8 +6,7 @@ import {
 import { DocumentStudio } from "@/features/incidents/document-studio";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
-import { listIncidentsForCurrentSession } from "@/server/incidents/list-incidents";
-import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
+import { listReportsForIncidentCurrentSession } from "@/server/incidents/list-reports";
 
 export const dynamic = "force-dynamic";
 
@@ -48,10 +47,7 @@ export default async function IncidentReportWorkspacePage({
     );
   }
 
-  const [incident, reports] = await Promise.all([
-    loadIncidentSummary(incidentId),
-    loadIncidentReports(result.workspace.incidentNumber),
-  ]);
+  const reports = await loadIncidentReports(incidentId);
 
   return (
     <WorkspaceShell current="Reports" title="Document Studio">
@@ -71,7 +67,7 @@ export default async function IncidentReportWorkspacePage({
       </section>
 
       <DocumentStudio
-        incident={incident}
+        incident={result.incident}
         reports={reports}
         workspace={result.workspace}
       />
@@ -90,32 +86,14 @@ export async function loadIncidentReportWorkspace(incidentId: unknown) {
   }
 }
 
-async function loadIncidentSummary(incidentId: string) {
+async function loadIncidentReports(incidentId: string) {
   try {
-    const listed = await listIncidentsForCurrentSession(
+    const listed = await listReportsForIncidentCurrentSession(
       await createSupabaseServerClient(),
-      100,
-    );
-    if (listed.kind !== "listed") return null;
-    return (
-      listed.incidents.find((incident) => incident.incidentId === incidentId) ??
-      null
-    );
-  } catch {
-    return null;
-  }
-}
-
-async function loadIncidentReports(incidentNumber: string) {
-  try {
-    const listed = await listReportsForCurrentSession(
-      await createSupabaseServerClient(),
-      100,
+      incidentId,
     );
     if (listed.kind !== "listed") return [];
-    return listed.reports.filter(
-      (report) => report.incidentNumber === incidentNumber,
-    );
+    return listed.reports;
   } catch {
     return [];
   }

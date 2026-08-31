@@ -19,6 +19,7 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+from urllib.parse import parse_qs, urlsplit
 
 from .collections import COLLECTION_SLUGS, canonical_collection
 from .diagnostics import safe_database_detail as _safe_database_detail
@@ -76,9 +77,8 @@ def slugify(value: str) -> str:
 def stable_keys_for(sources: tuple[PolicySource, ...]) -> dict[str, str]:
     """Map each source hash to a unique, deterministic stable key.
 
-    Readable keys are worth having, but two policies can share a slug once
-    punctuation is stripped. Rather than make every key ugly to defend against
-    the few that clash, only the clashing ones take a hash suffix.
+    The immutable source-hash suffix prevents a later collection-only run from
+    colliding with a same-named source registered by an earlier invocation.
     """
     proposed: dict[str, str] = {}
     for source in sources:
@@ -88,21 +88,44 @@ def stable_keys_for(sources: tuple[PolicySource, ...]) -> dict[str, str]:
             slug = f"policy-{source.source_sha256[:12]}"
         proposed[source.source_sha256] = slug
 
-    counts: dict[str, int] = {}
-    for slug in proposed.values():
-        counts[slug] = counts.get(slug, 0) + 1
-
     resolved: dict[str, str] = {}
     for source_sha256, slug in proposed.items():
-        if counts[slug] > 1:
-            slug = f"{slug[:119]}-{source_sha256[:8]}"
+        slug = f"{slug[:119]}-{source_sha256[:8]}"
         if not _STABLE_KEY.match(slug):
             slug = f"policy-{source_sha256[:12]}"
         resolved[source_sha256] = slug
     return resolved
 
 
-def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[PolicySource, ...]:
+def production_connection_options(
+    database_url: str,
+    ca_certificate_path: str | None,
+) -> dict[str, str]:
+    """Require hostname-verifying TLS while preserving URL-supplied settings."""
+    query = parse_qs(urlsplit(database_url).query, keep_blank_values=True)
+    url_sslmode = query.get("sslmode", [""])[-1].lower()
+    url_sslrootcert = query.get("sslrootcert", [""])[-1].strip()
+    sslrootcert = url_sslrootcert or (ca_certificate_path or "").strip()
+    if not sslrootcert:
+        raise RegistrationErrorSafe(
+            "Production registration requires SUPABASE_DB_CA_CERTIFICATE or sslrootcert"
+        )
+    if sslrootcert != "system" and not Path(sslrootcert).is_file():
+        raise RegistrationErrorSafe(
+            "The Production database CA certificate file does not exist"
+        )
+
+    options: dict[str, str] = {}
+    if url_sslmode != "verify-full":
+        options["sslmode"] = "verify-full"
+    if not url_sslrootcert:
+        options["sslrootcert"] = sslrootcert
+    return options
+
+
+def load_manifests(
+    work_dir: Path, collection: str | None = None
+) -> tuple[PolicySource, ...]:
     """Read every extraction manifest under a work directory.
 
     A manifest exists only for a source that finished extraction, so this
@@ -125,10 +148,14 @@ def load_manifests(work_dir: Path, collection: str | None = None) -> tuple[Polic
             try:
                 manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             except (OSError, ValueError) as error:
-                raise RegistrationErrorSafe("An extraction manifest could not be read") from error
+                raise RegistrationErrorSafe(
+                    "An extraction manifest could not be read"
+                ) from error
             source_sha256 = str(manifest.get("source_sha256", ""))
             if len(source_sha256) != 64:
-                raise RegistrationErrorSafe("An extraction manifest has no usable source hash")
+                raise RegistrationErrorSafe(
+                    "An extraction manifest has no usable source hash"
+                )
             # A re-extraction writes a second attempt for the same source. The
             # identity being registered is the source, not the attempt, so the
             # first manifest seen for a hash is enough.
@@ -201,7 +228,9 @@ class RightsAttestation:
                 "External AI processing cannot be allowed while rights remain pending"
             )
         if self.rights_status != "pending" and not self.evidence_ref.strip():
-            raise RegistrationErrorSafe("An approved rights status requires an evidence reference")
+            raise RegistrationErrorSafe(
+                "An approved rights status requires an evidence reference"
+            )
 
 
 class PolicyRegistrar:
@@ -213,10 +242,17 @@ class PolicyRegistrar:
     version or silently changes one that already exists.
     """
 
-    def __init__(self, database_url: str, facility_id: str, environment: str):
+    def __init__(
+        self,
+        database_url: str,
+        facility_id: str,
+        environment: str,
+        ca_certificate_path: str | None = None,
+    ):
         self.database_url = database_url
         self.facility_id = facility_id
         self.environment = environment
+        self.ca_certificate_path = ca_certificate_path
 
     def register(
         self,
@@ -242,27 +278,33 @@ class PolicyRegistrar:
 
         keys = stable_keys_for(sources)
         reviewed_at = datetime.now(timezone.utc)
-        options = {"sslmode": "require"} if self.environment == "production" else {}
+        options = (
+            production_connection_options(
+                self.database_url,
+                self.ca_certificate_path,
+            )
+            if self.environment == "production"
+            else {}
+        )
         try:
             with psycopg.connect(self.database_url, **options) as connection:
                 for source in sources:
-                    with connection.transaction():
-                        with connection.cursor() as cursor:
-                            if self._already_registered(cursor, source):
-                                summary.already_registered += 1
-                                continue
-                            self._insert(
-                                cursor,
-                                source,
-                                keys[source.source_sha256],
-                                attestation,
-                                version_label,
-                                reviewed_at,
-                            )
-                            summary.registered += 1
+                    with connection.transaction(), connection.cursor() as cursor:
+                        if self._already_registered(cursor, source):
+                            summary.already_registered += 1
+                            continue
+                        self._insert(
+                            cursor,
+                            source,
+                            keys[source.source_sha256],
+                            attestation,
+                            version_label,
+                            reviewed_at,
+                        )
+                        summary.registered += 1
         except RegistrationErrorSafe:
             raise
-        except Exception as error:  # noqa: BLE001 - reported without row values
+        except Exception as error:
             raise RegistrationErrorSafe(
                 f"Registration failed: {_safe_database_detail(error)}"
             ) from error
@@ -313,7 +355,9 @@ class PolicyRegistrar:
         )
         row = cursor.fetchone()
         if row is None:
-            raise RegistrationErrorSafe("The policy document identity could not be created")
+            raise RegistrationErrorSafe(
+                "The policy document identity could not be created"
+            )
         document_id = row[0]
 
         cursor.execute(

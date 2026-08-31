@@ -10,6 +10,7 @@ import {
   authorizeCurrentSession,
   type CurrentSessionClient,
 } from "@/server/auth/current-session";
+import type { IncidentSummary } from "@/server/incidents/list-incidents";
 
 const reportingOfficerSchema = z
   .object({
@@ -25,7 +26,10 @@ const workspaceRowSchema = z
     incident_id: z.uuid(),
     incident_number: z.string().trim().min(1).max(80),
     display_name: z.string().trim().min(1).max(160),
+    status: z.enum(["draft", "in_review", "complete", "archived"]),
+    occurred_at: z.iso.datetime({ offset: true }),
     category: z.string().trim().min(1).max(100),
+    updated_at: z.iso.datetime({ offset: true }),
     incident_revision_id: z.uuid(),
     revision_number: z.number().int().positive(),
     schema_version: z.union([z.literal(1), z.literal(2)]),
@@ -76,7 +80,11 @@ export type IncidentReportWorkspace = Readonly<{
 }>;
 
 export type GetIncidentReportWorkspaceResult =
-  | Readonly<{ kind: "found"; workspace: IncidentReportWorkspace }>
+  | Readonly<{
+      kind: "found";
+      incident: IncidentSummary;
+      workspace: IncidentReportWorkspace;
+    }>
   | Readonly<{ kind: "denied" }>
   | Readonly<{ kind: "not_found" }>
   | Readonly<{ kind: "unavailable" }>;
@@ -105,6 +113,16 @@ export async function getIncidentReportWorkspaceForCurrentSession(
     const row = rows.data[0];
     return {
       kind: "found",
+      incident: {
+        incidentId: row.incident_id,
+        incidentNumber: row.incident_number,
+        displayName: row.display_name,
+        status: row.status,
+        occurredAt: row.occurred_at,
+        category: row.category,
+        currentRevisionNumber: row.revision_number,
+        updatedAt: row.updated_at,
+      },
       workspace: {
         incidentId: row.incident_id,
         incidentNumber: row.incident_number,

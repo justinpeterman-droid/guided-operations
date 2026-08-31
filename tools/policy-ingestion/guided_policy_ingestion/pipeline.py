@@ -117,10 +117,17 @@ class IngestionPipeline:
                 )
                 if reuse_bundle:
                     pages, chunks = _load_bundle(plan.directory)
-                    expected_page_count = len(pages)
                     manifest = json.loads(
                         (plan.directory / "manifest.json").read_text(encoding="utf-8")
                     )
+                    expected_page_count = manifest.get(
+                        "extractor_page_count",
+                        prior_state.get("extractor_page_count"),
+                    )
+                    if not isinstance(expected_page_count, int) or isinstance(
+                        expected_page_count, bool
+                    ):
+                        raise ValueError("Bundle has no original extractor page count")
                     extraction_tool = str(manifest.get("extraction_tool", "existing-bundle"))
                     extraction_version = str(
                         manifest.get("extraction_version", self.extraction_config.provider_version)
@@ -138,7 +145,12 @@ class IngestionPipeline:
                     )
                     extraction = self.provider.extract(source, plan.directory / "extraction")
                     pages = normalize_extraction(source, extraction)
-                    self.checkpoints.write_state(plan.directory, status="chunking", page_count=len(pages))
+                    self.checkpoints.write_state(
+                        plan.directory,
+                        status="chunking",
+                        page_count=len(pages),
+                        extractor_page_count=extraction.page_count,
+                    )
                     chunks = chunk_pages(
                         source,
                         pages,
@@ -168,6 +180,7 @@ class IngestionPipeline:
                             "chunking_version": self.chunking_config.version,
                             "chunking_config_sha256": self.chunking_config.sha256,
                             "configuration_sha256": self.configuration_hash,
+                            "extractor_page_count": extraction.page_count,
                             "page_count": len(pages),
                             "chunk_count": len(chunks),
                         },

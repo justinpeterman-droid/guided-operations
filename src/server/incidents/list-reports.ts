@@ -33,8 +33,17 @@ type ListReportsRpcClient = Readonly<{
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
+type ListIncidentReportsRpcClient = Readonly<{
+  rpc(
+    functionName: "list_reports_for_incident",
+    arguments_: Readonly<{ p_incident_id: string }>,
+  ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
+}>;
+
 export type ListReportsSessionClient = CurrentSessionClient &
   ListReportsRpcClient;
+export type ListIncidentReportsSessionClient = CurrentSessionClient &
+  ListIncidentReportsRpcClient;
 
 export type ReportSummary = Readonly<{
   reportId: string;
@@ -60,6 +69,40 @@ export async function listReportsForCurrentSession(
   if (!session.allowed) return { kind: "denied" };
   try {
     const result = await client.rpc("list_reports", { p_limit: limit });
+    if (result.error) return { kind: "unavailable" };
+    const rows = rowsSchema.safeParse(result.data);
+    if (!rows.success) return { kind: "unavailable" };
+    return {
+      kind: "listed",
+      reports: rows.data.map((row) => ({
+        reportId: row.report_id,
+        incidentNumber: row.incident_number,
+        incidentName: row.incident_name,
+        reportType: row.report_type,
+        status: row.status,
+        currentRevisionNumber: row.current_revision_number,
+        updatedAt: row.updated_at,
+      })),
+    };
+  } catch {
+    return { kind: "unavailable" };
+  }
+}
+
+/** Maps every authorized report summary for one incident without a global cap. */
+export async function listReportsForIncidentCurrentSession(
+  client: ListIncidentReportsSessionClient,
+  incidentIdCandidate: unknown,
+): Promise<ListReportsResult> {
+  const incidentId = z.uuid().safeParse(incidentIdCandidate);
+  if (!incidentId.success) return { kind: "listed", reports: [] };
+
+  const session = await authorizeCurrentSession(client);
+  if (!session.allowed) return { kind: "denied" };
+  try {
+    const result = await client.rpc("list_reports_for_incident", {
+      p_incident_id: incidentId.data,
+    });
     if (result.error) return { kind: "unavailable" };
     const rows = rowsSchema.safeParse(result.data);
     if (!rows.success) return { kind: "unavailable" };

@@ -90,7 +90,7 @@ This applies to both planned and immediate uses of force.
 
 **Question:** Do I need photographs if an inmate is contaminated with OC?
 
-**Expected answer:** Yes, for both planned and immediate uses of force.
+**Expected answer:** Yes, during an immediate use of force.
 
 **Citation:** NCU 9.26.0, pages 3
 

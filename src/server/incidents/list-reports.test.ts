@@ -2,7 +2,10 @@ import { describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
-import { listReportsForCurrentSession } from "./list-reports";
+import {
+  listReportsForCurrentSession,
+  listReportsForIncidentCurrentSession,
+} from "./list-reports";
 
 const account = {
   auth_user_id: "11111111-1111-4111-8111-111111111111",
@@ -97,5 +100,19 @@ describe("listReportsForCurrentSession", () => {
         50,
       ),
     ).resolves.toEqual({ kind: "unavailable" });
+  });
+
+  it("loads reports directly for one authorized incident without a list cap", async () => {
+    const sessionClient = client();
+    await expect(
+      listReportsForIncidentCurrentSession(
+        sessionClient,
+        "55555555-5555-4555-8555-555555555555",
+      ),
+    ).resolves.toMatchObject({ kind: "listed", reports: [expect.any(Object)] });
+    expect(sessionClient.rpc).toHaveBeenLastCalledWith(
+      "list_reports_for_incident",
+      { p_incident_id: "55555555-5555-4555-8555-555555555555" },
+    );
   });
 });

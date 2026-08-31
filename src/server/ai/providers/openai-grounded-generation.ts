@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 import { z } from "zod";
 
 import { getOpenAiPolicyEnvironment } from "@/lib/env/openai-policy";
@@ -155,7 +156,7 @@ export function createOpenAiGroundedGenerationProvider(
                   schema: answerJsonSchema,
                 },
               },
-            }),
+            } satisfies ResponseCreateParamsNonStreaming),
           },
         );
 

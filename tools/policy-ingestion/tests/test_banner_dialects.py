@@ -1,3 +1,4 @@
+import re
 import sys
 import unittest
 from pathlib import Path
@@ -9,19 +10,26 @@ from guided_policy_ingestion.models import RawBlock
 
 
 def _doc(banner_text, page_count=3):
-    """One banner block on page 0, plain body text on the rest."""
-    blocks = [
-        RawBlock(
-            page_index=0,
-            kind="table",
-            text="",
-            table_html="<table><tr><td>%s</td></tr></table>" % banner_text,
-        )
-    ]
-    for i in range(1, page_count):
+    """Repeated banner blocks on the first two pages, then plain body text."""
+    second_banner = re.sub(
+        r"(PAGE\s*(?:NUMBER)?\s*:?\s*)1(\s*OF)",
+        r"\g<1>2\2",
+        banner_text,
+        count=1,
+        flags=re.IGNORECASE,
+    )
+    blocks = []
+    for i, text in enumerate((banner_text, second_banner)):
         blocks.append(
-            RawBlock(page_index=i, kind="text", text="body text page %d" % i)
+            RawBlock(
+                page_index=i,
+                kind="table",
+                text="",
+                table_html=f"<table><tr><td>{text}</td></tr></table>",
+            )
         )
+    for i in range(2, page_count):
+        blocks.append(RawBlock(page_index=i, kind="text", text=f"body text page {i}"))
     return blocks
 
 

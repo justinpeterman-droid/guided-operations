@@ -189,7 +189,9 @@ def _apply_banner_page_labels(
             anchors.setdefault(block.page_index, int(match.group(1)))
             declared_totals.add(int(match.group(2)))
 
-    if not anchors or len(declared_totals) != 1:
+    # One body-text sentence can resemble a banner. Require matching anchors on
+    # two different extracted pages before deriving labels for the document.
+    if len(anchors) < 2 or len(declared_totals) != 1:
         return
     declared_total = declared_totals.pop()
     if declared_total != page_count:

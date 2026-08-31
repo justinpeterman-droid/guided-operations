@@ -182,10 +182,13 @@ export type Database = {
           incident_id: string
           incident_number: string
           incident_revision_id: string
+          occurred_at: string
           reporting_officers: Json
           reviewed_facts: Json
           revision_number: number
           schema_version: number
+          status: string
+          updated_at: string
         }[]
       }
       get_incident_revision: {
@@ -375,6 +378,18 @@ export type Database = {
       }
       list_reports: {
         Args: { p_limit?: number }
+        Returns: {
+          current_revision_number: number
+          incident_name: string
+          incident_number: string
+          report_id: string
+          report_type: string
+          status: string
+          updated_at: string
+        }[]
+      }
+      list_reports_for_incident: {
+        Args: { p_incident_id: string }
         Returns: {
           current_revision_number: number
           incident_name: string

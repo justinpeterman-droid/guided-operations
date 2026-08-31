@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 import tempfile
 import unittest
@@ -76,6 +77,49 @@ class ResumeFailureTests(unittest.TestCase):
             self.assertEqual(provider.calls, 2)
             attempts = sorted((base / "work").rglob("attempt-*"))
             self.assertEqual([attempt.name for attempt in attempts], ["attempt-0001", "attempt-0002"])
+
+
+    def test_import_only_keeps_rejecting_a_bundle_with_missing_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary:
+            base = Path(temporary)
+            provider = FictionalProvider(
+                Path(__file__).parent
+                / "fixtures"
+                / "fictional_policy_content_list_v2.json"
+            )
+            pipeline = IngestionPipeline(
+                provider,
+                CheckpointStore(base / "work"),
+                ExtractionConfig(),
+                ChunkingConfig(),
+            )
+            self.assertEqual(pipeline.run(make_root(base)).awaiting_review, 1)
+
+            attempt = next((base / "work").rglob("attempt-*"))
+            pages_path = attempt / "pages.json"
+            chunks_path = attempt / "chunks.json"
+            pages = json.loads(pages_path.read_text(encoding="utf-8"))[:-1]
+            chunks = [
+                chunk
+                for chunk in json.loads(chunks_path.read_text(encoding="utf-8"))
+                if chunk["page_end"] <= len(pages)
+            ]
+            pages_path.write_text(json.dumps(pages), encoding="utf-8")
+            chunks_path.write_text(json.dumps(chunks), encoding="utf-8")
+
+            self.assertEqual(
+                pipeline.run(base / "policies", validate_only=True).failed,
+                1,
+            )
+            self.assertEqual(
+                pipeline.run(base / "policies", import_only=True).failed,
+                1,
+            )
+            validation = json.loads(
+                (attempt / "validation.json").read_text(encoding="utf-8")
+            )
+            self.assertIn("extracted_page_count_mismatch", validation["errors"])
+            self.assertEqual(provider.calls, 1)
 
 
 if __name__ == "__main__":

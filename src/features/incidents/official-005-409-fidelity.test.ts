@@ -8,6 +8,7 @@ describe("assessOfficial005409Fidelity", () => {
       assessOfficial005409Fidelity({
         sourceRevision: null,
         sourceSha256: null,
+        sourceKind: "authoritative_form",
         fieldMapApproved: false,
         renderedFidelityApproved: false,
       }),
@@ -20,6 +21,19 @@ describe("assessOfficial005409Fidelity", () => {
         "rendered_fidelity",
       ],
     });
+  });
+
+  it("blocks official output when source kind is omitted at runtime", () => {
+    expect(
+      assessOfficial005409Fidelity({
+        sourceRevision: "ADC 005/409 rev 2026-08",
+        sourceSha256: "b".repeat(64),
+        // @ts-expect-error Runtime validation must still reject untyped callers.
+        sourceKind: undefined,
+        fieldMapApproved: true,
+        renderedFidelityApproved: true,
+      }),
+    ).toEqual({ ready: false, blockers: ["authoritative_source_kind"] });
   });
 
   it("does not treat narrative/example material as an approved official source", () => {

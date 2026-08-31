@@ -18,7 +18,10 @@ const row = {
   incident_id: incidentId,
   incident_number: "F-WORK-001",
   display_name: "Fictional workspace scenario",
+  status: "in_review",
+  occurred_at: "2026-08-27T12:00:00Z",
   category: "training",
+  updated_at: "2026-08-27T12:30:00Z",
   incident_revision_id: "55555555-5555-4555-8555-555555555555",
   revision_number: 1,
   schema_version: 2,
@@ -73,6 +76,16 @@ describe("getIncidentReportWorkspaceForCurrentSession", () => {
       getIncidentReportWorkspaceForCurrentSession(incidentId, sessionClient),
     ).resolves.toEqual({
       kind: "found",
+      incident: {
+        incidentId,
+        incidentNumber: row.incident_number,
+        displayName: row.display_name,
+        status: row.status,
+        occurredAt: row.occurred_at,
+        category: row.category,
+        currentRevisionNumber: 1,
+        updatedAt: row.updated_at,
+      },
       workspace: {
         incidentId,
         incidentNumber: row.incident_number,

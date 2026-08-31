@@ -8,6 +8,16 @@ vi.mock("@/lib/supabase/server", () => ({
 vi.mock("@/server/incidents/get-incident-report-workspace", () => ({
   getIncidentReportWorkspaceForCurrentSession: vi.fn().mockResolvedValue({
     kind: "found",
+    incident: {
+      incidentId: "11111111-1111-4111-8111-111111111111",
+      incidentNumber: "F-PAGE-001",
+      displayName: "Fictional protected incident",
+      status: "in_review",
+      occurredAt: "2026-08-27T12:00:00Z",
+      category: "incident_no_disciplinary",
+      currentRevisionNumber: 1,
+      updatedAt: "2026-08-27T12:30:00Z",
+    },
     workspace: {
       incidentId: "11111111-1111-4111-8111-111111111111",
       incidentNumber: "F-PAGE-001",
@@ -21,14 +31,8 @@ vi.mock("@/server/incidents/get-incident-report-workspace", () => ({
     },
   }),
 }));
-vi.mock("@/server/incidents/list-incidents", () => ({
-  listIncidentsForCurrentSession: vi.fn().mockResolvedValue({
-    kind: "listed",
-    incidents: [],
-  }),
-}));
 vi.mock("@/server/incidents/list-reports", () => ({
-  listReportsForCurrentSession: vi.fn().mockResolvedValue({
+  listReportsForIncidentCurrentSession: vi.fn().mockResolvedValue({
     kind: "listed",
     reports: [],
   }),

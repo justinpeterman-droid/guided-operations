@@ -156,6 +156,56 @@ describe("answer report request validation", () => {
     expect(result).toMatchObject({ ok: false, status: 400 });
   });
 
+  it("rejects oversized optional citation fields", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [{ ...goodBody.citations[0], excerpt: "x".repeat(8_001) }],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("rejects deeply nested citation data", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [
+          {
+            ...goodBody.citations[0],
+            metadata: { first: { second: { third: { tooDeep: true } } } },
+          },
+        ],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("rejects citation arrays whose serialized payload is too large", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: Array.from({ length: 10 }, (_, index) => ({
+          ...goodBody.citations[0],
+          excerpt: `${index}${"x".repeat(7_000)}`,
+        })),
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
   it("rejects a malformed body", async () => {
     validCsrf.mockReturnValue(true);
     const request = new Request(ORIGIN + "/api/web/v1/answer-reports", {

@@ -1,5 +1,6 @@
 import "server-only";
 
+import type { ResponseCreateParamsNonStreaming } from "openai/resources/responses/responses";
 import { z } from "zod";
 
 import { getOpenAiReportDraftEnvironment } from "@/lib/env/openai-report-draft";
@@ -97,7 +98,7 @@ export function createOpenAiIncidentFactExtractionProvider(
                   },
                 },
               },
-            }),
+            } satisfies ResponseCreateParamsNonStreaming),
           },
         );
         if (!response.ok) {

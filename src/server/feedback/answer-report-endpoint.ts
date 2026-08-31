@@ -19,6 +19,45 @@ const citationSchema = z
   })
   .passthrough();
 
+const MAX_CITATIONS_BYTES = 64 * 1024;
+const MAX_CITATION_DEPTH = 3;
+const MAX_OPTIONAL_STRING_LENGTH = 8_000;
+const MAX_CONTAINER_ITEMS = 50;
+const MAX_OPTIONAL_KEY_LENGTH = 120;
+
+function isBoundedCitationValue(value: unknown, depth = 0): boolean {
+  if (depth > MAX_CITATION_DEPTH) return false;
+  if (value === null || typeof value === "boolean") return true;
+  if (typeof value === "number") return Number.isFinite(value);
+  if (typeof value === "string") {
+    return value.length <= MAX_OPTIONAL_STRING_LENGTH;
+  }
+  if (Array.isArray(value)) {
+    return (
+      value.length <= MAX_CONTAINER_ITEMS &&
+      value.every((entry) => isBoundedCitationValue(entry, depth + 1))
+    );
+  }
+  if (typeof value !== "object") return false;
+  const entries = Object.entries(value);
+  return (
+    entries.length <= MAX_CONTAINER_ITEMS &&
+    entries.every(
+      ([key, entry]) =>
+        key.length <= MAX_OPTIONAL_KEY_LENGTH &&
+        isBoundedCitationValue(entry, depth + 1),
+    )
+  );
+}
+
+function citationsAreBounded(citations: unknown[]): boolean {
+  return (
+    citations.every((citation) => isBoundedCitationValue(citation)) &&
+    new TextEncoder().encode(JSON.stringify(citations)).byteLength <=
+      MAX_CITATIONS_BYTES
+  );
+}
+
 const requestSchema = z
   .object({
     question: z.string().trim().min(3).max(2_000),
@@ -59,7 +98,7 @@ export async function validateAnswerReportRequest(
 
   try {
     const parsed = requestSchema.safeParse(await request.json());
-    return parsed.success
+    return parsed.success && citationsAreBounded(parsed.data.citations)
       ? {
           ok: true,
           question: parsed.data.question,

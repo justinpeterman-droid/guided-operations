@@ -219,6 +219,7 @@ $env:SUPABASE_DB_URL = "<private direct Supabase PostgreSQL connection string>"
 $env:GUIDED_OPERATIONS_FACILITY_ID = "<facility uuid>"
 $env:SUPABASE_PROJECT_REF = "<approved Production Supabase project reference>"
 $env:GUIDED_OPERATIONS_RIGHTS_REVIEWER_ID = "<reviewing staff member uuid>"
+$env:SUPABASE_DB_CA_CERTIFICATE = "<path to the trusted Supabase database CA certificate>"
 
 python ingest.py register --work-dir <work dir> --version-label "2026-05-28" --rights-evidence-ref "<safe reference>" --target-environment production --source-data controlled-policy --confirm-controlled-production-registration
 ```

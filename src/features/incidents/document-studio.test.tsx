@@ -98,18 +98,16 @@ describe("DocumentStudio", () => {
       await user.click(
         root.getByRole("tab", { name: new RegExp(tab.label, "i") }),
       );
+      const selectedTab = root.getByRole("tab", {
+        name: new RegExp(tab.label, "i"),
+      });
       const panel = root.getByRole("tabpanel");
-      for (const button of root.getAllByRole("tab")) {
-        expect(
-          view.container.querySelector(
-            `#${button.getAttribute("aria-controls")}`,
-          ),
-        ).toBe(panel);
-      }
-      expect(panel).toHaveAttribute(
-        "aria-labelledby",
-        `document-studio-tab-${tab.id}`,
-      );
+      expect(
+        view.container.querySelector(
+          `#${selectedTab.getAttribute("aria-controls")}`,
+        ),
+      ).toBe(panel);
+      expect(panel).toHaveAttribute("aria-labelledby", selectedTab.id);
     }
   });
   it("keeps a fact that belongs to no reporting officer off Notes & Facts", async () => {

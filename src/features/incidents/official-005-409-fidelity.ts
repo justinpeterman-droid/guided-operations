@@ -10,7 +10,7 @@ type Blocker =
 export interface Official005409FidelityInput {
   readonly sourceRevision: string | null;
   readonly sourceSha256: string | null;
-  readonly sourceKind?: SourceKind;
+  readonly sourceKind: SourceKind;
   readonly fieldMapApproved: boolean;
   readonly renderedFidelityApproved: boolean;
 }
@@ -38,7 +38,7 @@ export function assessOfficial005409Fidelity(
   if (!input.sourceSha256 || !SHA256_PATTERN.test(input.sourceSha256)) {
     blockers.push("source_sha256");
   }
-  if (input.sourceKind && input.sourceKind !== "authoritative_form") {
+  if (input.sourceKind !== "authoritative_form") {
     blockers.push("authoritative_source_kind");
   }
   if (!input.fieldMapApproved) {

@@ -6,12 +6,17 @@ both ran today.
 
 ## Result
 
-| Collection      | Registered | Imported | Pages | Chunks |
-| --------------- | ---------- | -------- | ----- | ------ |
-| BMU policies    | 160        | 160      | 796   | 735    |
-| BMU Post Orders | 42         | 42       | 249   | 234    |
-| SD              | 34         | 33       | 265   | 255    |
-| **Total**       | **236**    | **235**  | 1,310 | 1,224  |
+| Collection      | Registered | Imported | Imported pages | Imported chunks |
+| --------------- | ---------- | -------- | -------------- | --------------- |
+| BMU policies    | 160        | 160      | 796            | 735             |
+| BMU Post Orders | 42         | 42       | 249            | 234             |
+| SD              | 34         | 33       | 265            | 255             |
+| **Total**       | **236**    | **235**  | **1,310**      | **1,224**       |
+
+The registration manifests cover all 236 extracted bundles: 1,315 pages and
+1,228 chunks. The imported totals are lower by one five-page, four-chunk SD
+bundle for the documented failure below; this is an intentional recorded gap,
+not a second corpus count.
 
 All 236 are registered as `classification = public`,
 `rights_status = approved_full_reader`, `external_ai_allowed = true`, reviewed

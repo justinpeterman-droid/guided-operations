@@ -67,7 +67,7 @@ function AccessRequired() {
 function Unavailable() {
   return (
     <AdminUnavailableMessage
-      description="No service settings have been changed."
+      description="The health check is unavailable; no service status can be confirmed right now."
       eyebrow="System health unavailable"
       title="The status check cannot load right now."
     />

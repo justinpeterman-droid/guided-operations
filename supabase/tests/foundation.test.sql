@@ -1,6 +1,6 @@
 begin;
 
-select plan(225);
+select plan(229);
 
 select has_schema('api', 'locked Data API schema exists');
 select has_schema('app_private', 'app_private schema exists');
@@ -1312,6 +1312,12 @@ select ok(
   'only authenticated users can execute the report-list RPC'
 );
 
+select ok(
+  has_function_privilege('authenticated', 'api.list_reports_for_incident(uuid)', 'execute')
+  and not has_function_privilege('anon', 'api.list_reports_for_incident(uuid)', 'execute'),
+  'only authenticated users can execute the incident-scoped report-list RPC'
+);
+
 set local role authenticated;
 select set_config('request.jwt.claim.sub', '99999999-9999-4999-8999-999999999999', true);
 select ok(
@@ -1321,6 +1327,16 @@ select ok(
     where report_id = current_setting('app.test.report_id')::uuid
   ),
   'an active report owner can list the authorized finalized report summary'
+);
+select ok(
+  exists (
+    select 1
+    from api.list_reports_for_incident(
+      current_setting('app.test.incident_id')::uuid
+    )
+    where report_id = current_setting('app.test.report_id')::uuid
+  ),
+  'an active report owner can load every authorized report for one incident'
 );
 reset role;
 
@@ -3036,6 +3052,57 @@ select throws_ok(
   $$,
   'permission denied for schema app_private',
   'an authenticated caller cannot bypass the Count Sheet API through revisions'
+);
+
+reset role;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select lives_ok(
+  $$
+    select api.report_policy_answer(
+      'Fictional policy question?',
+      'Fictional policy answer.',
+      '[]'::jsonb,
+      'fictional-v1'
+    );
+  $$,
+  'an active officer can report a policy answer while within the storage quota'
+);
+
+reset role;
+
+insert into app_private.answer_reports (
+  facility_id,
+  reported_by_account_id,
+  question,
+  answer_text
+)
+select
+  staff.facility_id,
+  account.auth_user_id,
+  'Fictional quota-fill question ' || sequence.number,
+  'Fictional quota-fill answer.'
+from app_private.user_accounts as account
+join app_private.staff_members as staff on staff.id = account.staff_member_id
+cross join generate_series(1, 99) as sequence(number)
+where account.auth_user_id = '55555555-5555-4555-8555-555555555555'::uuid;
+
+set local role authenticated;
+select set_config('request.jwt.claim.sub', '55555555-5555-4555-8555-555555555555', true);
+
+select throws_ok(
+  $$
+    select api.report_policy_answer(
+      'Fictional over-quota question?',
+      'Fictional over-quota answer.',
+      '[]'::jsonb,
+      'fictional-v1'
+    );
+  $$,
+  'Daily answer report quota exceeded',
+  'the atomic per-account quota rejects a report beyond 100 in 24 hours'
 );
 
 reset role;
