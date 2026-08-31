@@ -111,6 +111,35 @@ One design system supports distinct working densities:
 Page titles, route identity, and the primary action should remain visible
 without requiring the user to interpret a decorative dashboard.
 
+### Document Studio work hierarchy
+
+Document Studio is an incident-level working surface, not a general dashboard.
+Its top-level navigation has four task-oriented sections in this order:
+
+1. **Reports** — the default section for supported draft, review, finalize, and
+   report-history work.
+2. **Notes & Facts** — reviewed fact states from the current authorized
+   incident revision.
+3. **Paperwork** — required items grouped by available digital work,
+   physical-form requirement, and unavailable digital support.
+4. **Incident Record** — current incident details, the active incident
+   revision, and linked report revision heads.
+
+Copy to Records remains a subordinate Reports subsection while it is
+unavailable. It must not receive equal top-level prominence or fake print, Word,
+or submission actions. Overview and report-history context belong together in
+Incident Record rather than competing with active report and fact work.
+
+The incident header may present one advisory **Next action** derived only from
+server-authorized incident, reporting-officer, reviewed-fact, and report values.
+That guidance is navigation, not persisted workflow state. It must never infer
+packet completeness, filing, submission, synchronization, or system-of-record
+status.
+
+Desktop keeps an accessible four-item tab list. Mobile uses a labeled native
+section selector rather than a horizontally scrolling tab rail. Both controls
+must share one active-section state and preserve the same information priority.
+
 ## Visual language
 
 ### Color
