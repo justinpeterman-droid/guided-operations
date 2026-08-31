@@ -11,13 +11,20 @@ import { listReportsForIncidentForCurrentSession } from "@/server/incidents/list
 
 export const dynamic = "force-dynamic";
 
+type IncidentPageClient = Parameters<
+  typeof getIncidentReportWorkspaceForCurrentSession
+>[1] &
+  Parameters<typeof getIncidentSummaryForCurrentSession>[1] &
+  Parameters<typeof listReportsForIncidentForCurrentSession>[1];
+
 export default async function IncidentReportWorkspacePage({
   params,
 }: {
   params: Promise<{ incidentId: string }>;
 }) {
   const { incidentId } = await params;
-  const result = await loadIncidentReportWorkspace(incidentId);
+  const client = await createSupabaseServerClient();
+  const result = await loadIncidentReportWorkspace(incidentId, client);
 
   if (result.kind === "denied") {
     return (
@@ -49,8 +56,8 @@ export default async function IncidentReportWorkspacePage({
   }
 
   const [incident, reports] = await Promise.all([
-    loadIncidentSummary(incidentId),
-    loadIncidentReports(incidentId),
+    loadIncidentSummary(incidentId, client),
+    loadIncidentReports(incidentId, client),
   ]);
 
   return (
@@ -79,34 +86,37 @@ export default async function IncidentReportWorkspacePage({
   );
 }
 
-export async function loadIncidentReportWorkspace(incidentId: unknown) {
+export async function loadIncidentReportWorkspace(
+  incidentId: unknown,
+  client: IncidentPageClient,
+) {
   try {
-    return await getIncidentReportWorkspaceForCurrentSession(
-      incidentId,
-      await createSupabaseServerClient(),
-    );
+    return await getIncidentReportWorkspaceForCurrentSession(incidentId, client);
   } catch {
     return { kind: "unavailable" } as const;
   }
 }
 
-export async function loadIncidentSummary(incidentId: string) {
+export async function loadIncidentSummary(
+  incidentId: string,
+  client: IncidentPageClient,
+) {
   try {
-    const result = await getIncidentSummaryForCurrentSession(
-      incidentId,
-      await createSupabaseServerClient(),
-    );
+    const result = await getIncidentSummaryForCurrentSession(incidentId, client);
     return result.kind === "found" ? result.incident : null;
   } catch {
     return null;
   }
 }
 
-export async function loadIncidentReports(incidentId: string) {
+export async function loadIncidentReports(
+  incidentId: string,
+  client: IncidentPageClient,
+) {
   try {
     const result = await listReportsForIncidentForCurrentSession(
       incidentId,
-      await createSupabaseServerClient(),
+      client,
     );
     return result.kind === "listed" ? result.reports : [];
   } catch {

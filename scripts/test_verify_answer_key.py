@@ -96,7 +96,7 @@ class AnswerKeyVerificationTests(unittest.TestCase):
         self.assertEqual(summary.owner_approved, ())
         self.assertEqual(summary.issues[0].reason, "QUOTE NOT IN POLICY")
 
-    def test_load_corpus_uses_the_supplied_private_root(self):
+    def test_load_corpus_normalizes_numeric_pages_and_skips_page_less_chunks(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             bundle = root / "private" / "attempt-0001"
@@ -105,12 +105,19 @@ class AnswerKeyVerificationTests(unittest.TestCase):
                 json.dumps(
                     [
                         {
-                            "printed_page_start": "3",
+                            "content": "NUMBER: NCU 9.26.0. Page-less metadata.",
+                        },
+                        {
+                            "printed_page_start": 3,
                             "content": (
                                 "NUMBER: NCU 9.26.0. Photographs will be "
                                 "taken during an immediate use of force."
                             ),
-                        }
+                        },
+                        {
+                            "printed_page_start": "003",
+                            "content": "Additional page three text.",
+                        },
                     ]
                 ),
                 encoding="utf-8",
@@ -120,6 +127,9 @@ class AnswerKeyVerificationTests(unittest.TestCase):
 
             self.assertIn("NCU9.26.0", corpus)
             self.assertIn("3", corpus["NCU9.26.0"])
+            self.assertNotIn("None", corpus["NCU9.26.0"])
+            self.assertNotIn("003", corpus["NCU9.26.0"])
+            self.assertIn("Additional page three text", corpus["NCU9.26.0"]["3"])
 
     def test_main_stays_red_until_answer_claims_are_owner_approved(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -132,7 +142,7 @@ class AnswerKeyVerificationTests(unittest.TestCase):
                 json.dumps(
                     [
                         {
-                            "printed_page_start": "3",
+                            "printed_page_start": 3,
                             "content": self.corpus()["NCU9.26.0"]["3"],
                         }
                     ]

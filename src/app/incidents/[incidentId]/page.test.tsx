@@ -54,6 +54,8 @@ vi.mock("@/app/incidents/[incidentId]/report-draft-request-form", () => ({
   ),
 }));
 
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/get-incident-report-workspace";
 import { getIncidentSummaryForCurrentSession } from "@/server/incidents/get-incident-summary";
 import { listReportsForIncidentForCurrentSession } from "@/server/incidents/list-incident-reports";
 
@@ -62,7 +64,7 @@ import IncidentReportWorkspacePage from "./page";
 const INCIDENT_ID = "11111111-1111-4111-8111-111111111111";
 
 describe("IncidentReportWorkspacePage", () => {
-  it("renders Document Studio from incident-scoped summary and report reads", async () => {
+  it("renders Document Studio from incident-scoped reads using one server client", async () => {
     const user = userEvent.setup();
     render(
       await IncidentReportWorkspacePage({
@@ -78,6 +80,11 @@ describe("IncidentReportWorkspacePage", () => {
       screen.getByRole("tablist", { name: "Document Studio sections" }),
     ).toBeVisible();
     expect(screen.getByText("in review")).toBeVisible();
+    expect(createSupabaseServerClient).toHaveBeenCalledTimes(1);
+    expect(getIncidentReportWorkspaceForCurrentSession).toHaveBeenCalledWith(
+      INCIDENT_ID,
+      serverClient,
+    );
     expect(getIncidentSummaryForCurrentSession).toHaveBeenCalledWith(
       INCIDENT_ID,
       serverClient,

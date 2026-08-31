@@ -74,6 +74,17 @@ def canonical_policy_number(value: str) -> str:
     return re.sub(r"\s+", "", value).upper()
 
 
+def _canonical_printed_page(value: object) -> str | None:
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, int):
+        return str(value) if value >= 0 else None
+    if isinstance(value, str):
+        stripped = value.strip()
+        return str(int(stripped)) if stripped.isdigit() else None
+    return None
+
+
 def load_corpus(corpus_root: Path) -> dict[str, dict[str, str]]:
     if not corpus_root.is_dir():
         raise ValueError("The corpus root must be an existing directory")
@@ -97,7 +108,9 @@ def load_corpus(corpus_root: Path) -> dict[str, dict[str, str]]:
         for chunk in chunks:
             if not isinstance(chunk, dict):
                 continue
-            page = str(chunk.get("printed_page_start"))
+            page = _canonical_printed_page(chunk.get("printed_page_start"))
+            if page is None:
+                continue
             pages[page] = (
                 pages.get(page, "") + " " + str(chunk.get("content") or "")
             )
