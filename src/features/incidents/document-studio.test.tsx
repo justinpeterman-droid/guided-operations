@@ -99,6 +99,20 @@ describe("DocumentStudio", () => {
     );
   });
 
+  it("withholds report actions when report summaries are unavailable", () => {
+    const view = render(
+      <DocumentStudio incident={incident} reports={null} workspace={workspace} />,
+    );
+    const root = within(view.container);
+
+    expect(
+      root.getByText(/the next report action is unavailable/i),
+    ).toBeVisible();
+    expect(root.getByText(/Reports cannot load right now/i)).toBeVisible();
+    expect(root.queryByRole("note")).toBeNull();
+    expect(root.queryByRole("button", { name: /Open Reports/i })).toBeNull();
+  });
+
   it("keeps a native mobile section control synchronized with desktop tabs", async () => {
     const user = userEvent.setup();
     const view = render(
@@ -186,8 +200,9 @@ describe("DocumentStudio", () => {
       root.getByRole("heading", { name: "Incident Record" }),
     ).toBeVisible();
     expect(root.getByText("Current incident revision")).toBeVisible();
-    expect(root.getByText("Revision 1 is the active revision for this incident."))
-      .toBeVisible();
+    expect(
+      root.getByText("Revision 1 is the active revision for this incident."),
+    ).toBeVisible();
     expect(root.getByRole("link", { name: "Open report history" })).toBeVisible();
   });
 
