@@ -185,6 +185,12 @@ dialog are intentionally not claimed by this local automated qualification.
       inspect the operating-system print dialog on the intended production
       browser/operating-system combination.
 
+**Execution aid:** Use the
+[hands-on accessibility and print validation runbook](../quality/hands-on-accessibility-print-validation.md)
+to capture the tester, exact commit, environment, assistive technology, and
+fictional-only observations. Do not mark this item complete until a human test
+on the intended browser/operating-system combination is recorded.
+
 ## Final verification
 
 - [x] Run formatting, lint, typecheck, focused tests, full tests when practical,

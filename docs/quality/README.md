@@ -28,6 +28,9 @@ Inspect the exact commit and retained evidence before citing a gate as passed.
   classification, non-production fictional-fixture rule, and corpus lifecycle.
 - [definition-of-done.md](definition-of-done.md) — change, release, deployment,
   and operational-readiness gates.
+- [hands-on-accessibility-print-validation.md](hands-on-accessibility-print-validation.md)
+  — repeatable human validation for native screen-reader announcements and the
+  operating-system print dialog; uses fictional records only.
 
 ## Evidence labels
 
