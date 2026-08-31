@@ -47,10 +47,9 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
     <div className="workspace-navigation-root" ref={rootRef}>
       {open ? (
         <button
-          aria-hidden="true"
+          aria-label="Dismiss navigation menu"
           className="workspace-navigation-scrim"
           onClick={() => setOpen(false)}
-          tabIndex={-1}
           type="button"
         />
       ) : null}
