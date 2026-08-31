@@ -7,7 +7,10 @@ vi.mock("@/server/security/session-csrf", () => ({
   hasValidSessionCsrfRequest: validCsrf,
 }));
 
-import { validateAnswerReportRequest } from "./answer-report-endpoint";
+import {
+  MAX_ANSWER_REPORT_CITATION_BYTES,
+  validateAnswerReportRequest,
+} from "./answer-report-endpoint";
 
 const ORIGIN = "https://guided-operations.example";
 const SESSION = "11111111-1111-4111-8111-111111111111";
@@ -28,17 +31,25 @@ function makeRequest(
   });
 }
 
+const goodCitation = {
+  documentId: "11111111-1111-4111-8111-111111111111",
+  documentVersionId: "22222222-2222-4222-8222-222222222222",
+  chunkId: "33333333-3333-4333-8333-333333333333",
+  stableKey: "count-principles-and-procedures",
+  title: "Count Principles and Procedures",
+  versionLabel: "2026 revision",
+  sourceSha256: "a".repeat(64),
+  collection: "BMU policies" as const,
+  pageStart: 4,
+  pageEnd: 4,
+  sectionPath: "Trustee supervision",
+  excerpt: "Trustees working outside the fence are verified once every hour.",
+};
+
 const goodBody = {
   question: "How often do I verify a trustee working outside the fence?",
   answerText: "At a minimum of once every hour.",
-  citations: [
-    {
-      documentVersionId: "22222222-2222-4222-8222-222222222222",
-      title: "Count Principles and Procedures",
-      collection: "BMU policies",
-      pageStart: 4,
-    },
-  ],
+  citations: [goodCitation],
 };
 
 describe("answer report request validation", () => {
@@ -131,6 +142,77 @@ describe("answer report request validation", () => {
     expect(result).toMatchObject({ ok: false, status: 400 });
   });
 
+  it("rejects unknown citation fields instead of persisting arbitrary JSON", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [{ ...goodCitation, internalNote: "not allowed" }],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("rejects deeply nested citation data hidden in an unknown field", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [
+          {
+            ...goodCitation,
+            metadata: { nested: { payload: { value: "not allowed" } } },
+          },
+        ],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("bounds every citation excerpt", async () => {
+    validCsrf.mockReturnValue(true);
+    const result = await validateAnswerReportRequest(
+      makeRequest({
+        ...goodBody,
+        citations: [{ ...goodCitation, excerpt: "x".repeat(1_201) }],
+      }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
+  it("bounds the aggregate serialized citation payload", async () => {
+    validCsrf.mockReturnValue(true);
+    const largeCitation = {
+      ...goodCitation,
+      stableKey: "s".repeat(128),
+      title: "t".repeat(300),
+      versionLabel: "v".repeat(120),
+      sectionPath: "p".repeat(300),
+      excerpt: "e".repeat(1_200),
+    };
+    const citations = Array.from({ length: 20 }, () => largeCitation);
+    expect(new TextEncoder().encode(JSON.stringify(citations)).byteLength).toBeGreaterThan(
+      MAX_ANSWER_REPORT_CITATION_BYTES,
+    );
+
+    const result = await validateAnswerReportRequest(
+      makeRequest({ ...goodBody, citations }),
+      ORIGIN,
+      SESSION,
+      KEY,
+    );
+    expect(result).toMatchObject({ ok: false, status: 400 });
+  });
+
   it("bounds an oversized answer instead of storing it", async () => {
     validCsrf.mockReturnValue(true);
     const result = await validateAnswerReportRequest(
@@ -147,7 +229,7 @@ describe("answer report request validation", () => {
     const result = await validateAnswerReportRequest(
       makeRequest({
         ...goodBody,
-        citations: Array.from({ length: 21 }, () => goodBody.citations[0]),
+        citations: Array.from({ length: 21 }, () => goodCitation),
       }),
       ORIGIN,
       SESSION,

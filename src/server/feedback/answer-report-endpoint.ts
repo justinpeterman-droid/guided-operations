@@ -2,8 +2,11 @@ import "server-only";
 
 import { z } from "zod";
 
+import { sourceCitationSchema } from "@/features/policy/grounding";
 import type { Json } from "@/lib/supabase/database.generated";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+
+export const MAX_ANSWER_REPORT_CITATION_BYTES = 32 * 1024;
 
 /**
  * A report carries the answer and citations exactly as the officer saw them.
@@ -11,19 +14,11 @@ import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
  * retrieval may not reproduce the same answer by the time a report is reviewed.
  * Without the shown text, a report cannot be investigated.
  */
-const citationSchema = z
-  .object({
-    documentVersionId: z.string().trim().min(1).max(200),
-    title: z.string().trim().min(1).max(400),
-    collection: z.string().trim().min(1).max(120),
-  })
-  .passthrough();
-
 const requestSchema = z
   .object({
     question: z.string().trim().min(3).max(2_000),
     answerText: z.string().trim().min(1).max(20_000),
-    citations: z.array(citationSchema).max(20).default([]),
+    citations: z.array(sourceCitationSchema).max(20).default([]),
   })
   .strict();
 
@@ -39,6 +34,10 @@ export type AnswerReportEndpointValidation =
       status: 400 | 403 | 415;
       code: "invalid_request" | "invalid_origin" | "csrf_failed";
     }>;
+
+function serializedByteLength(value: unknown): number {
+  return new TextEncoder().encode(JSON.stringify(value)).byteLength;
+}
 
 /** Validates a same-origin, session-CSRF-protected answer report. */
 export async function validateAnswerReportRequest(
@@ -59,18 +58,25 @@ export async function validateAnswerReportRequest(
 
   try {
     const parsed = requestSchema.safeParse(await request.json());
-    return parsed.success
-      ? {
-          ok: true,
-          question: parsed.data.question,
-          answerText: parsed.data.answerText,
-          // Citations came straight out of request.json(), so they are JSON by
-          // construction. The schema passes unknown keys through on purpose:
-          // page labels and snippets are what make a report investigable, and
-          // stripping them would defeat the point of storing what was shown.
-          citations: parsed.data.citations as Json[],
-        }
-      : { ok: false, status: 400, code: "invalid_request" };
+    if (!parsed.success) {
+      return { ok: false, status: 400, code: "invalid_request" };
+    }
+    if (
+      serializedByteLength(parsed.data.citations) >
+      MAX_ANSWER_REPORT_CITATION_BYTES
+    ) {
+      return { ok: false, status: 400, code: "invalid_request" };
+    }
+
+    return {
+      ok: true,
+      question: parsed.data.question,
+      answerText: parsed.data.answerText,
+      // The strict shared citation schema preserves every provenance field the
+      // officer saw while rejecting unknown keys, nested payloads, and
+      // unbounded strings before the JSON reaches PostgreSQL.
+      citations: parsed.data.citations as Json[],
+    };
   } catch {
     return { ok: false, status: 400, code: "invalid_request" };
   }
