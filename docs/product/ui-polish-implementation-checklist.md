@@ -2,13 +2,16 @@
 
 - **Status:** Active execution checklist
 - **Created:** 2026-08-31
-- **Scope:** Public previews, Count Sheet truthfulness, local authenticated-route readiness, responsive polish, shared UI consistency, and later authenticated-flow review
+- **Scope:** Public previews, Count Sheet truthfulness, local
+  authenticated-route readiness, responsive polish, shared UI consistency, and
+  later authenticated-flow review
 
 This checklist turns the multi-plugin UI audit into narrow implementation waves.
 It is an execution aid, not a second product contract. The governing decisions
-remain the [Product Contract](../../PRODUCT.md), [Experience Design
-Brief](experience-design-brief.md), [Workflow and Report
-Safety](workflow-and-report-safety.md), and applicable ADRs.
+remain the [Product Contract](../../PRODUCT.md),
+[Experience Design Brief](experience-design-brief.md),
+[Workflow and Report Safety](workflow-and-report-safety.md), and applicable
+ADRs.
 
 ## Guardrails for every wave
 
@@ -23,27 +26,29 @@ Safety](workflow-and-report-safety.md), and applicable ADRs.
 
 ## Wave 1 — Count Sheet truthfulness
 
-- [ ] Add a completeness state that distinguishes an untouched/incomplete sheet
+- [x] Add a completeness state that distinguishes an untouched/incomplete sheet
       from a true zero-difference reconciliation.
-- [ ] Preserve blank values as blank; never turn missing entries into
+- [x] Preserve blank values as blank; never turn missing entries into
       user-entered zeroes.
-- [ ] Show **Reconciled** only when the required reconciliation inputs are
+- [x] Show **Reconciled** only when the required reconciliation inputs are
       complete and the difference is zero.
-- [ ] Show an explicit incomplete message such as **Incomplete — enter known
+- [x] Show an explicit incomplete message such as **Incomplete — enter known
       values to reconcile** while required values are missing.
-- [ ] Keep signed open differences visible and never auto-balance values.
-- [ ] Apply the same semantics to the fictional preview and authenticated Count
+- [x] Keep signed open differences visible and never auto-balance values.
+- [x] Apply the same semantics to the fictional preview and authenticated Count
       Sheet workspace.
-- [ ] Add unit and browser coverage for blank, incomplete, reconciled, and
+- [x] Add unit and browser coverage for blank, incomplete, reconciled, and
       positive/negative-difference states.
 
-**Exit evidence:** A blank sheet never reads Reconciled; complete zero-difference
-data does; focused tests and real-browser checks pass.
+**Exit evidence:** A blank sheet never reads Reconciled; complete
+zero-difference data does; focused tests and real-browser checks pass
+(`0af88d8`). The stored validation contract remains unchanged, so historical
+saved revisions do not need a data migration.
 
 ## Wave 2 — Safe local protected-route readiness
 
-- [ ] Follow the existing approved local-auth/Supabase documentation to find
-      the intended non-secret development configuration.
+- [ ] Follow the existing approved local-auth/Supabase documentation to find the
+      intended non-secret development configuration.
 - [ ] Restore intended sign-in gating for `/account`, `/forms`, protected Count
       Sheet routes, and report output routes.
 - [ ] Verify unauthenticated protected APIs return 401 rather than a 500 runtime
@@ -52,26 +57,34 @@ data does; focused tests and real-browser checks pass.
 - [ ] Rerun the seven browser checks that were blocked by absent local public
       Supabase configuration.
 
+**Current gate (2026-08-31):** The running local preview lacks its public
+Supabase variables and local status reports required services stopped. The
+approved qualification runner is restricted to the expected local target, but
+intentionally resets the fictional local database several times; it awaits owner
+confirmation before that reset occurs. No hosted service was touched.
+
 **Exit evidence:** Protected local routes reach their designed authentication
 state, or a precise external configuration blocker is recorded.
 
 ## Wave 3 — Mobile working-surface polish
 
-- [ ] Keep the Count Sheet as a semantic table with usable internal horizontal
+- [x] Keep the Count Sheet as a semantic table with usable internal horizontal
       scrolling.
-- [ ] Add a clear narrow-screen cue such as **Swipe to view units** and a
+- [x] Add a clear narrow-screen cue such as **Swipe to view units** and a
       visible scroll affordance.
-- [ ] Preserve sticky row/column orientation where practical and do not hide
+- [x] Preserve sticky row/column orientation where practical and do not hide
       scrollbars for aesthetics.
-- [ ] Tighten mobile heading scale on operational/admin pages while preserving
+- [x] Tighten mobile heading scale on operational/admin pages while preserving
       the Officer Workspace identity.
-- [ ] Standardize narrow-header stacking of route title, preview badge, and
+- [x] Standardize narrow-header stacking of route title, preview badge, and
       secondary actions.
-- [ ] Verify 320 px, 390 px, 768 px, desktop, keyboard, reduced-motion, and
+- [x] Verify 320 px, 390 px, 768 px, desktop, keyboard, reduced-motion, and
       print behavior where applicable.
 
 **Exit evidence:** No page-level overflow, discoverable table navigation, and
-unchanged information priority across sizes.
+unchanged information priority across sizes (`5617bf1`, `ae52874`). Browser
+checks covered 320, 390, 768, and desktop widths; the focused reduced-motion
+mobile and print test passes.
 
 ## Wave 4 — Shared UI consistency
 
