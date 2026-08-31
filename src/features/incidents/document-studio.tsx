@@ -266,8 +266,24 @@ function RequiredPaperworkPanel({ workspace }: DocumentStudioProps) {
   );
 }
 
+/**
+ * The server hands back every fact stored on the revision; scoping to a
+ * reporting officer has always happened where facts are displayed. A confirmed
+ * version-two fact with an empty scope belongs to no reporter, so it is not
+ * shown here, the same way the draft request form never offers it.
+ */
+function scopedFacts(
+  facts: readonly StoredReviewedFact[],
+): readonly StoredReviewedFact[] {
+  return facts.filter((fact) => {
+    if (fact.state !== "confirmed") return true;
+    if (!("reportingStaffMemberIds" in fact)) return true;
+    return fact.reportingStaffMemberIds.length > 0;
+  });
+}
+
 function NotesAndFactsPanel({ workspace }: DocumentStudioProps) {
-  const facts = workspace.reviewedFacts;
+  const facts = scopedFacts(workspace.reviewedFacts);
 
   return (
     <section

@@ -112,4 +112,32 @@ describe("DocumentStudio", () => {
       );
     }
   });
+  it("keeps a fact that belongs to no reporting officer off Notes & Facts", async () => {
+    const user = userEvent.setup();
+    const view = render(
+      <DocumentStudio
+        incident={incident}
+        reports={[]}
+        workspace={{
+          ...workspace,
+          reviewedFacts: [
+            ...workspace.reviewedFacts,
+            {
+              id: "66666666-6666-4666-8666-666666666666",
+              field: "Unassigned observation",
+              state: "confirmed" as const,
+              value: "Confirmed fact that is not assigned to any reporter.",
+              sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
+              reportingStaffMemberIds: [],
+            },
+          ],
+        }}
+      />,
+    );
+    const root = within(view.container);
+
+    await user.click(root.getByRole("tab", { name: /Notes & Facts/i }));
+    expect(root.getByText("Location")).toBeVisible();
+    expect(root.queryByText("Unassigned observation")).toBeNull();
+  });
 });
