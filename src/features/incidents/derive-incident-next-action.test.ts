@@ -20,7 +20,6 @@ const unknownFact: StoredReviewedFact = {
   field: "Time",
   state: "unknown",
   reason: "Not established in the source notes.",
-  sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
 };
 
 const unassignedConfirmedFact: StoredReviewedFact = {
