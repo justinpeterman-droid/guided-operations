@@ -49,6 +49,7 @@ describe("WorkspaceNavigation", () => {
 
     expect(toggle).toHaveAccessibleName("Menu");
     expect(toggle).toHaveAttribute("aria-expanded", "false");
+    expect(toggle).toHaveFocus();
 
     await user.click(toggle);
     await user.click(
