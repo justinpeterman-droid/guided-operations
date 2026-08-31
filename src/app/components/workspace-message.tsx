@@ -2,10 +2,18 @@ import Link from "next/link";
 
 import { WorkspaceBrand } from "@/app/components/workspace-brand";
 
-export type WorkspaceMessageAction = Readonly<{
+type WorkspaceMessageLinkAction = Readonly<{
   href: string;
   label: string;
 }>;
+
+type WorkspaceMessageButtonAction = Readonly<{
+  label: string;
+  onClick: () => void;
+}>;
+
+export type WorkspaceMessageAction =
+  WorkspaceMessageLinkAction | WorkspaceMessageButtonAction;
 
 export type WorkspaceMessageProps = Readonly<{
   actions: readonly WorkspaceMessageAction[];
@@ -58,15 +66,26 @@ export function WorkspaceMessage({
         <h1 id={titleId}>{title}</h1>
         <p>{description}</p>
         <div className="workspace-message-actions">
-          {actions.map((action) => (
-            <Link
-              className="reports-home-link"
-              href={action.href}
-              key={action.href}
-            >
-              {action.label}
-            </Link>
-          ))}
+          {actions.map((action) =>
+            "href" in action ? (
+              <Link
+                className="reports-home-link"
+                href={action.href}
+                key={action.href}
+              >
+                {action.label}
+              </Link>
+            ) : (
+              <button
+                className="reports-home-link workspace-retry-button"
+                key={action.label}
+                onClick={action.onClick}
+                type="button"
+              >
+                {action.label}
+              </button>
+            ),
+          )}
         </div>
       </section>
     </main>

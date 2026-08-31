@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { describe, expect, it, vi } from "vitest";
 
 import {
   HOME_ACTION,
@@ -32,5 +33,21 @@ describe("WorkspaceMessage", () => {
       "href",
       "/home",
     );
+  });
+
+  it("uses the same recovery surface for a bounded retry action", async () => {
+    const onRetry = vi.fn();
+    const user = userEvent.setup();
+    render(
+      <WorkspaceMessage
+        actions={[{ label: "Try again", onClick: onRetry }]}
+        description="Your work is still visible."
+        eyebrow="Workspace unavailable"
+        title="This page cannot load right now."
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Try again" }));
+    expect(onRetry).toHaveBeenCalledOnce();
   });
 });
