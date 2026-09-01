@@ -138,11 +138,14 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
 
       <div className="count-sheet-grid">
         <div
+          aria-describedby="preview-count-scroll-cue"
           aria-label="Count entries by fictional area and unit"
           className="count-sheet-table-wrap"
           role="region"
         >
-          <p className="count-sheet-scroll-cue">Swipe to view all units</p>
+          <p className="count-sheet-scroll-cue" id="preview-count-scroll-cue">
+            Swipe to view all units; area names remain visible
+          </p>
           <table>
             <caption>Out-of-housing count by fictional area and unit</caption>
             <thead>

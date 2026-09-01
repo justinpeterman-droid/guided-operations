@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 import { getLegalHoldApproval } from "./legal-hold-request";
 
 type State = "idle" | "confirming" | "submitting" | "released" | "failed";
@@ -63,6 +65,7 @@ export function ReleaseLegalHoldControl({
 
   return (
     <form
+      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -89,13 +92,14 @@ export function ReleaseLegalHoldControl({
       <label htmlFor={`release-passcode-${holdId}`}>
         Your administrator passcode
       </label>
-      <input
+      <SecretInput
         autoComplete="current-password"
+        disabled={state === "submitting"}
         id={`release-passcode-${holdId}`}
         minLength={8}
         name="administratorPasscode"
+        revealLabel="administrator passcode"
         required
-        type="password"
       />
       <button disabled={state === "submitting"} type="submit">
         {state === "submitting" ? "Releasing hold…" : "Confirm release"}

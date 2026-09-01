@@ -23,6 +23,23 @@ describe("LoginForm", () => {
       .closest("form");
     expect(form).toHaveAttribute("action", "/api/auth/sign-in");
     expect(form).toHaveAttribute("method", "post");
+    expect(form).toHaveAttribute("novalidate");
+  });
+
+  it("owns required-field feedback and focuses the first missing field", async () => {
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.click(screen.getByRole("button", { name: "Sign in" }));
+
+    expect(
+      screen.getByText("Enter your employee number and passcode."),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Employee number")).toHaveFocus();
+    expect(screen.getByLabelText("Employee number")).toHaveAttribute(
+      "aria-invalid",
+      "true",
+    );
   });
 
   it("sends only the entered credentials to the guarded same-origin endpoint", async () => {
@@ -67,5 +84,10 @@ describe("LoginForm", () => {
       ),
     ).toBeVisible();
     expect(push).not.toHaveBeenCalled();
+    expect(
+      screen.getByText(
+        "We could not sign you in. Check your employee number and passcode, then try again.",
+      ),
+    ).toHaveFocus();
   });
 });

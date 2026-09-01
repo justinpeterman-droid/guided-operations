@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type FormState = "idle" | "submitting" | "failed";
 
 const FAILURE_MESSAGE =
@@ -61,6 +63,7 @@ export function TemporaryPasscodeChangeForm({
 
   return (
     <form
+      noValidate
       action="/api/auth/complete-temporary-passcode-change"
       className="account-session-controls"
       method="post"
@@ -87,14 +90,14 @@ export function TemporaryPasscodeChangeForm({
         type="text"
       />
       <label htmlFor="new-passcode">New personal passcode</label>
-      <input
+      <SecretInput
         autoComplete="new-password"
         id="new-passcode"
         maxLength={64}
         minLength={8}
         name="passcode"
+        revealLabel="new personal passcode"
         required
-        type="password"
       />
       <div className="account-session-actions">
         <button disabled={state === "submitting"} type="submit">

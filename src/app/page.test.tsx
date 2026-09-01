@@ -52,6 +52,9 @@ describe("PublicLandingPage", () => {
       "/login",
     );
     expect(
+      screen.getByRole("link", { name: "Sign in to Guided Operations" }),
+    ).toHaveAttribute("href", "/login");
+    expect(
       screen.getByRole("heading", {
         name: "Clear guidance for the work that has to be right.",
       }),

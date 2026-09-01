@@ -8,6 +8,10 @@ import {
   unavailableForms,
 } from "@/features/forms-library/catalog";
 
+export const metadata = {
+  title: "Forms Library preview",
+};
+
 /**
  * Honest visual contract for the future Forms Library. It contains no copied
  * forms, real records, or invented paper workflows.

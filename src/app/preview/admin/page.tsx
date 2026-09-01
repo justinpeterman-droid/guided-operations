@@ -2,6 +2,10 @@ import Link from "next/link";
 
 import { PreviewShell } from "@/app/components/preview-shell";
 
+export const metadata = {
+  title: "Administrator preview",
+};
+
 const actions = [
   {
     title: "Roster",

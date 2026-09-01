@@ -15,6 +15,10 @@ import { ReportHistory } from "./report-history";
 import { PrintReportButton } from "./print-report-button";
 import { ReportRevisionForm } from "./report-revision-form";
 
+export const metadata = {
+  title: "Report",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function ReportPage({

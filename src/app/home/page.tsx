@@ -11,6 +11,10 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
 
+export const metadata = {
+  title: "Officer workspace",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Real signed-in home. It never invents work or shows an unsafe admin entry. */

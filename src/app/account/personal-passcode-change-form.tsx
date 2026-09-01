@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type State = "idle" | "submitting" | "failed";
 
 function csrfFrom(body: unknown): string | null {
@@ -58,6 +60,7 @@ export function PersonalPasscodeChangeForm() {
 
   return (
     <form
+      noValidate
       className="account-session-controls"
       onSubmit={(event) => {
         event.preventDefault();
@@ -80,33 +83,33 @@ export function PersonalPasscodeChangeForm() {
         type="text"
       />
       <label htmlFor="current-personal-passcode">Current passcode</label>
-      <input
+      <SecretInput
         autoComplete="current-password"
         id="current-personal-passcode"
         maxLength={64}
         name="currentPasscode"
+        revealLabel="current passcode"
         required
-        type="password"
       />
       <label htmlFor="new-personal-passcode">New personal passcode</label>
-      <input
+      <SecretInput
         autoComplete="new-password"
         id="new-personal-passcode"
         maxLength={64}
         minLength={8}
         name="newPasscode"
+        revealLabel="new personal passcode"
         required
-        type="password"
       />
       <label htmlFor="confirm-personal-passcode">Confirm new passcode</label>
-      <input
+      <SecretInput
         autoComplete="new-password"
         id="confirm-personal-passcode"
         maxLength={64}
         minLength={8}
         name="confirmPasscode"
+        revealLabel="passcode confirmation"
         required
-        type="password"
       />
       <div className="account-session-actions">
         <button disabled={state === "submitting"} type="submit">

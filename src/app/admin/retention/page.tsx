@@ -22,6 +22,10 @@ import { ExecuteRetentionDeletionControl } from "./execute-retention-deletion-co
 import { PlaceLegalHoldForm } from "./place-legal-hold-form";
 import { ReleaseLegalHoldControl } from "./release-legal-hold-control";
 
+export const metadata = {
+  title: "Retention and legal holds",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function AdminRetentionPage() {

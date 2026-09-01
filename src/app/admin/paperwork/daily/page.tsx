@@ -10,6 +10,10 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listDailyPaperworkStatusForCurrentSession } from "@/server/paperwork/list-daily-paperwork-status";
 
+export const metadata = {
+  title: "Daily paperwork",
+};
+
 export const dynamic = "force-dynamic";
 
 type PageSearchParams = Promise<Record<string, string | string[] | undefined>>;

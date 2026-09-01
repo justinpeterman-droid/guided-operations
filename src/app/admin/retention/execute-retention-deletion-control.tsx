@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 import { getRetentionDeletionApproval } from "./retention-deletion-request";
 
 type State = "idle" | "confirming" | "submitting" | "completed" | "failed";
@@ -69,6 +71,7 @@ export function ExecuteRetentionDeletionControl({
 
   return (
     <form
+      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -93,13 +96,14 @@ export function ExecuteRetentionDeletionControl({
       <label htmlFor={`delete-execution-passcode-${requestId}`}>
         Re-enter your administrator passcode
       </label>
-      <input
+      <SecretInput
         autoComplete="current-password"
+        disabled={state === "submitting"}
         id={`delete-execution-passcode-${requestId}`}
         minLength={8}
         name="administratorPasscode"
+        revealLabel="administrator passcode"
         required
-        type="password"
       />
       <button disabled={state === "submitting"} type="submit">
         {state === "submitting" ? "Deleting…" : "Permanently delete"}

@@ -36,6 +36,10 @@ export default async function PublicLandingPage() {
             every answer and every document before anything becomes official.
           </p>
 
+          <Link className="mobile-sign-in-action" href="/login">
+            Sign in to Guided Operations
+          </Link>
+
           <ul className="principle-list">
             <li>
               <strong>Your facts stay yours.</strong>

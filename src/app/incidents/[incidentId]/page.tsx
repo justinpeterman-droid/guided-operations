@@ -9,6 +9,10 @@ import { getIncidentReportWorkspaceForCurrentSession } from "@/server/incidents/
 import { getIncidentSummaryForCurrentSession } from "@/server/incidents/get-incident-summary";
 import { listReportsForIncidentForCurrentSession } from "@/server/incidents/list-incident-reports";
 
+export const metadata = {
+  title: "Incident report workspace",
+};
+
 export const dynamic = "force-dynamic";
 
 type IncidentPageClient = Parameters<

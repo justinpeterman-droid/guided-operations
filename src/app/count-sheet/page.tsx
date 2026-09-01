@@ -11,6 +11,10 @@ import { CountSheetWorkspace } from "@/features/count-sheet/count-sheet-workspac
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
+export const metadata = {
+  title: "Count Sheet",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function CountSheetPage() {

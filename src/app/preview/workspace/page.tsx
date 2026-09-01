@@ -3,6 +3,10 @@ import Link from "next/link";
 import { PreviewShell } from "@/app/components/preview-shell";
 import { WorkspaceCommandCenter } from "@/app/components/workspace-command-center";
 
+export const metadata = {
+  title: "Officer workspace preview",
+};
+
 /**
  * A non-persistent visual workspace for owner review. It deliberately never
  * creates data or grants access; real officer pages remain session protected.

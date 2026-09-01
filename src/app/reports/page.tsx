@@ -13,6 +13,10 @@ import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
 import { ReportsList } from "./reports-list";
 import { SignOutButton } from "./sign-out-button";
 
+export const metadata = {
+  title: "Report history",
+};
+
 export const dynamic = "force-dynamic";
 
 async function loadAuthorizedWork() {

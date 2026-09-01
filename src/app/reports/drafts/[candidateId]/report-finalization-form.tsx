@@ -77,7 +77,7 @@ export function ReportFinalizationForm({
   }
 
   return (
-    <form className="draft-finalization-form" onSubmit={finalize}>
+    <form noValidate className="draft-finalization-form" onSubmit={finalize}>
       <h2>Make your reviewed report</h2>
       <p>
         Edit the draft as needed. Submitting creates an immutable first report
@@ -86,6 +86,7 @@ export function ReportFinalizationForm({
       <label>
         Final narrative
         <textarea
+          className="resize-none"
           onChange={(event) => setNarrative(event.target.value)}
           required
           value={narrative}

@@ -6,6 +6,10 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAuditEventsForCurrentSession } from "@/server/auth/list-admin-audit-events";
 
+export const metadata = {
+  title: "Audit events",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Server-rendered redacted administrator audit timeline. */

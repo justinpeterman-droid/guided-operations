@@ -14,6 +14,10 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
+export const metadata = {
+  title: "Forms Library",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Protected approved-form catalog. It never lists an unreviewed form as ready. */

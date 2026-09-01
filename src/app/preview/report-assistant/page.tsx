@@ -1,5 +1,9 @@
 import { PreviewShell } from "@/app/components/preview-shell";
 
+export const metadata = {
+  title: "Report Assistant preview",
+};
+
 export default function ReportAssistantPreviewPage() {
   return (
     <PreviewShell
@@ -71,6 +75,7 @@ export default function ReportAssistantPreviewPage() {
             <label className="full-width">
               Your field notes
               <textarea
+                className="resize-none"
                 disabled
                 value="This fictional workspace will preserve unknown or missing information instead of filling it in."
                 readOnly
