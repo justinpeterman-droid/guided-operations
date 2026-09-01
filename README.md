@@ -49,9 +49,12 @@ reasoning, is [Current open items](ROADMAP.md#current-open-items).
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The owner deferred the normalization fix
    to the annual refresh in O-026.
-3. **Continuous integration cannot run.** Every workflow has failed in three to
-   five seconds since 2026-08-28 with no assigned runner because the private
-   repository's included Actions minutes are exhausted.
+3. **The released commits were never checked by CI.** From 2026-08-28 to
+   2026-08-31 every workflow failed within seconds with no assigned runner
+   because the private repository's included Actions minutes were exhausted. The
+   monthly allowance reset on 2026-09-01 and workflows run normally again, but
+   nothing on `main` from that window — the 2026-08-30 release included — has a
+   passing CI run. Re-run the workflows on `main` to establish one.
 4. **Hosted recovery is unproven.** The backup tool has never been run against
    hosted production, and no decryption or isolated restore has been performed.
 5. **Production monitoring does not exist.** There are no monitoring sinks,

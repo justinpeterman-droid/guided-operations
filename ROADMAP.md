@@ -102,11 +102,16 @@ release, in rough order of user impact. They are tracked here and summarized in
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The normalization fix re-keys all 236
    bundles, so the owner deferred it to the annual refresh in O-026.
-3. **Continuous integration cannot run.** Every workflow has failed in three to
-   five seconds since 2026-08-28 16:34 UTC with no assigned runner, because the
-   private repository's included Actions minutes are exhausted. Verification
-   since that date is local only. Restore CI, or record an owner decision
-   accepting local-only verification with a named reviewer per release.
+3. **The released commits were never checked by CI.** From 2026-08-28 16:34 UTC
+   to 2026-08-31 every workflow failed within seconds with no assigned runner,
+   because the private repository's included Actions minutes were exhausted.
+   Verification in that window is local only. The monthly allowance reset on
+   2026-09-01 and workflows execute normally again — `Web quality` runs 447
+   through 450 passed that morning — but no commit on `main` from the outage
+   window, including the 2026-08-30 release commit, has a passing CI run. Re-run
+   the four workflows on `main` and record the result. Watch consumption: four
+   workflows at roughly 22 minutes per push exhausted the allowance in three
+   days last month.
 4. **Hosted recovery is unproven.** The guarded encrypted off-provider backup
    tool exists but has never been run against hosted production. Its protected
    operator host, schedule, key custody, decryption proof, and restore into an

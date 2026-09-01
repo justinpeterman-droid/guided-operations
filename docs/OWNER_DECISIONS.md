@@ -129,14 +129,17 @@ resource.
   each one individually against the dependency-maintenance policy; do not merge
   a bulk update only to clear the queue.
 
-- **GitHub Actions exhausted (2026-08-29):** every workflow run on this private
-  repository has failed in 3-5 seconds since 2026-08-28 16:34 UTC. Failed jobs
-  are assigned no runner and execute zero steps. Actions is enabled and the
-  workflow definitions are valid; a run on the owner's _public_ repository
-  succeeded during the same window. The cause is the monthly included-minutes
-  allowance for private repositories, consumed at roughly 22 minutes per push
-  across four workflows. Local verification is unaffected: lint, typecheck, 681
-  Vitest tests and 66 operations tests all pass.
+- **GitHub Actions exhausted (2026-08-29, resolved 2026-09-01):** every workflow
+  run on this private repository failed in 3-5 seconds from 2026-08-28 16:34 UTC
+  through 2026-08-31. Failed jobs were assigned no runner and executed zero
+  steps. Actions was enabled and the workflow definitions were valid; a run on
+  the owner's _public_ repository succeeded during the same window. The cause
+  was the monthly included-minutes allowance for private repositories, consumed
+  at roughly 22 minutes per push across four workflows. The allowance reset on
+  2026-09-01 and workflows execute normally again. Two consequences remain: no
+  commit on `main` from the outage window, including the 2026-08-30 release
+  commit, has a passing CI run; and the same consumption rate will exhaust the
+  allowance again in roughly three days of active pushing.
 - **NODE_ENV leak:** a shell environment with `NODE_ENV=production` causes React
   to load its production build, and 121 test files fail with
   `TypeError: React.act is not a function`. These are phantom failures. Run the

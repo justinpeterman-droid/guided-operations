@@ -20,9 +20,10 @@ The authoritative list of what remains open is
 - Corpus: **236 documents registered and 235 imported on 2026-08-30; all remain
   `awaiting_review` with `qa_approved = false`, so nothing is embedded or
   searchable**
-- CI/release automation: **GitHub Actions has failed before assigning a runner
-  since 2026-08-28 because the private repository's included minutes are
-  exhausted; verification since then is local only**
+- CI/release automation: **GitHub Actions failed before assigning a runner from
+  2026-08-28 to 2026-08-31 because the private repository's included minutes
+  were exhausted; the allowance reset on 2026-09-01 and workflows run again, but
+  no `main` commit from the outage window has a passing CI run**
 - Backups and restore exercise: **local fictional database-plus-Storage
   rehearsal and encrypted off-provider tooling implemented; hosted schedule, key
   custody, decryption proof and isolated restore not established**

@@ -13,9 +13,11 @@ and guarded fictional browser controls all run locally and pass. The application
 was released to production on 2026-08-30.
 
 Two limits apply to any claim made from this evidence. First, **GitHub Actions
-has not run since 2026-08-28** because the private repository's included minutes
-are exhausted, so every check since then is local only and must name the exact
-commit it was run against. Second, existing evidence does not prove native
+could not run from 2026-08-28 to 2026-08-31** because the private repository's
+included minutes were exhausted; the allowance reset on 2026-09-01 and workflows
+run normally again, but no commit on `main` from that window has a passing CI
+run, so evidence for those commits is local only and must name the exact commit
+it was run against. Second, existing evidence does not prove native
 screen-reader and print behavior, approved-corpus answer quality, off-provider
 hosted restore, or monitoring and alerting. Inspect the exact commit and
 retained evidence before citing a gate as passed.
