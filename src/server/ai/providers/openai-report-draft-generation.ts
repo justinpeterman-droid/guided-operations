@@ -46,7 +46,6 @@ function createDraftJsonSchema(allowedFactIds: readonly string[]) {
               type: "array",
               minItems: 1,
               maxItems: 50,
-              uniqueItems: true,
               items: { type: "string", enum: allowedFactIds },
             },
           },
