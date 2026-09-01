@@ -344,18 +344,21 @@ test("an officer and administrator can use the protected per-officer report work
   await page.getByRole("tab", { name: /^Reports/ }).click();
   await expect(page.getByRole("heading", { name: "Reports" })).toBeVisible();
 
+  await expect(page.getByText("1 of 1 confirmed facts included")).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Create review draft" }),
+  ).toBeEnabled();
+
+  await page.getByText("Edit included facts", { exact: true }).click();
   const checkbox = page.getByRole("checkbox", {
     name: /Officer observation/,
   });
+  await expect(checkbox).toBeChecked();
   const checkboxBox = await checkbox.boundingBox();
   expect(checkboxBox?.width).toBeLessThan(30);
   expect(checkboxBox?.height).toBeLessThan(30);
   await checkbox.focus();
   await expect(checkbox).toBeFocused();
-  await checkbox.press("Space");
-  await expect(
-    page.getByRole("button", { name: "Create review draft" }),
-  ).toBeEnabled();
 
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(
