@@ -26,6 +26,9 @@ export function validateProductionBackupRequest(input, paths) {
       "A dedicated server-side Storage backup credential is required.",
     );
 
+  validatePinnedToolPath("pg_dump", input.pgDumpPath, errors);
+  validatePinnedToolPath("age", input.agePath, errors);
+
   validateDatabaseUrl(input.databaseUrl, input.projectRef, errors);
   validateSupabaseUrl(input.supabaseUrl, input.projectRef, errors);
   validateDestination(paths, errors);
@@ -61,6 +64,19 @@ export function resolveBackupPaths({ repositoryRoot, destinationRoot }) {
     destinationRoot: resolvedDestination,
     targetAttestation,
   };
+}
+
+function validatePinnedToolPath(name, value, errors) {
+  // A bare executable name is resolved through PATH while the Production
+  // database credential and the plaintext dump stream are both in scope. Require
+  // an absolute, traversal-free path so the operator pins the exact binary.
+  if (typeof value !== "string" || !isAbsolute(value)) {
+    errors.push(`The ${name} backup tool must be pinned to an absolute path.`);
+    return;
+  }
+  if (value.split(/[\\/]/u).includes("..")) {
+    errors.push(`The ${name} backup tool path must not traverse directories.`);
+  }
 }
 
 function validateDestination(paths, errors) {
