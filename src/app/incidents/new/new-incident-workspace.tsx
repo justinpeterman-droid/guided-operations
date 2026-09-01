@@ -141,19 +141,19 @@ export function NewIncidentWorkspace() {
   );
   const readyForSuggestions = Boolean(
     incidentNumber.trim() &&
-      incidentName.trim() &&
-      occurredAt &&
-      location.trim() &&
-      notes.trim() &&
-      factSourceSupported,
+    incidentName.trim() &&
+    occurredAt &&
+    location.trim() &&
+    notes.trim() &&
+    factSourceSupported,
   );
   const readyForFactReview = Boolean(
     incidentNumber.trim() &&
-      incidentName.trim() &&
-      occurredAt &&
-      location.trim() &&
-      categoryDefinition &&
-      notes.trim(),
+    incidentName.trim() &&
+    occurredAt &&
+    location.trim() &&
+    categoryDefinition &&
+    notes.trim(),
   );
   const confirmedFactProposals = factProposals.filter(
     (proposal) =>
@@ -773,9 +773,8 @@ export function NewIncidentWorkspace() {
                 </section>
               ) : null}
               <p className="incident-guidance">
-                This recovered checklist is a Preview candidate. It remains
-                blocked from Production until its operational owner approves the
-                exact version.
+                This recovered checklist is approved for the limited production
+                pilot. Review every answer before saving.
               </p>
               <button
                 className="incident-primary"
@@ -995,7 +994,7 @@ export function NewIncidentWorkspace() {
           {step === 6 ? (
             <>
               <section className="incident-review">
-                <h2>Candidate required paperwork</h2>
+                <h2>Required paperwork guidance</h2>
                 {categoryDefinition ? (
                   <ul>
                     {categoryDefinition.requiredForms.map((formType) => (
@@ -1006,8 +1005,9 @@ export function NewIncidentWorkspace() {
                   </ul>
                 ) : null}
                 <p>
-                  This list is guidance from the recovered candidate. Saving
-                  does not claim that a form was completed, printed, or filed.
+                  This list is guidance from the approved pilot checklist.
+                  Saving does not claim that a form was completed, printed, or
+                  filed.
                 </p>
               </section>
               <button
@@ -1036,7 +1036,7 @@ export function NewIncidentWorkspace() {
         <aside className="incident-rail">
           <h2>Report Assistant rules</h2>
           <p>
-            Category questions come from one versioned candidate. Required
+            Category questions come from one versioned pilot checklist. Required
             answers cannot disappear, and report generation may use only saved
             confirmed facts.
           </p>

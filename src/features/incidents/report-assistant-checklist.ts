@@ -2,12 +2,12 @@ import { z } from "zod";
 
 import type { ReportType } from "./report-types";
 
-export const REPORT_CHECKLIST_DEFINITION_KEY = "bmu-legacy-candidate";
+export const REPORT_CHECKLIST_DEFINITION_KEY = "bmu-legacy-pilot";
 export const REPORT_CHECKLIST_DEFINITION_VERSION = 1;
 export const REPORT_CHECKLIST_SOURCE_COMMIT =
   "ebe52c4b977ab742975974732beec42fff1bbce5";
-export const REPORT_CHECKLIST_APPROVAL_STATUS = "candidate" as const;
-export const REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX = `[report-checklist:${REPORT_CHECKLIST_DEFINITION_KEY}@${REPORT_CHECKLIST_DEFINITION_VERSION}:`;
+export const REPORT_CHECKLIST_APPROVAL_STATUS = "pilot_approved" as const;
+export const REPORT_CHECKLIST_FIELD_PREFIX = `[report-checklist:${REPORT_CHECKLIST_DEFINITION_KEY}@${REPORT_CHECKLIST_DEFINITION_VERSION}:`;
 
 const questionIdSchema = z.string().regex(/^[a-z][a-z0-9_]{1,63}$/);
 const nonEmptyText = (maximum: number) => z.string().trim().min(1).max(maximum);
@@ -868,14 +868,15 @@ export function validateReportChecklistAnswers(
 export function checklistFieldForQuestion(
   question: ReportChecklistQuestion,
 ): string {
-  return `${REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX}${question.id}] ${question.field}`;
+  return `${REPORT_CHECKLIST_FIELD_PREFIX}${question.id}] ${question.field}`;
 }
 
-export function revisionUsesCandidateReportChecklist(
+/** Rejects retired checklist candidates while permitting the owner-approved pilot definition. */
+export function revisionUsesUnapprovedReportChecklist(
   reviewedFacts: readonly Readonly<{ field: string }>[],
 ): boolean {
   return reviewedFacts.some((fact) =>
-    fact.field.startsWith(REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX),
+    fact.field.startsWith("[report-checklist:bmu-legacy-candidate@"),
   );
 }
 

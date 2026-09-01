@@ -8,13 +8,13 @@ import {
   checklistFieldForQuestion,
   getApplicableReportChecklistQuestions,
   getReportChecklistCategory,
-  revisionUsesCandidateReportChecklist,
+  revisionUsesUnapprovedReportChecklist,
   validateReportChecklistAnswers,
   type ReportChecklistAnswer,
 } from "./report-assistant-checklist";
 
 describe("versioned Report Assistant checklist", () => {
-  it("preserves all nine legacy category families as a non-production candidate", () => {
+  it("preserves all nine legacy category families as a pilot-approved definition", () => {
     expect(REPORT_CHECKLIST_CATEGORIES).toHaveLength(9);
     expect(REPORT_CHECKLIST_CATEGORIES.map((category) => category.key)).toEqual(
       [
@@ -29,7 +29,7 @@ describe("versioned Report Assistant checklist", () => {
         "other_rule_violation",
       ],
     );
-    expect(REPORT_CHECKLIST_APPROVAL_STATUS).toBe("candidate");
+    expect(REPORT_CHECKLIST_APPROVAL_STATUS).toBe("pilot_approved");
     expect(REPORT_CHECKLIST_SOURCE_COMMIT).toMatch(/^[a-f0-9]{40}$/);
   });
 
@@ -158,8 +158,8 @@ describe("versioned Report Assistant checklist", () => {
     expect(built.reviewedFacts.every((fact) => fact.field.length <= 120)).toBe(
       true,
     );
-    expect(revisionUsesCandidateReportChecklist(built.reviewedFacts)).toBe(
-      true,
+    expect(revisionUsesUnapprovedReportChecklist(built.reviewedFacts)).toBe(
+      false,
     );
   });
 

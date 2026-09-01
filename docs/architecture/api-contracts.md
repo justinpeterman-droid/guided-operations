@@ -150,13 +150,14 @@ database RPC. Hosted-session and browser-workflow integration remain separate
 release gates.
 
 The incident create contract also recognizes the recovered Report Assistant
-checklist candidate by its versioned fact-field marker. In Development, Test,
-and Preview, every candidate checklist answer must match one controlled
-category, one known question, its answer type, dependency rule, and all
-applicable blocking questions. Answered questions become note-backed confirmed
-facts; Unknown and Not applicable remain explicit limited states. Production
-rejects this candidate marker until the operational owner approves the exact
-definition version. Removing the marker does not claim checklist completion.
+checklist by its versioned fact-field marker. In every environment, each
+pilot-checklist answer must match one controlled category, one known question,
+its answer type, dependency rule, and all applicable blocking questions.
+Answered questions become note-backed confirmed facts; Unknown and Not
+applicable remain explicit limited states. Production accepts the
+`bmu-legacy-pilot@1` marker under owner decision O-030 and continues to reject
+the retired `bmu-legacy-candidate` marker. Removing either marker does not claim
+checklist completion.
 
 Before the browser submits that contract, the incident workspace treats the
 selected category as a proposal that the officer must explicitly confirm. The
