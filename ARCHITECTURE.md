@@ -1,8 +1,8 @@
 # Guided Operations Target Architecture
 
-- **Status:** Target design with partial implementation; live qualification is
-  incomplete
-- **Last updated:** 2026-08-26
+- **Status:** Implemented and released to production 2026-08-30; several live
+  qualification gates remain open
+- **Last updated:** 2026-08-31
 - **Scope:** Private, web-only, single-facility application
 
 **Use classification:** Private single-facility application. Real operational
@@ -18,14 +18,13 @@ and Count Sheet persistence, provider-neutral policy/report AI adapters,
 immutable corpus-ingestion provenance, strict runtime readiness and redacted
 core telemetry. Local fictional database-plus-Storage recovery is automated.
 
-The shared Development Supabase project remains empty and behind the repository
-migration head. No hosted user, real record, or corpus object exists. Protected
-Vercel Previews build the Git branch, but the current candidate has not passed
-signed-in browser qualification. Complete forms/exports, real-corpus import and
-evaluation, hosted backup/restore, monitoring/alerts/budgets, retention/deletion
-execution, live infrastructure, and promotion remain target work. Everything
-labelled **target** is a constraint, not a claim that current code proves the
-behavior in Production.
+This design was released to production on 2026-08-30, with the corpus imported
+the same day. The corpus is not yet approved or embedded, so retrieval returns
+no sources. The corpus evaluation, hosted backup and restore, monitoring, alerts
+and budgets, and the retention/deletion rehearsal remain open; the current list
+is [Current open items](ROADMAP.md#current-open-items). Everything labelled
+**target** is a constraint, not a claim that current code proves the behavior in
+Production.
 
 The replacement is intentionally a new system, but it preserves the useful
 domain rules and contract tests from the former prison-policy-ai project. It

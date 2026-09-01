@@ -7,17 +7,20 @@ accessibility, recoverability, and explicit owner control.
 
 ## Current status
 
-Web, database, and fictional recovery CI now exist and repeatedly pass on the
-production-readiness branch. Unit/component, pgTAP, secret/dependency, build,
-private-Storage negative, runtime-readiness, and local recovery controls cover
-important implementation slices. A guarded, destructive-local-only browser
-runner is now implemented to create fictional staff through the private
-lifecycle and exercise the officer Count Sheet
-sign-in/save/reopen/print/sign-out path; executing and accepting that browser
-run and the protected hosted proof remain open. Existing evidence does not prove
-full accessibility/print parity, approved-corpus quality, off-provider hosted
-restore, monitoring/alerts, exact release qualification, or Production approval.
-Inspect the exact commit and retained evidence before citing a gate as passed.
+Updated 2026-08-31. Unit/component, pgTAP, operations-guard, secret and
+dependency, build, private-Storage negative, runtime-readiness, local recovery,
+and guarded fictional browser controls all run locally and pass. The application
+was released to production on 2026-08-30.
+
+Two limits apply to any claim made from this evidence. First, **GitHub Actions
+could not run from 2026-08-28 to 2026-08-31** because the private repository's
+included minutes were exhausted; the allowance reset on 2026-09-01 and workflows
+run normally again, but no commit on `main` from that window has a passing CI
+run, so evidence for those commits is local only and must name the exact commit
+it was run against. Second, existing evidence does not prove native
+screen-reader and print behavior, approved-corpus answer quality, off-provider
+hosted restore, or monitoring and alerting. Inspect the exact commit and
+retained evidence before citing a gate as passed.
 
 ## Documents
 

@@ -5,7 +5,9 @@ owner-authorized, isolated private Production release by completing the gated
 sequence in [`ROADMAP.md`](../../ROADMAP.md).
 
 **Started:** 2026-08-25  
-**Working branch:** `codex/production-readiness`  
+**Released:** 2026-08-30  
+**Working branch:** `codex/production-readiness`, merged to `main` as pull
+request #1 on 2026-08-30 and deleted; work now happens on `main`  
 **Data boundary:** real operational/personal data only in isolated Production
 after exact-candidate approval; Git, local development, CI, Preview, staging,
 screenshots, logs, support tools, recovery rehearsals, and fixtures remain
@@ -17,6 +19,28 @@ United States region
 This is the operational tracker, not a competing plan. `ROADMAP.md` owns phase
 order and exit criteria. The product, architecture, security, ADR, migration,
 quality, and operations documents remain authoritative for behavior and safety.
+
+## Post-release status — 2026-08-31
+
+**The application was released to production on 2026-08-30.** This checklist was
+written to drive that release and was not fully reconciled afterward. Read it
+with that in mind:
+
+- Phases 0 through 8 were all executed. Many boxes below remain unchecked
+  because nobody returned to record their evidence, not because the step was
+  skipped. An unchecked box here is not evidence that the step did not happen.
+- Several qualification gates were knowingly **not** satisfied at release and
+  were accepted as exceptions rather than passed: the hosted backup schedule and
+  decryption proof, the isolated restore drill, production monitoring and alert
+  delivery, provider budgets and cost caps, the rehearsed rollback, and the
+  corpus retrieval/citation/refusal evaluation.
+- The authoritative post-release list of what is still open is
+  [Current open items](../../ROADMAP.md#current-open-items) in `ROADMAP.md`,
+  summarized in [`README.md`](../../README.md). This checklist is history; that
+  list is current.
+
+Release evidence: [Production release](2026-08-30-production-release.md) and
+[Production corpus registration and import](2026-08-30-production-corpus-import.md).
 
 ## Evidence rule
 

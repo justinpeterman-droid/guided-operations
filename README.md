@@ -5,33 +5,77 @@ It is designed for one correctional facility and brings incident reports,
 operational paperwork, forms, and cited policy guidance into one review-first
 workspace.
 
-This repository contains no live operational records. The only real source
-material in the predecessor system is its policy/reference RAG corpus; that
-corpus is not copied into Git and must pass the documented inventory,
-classification, rights, hashing, and citation-reconciliation process before it
-is imported.
+This repository contains no live operational records and no policy corpus
+content. The real policy/reference corpus passed its inventory, rights, hashing,
+and reconciliation protocol and was imported into production private Storage on
+2026-08-30; it stays out of Git, local development, CI, Preview, screenshots,
+logs, and test fixtures.
 
 ## Current state
 
-As of 2026-08-28, this is an implementation candidate, not a production release.
+As of 2026-08-31 the application is released to production and in a post-release
+hardening period. The release evidence is recorded in
+[Production release](docs/operations/2026-08-30-production-release.md) and
+[Production corpus registration and import](docs/operations/2026-08-30-production-corpus-import.md).
 
-| Area                  | State                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub repository     | Private replacement repository created; the production-readiness branch is pushed and receives web, database, recovery, and authenticated fictional-browser CI on applicable commits                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Web foundation        | Next.js 16 App Router, React 19, protected officer/account/report/policy and administrator routes, and local production build                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Accepted appearance   | Guided Operations navy/gold design tokens established                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| Migrated product code | Protected incident/report review, finalization, correction, conflict recovery, append-only history/restore, audited print, exact-version reviewed-report Word download, and same-facility administrator visibility are locally browser-qualified with fictional data. Policy Expert, account/admin controls, the role-aware Forms Library capability catalog, assigned-shift Count Sheet, and an administrator-only six-form Daily Paperwork engine also exist. The catalog keeps Chain of Custody physical-only and does not advertise unfinished packet actions. Official 005/409 output, the six approved private paperwork definitions, hosted qualification, and release acceptance remain open; no feature is accepted for release |
-| Database              | Foundation migration applied to a new Supabase Free project in `us-east-1`; application tables remain empty                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Authentication        | Guarded sign-in, session, personal passcode, and protected officer/administrator lifecycle controls built; no hosted accounts exist                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| RAG corpus            | Not copied; inventory and reconciliation are required first                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Vercel                | Git-connected protected Previews build the branch; exact-commit health checks pass, while protected hosted signed-in qualification and Production configuration remain open                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| Supabase              | Hosted project healthy; the newer forward migrations and fictional end-to-end qualification have not been applied to the hosted project                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Operations            | Local fictional database-plus-Storage recovery, complete readiness validation, secret/dependency scanning, and redacted core telemetry pass; hosted controls remain open                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+Released is not the same as finished. The most important open item is that the
+production policy corpus is imported but not yet approved or embedded, so Policy
+Expert honestly reports that it has no sources instead of citing policy. See
+[Known gaps](#known-gaps) below.
+
+| Area              | State                                                                                                                                                                                                                                                                                           |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub repository | Private. `main` carries the released history after pull request #1 merged on 2026-08-30. GitHub Actions has not run since 2026-08-28 because the private-repository minute allowance is exhausted, so verification since that date is local only.                                               |
+| Web application   | Next.js 16 App Router and React 19. Protected officer, account, incident and report, Policy Expert, Forms Library, Count Sheet, and administrator routes are implemented and released.                                                                                                          |
+| Appearance        | Guided Operations navy/gold design tokens. The five UI polish waves and the owner-reviewed desktop Count Sheet fit are complete through `dbbc8d6`.                                                                                                                                              |
+| Authentication    | Employee number plus personal passcode is released: guarded sign-in, encrypted session cookies, refresh rotation, forced temporary-passcode change, personal passcode change, logout and logout-all, first-admin bootstrap, account lifecycle, and purpose-bound administrator step-up.         |
+| Database          | Supabase project in `us-east-1`. Fourteen pending migrations were applied on 2026-08-30 after schema and data dumps were taken outside the repository; local and remote migration histories matched exactly at that point.                                                                      |
+| RAG corpus        | 236 approved documents registered and 235 imported into production private Storage on 2026-08-30 across 1,310 pages and 1,224 chunks. Every document remains `awaiting_review` with `qa_approved = false`, so nothing is embedded and nothing is searchable yet. One document failed to import. |
+| AI providers      | `gpt-5.6-terra` is pinned for policy answers and report drafting and `text-embedding-3-small` for embeddings, both verified current on 2026-08-30. See O-027.                                                                                                                                   |
+| Vercel            | Git-connected. The released deployment returned `ok` from `/api/health/live` and `ready` from `/api/health/ready` on 2026-08-30.                                                                                                                                                                |
+| Operations        | Encrypted off-provider backup tooling, complete readiness validation, secret and dependency scanning, redacted telemetry, and a local fictional database-plus-Storage recovery rehearsal exist. Hosted backup scheduling, a live restore drill, monitoring sinks, alerting, and budgets do not. |
+
+### Known gaps
+
+These are the open items as of 2026-08-31. Most need an owner decision or an
+operator action rather than new application code. The fuller list, with the
+reasoning, is [Current open items](ROADMAP.md#current-open-items).
+
+1. **The corpus is not searchable.** All 235 imported documents are
+   `awaiting_review` and their chunks are `pending` with `qa_approved = false`.
+   The owner must approve them and run an embedding batch before Policy Expert
+   can cite anything.
+2. **One policy is permanently absent until the annual refresh.**
+   `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
+   bytes in its page 5 checkbox glyphs. The owner deferred the normalization fix
+   to the annual refresh in O-026.
+3. **The released commits were never checked by CI.** From 2026-08-28 to
+   2026-08-31 every workflow failed within seconds with no assigned runner
+   because the private repository's included Actions minutes were exhausted. The
+   monthly allowance reset on 2026-09-01 and workflows run normally again, but
+   nothing on `main` from that window — the 2026-08-30 release included — has a
+   passing CI run. Re-run the workflows on `main` to establish one.
+4. **Hosted recovery is unproven.** The backup tool has never been run against
+   hosted production, and no decryption or isolated restore has been performed.
+5. **Production monitoring does not exist.** There are no monitoring sinks,
+   alert delivery, cost caps, provider budgets, or a rehearsed rollback.
+6. **Administrator assurance is unresolved for real data.** O-013 remains an
+   open release gate; O-020 defers second-factor administration only for the
+   fictional-data phase, while O-015 authorizes real data in production.
+7. **The official 005/409 output is not authoritative.** The deterministic
+   mapping and fidelity checks exist, but the authoritative source form has not
+   been obtained, so the Word download is a generic reviewed-report export.
+8. **Manual accessibility and print validation is not done.** The runbook in
+   [Hands-on accessibility and print validation](docs/quality/hands-on-accessibility-print-validation.md)
+   has not been executed by a person.
+9. **Six Dependabot alerts are open** on the default branch as of 2026-09-01
+   (two high, two moderate, two low), where the 2026-08-28 review recorded zero.
+10. **Four owner decisions remain open:** OQ-010, OQ-013, OQ-014, and OQ-016.
 
 The predecessor repository remains intact. Canonical source provenance and the
 deliberate copy/rewrite/omit decisions live in
-[`docs/migration/source-manifest.md`](docs/migration/source-manifest.md). Hosted
-foundation evidence is recorded in
+[`docs/migration/source-manifest.md`](docs/migration/source-manifest.md). The
+original foundation evidence is recorded in
 [`docs/operations/2026-08-25-hosted-foundation.md`](docs/operations/2026-08-25-hosted-foundation.md).
 
 ## Stack decision
