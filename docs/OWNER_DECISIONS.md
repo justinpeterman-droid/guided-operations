@@ -139,13 +139,16 @@ resource.
   through 2026-08-31 because the monthly private-repository minutes were
   exhausted. After the reset, Web quality, Authenticated browser quality, and
   Recovery rehearsal passed on exact `main` commit `49812ec4`. Database quality
-  rebuilt and linted the database but exposed a test-only role-restoration
-  defect in one pgTAP assertion; the follow-up branch corrects it without
-  changing migrations, grants, RLS, application behavior, or hosted state. That
-  workflow must pass on the correction and resulting `main` commit. The same
-  roughly 22-minute consumption per four-workflow push can still exhaust the
-  allowance in about three active days. Exact run links are recorded in
-  `docs/quality/2026-09-01-post-merge-qualification.md`.
+  first exposed a test-only role-restoration defect in one pgTAP assertion. Pull
+  request #24 corrected it and passed migration replay, lint, pgTAP, and the
+  fictional import before generated-type verification found two already-migrated
+  incident-read RPCs missing from the generated file. The follow-up now includes
+  regenerated types and removes their temporary manual augmentation. No
+  migration, grant, RLS policy, application behavior, or hosted state changed.
+  The workflow must pass on the complete correction and resulting `main` commit.
+  The same roughly 22-minute consumption per four-workflow push can still
+  exhaust the allowance in about three active days. Exact run links are recorded
+  in `docs/quality/2026-09-01-post-merge-qualification.md`.
 - **NODE_ENV leak:** a shell environment with `NODE_ENV=production` causes React
   to load its production build, and 121 test files fail with
   `TypeError: React.act is not a function`. These are phantom failures. Run the

@@ -104,10 +104,13 @@ release, in rough order of user impact. They are tracked here and summarized in
    bundles, so the owner deferred it to the annual refresh in O-026.
 3. **Database quality needs a clean post-fix run.** On 2026-09-01, Web quality,
    Authenticated browser quality, and Recovery rehearsal passed on exact `main`
-   commit `49812ec4`. Database quality rebuilt from migrations and passed lint,
-   then pgTAP exposed one test-role assertion defect rather than a product grant
-   or RLS failure. The test-only correction must pass on its branch and then on
-   the resulting exact `main` commit. Evidence and run links are in
+   commit `49812ec4`. Database quality first exposed one test-role assertion
+   defect rather than a product grant or RLS failure. Pull request #24 then
+   passed migration replay, lint, pgTAP, and the fictional import before finding
+   that generated types omitted two already-migrated incident-read RPCs. The
+   role correction, regenerated types, and removal of their temporary manual
+   augmentation must pass together and then be rerun on the resulting exact
+   `main` commit. Evidence and run links are in
    [Post-merge qualification](docs/quality/2026-09-01-post-merge-qualification.md).
    Watch consumption: four workflows at roughly 22 minutes per push exhausted
    the allowance in three days last month.

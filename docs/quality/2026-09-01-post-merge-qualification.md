@@ -28,9 +28,23 @@ security. The test deliberately became `authenticated`, successfully exercised
 
 Commit `3de268fed94c2e5d0bc730da5921cfd1be6fbbd0` moves `reset role` immediately
 before that private-table assertion. It changes no migration, grant, RLS policy,
-application behavior, or hosted state. Database quality must pass on that commit
-before the correction can merge, and then must be rerun on the resulting exact
-`main` commit before the database gate is recorded as green.
+application behavior, or hosted state.
+
+The first pull-request rerun,
+[33475451312](https://github.com/justinpeterman-droid/guided-operations/actions/runs/33475451312),
+then passed local PostgreSQL startup, migration and fictional-seed replay,
+database lint, all pgTAP tests, and the fictional policy-bundle import. It found
+a second pre-existing repository drift at generated-type verification:
+`get_incident_summary` and `list_incident_reports` exist in migration
+`20260831111000`, but were represented only by a temporary manual type
+augmentation rather than `database.generated.ts`.
+
+The follow-up regenerates `database.generated.ts` from an unlinked local stack
+whose complete migration history exactly matched the checkout, then reduces the
+temporary wrapper to a direct generated-type export as its own comment required.
+Database quality must pass on the complete pull-request commit before merge and
+then be rerun on the resulting exact `main` commit before the database gate is
+recorded as green.
 
 ## Dependabot static triage
 

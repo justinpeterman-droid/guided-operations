@@ -8,18 +8,20 @@ accessibility, recoverability, and explicit owner control.
 ## Current status
 
 Updated 2026-09-01. Web quality, Authenticated browser quality, and Recovery
-rehearsal passed on exact `main` commit `49812ec4`. Database quality rebuilt and
-linted the database, then exposed a test-role defect in one pgTAP assertion. A
-test-only follow-up correction restores the owner role before querying a private
-table; it still needs a green branch run and exact-merge rerun. The application
-was released to production on 2026-08-30.
+rehearsal passed on exact `main` commit `49812ec4`. Database quality first
+exposed a test-role defect in one pgTAP assertion. After that correction passed
+pgTAP on pull request #24, generated-type verification found two
+already-migrated incident-read RPCs missing from the generated file. The
+follow-up now includes both corrections and still needs a complete green branch
+run and exact-merge rerun. The application was released to production on
+2026-08-30.
 
 Two limits apply to any claim made from this evidence. First, the exact-main
-database gate is not green yet; passing migration rebuild and lint do not
-replace the incomplete pgTAP run. Second, existing evidence does not prove
-native screen-reader and print behavior, approved-corpus answer quality,
-off-provider hosted restore, or monitoring and alerting. Inspect the exact
-commit and retained evidence before citing a gate as passed.
+database gate is not green yet; passing individual steps does not replace the
+complete workflow. Second, existing evidence does not prove native screen-reader
+and print behavior, approved-corpus answer quality, off-provider hosted restore,
+or monitoring and alerting. Inspect the exact commit and retained evidence
+before citing a gate as passed.
 
 ## Documents
 
