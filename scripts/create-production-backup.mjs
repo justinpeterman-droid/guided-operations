@@ -3,6 +3,8 @@ import { createHash, randomBytes } from "node:crypto";
 import {
   mkdirSync,
   createReadStream,
+  readFileSync,
+  realpathSync,
   renameSync,
   rmSync,
   statSync,
@@ -209,8 +211,8 @@ function environmentInput() {
     confirmation: process.env.PRODUCTION_BACKUP_CONFIRMATION,
     destinationRoot: process.env.PRODUCTION_BACKUP_DESTINATION,
     expiresOn: process.env.PRODUCTION_BACKUP_EXPIRES_ON,
-    pgDumpPath: process.env.PRODUCTION_BACKUP_PG_DUMP_PATH || "pg_dump",
-    agePath: process.env.PRODUCTION_BACKUP_AGE_PATH || "age",
+    pgDumpPath: process.env.PRODUCTION_BACKUP_PG_DUMP_PATH,
+    agePath: process.env.PRODUCTION_BACKUP_AGE_PATH,
   };
 }
 
@@ -251,6 +253,10 @@ async function main() {
       age: toolVersion(input.agePath, ["--version"]),
       node: process.version,
     };
+    // Every later spawn uses the verified real path, so a symlink swapped
+    // between verification and use cannot redirect the tool.
+    input.pgDumpPath = tools.pg_dump.path;
+    input.agePath = tools.age.path;
     const database = await backupDatabase({ input, backupRoot, signal });
     const client = createClient(input.supabaseUrl, input.supabaseSecretKey, {
       auth: { autoRefreshToken: false, persistSession: false },
@@ -357,8 +363,20 @@ function assertDirectChild(destinationRoot, backupRoot, backupId) {
 }
 
 function toolVersion(executable, args) {
+  // The guard has already rejected any non-absolute path. Resolve the real
+  // target and hash it so the evidence names the exact binary that handled the
+  // Production credential, without recording any secret.
+  let resolvedPath;
+  let digest;
   try {
-    return execFileSync(executable, args, {
+    resolvedPath = realpathSync(executable);
+    digest = sha256(readFileSync(resolvedPath));
+  } catch {
+    throw new Error("Production backup prerequisite is unavailable.");
+  }
+
+  try {
+    const version = execFileSync(resolvedPath, args, {
       encoding: "utf8",
       env: sanitizedToolEnvironment(),
       windowsHide: true,
@@ -366,6 +384,7 @@ function toolVersion(executable, args) {
     })
       .trim()
       .slice(0, 120);
+    return { version, path: resolvedPath, sha256: digest };
   } catch {
     throw new Error("Production backup prerequisite is unavailable.");
   }

@@ -19,6 +19,8 @@ function input(overrides = {}) {
     ageRecipient:
       "age1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
     confirmation: `BACKUP PRODUCTION ${projectRef}`,
+    pgDumpPath: "/usr/lib/postgresql/17/bin/pg_dump",
+    agePath: "/usr/bin/age",
     ...overrides,
   };
 }
@@ -117,5 +119,43 @@ describe("production backup request guard", () => {
       result.errors.join(" "),
       /exact Production backup confirmation/u,
     );
+  });
+
+  it("rejects backup tools resolved through PATH", () => {
+    const result = validateProductionBackupRequest(
+      input({ pgDumpPath: "pg_dump", agePath: "age" }),
+      paths,
+    );
+    assert.equal(result.ok, false);
+    assert.match(
+      result.errors.join(" "),
+      /pg_dump backup tool must be pinned to an absolute path/u,
+    );
+    assert.match(
+      result.errors.join(" "),
+      /age backup tool must be pinned to an absolute path/u,
+    );
+  });
+
+  it("rejects a missing or traversing backup tool path", () => {
+    const result = validateProductionBackupRequest(
+      input({ pgDumpPath: undefined, agePath: "/opt/tools/../../bin/age" }),
+      paths,
+    );
+    assert.equal(result.ok, false);
+    assert.match(
+      result.errors.join(" "),
+      /pg_dump backup tool must be pinned to an absolute path/u,
+    );
+    assert.match(
+      result.errors.join(" "),
+      /age backup tool path must not traverse directories/u,
+    );
+  });
+
+  it("accepts pinned absolute backup tool paths", () => {
+    const result = validateProductionBackupRequest(input(), paths);
+    assert.deepEqual(result.errors, []);
+    assert.equal(result.ok, true);
   });
 });
