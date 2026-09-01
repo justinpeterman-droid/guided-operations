@@ -13,7 +13,7 @@ logs, and test fixtures.
 
 ## Current state
 
-As of 2026-08-31 the application is released to production and in a post-release
+As of 2026-09-01 the application is released to production and in a post-release
 hardening period. The release evidence is recorded in
 [Production release](docs/operations/2026-08-30-production-release.md) and
 [Production corpus registration and import](docs/operations/2026-08-30-production-corpus-import.md).
@@ -23,21 +23,21 @@ production policy corpus is imported but not yet approved or embedded, so Policy
 Expert honestly reports that it has no sources instead of citing policy. See
 [Known gaps](#known-gaps) below.
 
-| Area              | State                                                                                                                                                                                                                                                                                           |
-| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| GitHub repository | Private. `main` carries the released history after pull request #1 merged on 2026-08-30. GitHub Actions has not run since 2026-08-28 because the private-repository minute allowance is exhausted, so verification since that date is local only.                                               |
-| Web application   | Next.js 16 App Router and React 19. Protected officer, account, incident and report, Policy Expert, Forms Library, Count Sheet, and administrator routes are implemented and released.                                                                                                          |
-| Appearance        | Guided Operations navy/gold design tokens. The five UI polish waves and the owner-reviewed desktop Count Sheet fit are complete through `dbbc8d6`.                                                                                                                                              |
-| Authentication    | Employee number plus personal passcode is released: guarded sign-in, encrypted session cookies, refresh rotation, forced temporary-passcode change, personal passcode change, logout and logout-all, first-admin bootstrap, account lifecycle, and purpose-bound administrator step-up.         |
-| Database          | Supabase project in `us-east-1`. Fourteen pending migrations were applied on 2026-08-30 after schema and data dumps were taken outside the repository; local and remote migration histories matched exactly at that point.                                                                      |
-| RAG corpus        | 236 approved documents registered and 235 imported into production private Storage on 2026-08-30 across 1,310 pages and 1,224 chunks. Every document remains `awaiting_review` with `qa_approved = false`, so nothing is embedded and nothing is searchable yet. One document failed to import. |
-| AI providers      | `gpt-5.6-terra` is pinned for policy answers and report drafting and `text-embedding-3-small` for embeddings, both verified current on 2026-08-30. See O-027.                                                                                                                                   |
-| Vercel            | Git-connected. The released deployment returned `ok` from `/api/health/live` and `ready` from `/api/health/ready` on 2026-08-30.                                                                                                                                                                |
-| Operations        | Encrypted off-provider backup tooling, complete readiness validation, secret and dependency scanning, redacted telemetry, and a local fictional database-plus-Storage recovery rehearsal exist. Hosted backup scheduling, a live restore drill, monitoring sinks, alerting, and budgets do not. |
+| Area              | State                                                                                                                                                                                                                                                                                                                  |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub repository | Private. On 2026-09-01, Web quality, Authenticated browser quality, and Recovery rehearsal passed on exact `main` commit `49812ec4`; Database quality exposed one test-role assertion defect now corrected on a follow-up branch. See [post-merge qualification](docs/quality/2026-09-01-post-merge-qualification.md). |
+| Web application   | Next.js 16 App Router and React 19. Protected officer, account, incident and report, Policy Expert, Forms Library, Count Sheet, and administrator routes are implemented and released.                                                                                                                                 |
+| Appearance        | Guided Operations navy/gold design tokens. The five UI polish waves and the owner-reviewed desktop Count Sheet fit are complete through `dbbc8d6`.                                                                                                                                                                     |
+| Authentication    | Employee number plus personal passcode is released: guarded sign-in, encrypted session cookies, refresh rotation, forced temporary-passcode change, personal passcode change, logout and logout-all, first-admin bootstrap, account lifecycle, and purpose-bound administrator step-up.                                |
+| Database          | Supabase project in `us-east-1`. Fourteen pending migrations were applied on 2026-08-30 after schema and data dumps were taken outside the repository; local and remote migration histories matched exactly at that point.                                                                                             |
+| RAG corpus        | 236 approved documents registered and 235 imported into production private Storage on 2026-08-30 across 1,310 pages and 1,224 chunks. Every document remains `awaiting_review` with `qa_approved = false`, so nothing is embedded and nothing is searchable yet. One document failed to import.                        |
+| AI providers      | `gpt-5.6-terra` is pinned for policy answers and report drafting and `text-embedding-3-small` for embeddings, both verified current on 2026-08-30. See O-027.                                                                                                                                                          |
+| Vercel            | Git-connected. The released deployment returned `ok` from `/api/health/live` and `ready` from `/api/health/ready` on 2026-08-30.                                                                                                                                                                                       |
+| Operations        | Encrypted off-provider backup tooling, complete readiness validation, secret and dependency scanning, redacted telemetry, and a local fictional database-plus-Storage recovery rehearsal exist. Hosted backup scheduling, a live restore drill, monitoring sinks, alerting, and budgets do not.                        |
 
 ### Known gaps
 
-These are the open items as of 2026-08-31. Most need an owner decision or an
+These are the open items as of 2026-09-01. Most need an owner decision or an
 operator action rather than new application code. The fuller list, with the
 reasoning, is [Current open items](ROADMAP.md#current-open-items).
 
@@ -49,12 +49,13 @@ reasoning, is [Current open items](ROADMAP.md#current-open-items).
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The owner deferred the normalization fix
    to the annual refresh in O-026.
-3. **The released commits were never checked by CI.** From 2026-08-28 to
-   2026-08-31 every workflow failed within seconds with no assigned runner
-   because the private repository's included Actions minutes were exhausted. The
-   monthly allowance reset on 2026-09-01 and workflows run normally again, but
-   nothing on `main` from that window — the 2026-08-30 release included — has a
-   passing CI run. Re-run the workflows on `main` to establish one.
+3. **The database CI rerun still needs to turn green.** Web quality,
+   Authenticated browser quality, and Recovery rehearsal passed on exact `main`
+   commit `49812ec4` on 2026-09-01. Database quality rebuilt and linted the
+   database, then exposed a pgTAP role-restoration defect in one assertion. The
+   test-only correction is on the follow-up branch; pass it there and rerun it
+   on the resulting exact `main` commit. See
+   [post-merge qualification](docs/quality/2026-09-01-post-merge-qualification.md).
 4. **Hosted recovery is unproven.** The backup tool has never been run against
    hosted production, and no decryption or isolated restore has been performed.
 5. **Production monitoring does not exist.** There are no monitoring sinks,
@@ -68,8 +69,12 @@ reasoning, is [Current open items](ROADMAP.md#current-open-items).
 8. **Manual accessibility and print validation is not done.** The runbook in
    [Hands-on accessibility and print validation](docs/quality/hands-on-accessibility-print-validation.md)
    has not been executed by a person.
-9. **Six Dependabot alerts are open** on the default branch as of 2026-09-01
-   (two high, two moderate, two low), where the 2026-08-28 review recorded zero.
+9. **Six Dependabot alerts remain open** on the default branch as of 2026-09-01
+   (two high, two moderate, two low). Static triage found one model-loading
+   alert that needs focused review and five that are not actionable in the
+   documented local MinerU path. No alert was dismissed and no dependency was
+   changed; see
+   [Dependabot triage](docs/quality/2026-09-01-post-merge-qualification.md#dependabot-static-triage).
 10. **Four owner decisions remain open:** OQ-010, OQ-013, OQ-014, and OQ-016.
 
 The predecessor repository remains intact. Canonical source provenance and the

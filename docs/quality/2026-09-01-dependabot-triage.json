@@ -1,0 +1,380 @@
+{
+  "schema_version": "triage-finding/v0",
+  "repository": {
+    "path": "C:\\Users\\justi\\GuidedOperationsWork\\pr17-merge",
+    "revision": "3de268fed94c2e5d0bc730da5921cfd1be6fbbd0"
+  },
+  "findings": [
+    {
+      "triage_item_id": "triage-001",
+      "input_id": "dependabot-34",
+      "source_type": "advisory",
+      "title": "HuggingFace transformers vulnerable to remote code execution",
+      "normalized_input": {
+        "vulnerable_component": "transformers 4.57.6 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "attacker-controlled model config.json or HuggingFace model repository",
+        "claimed_sink": "model initialization that downloads and executes attacker-controlled Python kernel code",
+        "claimed_control": "trust_remote_code is bypassed by _attn_implementation_internal",
+        "affected_version_or_path": "transformers < 5.3.0; CVE-2026-4372; GHSA-29pf-2h5f-8g72",
+        "preconditions": [
+          "The local MinerU process loads a model configuration containing an attacker-controlled _attn_implementation_internal value",
+          "The affected Transformers model-loading path is reached"
+        ],
+        "impact": "arbitrary code execution with the local operator process privileges",
+        "references": [
+          "https://github.com/advisories/GHSA-29pf-2h5f-8g72",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/34"
+        ]
+      },
+      "verdict": "needs_review",
+      "confidence": "medium",
+      "affected_locations": [
+        {
+          "label": "optional dependency",
+          "path": "tools/policy-ingestion/pyproject.toml",
+          "lines": "10",
+          "detail": "The local ingestion extra pins MinerU with both pipeline and VLM support."
+        },
+        {
+          "label": "locked vulnerable dependency",
+          "path": "tools/policy-ingestion/uv.lock",
+          "lines": "734-789",
+          "detail": "MinerU pipeline and VLM extras bring in Transformers; the lock resolves Transformers 4.57.6 at lines 1892-1893."
+        },
+        {
+          "label": "local model acquisition",
+          "path": "docs/operations/local-policy-ingestion.md",
+          "lines": "68-85",
+          "detail": "The operator downloads MinerU model artifacts from HuggingFace once and then selects the local model source."
+        },
+        {
+          "label": "local CLI boundary",
+          "path": "tools/policy-ingestion/guided_policy_ingestion/extractors/mineru.py",
+          "lines": "267-298",
+          "detail": "The repository invokes the pinned MinerU executable as a local subprocess."
+        }
+      ],
+      "reachable_path": [
+        "A trusted operator downloads the MinerU model set from HuggingFace",
+        "The local ingestion CLI launches MinerU with pipeline or VLM support",
+        "The hash-matched MinerU 3.4.5 wheel contains Transformers from_pretrained model-loading calls, including a causal-language-model registration path",
+        "Whether a downloaded model config can reach the advisory's dynamic-kernel path is not proven by repository-static evidence"
+      ],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "unknown",
+        "boundary_crossed": true,
+        "policy_basis": "SECURITY.md permits authorized local ingest but treats model and external artifacts as bounded supply-chain inputs; the local ingestion runbook downloads model artifacts from HuggingFace"
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": "needs_review",
+        "rank": 1,
+        "rationale": "This is the only alert with a plausible static bridge from the locked dependency to MinerU model initialization and an external model-artifact boundary.",
+        "drivers": [
+          "local operator execution",
+          "external model artifact",
+          "arbitrary code execution impact",
+          "exact vulnerable branch unresolved"
+        ]
+      },
+      "evidence": [
+        "The lock resolves Transformers 4.57.6, which is inside the advisory range below 5.3.0.",
+        "The runbook downloads the MinerU model set from HuggingFace and then runs those artifacts locally.",
+        "The exact MinerU 3.4.5 wheel matched lockfile SHA-256 4a73b865920bb9109c1b8b1bc46567e296bf0133a67106a04effd219536ae72d and contains multiple from_pretrained calls plus an AutoModelForCausalLM registration."
+      ],
+      "counterevidence": [
+        "Repository code accepts a policy-document root, not an arbitrary model repository identifier.",
+        "The documented steady-state extraction path sets MINERU_MODEL_SOURCE=local.",
+        "No repository code sets _attn_implementation_internal or trust_remote_code."
+      ],
+      "proof_gaps": [
+        "The repository does not record the downloaded model repository revisions or content digests.",
+        "Static evidence does not prove whether the selected MinerU models exercise the exact vulnerable dynamic-kernel branch.",
+        "A compatible MinerU or Transformers upgrade has not been qualified against the extraction configuration and existing 236 bundles."
+      ],
+      "recommended_next_step": "Pin and verify the exact MinerU model revisions or digests, confirm the affected model-loading branch against those artifacts, and design a compatible upgrade to Transformers 5.3.0 or later through a qualified MinerU release.",
+      "fix_finding_handoff": null
+    },
+    {
+      "triage_item_id": "triage-002",
+      "input_id": "dependabot-36",
+      "source_type": "advisory",
+      "title": "Arbitrary code execution in the Transformers LightGlue model loading path",
+      "normalized_input": {
+        "vulnerable_component": "transformers 4.57.6 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "attacker-controlled LightGlue model repository and serialized configuration",
+        "claimed_sink": "nested AutoConfig.from_pretrained call that executes attacker-provided Python",
+        "claimed_control": "trust_remote_code=false is overridden by untrusted nested configuration",
+        "affected_version_or_path": "transformers < 5.5.0; CVE-2026-5241; GHSA-fgcw-684q-jj6r",
+        "preconditions": [
+          "A LightGlue model is loaded",
+          "The LightGlue model repository or config is attacker-controlled"
+        ],
+        "impact": "arbitrary code execution with the local operator process privileges",
+        "references": [
+          "https://github.com/advisories/GHSA-fgcw-684q-jj6r",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/36"
+        ]
+      },
+      "verdict": "not_actionable",
+      "confidence": "medium",
+      "affected_locations": [
+        {
+          "label": "locked dependency",
+          "path": "tools/policy-ingestion/uv.lock",
+          "lines": "774-789",
+          "detail": "Transformers is present only through the optional MinerU pipeline and VLM extras."
+        },
+        {
+          "label": "documented model boundary",
+          "path": "docs/operations/local-policy-ingestion.md",
+          "lines": "68-85",
+          "detail": "The documented operator path downloads MinerU's model set and selects local models."
+        }
+      ],
+      "reachable_path": [],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "trusted_operator",
+        "boundary_crossed": false,
+        "policy_basis": "The local ingestion runbook defines a fixed MinerU model workflow; repository and hash-matched MinerU 3.4.5 source contain no LightGlue reference or LightGlue model selection surface."
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": null,
+        "rank": null,
+        "rationale": "not actionable",
+        "drivers": []
+      },
+      "evidence": [
+        "The locked Transformers version falls inside the advisory range."
+      ],
+      "counterevidence": [
+        "No LightGlue reference exists in repository code or documentation.",
+        "No LightGlue reference exists in the exact hash-matched MinerU 3.4.5 wheel.",
+        "The CLI exposes a policy source folder and MinerU backend choice, not a caller-selected model repository."
+      ],
+      "proof_gaps": [
+        "The separately downloaded model artifacts are outside the repository and were not inspected."
+      ],
+      "recommended_next_step": "Record this scoped rationale before any dismissal and re-triage if MinerU adds LightGlue or arbitrary model-repository selection.",
+      "fix_finding_handoff": null
+    },
+    {
+      "triage_item_id": "triage-003",
+      "input_id": "dependabot-15",
+      "source_type": "advisory",
+      "title": "Arbitrary code execution in the Transformers Trainer checkpoint path",
+      "normalized_input": {
+        "vulnerable_component": "transformers 4.57.6 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "malicious Trainer checkpoint file such as rng_state.pth",
+        "claimed_sink": "Trainer._load_rng_state calling torch.load without weights_only=true",
+        "claimed_control": "safe_globals does not protect PyTorch versions below 2.6",
+        "affected_version_or_path": "transformers < 5.0.0rc3; CVE-2026-1839; GHSA-69w3-r845-3855",
+        "preconditions": [
+          "Transformers Trainer resumes from an attacker-controlled checkpoint",
+          "PyTorch is below 2.6"
+        ],
+        "impact": "arbitrary code execution with the local operator process privileges",
+        "references": [
+          "https://github.com/advisories/GHSA-69w3-r845-3855",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/15"
+        ]
+      },
+      "verdict": "not_actionable",
+      "confidence": "high",
+      "affected_locations": [
+        {
+          "label": "local extraction command",
+          "path": "tools/policy-ingestion/guided_policy_ingestion/extractors/mineru.py",
+          "lines": "267-298",
+          "detail": "The only dependency entrypoint performs MinerU document extraction."
+        }
+      ],
+      "reachable_path": [],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "trusted_operator",
+        "boundary_crossed": false,
+        "policy_basis": "The product implements inference-only policy extraction and exposes no model training or Trainer checkpoint-resume workflow."
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": null,
+        "rank": null,
+        "rationale": "not actionable",
+        "drivers": []
+      },
+      "evidence": ["Transformers 4.57.6 is present in the lockfile."],
+      "counterevidence": [
+        "Repository code contains no Trainer, training, or rng_state checkpoint call.",
+        "The exact hash-matched MinerU 3.4.5 wheel contains no Transformers Trainer reference.",
+        "The documented workflow is local document extraction, not model training."
+      ],
+      "proof_gaps": [],
+      "recommended_next_step": "Record this scoped rationale before any dismissal and re-triage if a training or Trainer checkpoint workflow is introduced.",
+      "fix_finding_handoff": null
+    },
+    {
+      "triage_item_id": "triage-004",
+      "input_id": "dependabot-42",
+      "source_type": "advisory",
+      "title": "PyTorch memory corruption through torch.jit.script",
+      "normalized_input": {
+        "vulnerable_component": "torch 2.8.0 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "local input supplied to torch.jit.script",
+        "claimed_sink": "torch.jit.script memory corruption",
+        "claimed_control": "unknown",
+        "affected_version_or_path": "torch <= 2.12.1; CVE-2025-3000; GHSA-rrmf-rvhw-rf47",
+        "preconditions": [
+          "The local process calls torch.jit.script with exploit-triggering input"
+        ],
+        "impact": "bounded local confidentiality, integrity, and availability impact",
+        "references": [
+          "https://github.com/advisories/GHSA-rrmf-rvhw-rf47",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/42"
+        ]
+      },
+      "verdict": "not_actionable",
+      "confidence": "medium",
+      "affected_locations": [
+        {
+          "label": "locked dependency",
+          "path": "tools/policy-ingestion/uv.lock",
+          "lines": "1812-1813",
+          "detail": "The optional MinerU environment resolves PyTorch 2.8.0."
+        }
+      ],
+      "reachable_path": [],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "trusted_operator",
+        "boundary_crossed": false,
+        "policy_basis": "PyTorch exists only in the local optional MinerU environment, and no torch.jit.script sink was found in repository or hash-matched MinerU source."
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": null,
+        "rank": null,
+        "rationale": "not actionable",
+        "drivers": []
+      },
+      "evidence": ["PyTorch 2.8.0 is inside the advisory range."],
+      "counterevidence": [
+        "No torch.jit.script call exists in repository code.",
+        "No torch.jit.script call exists in the exact hash-matched MinerU 3.4.5 wheel.",
+        "The only nearby MinerU occurrence is torch.jit.is_tracing, which is a different API."
+      ],
+      "proof_gaps": [
+        "Static inspection did not recursively inspect every package in the 110-package optional environment."
+      ],
+      "recommended_next_step": "Record this scoped rationale before any dismissal and re-triage if a JIT compilation path is added or MinerU changes.",
+      "fix_finding_handoff": null
+    },
+    {
+      "triage_item_id": "triage-005",
+      "input_id": "dependabot-24",
+      "source_type": "advisory",
+      "title": "PyTorch memory corruption through torch.lstm_cell",
+      "normalized_input": {
+        "vulnerable_component": "torch 2.8.0 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "local input supplied to torch.lstm_cell",
+        "claimed_sink": "torch.lstm_cell memory corruption",
+        "claimed_control": "unknown",
+        "affected_version_or_path": "torch < 2.10.0; CVE-2025-3001; GHSA-qfhq-4f3w-5fph",
+        "preconditions": [
+          "The local process calls torch.lstm_cell with exploit-triggering input"
+        ],
+        "impact": "bounded local confidentiality, integrity, and availability impact",
+        "references": [
+          "https://github.com/advisories/GHSA-qfhq-4f3w-5fph",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/24"
+        ]
+      },
+      "verdict": "not_actionable",
+      "confidence": "medium",
+      "affected_locations": [
+        {
+          "label": "locked dependency",
+          "path": "tools/policy-ingestion/uv.lock",
+          "lines": "1812-1813",
+          "detail": "The optional MinerU environment resolves PyTorch 2.8.0."
+        }
+      ],
+      "reachable_path": [],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "trusted_operator",
+        "boundary_crossed": false,
+        "policy_basis": "PyTorch exists only in the local optional MinerU environment, and no torch.lstm_cell sink was found in repository or hash-matched MinerU source."
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": null,
+        "rank": null,
+        "rationale": "not actionable",
+        "drivers": []
+      },
+      "evidence": ["PyTorch 2.8.0 is inside the advisory range."],
+      "counterevidence": [
+        "No torch.lstm_cell call exists in repository code.",
+        "No torch.lstm_cell call exists in the exact hash-matched MinerU 3.4.5 wheel."
+      ],
+      "proof_gaps": [
+        "Static inspection did not recursively inspect every package in the 110-package optional environment."
+      ],
+      "recommended_next_step": "Record this scoped rationale before any dismissal and re-triage if an LSTM-cell path is added or MinerU changes.",
+      "fix_finding_handoff": null
+    },
+    {
+      "triage_item_id": "triage-006",
+      "input_id": "dependabot-23",
+      "source_type": "advisory",
+      "title": "PyTorch memory corruption through unpack_sequence",
+      "normalized_input": {
+        "vulnerable_component": "torch 2.8.0 in tools/policy-ingestion/uv.lock",
+        "claimed_source": "local input supplied to torch.nn.utils.rnn.unpack_sequence",
+        "claimed_sink": "unpack_sequence memory corruption",
+        "claimed_control": "unknown",
+        "affected_version_or_path": "torch < 2.9.1; CVE-2025-2999; GHSA-vgrw-7cvw-pwgx",
+        "preconditions": [
+          "The local process calls unpack_sequence with exploit-triggering input"
+        ],
+        "impact": "bounded local confidentiality, integrity, and availability impact",
+        "references": [
+          "https://github.com/advisories/GHSA-vgrw-7cvw-pwgx",
+          "https://github.com/justinpeterman-droid/guided-operations/security/dependabot/23"
+        ]
+      },
+      "verdict": "not_actionable",
+      "confidence": "medium",
+      "affected_locations": [
+        {
+          "label": "locked dependency",
+          "path": "tools/policy-ingestion/uv.lock",
+          "lines": "1812-1813",
+          "detail": "The optional MinerU environment resolves PyTorch 2.8.0."
+        }
+      ],
+      "reachable_path": [],
+      "boundary_assessment": {
+        "product_surface": "CLI",
+        "source_trust": "trusted_operator",
+        "boundary_crossed": false,
+        "policy_basis": "PyTorch exists only in the local optional MinerU environment, and no unpack_sequence sink was found in repository or hash-matched MinerU source."
+      },
+      "exploitability_stack_rank": {
+        "rank_queue": null,
+        "rank": null,
+        "rationale": "not actionable",
+        "drivers": []
+      },
+      "evidence": ["PyTorch 2.8.0 is inside the advisory range."],
+      "counterevidence": [
+        "No unpack_sequence call exists in repository code.",
+        "No unpack_sequence call exists in the exact hash-matched MinerU 3.4.5 wheel."
+      ],
+      "proof_gaps": [
+        "Static inspection did not recursively inspect every package in the 110-package optional environment."
+      ],
+      "recommended_next_step": "Record this scoped rationale before any dismissal and re-triage if a packed-sequence path is added or MinerU changes.",
+      "fix_finding_handoff": null
+    }
+  ]
+}
