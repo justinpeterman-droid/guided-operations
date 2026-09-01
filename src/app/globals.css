@@ -4428,3 +4428,134 @@ form.account-session-controls {
     scrollbar-color: CanvasText Canvas;
   }
 }
+
+/* Public landing refinement: make the product promise tangible without
+   changing the secure entry flow or implying operational data. */
+.landing-workflow {
+  margin-top: 30px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(158, 176, 191, 0.58);
+}
+
+.landing-workflow-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  color: var(--gow-navy-800);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.landing-workflow-heading .eyebrow {
+  margin: 0;
+  color: var(--gow-gold-500);
+}
+
+.landing-workflow ol {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 15px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.landing-workflow li {
+  display: grid;
+  gap: 6px;
+  padding: 14px;
+  background: rgba(255, 255, 255, 0.66);
+  border: 1px solid rgba(158, 176, 191, 0.66);
+  border-radius: 12px;
+}
+
+.landing-workflow li > span {
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  color: var(--gow-navy-950);
+  background: var(--gow-gold-300);
+  border-radius: 999px;
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.landing-workflow strong {
+  color: var(--gow-navy-900);
+  font-family: var(--gow-font-brand);
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.landing-workflow small,
+.preview-intro {
+  color: var(--gow-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.preview-intro {
+  margin: -3px 0 5px;
+}
+
+.sign-in-card .preview-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  min-height: 44px;
+  margin: 8px 0 0;
+  padding: 9px 12px;
+  color: var(--gow-navy-900);
+  background: #f4f8fb;
+  border: 1px solid rgba(143, 168, 186, 0.68);
+  border-radius: 10px;
+  text-decoration: none;
+}
+
+.sign-in-card .preview-link::after {
+  color: var(--gow-gold-500);
+  content: "→";
+  font-size: 1rem;
+  transition: transform 140ms ease;
+}
+
+.sign-in-card .preview-link:hover,
+.sign-in-card .preview-link:focus-visible {
+  background: #fff;
+  border-color: var(--gow-navy-800);
+  box-shadow: 0 7px 17px rgba(19, 53, 83, 0.09);
+}
+
+.sign-in-card .preview-link:hover::after,
+.sign-in-card .preview-link:focus-visible::after {
+  transform: translateX(3px);
+}
+
+@media (max-width: 620px) {
+  .landing-workflow {
+    margin-top: 24px;
+  }
+
+  .landing-workflow-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .landing-workflow ol {
+    grid-template-columns: 1fr;
+  }
+
+  .landing-workflow li {
+    grid-template-columns: 25px minmax(0, 1fr);
+    column-gap: 10px;
+    align-items: center;
+  }
+
+  .landing-workflow li > span {
+    grid-row: span 2;
+  }
+}
