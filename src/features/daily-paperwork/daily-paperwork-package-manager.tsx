@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
 import type { DailyPaperworkTemplatePackageSummary } from "@/server/paperwork/list-daily-paperwork-template-packages";
 
 import styles from "./daily-paperwork-package-manager.module.css";
@@ -221,6 +222,7 @@ export function DailyPaperworkPackageManager({
         </p>
 
         <form
+          noValidate
           className={styles.form}
           ref={sourceFormRef}
           onSubmit={(event) => {
@@ -308,23 +310,25 @@ export function DailyPaperworkPackageManager({
               </div>
             </dl>
             <form
+              noValidate
               className={styles.confirmForm}
               onSubmit={(event) => {
                 event.preventDefault();
                 void register(event.currentTarget);
               }}
             >
-              <label>
+              <label htmlFor="paperwork-package-administrator-passcode">
                 Your administrator passcode
-                <input
-                  autoComplete="current-password"
-                  disabled={state === "registering"}
-                  minLength={8}
-                  name="administratorPasscode"
-                  required
-                  type="password"
-                />
               </label>
+              <SecretInput
+                autoComplete="current-password"
+                disabled={state === "registering"}
+                id="paperwork-package-administrator-passcode"
+                minLength={8}
+                name="administratorPasscode"
+                revealLabel="administrator passcode"
+                required
+              />
               <div className={styles.actions}>
                 <button disabled={state === "registering"} type="submit">
                   {state === "registering"

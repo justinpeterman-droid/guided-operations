@@ -6,6 +6,10 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getAdminSystemHealth } from "@/server/health/admin-system-health";
 
+export const metadata = {
+  title: "System health",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Protected, truthful status screen for the site and its Supabase connection. */

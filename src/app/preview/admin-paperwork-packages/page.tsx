@@ -4,6 +4,10 @@ import { PreviewShell } from "@/app/components/preview-shell";
 import { DailyPaperworkPackageManager } from "@/features/daily-paperwork/daily-paperwork-package-manager";
 import type { DailyPaperworkTemplatePackageSummary } from "@/server/paperwork/list-daily-paperwork-template-packages";
 
+export const metadata = {
+  title: "Form packages preview",
+};
+
 const fictionalPackage: DailyPaperworkTemplatePackageSummary = {
   packageId: "77777777-7777-4777-8777-777777777777",
   packageDigest: "a".repeat(64),

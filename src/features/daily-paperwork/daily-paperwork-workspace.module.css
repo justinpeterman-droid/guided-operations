@@ -51,10 +51,10 @@
   opacity: 0.5;
 }
 
-.primaryButton {
-  border-color: #1f5b34 !important;
-  background: #1f5b34 !important;
-  color: #fff !important;
+.toolbar button.primaryButton {
+  border-color: #1f5b34;
+  background: #1f5b34;
+  color: #fff;
 }
 
 .status {
@@ -189,6 +189,7 @@
   .noPrint,
   .history,
   .status {
+    /* Printed paperwork excludes browser-only controls and status messaging. */
     display: none !important;
   }
 

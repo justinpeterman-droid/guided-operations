@@ -15,7 +15,9 @@ async function signIn(page: Page) {
   await page
     .getByLabel("Employee number")
     .fill(accounts.officer.employeeNumber);
-  await page.getByLabel("Passcode").fill(accounts.officer.passcode);
+  await page
+    .getByLabel("Passcode", { exact: true })
+    .fill(accounts.officer.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
 }

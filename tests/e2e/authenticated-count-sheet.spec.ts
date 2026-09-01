@@ -75,7 +75,7 @@ test("a fictional officer signs in, saves, reopens, prints, and signs out", asyn
 
   await page.goto("/login");
   await page.getByLabel("Employee number").fill(officer.employeeNumber);
-  await page.getByLabel("Passcode").fill(officer.passcode);
+  await page.getByLabel("Passcode", { exact: true }).fill(officer.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
 

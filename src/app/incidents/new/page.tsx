@@ -7,6 +7,10 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 
 import { NewIncidentWorkspace } from "./new-incident-workspace";
 
+export const metadata = {
+  title: "Start a report",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function NewIncidentPage() {

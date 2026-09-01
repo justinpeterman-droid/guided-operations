@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type FormState = "idle" | "submitting" | "failed";
 type Handoff = Readonly<{
   employeeNumberHint: string;
@@ -180,6 +182,7 @@ export function AccountInvitationForm() {
         this account is created.
       </p>
       <form
+        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           void submit(event.currentTarget);
@@ -212,13 +215,14 @@ export function AccountInvitationForm() {
         <label htmlFor="administrator-passcode">
           Your administrator passcode
         </label>
-        <input
+        <SecretInput
           autoComplete="current-password"
+          disabled={state === "submitting"}
           id="administrator-passcode"
           minLength={8}
           name="administratorPasscode"
+          revealLabel="administrator passcode"
           required
-          type="password"
         />
         <div className="account-session-actions">
           <button disabled={state === "submitting"} type="submit">

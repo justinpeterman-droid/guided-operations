@@ -299,7 +299,7 @@ export function CountSheetHistory({
         ))}
       </ol>
       {selectedRevision ? (
-        <form onSubmit={restore}>
+        <form noValidate onSubmit={restore}>
           <p>Restore revision {selectedRevision} as a new saved version.</p>
           <label>
             Restore reason

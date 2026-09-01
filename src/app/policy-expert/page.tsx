@@ -7,6 +7,10 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 
 import { PolicyExpert } from "./policy-expert";
 
+export const metadata = {
+  title: "Policy Expert",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function PolicyExpertPage() {

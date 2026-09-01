@@ -14,6 +14,10 @@ import { DailyPaperworkWorkspace } from "@/features/daily-paperwork/daily-paperw
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { getDailyPaperworkForCurrentSession } from "@/server/paperwork/get-daily-paperwork";
 
+export const metadata = {
+  title: "Daily paperwork record",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function DailyPaperworkFormPage({

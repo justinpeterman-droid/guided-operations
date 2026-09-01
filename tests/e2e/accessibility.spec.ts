@@ -126,7 +126,7 @@ test("the skip link moves keyboard focus into the main content", async ({
 test("fictional preview routes remain usable at mobile size and reduced motion", async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: 320, height: 568 });
   await page.emulateMedia({ reducedMotion: "reduce" });
 
   for (const route of routes.filter((value) => value.startsWith("/preview/"))) {
@@ -142,5 +142,35 @@ test("fictional preview routes remain usable at mobile size and reduced motion",
       )
       .toBe(true);
     await expect(page.locator("main")).toBeVisible();
+  }
+});
+
+test("representative previews reflow at zoom-equivalent viewports", async ({
+  page,
+}) => {
+  const representativeRoutes = [
+    "/login",
+    "/preview/workspace",
+    "/preview/report-assistant",
+    "/preview/count-sheet",
+    "/preview/admin-retention",
+  ] as const;
+
+  for (const viewport of [
+    { width: 720, height: 450 },
+    { width: 360, height: 225 },
+  ]) {
+    await page.setViewportSize(viewport);
+    for (const route of representativeRoutes) {
+      await page.goto(route);
+      await expect
+        .poll(() =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        )
+        .toBe(true);
+      await expect(page.locator("main")).toBeVisible();
+    }
   }
 });

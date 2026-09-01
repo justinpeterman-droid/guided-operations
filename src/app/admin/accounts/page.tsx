@@ -12,6 +12,10 @@ import { AccountUnlockControl } from "./account-unlock-control";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listAdminAccountsForCurrentSession } from "@/server/auth/list-admin-accounts";
 
+export const metadata = {
+  title: "Account administration",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Administrator roster with purpose-bound account lifecycle controls. */

@@ -10,6 +10,10 @@ import { getReportDraftCandidateForCurrentSession } from "@/server/ai/get-report
 
 import { ReportFinalizationForm } from "./report-finalization-form";
 
+export const metadata = {
+  title: "Review report draft",
+};
+
 export const dynamic = "force-dynamic";
 
 export default async function ReportDraftReviewPage({

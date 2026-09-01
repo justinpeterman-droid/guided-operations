@@ -8,6 +8,10 @@ import { AdminAccountLink, AdminShell } from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 
+export const metadata = {
+  title: "Administrator workspace",
+};
+
 export const dynamic = "force-dynamic";
 
 /**

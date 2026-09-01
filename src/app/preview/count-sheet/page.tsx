@@ -4,6 +4,10 @@ import { PreviewShell } from "@/app/components/preview-shell";
 import { APPROVED_COUNT_SHEET_STRUCTURE } from "@/features/count-sheet/approved-structure";
 import { CountSheetPreview } from "@/features/count-sheet/count-sheet-preview";
 
+export const metadata = {
+  title: "Count Sheet preview",
+};
+
 export default function CountSheetPreviewPage() {
   return (
     <PreviewShell

@@ -10,6 +10,10 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { listDailyPaperworkTemplatePackagesForCurrentSession } from "@/server/paperwork/list-daily-paperwork-template-packages";
 
+export const metadata = {
+  title: "Approved form packages",
+};
+
 export const dynamic = "force-dynamic";
 
 /** Production-only administrator workflow for reviewing and registering one exact six-form package. */

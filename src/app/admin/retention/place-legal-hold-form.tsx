@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 import { getLegalHoldApproval } from "./legal-hold-request";
 
 type State = "idle" | "submitting" | "placed" | "failed";
@@ -64,6 +66,7 @@ export function PlaceLegalHoldForm() {
         enter report narratives, names, or other record details here.
       </p>
       <form
+        noValidate
         className="account-session-confirm"
         onSubmit={(event) => {
           event.preventDefault();
@@ -102,13 +105,14 @@ export function PlaceLegalHoldForm() {
           type="text"
         />
         <label htmlFor="legal-hold-passcode">Your administrator passcode</label>
-        <input
+        <SecretInput
           autoComplete="current-password"
+          disabled={state === "submitting"}
           id="legal-hold-passcode"
           minLength={8}
           name="administratorPasscode"
+          revealLabel="administrator passcode"
           required
-          type="password"
         />
         <button disabled={state === "submitting"} type="submit">
           {state === "submitting" ? "Placing hold…" : "Confirm legal hold"}

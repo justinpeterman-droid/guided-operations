@@ -15,6 +15,10 @@ import { AccountSessionControls } from "./account-session-controls";
 import { PersonalPasscodeChangeForm } from "./personal-passcode-change-form";
 import { TemporaryPasscodeChangeForm } from "./temporary-passcode-change-form";
 
+export const metadata = {
+  title: "Account safety",
+};
+
 export const dynamic = "force-dynamic";
 
 async function loadCurrentAccount() {

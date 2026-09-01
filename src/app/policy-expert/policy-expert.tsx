@@ -125,7 +125,7 @@ export function PolicyExpert() {
             </p>
           </div>
 
-          <form className="policy-question-form" onSubmit={submit}>
+          <form noValidate className="policy-question-form" onSubmit={submit}>
             <label htmlFor="policy-collection">Search collection</label>
             <select
               disabled={submitting}
@@ -142,6 +142,7 @@ export function PolicyExpert() {
             </select>
             <label htmlFor="policy-question">Policy question</label>
             <textarea
+              className="resize-none"
               disabled={submitting}
               id="policy-question"
               maxLength={2000}

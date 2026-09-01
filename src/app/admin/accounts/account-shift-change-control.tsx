@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type ShiftCode = "A" | "B" | "C" | "D" | "U" | "F";
 type State = "idle" | "confirming" | "submitting" | "failed" | "changed";
 
@@ -111,6 +113,7 @@ export function AccountShiftChangeControl({
   const submitting = state === "submitting";
   return (
     <form
+      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -137,13 +140,14 @@ export function AccountShiftChangeControl({
       <label htmlFor={`change-shift-passcode-${accountId}`}>
         Your administrator passcode
       </label>
-      <input
+      <SecretInput
         autoComplete="current-password"
+        disabled={submitting}
         id={`change-shift-passcode-${accountId}`}
         minLength={8}
         name="administratorPasscode"
+        revealLabel="administrator passcode"
         required
-        type="password"
       />
       <button disabled={submitting} type="submit">
         {submitting ? "Changing shift…" : "Confirm shift change"}

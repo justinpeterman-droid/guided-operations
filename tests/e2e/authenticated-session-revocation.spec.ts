@@ -10,7 +10,7 @@ test.describe.configure({ mode: "serial" });
 async function signIn(page: Page, credentials: LocalQualificationCredentials) {
   await page.goto("/login");
   await page.getByLabel("Employee number").fill(credentials.employeeNumber);
-  await page.getByLabel("Passcode").fill(credentials.passcode);
+  await page.getByLabel("Passcode", { exact: true }).fill(credentials.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
 }
@@ -58,13 +58,13 @@ test("global sign-out and passcode replacement deny every existing browser sessi
       .getByLabel("Confirm employee number")
       .fill(accounts.officer.employeeNumber);
     await firstPage
-      .getByLabel("Current passcode")
+      .getByLabel("Current passcode", { exact: true })
       .fill(accounts.officer.passcode);
     await firstPage
-      .getByLabel("New personal passcode")
+      .getByLabel("New personal passcode", { exact: true })
       .fill(replacementPasscode);
     await firstPage
-      .getByLabel("Confirm new passcode")
+      .getByLabel("Confirm new passcode", { exact: true })
       .fill(replacementPasscode);
     await firstPage.getByRole("button", { name: "Change passcode" }).click();
     await firstPage.waitForURL("**/login");

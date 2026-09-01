@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type State = "idle" | "confirming" | "submitting" | "failed";
 type Handoff = Readonly<{
   temporaryPasscode: string;
@@ -147,6 +149,7 @@ export function AccountPasscodeResetControl({
   const submitting = state === "submitting";
   return (
     <form
+      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -159,13 +162,14 @@ export function AccountPasscodeResetControl({
       <label htmlFor={`reset-passcode-${accountId}`}>
         Your administrator passcode
       </label>
-      <input
+      <SecretInput
         autoComplete="current-password"
+        disabled={submitting}
         id={`reset-passcode-${accountId}`}
         minLength={8}
         name="administratorPasscode"
+        revealLabel="administrator passcode"
         required
-        type="password"
       />
       <button disabled={submitting} type="submit">
         {submitting ? "Resetting…" : "Confirm reset"}

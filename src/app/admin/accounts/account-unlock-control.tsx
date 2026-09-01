@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
+import { SecretInput } from "@/app/components/secret-input";
+
 type State = "idle" | "confirming" | "submitting" | "failed" | "unlocked";
 
 function csrfFrom(body: unknown): string | null {
@@ -92,6 +94,7 @@ export function AccountUnlockControl({
   const submitting = state === "submitting";
   return (
     <form
+      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -102,13 +105,14 @@ export function AccountUnlockControl({
       <label htmlFor={`unlock-passcode-${accountId}`}>
         Your administrator passcode
       </label>
-      <input
+      <SecretInput
         autoComplete="current-password"
+        disabled={submitting}
         id={`unlock-passcode-${accountId}`}
         minLength={8}
         name="administratorPasscode"
+        revealLabel="administrator passcode"
         required
-        type="password"
       />
       <button disabled={submitting} type="submit">
         {submitting ? "Unlocking…" : "Confirm unlock"}
