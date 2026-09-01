@@ -186,7 +186,9 @@ active same-facility administrators may read a revision, as may its active
 creator, reporting officers, and preparer. Involved and witness labels do not
 grant access. It is not exposed as a browser endpoint yet. Its intended caller
 is a server-side workflow that constructs a report-draft source from explicitly
-selected confirmed facts only.
+identified confirmed facts only. The interface includes every confirmed fact
+scoped to the selected reporting officer by default and keeps removal behind an
+optional review control; unknown and unconfirmed facts are never included.
 
 The protected server-rendered `/incidents/{incidentId}` report workspace uses a
 separate `api.get_incident_report_workspace` RPC. The RPC returns only the

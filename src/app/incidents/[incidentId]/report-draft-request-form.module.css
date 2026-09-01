@@ -48,6 +48,44 @@
   margin-bottom: 0.2rem;
 }
 
+.includedSummary {
+  display: grid;
+  gap: 0.25rem;
+  margin-top: 1rem;
+  padding: 0.9rem 1rem;
+  color: var(--gow-navy-900);
+  background: #eef7f8;
+  border: 1px solid #9cc9ca;
+  border-radius: var(--gow-radius-control);
+}
+
+.includedSummary span {
+  color: var(--gow-ink-muted);
+  line-height: 1.45;
+}
+
+.factEditor {
+  margin-top: 0.75rem;
+}
+
+.factEditor summary {
+  width: fit-content;
+  min-height: 2.75rem;
+  padding: 0.7rem 0;
+  color: #0d6265;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.factEditor summary:focus-visible {
+  outline: 3px solid #82b9dc;
+  outline-offset: 2px;
+}
+
+.factEditor > p {
+  margin-top: 0.25rem;
+}
+
 .selectLabel {
   display: grid;
   max-width: 28rem;

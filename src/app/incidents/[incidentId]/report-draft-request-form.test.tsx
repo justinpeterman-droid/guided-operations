@@ -1,6 +1,6 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const push = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -63,6 +63,10 @@ describe("ReportDraftRequestForm", () => {
     vi.clearAllMocks();
   });
 
+  afterEach(() => {
+    cleanup();
+  });
+
   it("submits only facts scoped to the selected reporting officer", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")
@@ -93,11 +97,13 @@ describe("ReportDraftRequestForm", () => {
     await user.click(
       screen.getByRole("radio", { name: /Fictional Officer One/ }),
     );
-    expect(screen.getByText("Officer one fact")).toBeVisible();
     expect(screen.queryByText("Officer two fact")).not.toBeInTheDocument();
-    await user.click(
-      screen.getByRole("checkbox", { name: /Officer one fact/ }),
-    );
+    expect(screen.getByText("1 of 1 confirmed facts included")).toBeVisible();
+    expect(
+      screen
+        .getByText("Edit included facts", { selector: "summary" })
+        .closest("details"),
+    ).not.toHaveAttribute("open");
     await user.click(
       screen.getByRole("button", { name: "Create review draft" }),
     );
@@ -122,6 +128,37 @@ describe("ReportDraftRequestForm", () => {
     expect(push).toHaveBeenCalledWith(
       "/reports/drafts/99999999-9999-4999-8999-999999999999",
     );
+  });
+
+  it("keeps fact selection optional and resets exclusions for a new reporter", async () => {
+    const user = userEvent.setup();
+    render(<ReportDraftRequestForm workspace={workspace} />);
+
+    await user.click(
+      screen.getByRole("radio", { name: /Fictional Officer One/ }),
+    );
+    await user.click(
+      screen.getByText("Edit included facts", { selector: "summary" }),
+    );
+    const officerOneFact = screen.getByRole("checkbox", {
+      name: /Officer one fact/,
+    });
+    expect(officerOneFact).toBeChecked();
+    await user.click(officerOneFact);
+    expect(
+      screen.getByRole("button", { name: "Create review draft" }),
+    ).toBeDisabled();
+    expect(
+      screen.getByText(/Include at least one confirmed fact/),
+    ).toBeVisible();
+
+    await user.click(
+      screen.getByRole("radio", { name: /Fictional Officer Two/ }),
+    );
+    expect(screen.getByText("1 of 1 confirmed facts included")).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: "Create review draft" }),
+    ).toBeEnabled();
   });
 
   it("does not offer generation for legacy unscoped revisions", () => {
