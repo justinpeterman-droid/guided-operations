@@ -49,7 +49,7 @@ export function ReportDraftRequestForm({
       : "",
   );
   const [reportType, setReportType] = useState<ReportType>("first_person");
-  const [selectedFactIds, setSelectedFactIds] = useState<ReadonlySet<string>>(
+  const [excludedFactIds, setExcludedFactIds] = useState<ReadonlySet<string>>(
     new Set(),
   );
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
@@ -64,15 +64,22 @@ export function ReportDraftRequestForm({
       ),
     [reportingStaffMemberId, workspace.reviewedFacts],
   );
+  const selectedFactIds = useMemo(
+    () =>
+      eligibleFacts
+        .filter((fact) => !excludedFactIds.has(fact.id))
+        .map((fact) => fact.id),
+    [eligibleFacts, excludedFactIds],
+  );
 
   function chooseReporter(staffMemberId: string) {
     setReportingStaffMemberId(staffMemberId);
-    setSelectedFactIds(new Set());
+    setExcludedFactIds(new Set());
     setSubmitState("idle");
   }
 
   function toggleFact(factId: string) {
-    setSelectedFactIds((current) => {
+    setExcludedFactIds((current) => {
       const next = new Set(current);
       if (next.has(factId)) next.delete(factId);
       else next.add(factId);
@@ -83,7 +90,7 @@ export function ReportDraftRequestForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!reportingStaffMemberId || selectedFactIds.size === 0) return;
+    if (!reportingStaffMemberId || selectedFactIds.length === 0) return;
     setSubmitState("submitting");
 
     try {
@@ -103,7 +110,7 @@ export function ReportDraftRequestForm({
             sourceIncidentRevisionId: workspace.incidentRevisionId,
             reportingStaffMemberId,
             reportType,
-            confirmedFactIds: [...selectedFactIds],
+            confirmedFactIds: selectedFactIds,
           },
           sourceRevisionNumber: workspace.revisionNumber,
         }),
@@ -165,7 +172,7 @@ export function ReportDraftRequestForm({
       </section>
 
       <section className="incident-review">
-        <h2>2. Choose confirmed facts</h2>
+        <h2>2. Review facts included</h2>
         {!reportingStaffMemberId ? (
           <p>Choose a reporting officer to see that officer&apos;s facts.</p>
         ) : eligibleFacts.length === 0 ? (
@@ -173,22 +180,46 @@ export function ReportDraftRequestForm({
             No confirmed facts were approved for this reporting officer.
           </p>
         ) : (
-          <div className={styles.optionGrid}>
-            {eligibleFacts.map((fact) => (
-              <label className={styles.option} key={fact.id}>
-                <input
-                  className={styles.choice}
-                  checked={selectedFactIds.has(fact.id)}
-                  onChange={() => toggleFact(fact.id)}
-                  type="checkbox"
-                />
-                <span className={styles.factText}>
-                  <strong>{fact.field}</strong>
-                  {fact.value}
-                </span>
-              </label>
-            ))}
-          </div>
+          <>
+            <div className={styles.includedSummary} role="status">
+              <strong>
+                {selectedFactIds.length} of {eligibleFacts.length} confirmed
+                facts included
+              </strong>
+              <span>
+                All facts approved for this reporting officer are included
+                automatically.
+              </span>
+            </div>
+            <details className={styles.factEditor}>
+              <summary>Edit included facts</summary>
+              <p>
+                Remove a fact only when it should not be used in this draft. The
+                saved incident record will not change.
+              </p>
+              <div className={styles.optionGrid}>
+                {eligibleFacts.map((fact) => (
+                  <label className={styles.option} key={fact.id}>
+                    <input
+                      className={styles.choice}
+                      checked={!excludedFactIds.has(fact.id)}
+                      onChange={() => toggleFact(fact.id)}
+                      type="checkbox"
+                    />
+                    <span className={styles.factText}>
+                      <strong>{fact.field}</strong>
+                      {fact.value}
+                    </span>
+                  </label>
+                ))}
+              </div>
+            </details>
+            {selectedFactIds.length === 0 ? (
+              <p role="alert">
+                Include at least one confirmed fact to create a draft.
+              </p>
+            ) : null}
+          </>
         )}
       </section>
 
@@ -218,7 +249,7 @@ export function ReportDraftRequestForm({
         disabled={
           submitState === "submitting" ||
           !reportingStaffMemberId ||
-          selectedFactIds.size === 0
+          selectedFactIds.length === 0
         }
         type="submit"
       >
