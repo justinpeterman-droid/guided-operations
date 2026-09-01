@@ -123,6 +123,12 @@ resource.
   directive is not searchable and a question about it returns no sources.
   Recorded in `docs/operations/2026-08-30-production-corpus-import.md`.
 
+- **Open Dependabot alerts (2026-09-01):** pushing to the repository reports six
+  vulnerabilities on the default branch — two high, two moderate and two low.
+  The 2026-08-28 review recorded zero open alerts, so these are newer. Review
+  each one individually against the dependency-maintenance policy; do not merge
+  a bulk update only to clear the queue.
+
 - **GitHub Actions exhausted (2026-08-29):** every workflow run on this private
   repository has failed in 3-5 seconds since 2026-08-28 16:34 UTC. Failed jobs
   are assigned no runner and execute zero steps. Actions is enabled and the

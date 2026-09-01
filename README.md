@@ -65,7 +65,9 @@ reasoning, is [Current open items](ROADMAP.md#current-open-items).
 8. **Manual accessibility and print validation is not done.** The runbook in
    [Hands-on accessibility and print validation](docs/quality/hands-on-accessibility-print-validation.md)
    has not been executed by a person.
-9. **Four owner decisions remain open:** OQ-010, OQ-013, OQ-014, and OQ-016.
+9. **Six Dependabot alerts are open** on the default branch as of 2026-09-01
+   (two high, two moderate, two low), where the 2026-08-28 review recorded zero.
+10. **Four owner decisions remain open:** OQ-010, OQ-013, OQ-014, and OQ-016.
 
 The predecessor repository remains intact. Canonical source provenance and the
 deliberate copy/rewrite/omit decisions live in

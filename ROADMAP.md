@@ -144,7 +144,10 @@ release, in rough order of user impact. They are tracked here and summarized in
 12. **Three pull requests are open:** #21 (UI refinement), #20 and #16 (the
     CodeRabbit audit chain, which targets review branches rather than `main`).
     Decide each one; do not let them accumulate.
-13. **Production environment scoping needs re-verification.** Before the
+13. **Six Dependabot alerts are open on the default branch** (two high, two
+    moderate, two low) as of 2026-09-01. The 2026-08-28 review recorded zero, so
+    these are newer. Review each individually rather than merging a bulk update.
+14. **Production environment scoping needs re-verification.** Before the
     release, two Production-scoped Supabase server entries still matched the
     fictional Development project. The release applied migrations to a
     production database, so this was probably corrected, but no record confirms
