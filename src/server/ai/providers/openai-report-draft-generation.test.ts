@@ -76,7 +76,6 @@ describe("OpenAI report draft generation provider", () => {
                 items: {
                   properties: {
                     sourceFactIds: {
-                      uniqueItems: true,
                       items: {
                         enum: [request.source.confirmedFacts[0].id],
                       },
