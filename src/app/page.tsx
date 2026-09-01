@@ -106,7 +106,10 @@ export default async function PublicLandingPage() {
           </p>
 
           <p className="eyebrow">See it before you sign in</p>
-          <p className="preview-intro">Explore the workspace with fictional training data. Nothing here is saved or submitted.</p>
+          <p className="preview-intro">
+            Explore the workspace with fictional training data. Nothing here is
+            saved or submitted.
+          </p>
           <Link className="preview-link" href="/preview/workspace">
             Officer workspace
           </Link>
