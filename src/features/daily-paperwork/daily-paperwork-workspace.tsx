@@ -486,7 +486,7 @@ function renderControl(
   if (field.type === "text" && field.max_length > 300)
     return (
       <textarea
-        className="resize-none"
+        className="resize-vertical"
         aria-label={field.label}
         disabled={disabled}
         maxLength={field.max_length}

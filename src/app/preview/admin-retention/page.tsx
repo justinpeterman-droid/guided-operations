@@ -105,7 +105,7 @@ export default function AdminRetentionPreviewPage() {
           This disabled example shows the information an administrator will use.
           It cannot send a request or change a record.
         </p>
-        <form noValidate className="account-session-confirm">
+        <form className="account-session-confirm">
           <label htmlFor="preview-legal-hold-scope">Record type</label>
           <select id="preview-legal-hold-scope" disabled>
             <option>Incident</option>

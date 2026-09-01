@@ -63,7 +63,6 @@ export function TemporaryPasscodeChangeForm({
 
   return (
     <form
-      noValidate
       action="/api/auth/complete-temporary-passcode-change"
       className="account-session-controls"
       method="post"

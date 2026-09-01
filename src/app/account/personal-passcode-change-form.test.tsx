@@ -31,6 +31,9 @@ describe("PersonalPasscodeChangeForm", () => {
     const user = userEvent.setup();
     render(<PersonalPasscodeChangeForm />);
 
+    expect(
+      screen.getByRole("button", { name: "Change passcode" }).closest("form"),
+    ).not.toHaveAttribute("novalidate");
     await user.type(screen.getByLabelText("Confirm employee number"), "EMP-42");
     await user.type(screen.getByLabelText("Current passcode"), "Current9!");
     await user.type(screen.getByLabelText("New personal passcode"), "Cedar7!9");

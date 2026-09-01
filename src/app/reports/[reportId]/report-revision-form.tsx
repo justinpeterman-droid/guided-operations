@@ -75,7 +75,7 @@ export function ReportRevisionForm({
   }
 
   return (
-    <form noValidate className="draft-finalization-form" onSubmit={submit}>
+    <form className="draft-finalization-form" onSubmit={submit}>
       <h2>Create a corrected revision</h2>
       <p>
         This adds a new immutable version. The current report is never edited or
@@ -84,7 +84,7 @@ export function ReportRevisionForm({
       <label>
         Corrected narrative
         <textarea
-          className="resize-none"
+          className="resize-vertical"
           onChange={(event) => setNarrative(event.target.value)}
           required
           value={narrative}

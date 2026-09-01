@@ -66,7 +66,6 @@ export function PlaceLegalHoldForm() {
         enter report narratives, names, or other record details here.
       </p>
       <form
-        noValidate
         className="account-session-confirm"
         onSubmit={(event) => {
           event.preventDefault();

@@ -75,7 +75,7 @@ export default function ReportAssistantPreviewPage() {
             <label className="full-width">
               Your field notes
               <textarea
-                className="resize-none"
+                className="resize-vertical"
                 disabled
                 value="This fictional workspace will preserve unknown or missing information instead of filling it in."
                 readOnly

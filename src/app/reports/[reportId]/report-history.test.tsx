@@ -50,13 +50,17 @@ describe("ReportHistory", () => {
     await user.click(
       screen.getAllByRole("button", { name: "Restore this version" })[1],
     );
-    await user.type(
-      screen.getByLabelText("Restore reason"),
-      "Review correction.",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Create restored revision" }),
-    );
+    const restoreReason = screen.getByLabelText("Restore reason");
+    const restoreButton = screen.getByRole("button", {
+      name: "Create restored revision",
+    });
+    expect(restoreButton).toBeDisabled();
+    await user.type(restoreReason, "   ");
+    expect(restoreButton).toBeDisabled();
+    await user.clear(restoreReason);
+    await user.type(restoreReason, "Review correction.");
+    expect(restoreButton).toBeEnabled();
+    await user.click(restoreButton);
     expect(fetch).toHaveBeenNthCalledWith(
       2,
       "/api/web/v1/reports/11111111-1111-4111-8111-111111111111/restore",

@@ -90,7 +90,6 @@ export function ApproveRetentionDeletionForm({
 
   return (
     <form
-      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();

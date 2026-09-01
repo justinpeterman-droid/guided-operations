@@ -65,7 +65,6 @@ export function ReleaseLegalHoldControl({
 
   return (
     <form
-      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();

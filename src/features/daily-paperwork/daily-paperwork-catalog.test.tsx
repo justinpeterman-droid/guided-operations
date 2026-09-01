@@ -33,6 +33,9 @@ describe("DailyPaperworkCatalog", () => {
     expect(
       screen.getByRole("heading", { name: /F · Five-day week field/ }),
     ).toBeInTheDocument();
+    const workDate = screen.getByLabelText("Work date");
+    expect(workDate).toBeRequired();
+    expect(workDate.closest("form")).not.toHaveAttribute("novalidate");
     for (const form of dailyPaperworkCatalog) {
       expect(
         screen.getByRole("heading", { name: form.title }),

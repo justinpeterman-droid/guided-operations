@@ -530,7 +530,7 @@ export function NewIncidentWorkspace() {
             ))}
           </ol>
         </nav>
-        <form noValidate className="incident-stage" onSubmit={save}>
+        <form className="incident-stage" onSubmit={save}>
           <h1>
             {step === 1
               ? "Confirm the reporting officer"
@@ -701,7 +701,7 @@ export function NewIncidentWorkspace() {
                 <label className="incident-full">
                   Your field notes
                   <textarea
-                    className="resize-none"
+                    className="resize-vertical"
                     required
                     value={notes}
                     onChange={(event) => {
@@ -792,7 +792,7 @@ export function NewIncidentWorkspace() {
                   <label className="incident-fact">
                     Fact {index + 1} for reports
                     <textarea
-                      className="resize-none"
+                      className="resize-vertical"
                       value={proposal.value}
                       onChange={(event) =>
                         updateFactProposal(proposal.key, {
@@ -830,7 +830,7 @@ export function NewIncidentWorkspace() {
               <label className="incident-fact">
                 Information not yet known
                 <textarea
-                  className="resize-none"
+                  className="resize-vertical"
                   value={unknown}
                   onChange={(event) => setUnknown(event.target.value)}
                   placeholder="Keep missing information visible"
@@ -1055,7 +1055,7 @@ function ChecklistQuestion({
       </legend>
       {question.answerType === "text" ? (
         <textarea
-          className="resize-none"
+          className="resize-vertical"
           aria-label={`${question.prompt} answer`}
           value={answeredValue}
           onChange={(event) =>

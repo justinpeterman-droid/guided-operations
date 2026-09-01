@@ -299,7 +299,7 @@ export function CountSheetHistory({
         ))}
       </ol>
       {selectedRevision ? (
-        <form noValidate onSubmit={restore}>
+        <form onSubmit={restore}>
           <p>Restore revision {selectedRevision} as a new saved version.</p>
           <label>
             Restore reason
@@ -310,7 +310,11 @@ export function CountSheetHistory({
               value={reason}
             />
           </label>
-          <button className="incident-primary" disabled={busy} type="submit">
+          <button
+            className="incident-primary"
+            disabled={busy || !reason.trim()}
+            type="submit"
+          >
             Create restored revision
           </button>
         </form>

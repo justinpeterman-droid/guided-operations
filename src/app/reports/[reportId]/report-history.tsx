@@ -121,7 +121,7 @@ export function ReportHistory({
         ))}
       </ol>
       {selectedRevision ? (
-        <form noValidate onSubmit={restore}>
+        <form onSubmit={restore}>
           <p>Restore revision {selectedRevision} as a new version.</p>
           <label>
             Restore reason
@@ -132,7 +132,11 @@ export function ReportHistory({
               onChange={(event) => setReason(event.target.value)}
             />
           </label>
-          <button className="incident-primary" type="submit">
+          <button
+            className="incident-primary"
+            disabled={!reason.trim()}
+            type="submit"
+          >
             Create restored revision
           </button>
         </form>
