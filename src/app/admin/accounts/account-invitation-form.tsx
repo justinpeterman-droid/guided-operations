@@ -182,7 +182,6 @@ export function AccountInvitationForm() {
         this account is created.
       </p>
       <form
-        noValidate
         onSubmit={(event) => {
           event.preventDefault();
           void submit(event.currentTarget);

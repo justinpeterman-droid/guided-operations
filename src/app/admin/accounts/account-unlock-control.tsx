@@ -94,7 +94,6 @@ export function AccountUnlockControl({
   const submitting = state === "submitting";
   return (
     <form
-      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();

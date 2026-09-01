@@ -222,7 +222,6 @@ export function DailyPaperworkPackageManager({
         </p>
 
         <form
-          noValidate
           className={styles.form}
           ref={sourceFormRef}
           onSubmit={(event) => {
@@ -310,7 +309,6 @@ export function DailyPaperworkPackageManager({
               </div>
             </dl>
             <form
-              noValidate
               className={styles.confirmForm}
               onSubmit={(event) => {
                 event.preventDefault();

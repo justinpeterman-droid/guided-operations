@@ -43,7 +43,7 @@ export function DailyPaperworkCatalog({
         ) : null}
       </section>
 
-      <form noValidate className="daily-paperwork-filter" method="get">
+      <form className="daily-paperwork-filter" method="get">
         <label>
           Work date
           <input defaultValue={workDate} name="workDate" required type="date" />

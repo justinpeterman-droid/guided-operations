@@ -66,7 +66,6 @@ export function PlaceLegalHoldForm() {
         enter report narratives, names, or other record details here.
       </p>
       <form
-        noValidate
         className="account-session-confirm"
         onSubmit={(event) => {
           event.preventDefault();
@@ -100,7 +99,7 @@ export function PlaceLegalHoldForm() {
           maxLength={160}
           minLength={3}
           name="authorityReference"
-          pattern="[A-Za-z0-9][A-Za-z0-9 ._:/-]*"
+          pattern={"[A-Za-z0-9][A-Za-z0-9 ._:\\/\\-]*"}
           required
           type="text"
         />

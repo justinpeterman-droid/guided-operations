@@ -94,8 +94,8 @@ button:not(:disabled),
   cursor: pointer;
 }
 
-.resize-none {
-  resize: none;
+.resize-vertical {
+  resize: vertical;
 }
 
 button:focus-visible,
@@ -4375,7 +4375,6 @@ form.account-session-controls {
     margin-left: 0;
   }
 
-  .workflow-steps ol,
   .report-fields,
   .review-promise > div {
     grid-template-columns: 1fr;

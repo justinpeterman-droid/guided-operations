@@ -73,10 +73,9 @@ describe("NewIncidentWorkspace", () => {
       target: { value: "2026-08-27T13:00" },
     });
     await user.type(screen.getByLabelText("Location"), "Training room");
-    await user.type(
-      screen.getByLabelText("Your field notes"),
-      "Fictional raw training note.",
-    );
+    const fieldNotes = screen.getByLabelText("Your field notes");
+    expect(fieldNotes).toHaveClass("resize-vertical");
+    await user.type(fieldNotes, "Fictional raw training note.");
     await user.click(
       screen.getByRole("button", { name: "Suggest category and facts" }),
     );

@@ -8,6 +8,16 @@ describe("PolicyExpert", () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => cleanup());
 
+  it("keeps native question validation and allows vertical expansion", () => {
+    render(<PolicyExpert />);
+
+    const question = screen.getByLabelText("Policy question");
+    expect(question).toBeRequired();
+    expect(question).toHaveAttribute("minlength", "3");
+    expect(question).toHaveClass("resize-vertical");
+    expect(question.closest("form")).not.toHaveAttribute("novalidate");
+  });
+
   it("gets a session CSRF token before submitting a same-origin policy question", async () => {
     const fetch = vi
       .spyOn(globalThis, "fetch")

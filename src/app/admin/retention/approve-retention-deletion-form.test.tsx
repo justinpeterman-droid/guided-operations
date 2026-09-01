@@ -34,6 +34,16 @@ describe("ApproveRetentionDeletionForm", () => {
       screen.getByRole("button", { name: "Prepare deletion approval" }),
     );
 
+    for (const label of [
+      "Deletion authority reference",
+      "Database backup reference",
+      "Private-Storage backup reference",
+    ]) {
+      const pattern = screen.getByLabelText(label).getAttribute("pattern");
+      expect(pattern).not.toBeNull();
+      expect(() => new RegExp(pattern!, "v")).not.toThrow();
+    }
+
     fireEvent.change(screen.getByLabelText("Deletion authority reference"), {
       target: { value: "FICTIONAL-AUTHORITY-001" },
     });

@@ -28,6 +28,7 @@ describe("TemporaryPasscodeChangeForm", () => {
       "/api/auth/complete-temporary-passcode-change",
     );
     expect(form).toHaveAttribute("method", "post");
+    expect(form).not.toHaveAttribute("novalidate");
   });
 
   it("uses a fresh CSRF token and never sends the employee number in a URL", async () => {

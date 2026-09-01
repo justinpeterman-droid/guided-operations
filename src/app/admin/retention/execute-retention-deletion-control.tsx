@@ -71,7 +71,6 @@ export function ExecuteRetentionDeletionControl({
 
   return (
     <form
-      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();

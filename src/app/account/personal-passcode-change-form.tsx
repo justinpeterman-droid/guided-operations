@@ -60,7 +60,6 @@ export function PersonalPasscodeChangeForm() {
 
   return (
     <form
-      noValidate
       className="account-session-controls"
       onSubmit={(event) => {
         event.preventDefault();

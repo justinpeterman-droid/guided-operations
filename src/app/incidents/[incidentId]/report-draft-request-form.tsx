@@ -141,7 +141,7 @@ export function ReportDraftRequestForm({
   }
 
   return (
-    <form noValidate className="incident-stage" onSubmit={submit}>
+    <form className="incident-stage" onSubmit={submit}>
       <section className="incident-review">
         <h2>1. Choose the reporting officer</h2>
         <p>

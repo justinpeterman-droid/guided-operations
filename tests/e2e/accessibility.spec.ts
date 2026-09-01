@@ -145,6 +145,20 @@ test("fictional preview routes remain usable at mobile size and reduced motion",
   }
 });
 
+test("the report workflow keeps its compact three-column mobile progress rail", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/preview/report-assistant");
+
+  const columns = await page
+    .locator(".workflow-steps ol")
+    .evaluate((element) =>
+      getComputedStyle(element).gridTemplateColumns.split(" ").filter(Boolean),
+    );
+  expect(columns).toHaveLength(3);
+});
+
 test("representative previews reflow at zoom-equivalent viewports", async ({
   page,
 }) => {

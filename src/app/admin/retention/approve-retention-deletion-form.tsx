@@ -90,7 +90,6 @@ export function ApproveRetentionDeletionForm({
 
   return (
     <form
-      noValidate
       className="account-session-confirm"
       onSubmit={(event) => {
         event.preventDefault();
@@ -111,7 +110,7 @@ export function ApproveRetentionDeletionForm({
         maxLength={160}
         minLength={3}
         name="authorityReference"
-        pattern="[A-Za-z0-9][A-Za-z0-9 ._:/-]*"
+        pattern={"[A-Za-z0-9][A-Za-z0-9 ._:\\/\\-]*"}
         required
       />
       <label htmlFor={`database-backup-${recordId}`}>
@@ -123,7 +122,7 @@ export function ApproveRetentionDeletionForm({
         maxLength={160}
         minLength={3}
         name="databaseBackupReference"
-        pattern="[A-Za-z0-9][A-Za-z0-9 ._:/-]*"
+        pattern={"[A-Za-z0-9][A-Za-z0-9 ._:\\/\\-]*"}
         required
       />
       <label htmlFor={`storage-backup-${recordId}`}>
@@ -135,7 +134,7 @@ export function ApproveRetentionDeletionForm({
         maxLength={160}
         minLength={3}
         name="storageBackupReference"
-        pattern="[A-Za-z0-9][A-Za-z0-9 ._:/-]*"
+        pattern={"[A-Za-z0-9][A-Za-z0-9 ._:\\/\\-]*"}
         required
       />
       <label htmlFor={`backup-manifest-${recordId}`}>

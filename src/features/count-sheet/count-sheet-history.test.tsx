@@ -112,13 +112,19 @@ describe("CountSheetHistory", () => {
     });
     expect(restoreButtons[0]).toBeDisabled();
     await user.click(restoreButtons[1]);
-    await user.type(
-      screen.getByRole("textbox", { name: "Restore reason" }),
-      "Return to the earlier fictional count.",
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Create restored revision" }),
-    );
+    const restoreReason = screen.getByRole("textbox", {
+      name: "Restore reason",
+    });
+    const restoreButton = screen.getByRole("button", {
+      name: "Create restored revision",
+    });
+    expect(restoreButton).toBeDisabled();
+    await user.type(restoreReason, "   ");
+    expect(restoreButton).toBeDisabled();
+    await user.clear(restoreReason);
+    await user.type(restoreReason, "Return to the earlier fictional count.");
+    expect(restoreButton).toBeEnabled();
+    await user.click(restoreButton);
 
     await waitFor(() => expect(onRestored).toHaveBeenCalledOnce());
     const restoreRequest = fetchMock.mock.calls[2];
