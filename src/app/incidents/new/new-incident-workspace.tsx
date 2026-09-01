@@ -141,19 +141,19 @@ export function NewIncidentWorkspace() {
   );
   const readyForSuggestions = Boolean(
     incidentNumber.trim() &&
-    incidentName.trim() &&
-    occurredAt &&
-    location.trim() &&
-    notes.trim() &&
-    factSourceSupported,
+      incidentName.trim() &&
+      occurredAt &&
+      location.trim() &&
+      notes.trim() &&
+      factSourceSupported,
   );
   const readyForFactReview = Boolean(
     incidentNumber.trim() &&
-    incidentName.trim() &&
-    occurredAt &&
-    location.trim() &&
-    categoryDefinition &&
-    notes.trim(),
+      incidentName.trim() &&
+      occurredAt &&
+      location.trim() &&
+      categoryDefinition &&
+      notes.trim(),
   );
   const confirmedFactProposals = factProposals.filter(
     (proposal) =>
@@ -539,7 +539,9 @@ export function NewIncidentWorkspace() {
           <div className="incident-stage-progress">
             <div className="incident-stage-progress-heading">
               <p className="eyebrow">Report workflow</p>
-              <span>Step {step} of {stepCount}</span>
+              <span>
+                Step {step} of {stepCount}
+              </span>
             </div>
             <div
               aria-label={`Report workflow: step ${step} of ${stepCount}`}
