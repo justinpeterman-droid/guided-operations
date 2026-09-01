@@ -314,7 +314,7 @@ test("an officer and administrator can use the protected per-officer report work
   await expect(
     page.getByRole("radio", { name: /Fictional Qualification Officer/ }),
   ).toBeChecked();
-  await expect(page.getByText("Officer observation")).toBeVisible();
+  await expect(page.getByText("Officer observation")).toBeHidden();
   await expect(page.getByText("Unassigned observation")).toHaveCount(0);
   await expect(page.getByText(/raw note that must not reach/)).toHaveCount(0);
   await expect(
