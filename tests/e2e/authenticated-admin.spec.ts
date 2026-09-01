@@ -60,7 +60,7 @@ test("the last administrator cannot demote their own account", async ({
     .filter({ hasText: "Fictional Qualification Administrator" });
   await administratorCard.getByRole("button", { name: "Make officer" }).click();
   await administratorCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await administratorCard
     .getByRole("button", { name: "Confirm: Make officer" })
@@ -143,7 +143,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await page.getByLabel("Account type").selectOption("officer");
   await page.getByLabel("Assigned shift").selectOption("B");
   await page
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await page.getByRole("button", { name: "Create account" }).click();
 
@@ -166,7 +166,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await invitedCard.getByRole("button", { name: "Change shift" }).click();
   await invitedCard.getByLabel("New assigned shift").selectOption("C");
   await invitedCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await invitedCard
     .getByRole("button", { name: "Confirm shift change" })
@@ -179,7 +179,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
 
   await invitedCard.getByRole("button", { name: "Make administrator" }).click();
   await invitedCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await invitedCard
     .getByRole("button", { name: "Confirm: Make administrator" })
@@ -192,7 +192,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
 
   await invitedCard.getByRole("button", { name: "Reset passcode" }).click();
   await invitedCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await invitedCard.getByRole("button", { name: "Confirm reset" }).click();
   await expect(
@@ -211,7 +211,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
 
   await invitedCard.getByRole("button", { name: "Disable account" }).click();
   await invitedCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await invitedCard.getByRole("button", { name: "Confirm disable" }).click();
   await expect(invitedCard.getByText("Disabled")).toBeVisible();
@@ -233,7 +233,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
     .getByRole("button", { name: "Unlock account" })
     .click();
   await lockedOfficerCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   const unlockResponse = page.waitForResponse(
     (response) =>
@@ -338,7 +338,7 @@ test("a fictional administrator uses the protected roster and status pages", asy
     .getByRole("button", { name: "Disable account" })
     .click();
   await activeOfficerCard
-    .getByLabel("Your administrator passcode")
+    .getByLabel("Your administrator passcode", { exact: true })
     .fill(accounts.administrator.passcode);
   await activeOfficerCard
     .getByRole("button", { name: "Confirm disable" })
