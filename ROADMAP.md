@@ -70,87 +70,123 @@ The hosted details and limitations are recorded in
   Hosted monitoring, alert delivery, budgets, backup jobs, and a live restore
   still remain open.
 
-## Current launch blockers
+## Release history
 
-1. The fictional Development Supabase project remains at the previously verified
-   62-migration head and has one active fictional administrator. The repository
-   now has nine additional forward migrations, through `20260828151000`, that
-   have not been applied to the hosted project. The owner must complete the
-   fictional administrator's temporary-passcode change before the protected
-   workflow can create a fictional officer. A separate isolated live Supabase
-   project is still required before release.
-2. Authentication and authorization have local fictional proof for encrypted
-   alias/token-non-exposing cookies, refresh rotation, officer sign-in, Count
-   Sheet save/reload/print, sign-out, and post-logout denial. Hosted proof is
-   still required for recovery/email configuration, expiry, timing bounds,
-   revoked-session/provider-failure behavior, direct RLS/API/Storage negatives,
-   and full officer/admin browser flows.
-3. The core report path is locally browser-qualified with fictional data for
-   explicit category confirmation, per-note-line fact confirmation/exclusion,
-   officer edit/finalize/correction, bounded stale-conflict recovery,
-   append-only history/restore, audited print, explicit-version reviewed-report
-   Word download, and same-facility administrator visibility. A protected,
-   provider-neutral model boundary now returns only review suggestions: an
-   allowed category plus source-line-bound facts. The officer must still confirm
-   the category and every fact, and the manual path remains available when AI is
-   disabled. Remaining work includes model and operational-data evaluation,
-   approved gap rules, the complete draft-generation flow; the approved 005/409
-   source-form mapping and output fidelity; Forms Library and Count Sheet
-   acceptance; hosted proof; and owner acceptance. The generic Word download is
-   not an official 005/409 form.
-4. The policy corpus lacks authoritative bytes, rights classification, current
-   version approval, SHA-256 inventory, page maps, and citation reconciliation.
-5. The approved corpus has not passed retrieval, citation, refusal,
-   supersession/conflict, prompt-injection, latency, and cost evaluation on the
-   pinned production configuration.
-6. The guarded encrypted off-provider database and Storage backup tool is built
-   locally, but its protected operator host, schedule, key custody, hosted run,
-   decryption proof, and restore into an isolated replacement project do not
-   exist. Local code and same-stack recovery proof do not close this gate.
-7. Production monitoring sinks, alert delivery, access/retention, cost caps,
-   provider budgets, incident ownership, and release/rollback exercises do not
+- **2026-08-30 — application production release.** Pull request #1 merged 296
+  commits to `main`; fourteen pending migrations were applied to production
+  after schema and data dumps were taken outside the repository; policy and
+  report-draft models were pinned to `gpt-5.6-terra` and embeddings to
+  `text-embedding-3-small`; and the deployment returned `ok` from
+  `/api/health/live` and `ready` from `/api/health/ready`. Recorded in
+  [Production release](docs/operations/2026-08-30-production-release.md).
+- **2026-08-30 — corpus registration and import.** The owner registered 236
+  approved documents and imported 235 of them into production private Storage
+  across 1,310 pages and 1,224 chunks. Recorded in
+  [Production corpus registration and import](docs/operations/2026-08-30-production-corpus-import.md).
+- **2026-08-31 — post-release UI polish.** Five UI polish waves, the
+  owner-reviewed desktop Count Sheet fit, and the hands-on accessibility runbook
+  landed on `main` through `dbbc8d6`.
+
+## Current open items
+
+The application is released. These are the items that remain open after the
+release, in rough order of user impact. They are tracked here and summarized in
+[`README.md`](README.md); do not open a competing tracker for them.
+
+1. **The production corpus is not searchable.** All 235 imported documents are
+   `awaiting_review` and their chunks are `pending` with `qa_approved = false`.
+   Until the owner approves them and an embedding batch runs, Policy Expert
+   reports that it has no sources instead of citing policy. This is the designed
+   refusal behavior, not a fault, but the feature is not usable until it clears.
+2. **One policy is absent from the corpus.**
+   `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
+   bytes in its page 5 checkbox glyphs. The normalization fix re-keys all 236
+   bundles, so the owner deferred it to the annual refresh in O-026.
+3. **Continuous integration cannot run.** Every workflow has failed in three to
+   five seconds since 2026-08-28 16:34 UTC with no assigned runner, because the
+   private repository's included Actions minutes are exhausted. Verification
+   since that date is local only. Restore CI, or record an owner decision
+   accepting local-only verification with a named reviewer per release.
+4. **Hosted recovery is unproven.** The guarded encrypted off-provider backup
+   tool exists but has never been run against hosted production. Its protected
+   operator host, schedule, key custody, decryption proof, and restore into an
+   isolated replacement project do not exist. Local rehearsal does not close
+   this gate.
+5. **Production monitoring does not exist.** There are no monitoring sinks,
+   alert delivery, access and retention settings, cost caps, provider budgets,
+   named incident ownership, or a rehearsed rollback.
+6. **Administrator assurance is unresolved for real data.** O-015 authorizes
+   real operational and personal data in production, O-013 still lists
+   administrator assurance as an unmet release gate, and O-020 defers
+   second-factor administration only for the fictional-data phase. The owner
+   must reconcile these three before real data is entered.
+7. **The official 005/409 output is not authoritative.** The deterministic
+   mapping and fidelity checks exist, but the authoritative source form has not
+   been obtained, so the Word download is a generic reviewed-report export. It
+   may not be called an official 005/409 form until the source kind, revision,
+   and SHA-256 are recorded. See
+   [Official 005/409 source-form review](docs/quality/2026-08-30-official-005-409-source-review.md).
+8. **Manual accessibility and print validation is outstanding.** The runbook in
+   [Hands-on accessibility and print validation](docs/quality/hands-on-accessibility-print-validation.md)
+   requires a representative assistive-technology user and an operating-system
+   print dialog; automation cannot observe either.
+9. **Retention and deletion are unrehearsed.** Legal-hold placement and release
+   and controlled deletion are implemented, but hosted Storage and backup
+   reconciliation, a deletion rehearsal, and live backup-expiry evidence do not
    exist.
-8. The production data inventory and protected, purpose-bound legal-hold
-   placement/release and controlled-deletion workflows are implemented locally.
-   Hosted Storage/backup reconciliation, restore/deletion rehearsal, live
-   backup-expiry evidence, and owner approval remain open.
-9. GitHub branch protection and private-repository rulesets are unavailable on
-   the current account plan. The owner must upgrade or formally accept and
-   document compensating release controls.
-10. Vercel Hobby Standard Protection does not protect the Production domain.
-    Application authentication remains mandatory; provider-level Production
-    protection requires a plan decision.
-11. Supabase Free projects can pause for low activity and require operator-run
-    off-provider database and Storage backups. The owner must accept or remove
-    those limitations before release.
-12. The two currently Production-scoped Supabase server entries match the
-    fictional Development project. They must be removed from the Production
-    scope under exact authorization, then replaced only with complete values for
-    the future isolated Production project.
+10. **Repository enforcement is unresolved (OQ-016).** Branch protection and
+    rulesets are unavailable on the current plan. Upgrade, or record the
+    accepted manual pull-request, review, green-check, no-force-push, and
+    release-record controls.
+11. **Three owner decisions remain open:** OQ-010 (Google AI boundary), OQ-013
+    (AI budget, request caps, and circuit-breaker behavior), and OQ-014 (durable
+    document worker).
+12. **Three pull requests are open:** #21 (UI refinement), #20 and #16 (the
+    CodeRabbit audit chain, which targets review branches rather than `main`).
+    Decide each one; do not let them accumulate.
+13. **Production environment scoping needs re-verification.** Before the
+    release, two Production-scoped Supabase server entries still matched the
+    fictional Development project. The release applied migrations to a
+    production database, so this was probably corrected, but no record confirms
+    it. Verify that every Production-scoped value names the production project
+    and that no Development value remains in Production scope.
+
+Two earlier blockers are now closed by owner decision rather than by work.
+Provider-level protection of the Production domain was declined in favor of
+application authentication alone (O-019, closing OQ-017), and Free provider
+tiers, including the possibility that a Supabase Free project pauses on low
+activity, were deliberately accepted for this scope (O-023, closing OQ-004).
 
 ## Delivery sequence
 
-| Order | Phase                                            | Current status                   |              Working estimate | Primary exit gate                                                 |
-| ----: | ------------------------------------------------ | -------------------------------- | ----------------------------: | ----------------------------------------------------------------- |
-|     0 | Foundation closure and repository controls       | Mostly built; decisions open     |          1–2 engineering days | Truthful baseline, reproducible gates, reviewed decisions         |
-|     1 | Connected non-production environment             | Connected; requalification open  |                      1–2 days | Remotely verified protected preview using non-production services |
-|     2 | Identity, sessions, authorization, and bootstrap | Built locally; hosted proof open |                      5–8 days | Accepted ADR-0003 and negative security tests                     |
-|     3 | Incident and report vertical slice               | Implementation in progress       |                    10–15 days | Accepted end-to-end fictional incident/report workflow            |
-|     4 | Forms and operational paperwork                  | Count Sheet slice in progress    |                     8–12 days | Accepted persistence, print, export, and records behavior         |
-|     5 | Policy corpus and grounded assistance            | Code built; corpus gate blocked  |       10–20 days after access | Reconciled corpus and passing citation/refusal evaluation         |
-|     6 | Administration and operational controls          | Implementation in progress       |                      5–8 days | Step-up admin, audit, monitoring, and recovery exercises pass     |
-|     7 | Live-environment qualification                   | Planned                          |                      3–5 days | Named release candidate passes every applicable release gate      |
-|     8 | Owner-authorized promotion and observation       | Planned                          | 1–2 days plus rollback window | Production evidence accepted; rollback retained                   |
+The phases below describe the sequence that produced the 2026-08-30 release.
+Phases 0 through 8 were all executed. Their remaining work is the post-release
+hardening listed in [Current open items](#current-open-items), not new feature
+delivery.
 
-These are planning ranges for focused engineering work, not calendar promises.
-Owner decisions, independent review, corpus acquisition, and provider access are
-not included. A realistic single-workstream target is approximately 10–14 weeks
-after the blocking decisions and authoritative corpus are available. Corpus
-discovery can run alongside Phases 1–4, but corpus import cannot bypass Phase 5.
+| Order | Phase                                            | Status after the release                  | Remaining work                                                       |
+| ----: | ------------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------- |
+|     0 | Foundation closure and repository controls       | Executed                                  | Repository enforcement (OQ-016) and restoring CI                     |
+|     1 | Connected non-production environment             | Executed                                  | None blocking; Preview follows `main`                                |
+|     2 | Identity, sessions, authorization, and bootstrap | Executed and released                     | Administrator assurance for real data (O-013/O-020)                  |
+|     3 | Incident and report vertical slice               | Executed and released                     | Owner acceptance of live use                                         |
+|     4 | Forms and operational paperwork                  | Executed and released                     | Manual print and accessibility validation                            |
+|     5 | Policy corpus and grounded assistance            | Corpus imported; not approved or embedded | Chunk approval, embedding batch, and the citation/refusal evaluation |
+|     6 | Administration and operational controls          | Executed and released                     | Monitoring, alerting, budgets, and retention/deletion rehearsal      |
+|     7 | Live-environment qualification                   | Executed under accepted exceptions        | Hosted backup schedule, restore drill, and rollback exercise         |
+|     8 | Owner-authorized promotion and observation       | Executed 2026-08-30                       | Corpus approval before the product is fully usable                   |
+
+Phase 7 and Phase 8 were completed with several qualification gates knowingly
+unmet rather than satisfied. The specific exceptions are the hosted backup and
+restore drill, production monitoring and alerting, the rehearsed rollback, and
+the corpus evaluation. Recording them as accepted exceptions is honest; treating
+them as passed is not. Each one remains listed in
+[Current open items](#current-open-items) until it is closed with evidence.
 
 ## Phase 0 — foundation closure and repository controls
 
-Status: **in progress**
+Status: **executed; repository enforcement (OQ-016) and restoring continuous
+integration remain open**
 
 ### Steps
 
@@ -198,8 +234,7 @@ Status: **in progress**
 
 ## Phase 1 — connected non-production environment
 
-Status: **connected; latest authenticated fictional requalification remains
-open**
+Status: **executed; protected Previews build `main`**
 
 ### Steps
 
@@ -243,10 +278,8 @@ open**
 
 ## Phase 2 — identity, sessions, authorization, and bootstrap
 
-Status: **private lifecycle, local password-provider configuration, encrypted
-server-only sessions, and the fictional officer sign-in/save/reopen/print/logout
-browser run are passing; hosted proof and ADR-0003 security acceptance remain
-required before production login**
+Status: **executed and released 2026-08-30; administrator assurance for real
+data (O-013 against O-020) remains open**
 
 ### Steps
 
@@ -298,12 +331,10 @@ required before production login**
 
 ## Phase 3 — incident and report vertical slice
 
-Status: **implementation in progress; the protected incident-to-draft path now
-enforces per-officer fact selection and connects to the review screen; a generic
-exact-version reviewed-report Word download exists, while approved 005/409
-output, protected hosted qualification, manual accessibility/visual review, and
-owner acceptance remain open. The guarded local officer/administrator browser
-lane passes in pull-request CI with fictional data**
+Status: **executed and released 2026-08-30. The deterministic 005/409 mapping
+and fidelity checks are implemented, but the authoritative source form has not
+been obtained, so the Word download remains a generic reviewed-report export and
+is not an official 005/409 form. Owner acceptance of live use remains open**
 
 ### Steps
 
@@ -350,22 +381,9 @@ lane passes in pull-request CI with fictional data**
 
 ## Phase 4 — forms and operational paperwork
 
-Status: **Count Sheet protected load/save/reopen/revision review/restore,
-redacted current-revision print-request audit, and a protected
-honest-availability Forms Library foundation are implemented. The six-form
-administrator Daily Paperwork catalog and private, append-only, source-bound
-template registry plus generic protected open/edit/save/history/exact-restore
-and audited current-revision print workflow are implemented locally. The
-Production-only package-review and registration screen is implemented locally;
-it automatically binds review to the current package, shows only value-free
-history, and requires a fresh package-bound administrator passcode proof. The
-workflow includes closed server-owned schemas, repeating rows, stale-session
-denial, optimistic conflict protection, idempotent writes, redacted print audit,
-and fail-closed quarantine/retirement handling. Approved source import,
-source-specific screen/print fidelity, rollback selection UI, PostgreSQL replay,
-hosted migration, manual accessibility review, protected hosted qualification,
-and owner acceptance remain open. The generic Count Sheet mobile/print-fit and
-signed-in workflow pass in the guarded fictional browser lane**
+Status: **executed and released 2026-08-30, including the Count Sheet workflow,
+the six-form administrator Daily Paperwork engine, and the role-aware Forms
+Library. Manual print and accessibility validation remains open**
 
 ### Steps
 
@@ -403,17 +421,11 @@ signed-in workflow pass in the guarded fictional browser lane**
 
 ## Phase 5 — policy corpus and grounded assistance
 
-Status: **the resumable local MinerU, provenance, collection-aware retrieval,
-pinned query-embedding adapter, resumable chunk-embedding foundation,
-deterministic hybrid fusion, and citation code are implemented and pass
-fictional local tests; real corpus review/import/embedding, vector-index
-measurement, hybrid qualification, hosted migration, and evaluation remain no
-longer blocked on corpus rights: OQ-008 and OQ-009 closed 2026-08-30 (the corpus
-is public record and the owner is authorized - see O-021/O-022). Real corpus
-extraction is complete: 236 of 236 documents, 1,308 pages, 1,228 chunks, held
-locally and awaiting review. What remains is import, embedding, hybrid
-qualification and the accuracy evaluation. The corpus is refreshed once a year
-by the owner by hand; no automated freshness checking is wanted.**
+Status: **corpus imported to production 2026-08-30 (236 registered, 235
+imported). Every document is `awaiting_review` with `qa_approved = false`, so
+nothing is embedded or searchable. Chunk approval, the embedding batch, vector
+index measurement, hybrid qualification, and the citation/refusal evaluation
+remain open**
 
 ### Steps
 
@@ -465,11 +477,9 @@ by the owner by hand; no automated freshness checking is wanted.**
 
 ## Phase 6 — administration and operational controls
 
-Status: **account/audit/health controls, purpose-bound legal-hold operation,
-bounded two-year review, fail-closed controlled deletion, redacted core
-telemetry, a machine-enforced runtime logging boundary, and local recovery are
-implemented; hosted deletion/recovery rehearsal, monitoring, alerts, budgets,
-and exercises remain open**
+Status: **executed and released 2026-08-30; hosted deletion and recovery
+rehearsal, monitoring sinks, alert delivery, budgets, and exercises remain
+open**
 
 ### Steps
 
@@ -527,8 +537,9 @@ and exercises remain open**
 
 ## Phase 7 — live-environment qualification
 
-Status: **protected backup tooling built locally; isolated live infrastructure,
-hosted backup/restore, qualification, and owner approval remain open**
+Status: **executed under accepted exceptions on 2026-08-30. The hosted backup
+schedule, decryption proof, isolated restore drill, monitoring, and rehearsed
+rollback were not satisfied and remain open**
 
 ### Steps
 
@@ -578,7 +589,8 @@ hosted backup/restore, qualification, and owner approval remain open**
 
 ## Phase 8 — owner-authorized promotion and observation
 
-Status: **planned; do not execute without explicit promotion authorization**
+Status: **executed 2026-08-30 under owner authorization; see
+[Production release](docs/operations/2026-08-30-production-release.md)**
 
 ### Steps
 
@@ -622,48 +634,51 @@ Status: **planned; do not execute without explicit promotion authorization**
 - Legacy retirement remains open or is completed under its separate approved
   record.
 
-## Recommended pull-request sequence
+## Change discipline after the release
 
-Keep each pull request narrow enough to review and roll back independently.
+`main` is now the released branch. Keep each pull request narrow enough to
+review and roll back independently, and group post-release work along these
+lines:
 
-1. **PR-01 — foundation truth and repository gates:** documentation drift, local
-   database proof, security/dependency scanning, and repository-control
-   decision.
-2. **PR-02 — connected Preview and readiness:** Git linkage, environment
-   validation, readiness route, remote browser proof.
-3. **PR-03 — authentication spike and ADR:** disposable alias lifecycle, threat
-   model, accepted/rejected ADR outcome; no user-facing enablement.
-4. **PR-04 — identity schema and authorization matrix:** forward migration,
-   grants, RLS/Storage policies, generated types, direct negative tests.
-5. **PR-05 — sign-in/session/bootstrap vertical slice:** SSR cookies, rate
-   limits, revocation, forced change, admin ceremony, browser tests.
-6. **PR-06 onward — incident/report slices:** schema/DAL first, then one
-   end-to-end user capability per reviewed change.
-7. **Forms PRs:** Count Sheet, Daily Paperwork, Monthly packets, Forms Library,
-   each with print/output acceptance.
-8. **Corpus PRs:** inventory tooling, ingest/extraction, retrieval, generation,
-   reader/UI, and evaluations remain separate from restricted source objects.
-9. **Operations PRs:** admin/audit, observability, backups, restore drill,
-   release automation, and final evidence.
+1. **Corpus activation:** chunk approval, the embedding batch, vector-index
+   measurement, hybrid qualification, and the citation/refusal evaluation.
+   Restricted source objects stay out of every change.
+2. **Operations hardening:** hosted backup scheduling and key custody, the
+   decryption and isolated-restore drill, monitoring sinks, alert delivery,
+   provider budgets and cost caps, and a rehearsed rollback.
+3. **Records controls:** the retention and deletion rehearsal, hosted Storage
+   and backup reconciliation, and live backup-expiry evidence.
+4. **Product follow-through:** the authoritative 005/409 source form, the manual
+   accessibility and print validation, and any owner-requested UI work.
+5. **Repository controls:** restoring continuous integration and settling
+   repository enforcement (OQ-016).
+
+Every change still updates the affected contract document in the same pull
+request. Do not open a competing tracker; record status in
+[Current open items](#current-open-items).
 
 ## Immediate owner decisions
 
-The next implementation phase cannot be completed until these are answered in
-[`docs/OWNER_DECISIONS.md`](docs/OWNER_DECISIONS.md):
+These are the outstanding decisions in
+[`docs/OWNER_DECISIONS.md`](docs/OWNER_DECISIONS.md). They are the practical
+constraint on finishing the post-release work:
 
-1. Approve `iad1` as the Vercel region paired with Supabase `us-east-1`.
-2. Supply a non-sensitive facility display label and URL/domain preference.
-3. Confirm Hobby/Free plan eligibility and whether the live Production domain
-   needs provider-level protection in addition to application authentication.
-4. Choose GitHub Pro branch enforcement or explicitly accept temporary manual
-   release controls for the private hobby repository.
-5. Approve the personal-passcode policy and administrator MFA/step-up direction.
-6. Name the first-admin, reset/unlock, temporary-secret, incident-response,
-   backup, billing, and production-approval owners.
-7. Identify the authoritative corpus location and the person authorized to
-   decide source rights/current versions.
-8. Approve recovery objectives, AI budget/circuit breaker, and OpenAI data
-   retention posture before Phase 7.
+1. **Approve the imported corpus for search.** Nothing in Policy Expert works
+   until the 235 imported documents are approved and embedded.
+2. **Reconcile administrator assurance.** O-015 authorizes real data, O-013
+   still requires administrator assurance before real data, and O-020 defers it
+   only for the fictional-data phase. Decide which governs production today.
+3. **OQ-013 — AI budget and quality:** approve the monthly budget, request caps,
+   circuit-breaker behavior, and evaluation thresholds. Production is currently
+   running against pinned models with no recorded cost ceiling.
+4. **OQ-016 — repository enforcement:** upgrade the GitHub plan, or record the
+   accepted manual release controls and the reviewer for each release.
+5. **Continuous integration:** fund or otherwise restore Actions minutes, or
+   record an owner decision accepting local-only verification.
+6. **OQ-010 — Google boundary:** confirm whether Google AI APIs are prohibited
+   in addition to Google hosting.
+7. **OQ-014 — document worker:** decide whether a non-Google durable worker is
+   allowed if measured document or ingestion work outgrows Vercel-sized jobs.
 
 ## Stop conditions
 

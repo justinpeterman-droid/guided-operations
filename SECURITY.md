@@ -25,15 +25,14 @@ envelope; a fictional browser test proves the alias and raw tokens are not
 browser-readable. Local fictional database-plus-Storage recovery is automated
 and tested.
 
-These controls are not hosted security acceptance. The shared Development
-Supabase project remains empty and behind the repository migration head; no
-hosted account exists. The current candidate still needs hosted
-recovery/email/log/analytics non-exposure proof, cookie expiry and
-revoked-session tests, complete hosted RLS/API/Storage negatives, full
-officer/administrator browser qualification, real-corpus security evaluation,
-hosted recovery, monitoring/alerts, retention/deletion proof, and an isolated
-Production environment. A missing target control is a gap; code that claims to
-establish a boundary but fails to do so is a security finding.
+These controls were released to production on 2026-08-30, but release is not
+hosted security acceptance. The following still have no hosted evidence: cookie
+expiry and revoked-session behavior, complete hosted RLS/API/Storage negatives,
+recovery/email/log/analytics non-exposure proof, the real-corpus security
+evaluation, hosted backup and restore, monitoring and alerting, and the
+retention/deletion rehearsal. A missing target control is a gap; code that
+claims to establish a boundary but fails to do so is a security finding. The
+current list is [Current open items](ROADMAP.md#current-open-items).
 
 The target is a private, internet-reachable web application:
 
@@ -44,10 +43,11 @@ The target is a private, internet-reachable web application:
 - one facility and no public user registration;
 - no Google hosting or Google Cloud runtime dependency.
 
-Its present target is an isolated private Production deployment for the owner's
-authorized real operational and personal data. This is not a claim of agency,
-legal, regulatory, or vendor compliance. Real-data entry remains blocked until
-the documented release gates pass; see
+It runs as an isolated private Production deployment for the owner's authorized
+real operational and personal data. This is not a claim of agency, legal,
+regulatory, or vendor compliance. Real-data entry remains governed by the
+documented release gates, including the unresolved administrator-assurance gate
+in O-013; see
 [docs/operations/real-data-governance.md](docs/operations/real-data-governance.md).
 
 ## Data classification
@@ -91,9 +91,9 @@ payload, signed URL, nor AI answer is an authority.
 
 - No shared access code, default password, hard-coded credential, caller-chosen
   bootstrap secret, or credential in source control is permitted.
-- Employee-number login must use the approved design in ADR-0003. Until its
-  spike and security approval are complete, authentication is not production
-  ready.
+- Employee-number login must use the approved design in ADR-0003, which is
+  Accepted and released. Administrator assurance for real data (O-013 against
+  O-020) remains an unresolved release gate.
 - Public signup, anonymous product access, unreviewed recovery, and direct Auth
   provider UI must be disabled.
 - PIN-like secrets must meet the final approved entropy/length policy, reject

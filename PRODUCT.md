@@ -1,6 +1,7 @@
 # Guided Operations Product Contract
 
 - **Document baseline:** 2026-08-25
+- **Status updated:** 2026-08-31 (production release 2026-08-30)
 - **Product:** Guided Operations
 - **Repository:** `guided-operations` (private)
 - **Deployment target:** Vercel + Supabase, United States region
@@ -17,21 +18,25 @@ the detailed product and migration contracts live.
 
 ## Status truth
 
-The new repository now contains protected officer, account, incident/report,
-Policy Expert, and administrator implementation slices; guarded individual
-authentication/account lifecycle; private versioned database/RPC boundaries;
-Count Sheet persistence; strict AI adapters and corpus provenance; redacted core
-telemetry; and automated local fictional database-plus-Storage recovery. These
-are substantial implementation evidence, but no end-user feature has passed all
-parity, hosted fictional qualification, accessibility/print, corpus, recovery,
-and owner-acceptance gates.
+The application was released to production on 2026-08-30 and is in a
+post-release hardening period. Protected officer, account, incident and report,
+Policy Expert, Forms Library, Count Sheet, and administrator routes are
+implemented and released, on top of guarded individual authentication and
+account lifecycle, private versioned database and RPC boundaries, strict AI
+adapters with corpus provenance, redacted telemetry, and encrypted off-provider
+backup tooling. The release and corpus evidence is recorded in
+[`docs/operations/2026-08-30-production-release.md`](docs/operations/2026-08-30-production-release.md)
+and
+[`docs/operations/2026-08-30-production-corpus-import.md`](docs/operations/2026-08-30-production-corpus-import.md).
 
-The Vercel project is Git-connected and protected Previews build the branch. The
-Development Supabase project remains empty and does not have the newest forward
-migrations or hosted accounts. There is still no isolated Production Supabase
-project, approved real corpus, complete protected Forms/Count Sheet
-qualification, hosted backup/restore and monitoring proof, production promotion,
-or Google Cloud retirement.
+Released is not the same as fully qualified. The following remain open and are
+tracked in [`README.md`](README.md) and [`ROADMAP.md`](ROADMAP.md): the imported
+corpus is not approved or embedded, so Policy Expert reports that it has no
+sources rather than citing policy; hosted backup scheduling, a live restore
+drill, monitoring, alerting, budgets, and a rehearsed rollback do not exist;
+administrator assurance for real data (O-013) is unresolved; the manual
+accessibility and print validation has not been performed; and continuous
+integration has been unable to run since 2026-08-28.
 
 Use these labels in plans, issues, pull requests, and documentation:
 

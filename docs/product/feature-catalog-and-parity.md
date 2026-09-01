@@ -11,14 +11,22 @@ At the 2026-08-25 documentation baseline, the new repository had a
 Next.js/Supabase foundation, a tested pure Count Sheet calculation/schema slice,
 and a tested policy-answer grounding schema, but no accepted complete migrated
 product feature. The original baseline state remains in the parity matrix for
-traceability. The current implementation snapshot below supersedes only that
-state column; it does not claim end-to-end parity or production readiness.
+traceability.
+
+**This document is a migration comparison, not a status report.** The
+application was released to production on 2026-08-30, after the snapshot below
+was written; the "still required for parity" column therefore predates the
+release and overstates what is outstanding. For the current state of the
+product, read [`README.md`](../../README.md) and
+[Current open items](../../ROADMAP.md#current-open-items). The parity labels
+below describe the relationship between the old source and this replacement,
+which does not change when a feature ships.
 
 “Source-implemented” means the old source is a behavior/design reference. It
 does not mean that old code is safe to copy unchanged, that its backend contract
 is complete, or that the new product has parity.
 
-## Current implementation snapshot — 2026-08-26
+## Implementation snapshot — 2026-08-26 (pre-release; see README for current state)
 
 | Surface                         | Current replacement state                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Still required for parity                                                                                                                                                                                        |
 | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

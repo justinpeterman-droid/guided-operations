@@ -5,47 +5,36 @@ Vercel and Supabase. They are control specifications, not deployment evidence.
 
 ## Current status
 
-- Application hosting configured: **authoritative Git-connected Vercel project
-  and protected Previews verified; the protected Preview for `06848a1` is
-  `READY` and its public, liveness, readiness, login, officer, and administrator
-  routes answer through authenticated Vercel checks, but the real-browser visual
-  review remains incomplete**
-- Supabase projects configured: **fictional Development project healthy at the
-  verified 62-migration hosted head with one fictional administrator pending
-  personal passcode change; eight repository migrations remain local/CI
-  candidates, the organization remains on Free, and no isolated Production
-  project exists**
-- CI/release automation configured: **GitHub web, database, fictional recovery,
-  and Production-style authenticated browser workflows pass for exact code
-  commit `9a01c92`; commit `907f386` passes the complete local web gate, but
-  GitHub jobs currently fail before a runner or step starts and newer-head
-  database/recovery/browser CI remains unproven**
+Updated 2026-08-31. The application was released to production on 2026-08-30;
+see [Production release](2026-08-30-production-release.md) and
+[Production corpus registration and import](2026-08-30-production-corpus-import.md).
+The authoritative list of what remains open is
+[Current open items](../../ROADMAP.md#current-open-items).
+
+- Application hosting: **Git-connected Vercel project; the released deployment
+  returned `ok` from `/api/health/live` and `ready` from `/api/health/ready` on
+  2026-08-30**
+- Supabase: **production project carries the corpus, facility, roster, accounts
+  and audit events; local and remote migration histories matched exactly at the
+  release**
+- Corpus: **236 documents registered and 235 imported on 2026-08-30; all remain
+  `awaiting_review` with `qa_approved = false`, so nothing is embedded or
+  searchable**
+- CI/release automation: **GitHub Actions has failed before assigning a runner
+  since 2026-08-28 because the private repository's included minutes are
+  exhausted; verification since then is local only**
 - Backups and restore exercise: **local fictional database-plus-Storage
-  rehearsal implemented; encrypted off-provider and isolated hosted restore not
-  established**
+  rehearsal and encrypted off-provider tooling implemented; hosted schedule, key
+  custody, decryption proof and isolated restore not established**
 - Monitoring and alerts: **strict redacted core application events implemented;
-  hosted sinks, dashboards, alerts, budgets, access, and retention not
+  hosted sinks, dashboards, alerts, budgets, access and retention not
   established**
-- Production domain or traffic: **older public foundation deployment only; it is
-  not a qualified release candidate and no new Production promotion is
-  authorized**
+- Production domain or traffic: **released and serving invited users**
 - Intended use: **private, single-facility Production app for selected invited
   officers; not represented as an official agency/facility system**
 - GCP retirement: **not authorized or performed**
-- Real operational/personal data: **Production-only after release gates**
-- Production retention: **two years from final revision**, subject to legal hold
-
-No checklist item may be marked complete without dated evidence identifying the
-environment, commit/deployment, actor, command or dashboard observation, result,
-and retained artifact location.
-
-See the dated
-[`2026-08-28 hosted readiness refresh`](2026-08-28-hosted-readiness-refresh.md)
-for the latest read-only provider evidence, the
-[`2026-08-28 local candidate`](2026-08-28-local-candidate.md) for the latest
-exact-commit CI evidence, and the
-[`2026-08-27 command-center requalification`](2026-08-27-command-center-requalification.md)
-for the preceding provider evidence and explicit limitations.
+- Real operational/personal data: **authorized in Production by O-015; O-013
+  administrator assurance remains an unresolved gate**
 
 ## Control labels
 
