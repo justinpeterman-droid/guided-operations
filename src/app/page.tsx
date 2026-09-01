@@ -36,6 +36,30 @@ export default async function PublicLandingPage() {
             every answer and every document before anything becomes official.
           </p>
 
+          <div className="landing-workflow" aria-label="Review workflow">
+            <div className="landing-workflow-heading">
+              <span className="eyebrow">One clear loop</span>
+              <span>From first note to final review</span>
+            </div>
+            <ol>
+              <li>
+                <span>01</span>
+                <strong>Capture</strong>
+                <small>Start with what is known.</small>
+              </li>
+              <li>
+                <span>02</span>
+                <strong>Review</strong>
+                <small>Keep gaps and sources visible.</small>
+              </li>
+              <li>
+                <span>03</span>
+                <strong>Confirm</strong>
+                <small>Decide before anything is official.</small>
+              </li>
+            </ol>
+          </div>
+
           <Link className="mobile-sign-in-action" href="/login">
             Sign in to Guided Operations
           </Link>
@@ -81,7 +105,8 @@ export default async function PublicLandingPage() {
             own system.
           </p>
 
-          <p className="eyebrow">Sample views · fictional data</p>
+          <p className="eyebrow">See it before you sign in</p>
+          <p className="preview-intro">Explore the workspace with fictional training data. Nothing here is saved or submitted.</p>
           <Link className="preview-link" href="/preview/workspace">
             Officer workspace
           </Link>
