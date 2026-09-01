@@ -499,6 +499,11 @@ export function NewIncidentWorkspace() {
     }
   }
 
+  const reviewedFactCount = factProposals.filter(
+    ({ decision }) => decision !== "pending",
+  ).length;
+  const stepCount = 6;
+
   return (
     <WorkspaceShell current="Reports" title="New incident">
       <div className="incident-workspace">
@@ -531,6 +536,22 @@ export function NewIncidentWorkspace() {
           </ol>
         </nav>
         <form className="incident-stage" onSubmit={save}>
+          <div className="incident-stage-progress">
+            <div className="incident-stage-progress-heading">
+              <p className="eyebrow">Report workflow</p>
+              <span>Step {step} of {stepCount}</span>
+            </div>
+            <div
+              aria-label={`Report workflow: step ${step} of ${stepCount}`}
+              aria-valuemax={stepCount}
+              aria-valuemin={1}
+              aria-valuenow={step}
+              className="incident-progress-track"
+              role="progressbar"
+            >
+              <span style={{ width: `${(step / stepCount) * 100}%` }} />
+            </div>
+          </div>
           <h1>
             {step === 1
               ? "Confirm the reporting officer"
@@ -780,6 +801,12 @@ export function NewIncidentWorkspace() {
           ) : null}
           {step === 3 ? (
             <>
+              <div className="incident-review-summary" role="status">
+                <strong>
+                  {reviewedFactCount} of {factProposals.length} facts reviewed
+                </strong>
+                <span>Confirm or exclude each proposal before continuing.</span>
+              </div>
               <p className="incident-guidance">
                 Each note line is only a proposal. Compare it with the source,
                 then confirm it or keep it out of every report.
