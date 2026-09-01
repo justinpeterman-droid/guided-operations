@@ -70,21 +70,31 @@ export function createReportDraftService(
       sourceCandidate: ReportDraftSource,
     ): Promise<ReportDraftOutcome> {
       const source = sourceSchema.parse(sourceCandidate);
-      try {
-        const providerSource = {
+      const providerRequest = {
+        source: {
           incidentId: source.incidentId,
           sourceIncidentRevisionId: source.sourceIncidentRevisionId,
           reportType: source.reportType,
           confirmedFacts: source.confirmedFacts,
-        };
-        const candidate = await generation.generate({
-          source: providerSource,
-          ...options,
-        });
-        return {
-          kind: "draft",
-          draft: validateGeneratedReportDraft(candidate, source),
-        };
+        },
+        ...options,
+      };
+      try {
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          const candidate = await generation.generate(providerRequest);
+          try {
+            return {
+              kind: "draft",
+              draft: validateGeneratedReportDraft(candidate, source),
+            };
+          } catch (error) {
+            const invalidCandidate =
+              error instanceof GeneratedReportDraftError ||
+              error instanceof z.ZodError;
+            if (!invalidCandidate || attempt === 1) throw error;
+          }
+        }
+        return { kind: "invalid_output" };
       } catch (error) {
         if (error instanceof AiBudgetCircuitOpenError) {
           return {

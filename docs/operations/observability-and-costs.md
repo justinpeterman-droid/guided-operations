@@ -160,6 +160,9 @@ when qualifying an environment.
 - Provider requests receive an abort deadline five seconds shorter than their
   database concurrency lease. A still-running request therefore cannot outlive
   its lease and silently free another concurrency slot.
+- Report drafting may make one additional independently budgeted provider call
+  only when the first candidate fails source or writing-rule validation. A
+  candidate is never stored merely because it was retried.
 - Keep request timeout, retry cap with jitter, maximum input/retrieval/output
   tokens, and maximum retrieved chunks bounded.
 - Cache only provider-neutral answers that contain no user or operational

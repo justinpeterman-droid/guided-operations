@@ -66,7 +66,28 @@ describe("OpenAI report draft generation provider", () => {
     expect(body).toMatchObject({
       model: environment.OPENAI_REPORT_DRAFT_MODEL,
       store: false,
-      text: { format: { type: "json_schema", strict: true } },
+      text: {
+        format: {
+          type: "json_schema",
+          strict: true,
+          schema: {
+            properties: {
+              paragraphs: {
+                items: {
+                  properties: {
+                    sourceFactIds: {
+                      uniqueItems: true,
+                      items: {
+                        enum: [request.source.confirmedFacts[0].id],
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
     });
     expect(body.instructions).toContain("ADC# 123456");
     expect(JSON.parse(body.input)).toMatchObject({

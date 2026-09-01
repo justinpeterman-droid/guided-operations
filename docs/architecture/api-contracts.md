@@ -217,11 +217,13 @@ type, and explicit confirmed-fact IDs; it cannot assign an arbitrary actor,
 facility, or source text. The server verifies the selected person is an active
 reporting officer on the revision, removes that identity before provider input,
 requires every requested confirmed fact to be explicitly scoped to that officer,
-removes the identity before provider input, validates the provider output
-against the confirmed facts, and stores an immutable attributed candidate before
-returning only an opaque candidate ID. Both the server source builder and
-database storage RPC fail closed on a cross-officer fact. Immutable schema
-version one facts remain readable but are not eligible for new report
+constrains structured-output citations to those exact confirmed-fact IDs, and
+validates the provider output against the confirmed facts. One invalid candidate
+may be regenerated once; neither candidate is stored unless it passes every
+source and writing-rule check. The server then stores an immutable attributed
+candidate before returning only an opaque candidate ID. Both the server source
+builder and database storage RPC fail closed on a cross-officer fact. Immutable
+schema version one facts remain readable but are not eligible for new report
 generation. This is not a final-report endpoint and it never returns generated
 narrative or source facts in the response.
 
