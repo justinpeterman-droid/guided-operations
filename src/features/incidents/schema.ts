@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 import {
-  REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX,
+  REPORT_CHECKLIST_FIELD_PREFIX,
   validateReportChecklistAnswers,
   type ReportChecklistAnswer,
 } from "./report-assistant-checklist";
@@ -136,12 +136,12 @@ export const incidentRevisionInputSchema = z
     const checklistAnswers: ReportChecklistAnswer[] = [];
     let hasMalformedChecklistField = false;
     revision.reviewedFacts.forEach((fact) => {
-      if (!fact.field.startsWith(REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX)) {
+      if (!fact.field.startsWith(REPORT_CHECKLIST_FIELD_PREFIX)) {
         return;
       }
       const questionIdEnd = fact.field.indexOf("]");
       const questionId = fact.field.slice(
-        REPORT_CHECKLIST_CANDIDATE_FIELD_PREFIX.length,
+        REPORT_CHECKLIST_FIELD_PREFIX.length,
         questionIdEnd,
       );
       if (questionIdEnd < 0 || !questionId) {
