@@ -107,10 +107,10 @@ Already present:
   correction, stale-revision conflict recovery that preserves unsaved text,
   append-only history/restore, audited print, and same-facility administrator
   access to an officer's restored report revision;
-- a nine-category, source-commit-bound checklist candidate with typed answer
+- a nine-category, source-commit-bound pilot checklist with typed answer
   controls, explicit Unknown/Not applicable states, deterministic dependent
   questions, required-answer validation, note-backed confirmed facts, and
-  Preview-only enforcement while operational approval remains pending.
+  owner-approved Production pilot use under O-030;
 - explicit officer confirmation of the selected category plus conservative
   one-note-line/one-proposal fact review with exact visible source text,
   confirm/exclude decisions, edit re-confirmation, and separate provenance for
@@ -122,8 +122,6 @@ Already present:
 
 Still required for parity:
 
-- approve the exact nine-category candidate and its charge/form selection rules
-  before changing its status or permitting it in Production;
 - qualify the provider-neutral structured extraction boundary against the pinned
   model and approved fictional evaluation set, then approve provider data
   controls before any operational note is sent;

@@ -141,4 +141,37 @@ describe("validateCreateIncidentEndpointRequest", () => {
       ),
     ).resolves.toMatchObject({ ok: true });
   });
+
+  it("accepts the owner-approved pilot checklist in Production", async () => {
+    const approvedRevision = {
+      ...revision,
+      category: "incident_no_disciplinary",
+      reviewedFacts: [
+        {
+          id: "33333333-3333-4333-8333-333333333333",
+          field:
+            "[report-checklist:bmu-legacy-pilot@1:medical_disposition] Medical disposition",
+          state: "unknown",
+          reason: "Officer marked this checklist item Unknown.",
+        },
+        {
+          id: "44444444-4444-4444-8444-444444444444",
+          field:
+            "[report-checklist:bmu-legacy-pilot@1:investigation_occurred] Investigation occurred",
+          state: "unknown",
+          reason: "Officer marked this checklist item Unknown.",
+        },
+      ],
+    };
+
+    await expect(
+      validateCreateIncidentEndpointRequest(
+        request({ body: { revision: approvedRevision, staffRelationships } }),
+        origin,
+        sessionId,
+        csrfKey,
+        "production",
+      ),
+    ).resolves.toMatchObject({ ok: true });
+  });
 });

@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { revisionUsesCandidateReportChecklist } from "@/features/incidents/report-assistant-checklist";
+import { revisionUsesUnapprovedReportChecklist } from "@/features/incidents/report-assistant-checklist";
 import { createIncidentRequestSchema } from "@/features/incidents/commands";
 import { isTrustedMutationRequest } from "@/server/security/request-origin";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
@@ -64,7 +64,7 @@ export async function validateCreateIncidentEndpointRequest(
   }
   if (
     applicationEnvironment === "production" &&
-    revisionUsesCandidateReportChecklist(parsed.data.revision.reviewedFacts)
+    revisionUsesUnapprovedReportChecklist(parsed.data.revision.reviewedFacts)
   ) {
     return { ok: false, status: 403, code: "checklist_not_approved" };
   }

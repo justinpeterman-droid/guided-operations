@@ -258,7 +258,7 @@ describe("NewIncidentWorkspace", () => {
         }),
         expect.objectContaining({
           field: expect.stringContaining(
-            "[report-checklist:bmu-legacy-candidate@1:medical_disposition]",
+            "[report-checklist:bmu-legacy-pilot@1:medical_disposition]",
           ),
         }),
       ]),
