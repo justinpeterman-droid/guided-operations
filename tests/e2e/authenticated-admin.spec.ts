@@ -22,12 +22,6 @@ async function signIn(page: Page, credentials: LocalQualificationCredentials) {
   await page.waitForURL("**/home");
 }
 
-async function signOut(page: Page) {
-  await page.goto("/account");
-  await page.getByRole("button", { name: "Sign out of this browser" }).click();
-  await page.waitForURL("**/login");
-}
-
 test("an officer cannot open administrator pages", async ({ page }) => {
   await signIn(page, accounts.officer);
 
@@ -45,8 +39,6 @@ test("an officer cannot open administrator pages", async ({ page }) => {
       page.getByRole("heading", { name: "Administrator access is required." }),
     ).toBeVisible();
   }
-
-  await signOut(page);
 });
 
 test("the last administrator cannot demote their own account", async ({
@@ -71,8 +63,6 @@ test("the last administrator cannot demote their own account", async ({
   await expect(
     administratorCard.getByText(/Administrator · active · no shift/),
   ).toBeVisible();
-
-  await signOut(page);
 });
 
 test("a fictional administrator uses the protected roster and status pages", async ({
@@ -366,7 +356,6 @@ test("a fictional administrator uses the protected roster and status pages", asy
   ).toBeVisible();
   await officerContext.close();
 
-  await signOut(page);
   expect(browserErrors).toEqual([]);
   expect(failedRequests).toEqual([]);
 });
