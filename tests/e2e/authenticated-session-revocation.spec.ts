@@ -10,7 +10,7 @@ test.describe.configure({ mode: "serial" });
 async function signIn(page: Page, credentials: LocalQualificationCredentials) {
   await page.goto("/login");
   await page.getByLabel("Employee number").fill(credentials.employeeNumber);
-  await page.getByLabel("Passcode").fill(credentials.passcode);
+  await page.getByLabel("Passcode", { exact: true }).fill(credentials.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
 }

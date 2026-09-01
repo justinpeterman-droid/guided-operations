@@ -17,7 +17,7 @@ test.beforeAll(async () => {
 async function signIn(page: Page, credentials: LocalQualificationCredentials) {
   await page.goto("/login");
   await page.getByLabel("Employee number").fill(credentials.employeeNumber);
-  await page.getByLabel("Passcode").fill(credentials.passcode);
+  await page.getByLabel("Passcode", { exact: true }).fill(credentials.passcode);
   await page.getByRole("button", { name: "Sign in" }).click();
   await page.waitForURL("**/home");
 }
@@ -355,7 +355,9 @@ test("a fictional administrator uses the protected roster and status pages", asy
   await officerPage
     .getByLabel("Employee number")
     .fill(accounts.officer.employeeNumber);
-  await officerPage.getByLabel("Passcode").fill(accounts.officer.passcode);
+  await officerPage
+    .getByLabel("Passcode", { exact: true })
+    .fill(accounts.officer.passcode);
   await officerPage.getByRole("button", { name: "Sign in" }).click();
   await expect(
     officerPage.getByText(
