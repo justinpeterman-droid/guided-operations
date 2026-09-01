@@ -37,10 +37,13 @@ describe("ReleaseLegalHoldControl", () => {
     render(<ReleaseLegalHoldControl holdId={holdId} />);
 
     await user.click(screen.getByRole("button", { name: "Release hold" }));
-    await user.type(
-      screen.getByLabelText("Release authority reference"),
-      "FICTIONAL-RELEASE-001",
+    const authorityReference = screen.getByLabelText(
+      "Release authority reference",
     );
+    const authorityPattern = authorityReference.getAttribute("pattern");
+    expect(authorityPattern).not.toBeNull();
+    expect(() => new RegExp(authorityPattern!, "v")).not.toThrow();
+    await user.type(authorityReference, "FICTIONAL-RELEASE-001");
     await user.type(
       screen.getByLabelText("Your administrator passcode"),
       "FreshPasscode9!",

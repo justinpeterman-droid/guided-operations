@@ -37,15 +37,20 @@ describe("PlaceLegalHoldForm", () => {
     const user = userEvent.setup();
     render(<PlaceLegalHoldForm />);
 
+    const authorityReference = screen.getByLabelText("Authority reference");
+    const authorityPattern = authorityReference.getAttribute("pattern");
+    expect(authorityPattern).not.toBeNull();
+    expect(() => new RegExp(authorityPattern!, "v")).not.toThrow();
+    const fullReferencePattern = new RegExp(`^(?:${authorityPattern})$`, "v");
+    expect(fullReferencePattern.test("ORDER-42/2026")).toBe(true);
+    expect(fullReferencePattern.test("contains <markup>")).toBe(false);
+
     await user.selectOptions(screen.getByLabelText("Record type"), "incident");
     await user.type(
       screen.getByLabelText("Target record ID"),
       "22222222-2222-4222-8222-222222222222",
     );
-    await user.type(
-      screen.getByLabelText("Authority reference"),
-      "FICTIONAL-HOLD-001",
-    );
+    await user.type(authorityReference, "FICTIONAL-HOLD-001");
     await user.type(
       screen.getByLabelText("Your administrator passcode"),
       "FreshPasscode9!",
