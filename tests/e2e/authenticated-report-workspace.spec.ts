@@ -40,7 +40,8 @@ async function signIn(page: Page, credentials: LocalQualificationCredentials) {
 async function signOut(page: Page) {
   await page.goto("/account");
   await page.getByRole("button", { name: "Sign out of this browser" }).click();
-  await page.waitForURL("**/login");
+  await expect(page).toHaveURL(/\/login$/);
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 }
 
 async function createFictionalIncident(): Promise<{
@@ -267,7 +268,10 @@ test.beforeAll(async () => {
 test("an officer and administrator can use the protected per-officer report workspace", async ({
   page,
 }) => {
-  test.setTimeout(60_000);
+  // This deliberately long scenario covers the full officer-to-administrator
+  // handoff, revision conflicts, exports, print, and two verified sign-outs.
+  // Keep enough CI headroom for every assertion instead of racing cleanup.
+  test.setTimeout(90_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
   let expectingRevisionConflict = false;

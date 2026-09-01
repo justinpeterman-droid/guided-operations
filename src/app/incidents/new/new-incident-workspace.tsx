@@ -141,19 +141,19 @@ export function NewIncidentWorkspace() {
   );
   const readyForSuggestions = Boolean(
     incidentNumber.trim() &&
-      incidentName.trim() &&
-      occurredAt &&
-      location.trim() &&
-      notes.trim() &&
-      factSourceSupported,
+    incidentName.trim() &&
+    occurredAt &&
+    location.trim() &&
+    notes.trim() &&
+    factSourceSupported,
   );
   const readyForFactReview = Boolean(
     incidentNumber.trim() &&
-      incidentName.trim() &&
-      occurredAt &&
-      location.trim() &&
-      categoryDefinition &&
-      notes.trim(),
+    incidentName.trim() &&
+    occurredAt &&
+    location.trim() &&
+    categoryDefinition &&
+    notes.trim(),
   );
   const confirmedFactProposals = factProposals.filter(
     (proposal) =>
