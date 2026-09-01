@@ -123,23 +123,32 @@ resource.
   directive is not searchable and a question about it returns no sources.
   Recorded in `docs/operations/2026-08-30-production-corpus-import.md`.
 
-- **Open Dependabot alerts (2026-09-01):** pushing to the repository reports six
-  vulnerabilities on the default branch — two high, two moderate and two low.
-  The 2026-08-28 review recorded zero open alerts, so these are newer. Review
-  each one individually against the dependency-maintenance policy; do not merge
-  a bulk update only to clear the queue.
+- **Open Dependabot alerts (2026-09-01):** six alerts remain on the default
+  branch — two high, two moderate and two low — all in the optional local MinerU
+  environment. Static, individual triage found alert #34 needs review of the
+  exact downloaded model provenance and a compatible upgrade path. The other
+  five are not actionable in the documented path because their LightGlue,
+  Trainer, `torch.jit.script`, `torch.lstm_cell`, or `unpack_sequence` sinks are
+  absent from repository and exact MinerU source. No alert was dismissed and no
+  dependency was changed. Review the full evidence in
+  `docs/quality/2026-09-01-post-merge-qualification.md` before resolving any
+  alert; do not bulk-dismiss or bulk-upgrade.
 
 - **GitHub Actions exhausted (2026-08-29, resolved 2026-09-01):** every workflow
   run on this private repository failed in 3-5 seconds from 2026-08-28 16:34 UTC
-  through 2026-08-31. Failed jobs were assigned no runner and executed zero
-  steps. Actions was enabled and the workflow definitions were valid; a run on
-  the owner's _public_ repository succeeded during the same window. The cause
-  was the monthly included-minutes allowance for private repositories, consumed
-  at roughly 22 minutes per push across four workflows. The allowance reset on
-  2026-09-01 and workflows execute normally again. Two consequences remain: no
-  commit on `main` from the outage window, including the 2026-08-30 release
-  commit, has a passing CI run; and the same consumption rate will exhaust the
-  allowance again in roughly three days of active pushing.
+  through 2026-08-31 because the monthly private-repository minutes were
+  exhausted. After the reset, Web quality, Authenticated browser quality, and
+  Recovery rehearsal passed on exact `main` commit `49812ec4`. Database quality
+  first exposed a test-only role-restoration defect in one pgTAP assertion. Pull
+  request #24 corrected it and passed migration replay, lint, pgTAP, and the
+  fictional import before generated-type verification found two already-migrated
+  incident-read RPCs missing from the generated file. The follow-up now includes
+  regenerated types and removes their temporary manual augmentation. No
+  migration, grant, RLS policy, application behavior, or hosted state changed.
+  The workflow must pass on the complete correction and resulting `main` commit.
+  The same roughly 22-minute consumption per four-workflow push can still
+  exhaust the allowance in about three active days. Exact run links are recorded
+  in `docs/quality/2026-09-01-post-merge-qualification.md`.
 - **NODE_ENV leak:** a shell environment with `NODE_ENV=production` causes React
   to load its production build, and 121 test files fail with
   `TypeError: React.act is not a function`. These are phantom failures. Run the

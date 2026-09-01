@@ -155,6 +155,8 @@ select lives_ok(
   'a valid report below the quota is recorded'
 );
 
+reset role;
+
 select is(
   (
     select count(*)::integer
@@ -165,8 +167,6 @@ select is(
   1,
   'the accepted report is persisted once'
 );
-
-reset role;
 
 insert into app_private.answer_reports (
   facility_id,

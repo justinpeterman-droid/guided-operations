@@ -102,16 +102,18 @@ release, in rough order of user impact. They are tracked here and summarized in
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The normalization fix re-keys all 236
    bundles, so the owner deferred it to the annual refresh in O-026.
-3. **The released commits were never checked by CI.** From 2026-08-28 16:34 UTC
-   to 2026-08-31 every workflow failed within seconds with no assigned runner,
-   because the private repository's included Actions minutes were exhausted.
-   Verification in that window is local only. The monthly allowance reset on
-   2026-09-01 and workflows execute normally again — `Web quality` runs 447
-   through 450 passed that morning — but no commit on `main` from the outage
-   window, including the 2026-08-30 release commit, has a passing CI run. Re-run
-   the four workflows on `main` and record the result. Watch consumption: four
-   workflows at roughly 22 minutes per push exhausted the allowance in three
-   days last month.
+3. **Database quality needs a clean post-fix run.** On 2026-09-01, Web quality,
+   Authenticated browser quality, and Recovery rehearsal passed on exact `main`
+   commit `49812ec4`. Database quality first exposed one test-role assertion
+   defect rather than a product grant or RLS failure. Pull request #24 then
+   passed migration replay, lint, pgTAP, and the fictional import before finding
+   that generated types omitted two already-migrated incident-read RPCs. The
+   role correction, regenerated types, and removal of their temporary manual
+   augmentation must pass together and then be rerun on the resulting exact
+   `main` commit. Evidence and run links are in
+   [Post-merge qualification](docs/quality/2026-09-01-post-merge-qualification.md).
+   Watch consumption: four workflows at roughly 22 minutes per push exhausted
+   the allowance in three days last month.
 4. **Hosted recovery is unproven.** The guarded encrypted off-provider backup
    tool exists but has never been run against hosted production. Its protected
    operator host, schedule, key custody, decryption proof, and restore into an
@@ -146,13 +148,13 @@ release, in rough order of user impact. They are tracked here and summarized in
 11. **Three owner decisions remain open:** OQ-010 (Google AI boundary), OQ-013
     (AI budget, request caps, and circuit-breaker behavior), and OQ-014 (durable
     document worker).
-12. **Three pull requests are open:** #21 (UI refinement), #20 and #16 (the
-    CodeRabbit audit chain, which targets review branches rather than `main`).
-    Decide each one; do not let them accumulate.
-13. **Six Dependabot alerts are open on the default branch** (two high, two
-    moderate, two low) as of 2026-09-01. The 2026-08-28 review recorded zero, so
-    these are newer. Review each individually rather than merging a bulk update.
-14. **Production environment scoping needs re-verification.** Before the
+12. **Six Dependabot alerts remain open on the default branch** (two high, two
+    moderate, two low) as of 2026-09-01. Static triage found one model-loading
+    alert that needs focused review and five alerts that are not actionable in
+    the documented local MinerU path. No alert was dismissed and no dependency
+    was changed. Review the individual evidence before resolving each alert; see
+    [Dependabot static triage](docs/quality/2026-09-01-post-merge-qualification.md#dependabot-static-triage).
+13. **Production environment scoping needs re-verification.** Before the
     release, two Production-scoped Supabase server entries still matched the
     fictional Development project. The release applied migrations to a
     production database, so this was probably corrected, but no record confirms
@@ -174,7 +176,7 @@ delivery.
 
 | Order | Phase                                            | Status after the release                  | Remaining work                                                       |
 | ----: | ------------------------------------------------ | ----------------------------------------- | -------------------------------------------------------------------- |
-|     0 | Foundation closure and repository controls       | Executed                                  | Repository enforcement (OQ-016) and restoring CI                     |
+|     0 | Foundation closure and repository controls       | Executed                                  | Repository enforcement (OQ-016) and a clean Database quality rerun   |
 |     1 | Connected non-production environment             | Executed                                  | None blocking; Preview follows `main`                                |
 |     2 | Identity, sessions, authorization, and bootstrap | Executed and released                     | Administrator assurance for real data (O-013/O-020)                  |
 |     3 | Incident and report vertical slice               | Executed and released                     | Owner acceptance of live use                                         |
@@ -193,8 +195,8 @@ them as passed is not. Each one remains listed in
 
 ## Phase 0 — foundation closure and repository controls
 
-Status: **executed; repository enforcement (OQ-016) and restoring continuous
-integration remain open**
+Status: **executed; repository enforcement (OQ-016) and the post-fix Database
+quality rerun remain open**
 
 ### Steps
 
@@ -224,8 +226,9 @@ integration remain open**
      enforce the rule.
 6. Add CI secret scanning, dependency vulnerability review, and a documented
    action/dependency update policy. Keep GitHub Actions pinned by immutable SHA.
-7. Review the queued Dependabot updates individually. Never merge a bulk update
-   only to clear a queue.
+7. Use the 2026-09-01 individual Dependabot triage to resolve alert #34's model
+   provenance and upgrade question, then review each not-actionable rationale
+   before dismissal. Never merge a bulk update only to clear a queue.
 8. Create GitHub issues/milestones matching Phases 1–8 and link each pull
    request to one acceptance gate. Do not use issue completion as release proof.
 9. Confirm no secrets, real roster/operational data, corpus bytes, build output,
