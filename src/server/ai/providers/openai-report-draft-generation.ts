@@ -26,32 +26,35 @@ const responseSchema = z
   })
   .passthrough();
 
-const draftJsonSchema = {
-  type: "object",
-  additionalProperties: false,
-  required: ["paragraphs"],
-  properties: {
-    paragraphs: {
-      type: "array",
-      minItems: 1,
-      maxItems: 50,
-      items: {
-        type: "object",
-        additionalProperties: false,
-        required: ["text", "sourceFactIds"],
-        properties: {
-          text: { type: "string", minLength: 1, maxLength: 4000 },
-          sourceFactIds: {
-            type: "array",
-            minItems: 1,
-            maxItems: 50,
-            items: { type: "string" },
+function createDraftJsonSchema(allowedFactIds: readonly string[]) {
+  return {
+    type: "object",
+    additionalProperties: false,
+    required: ["paragraphs"],
+    properties: {
+      paragraphs: {
+        type: "array",
+        minItems: 1,
+        maxItems: 50,
+        items: {
+          type: "object",
+          additionalProperties: false,
+          required: ["text", "sourceFactIds"],
+          properties: {
+            text: { type: "string", minLength: 1, maxLength: 4000 },
+            sourceFactIds: {
+              type: "array",
+              minItems: 1,
+              maxItems: 50,
+              uniqueItems: true,
+              items: { type: "string", enum: allowedFactIds },
+            },
           },
         },
       },
     },
-  },
-} as const;
+  } as const;
+}
 
 /** Strict, tool-free review-draft provider. Domain code validates every fact reference. */
 export function createOpenAiReportDraftGenerationProvider(
@@ -91,7 +94,9 @@ export function createOpenAiReportDraftGenerationProvider(
               request.maximumParagraphs * request.maximumParagraphCharacters,
             ),
           schemaName: "report_draft",
-          schema: draftJsonSchema,
+          schema: createDraftJsonSchema(
+            request.source.confirmedFacts.map((fact) => fact.id),
+          ),
         });
         const response = await fetchImplementation(
           "https://api.openai.com/v1/responses",

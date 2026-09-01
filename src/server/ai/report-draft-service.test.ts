@@ -54,23 +54,55 @@ describe("createReportDraftService", () => {
   });
 
   it("rejects a paragraph that cites an unconfirmed fact", async () => {
+    const generate = vi.fn().mockResolvedValue({
+      paragraphs: [
+        {
+          text: "Unsupported.",
+          sourceFactIds: ["55555555-5555-4555-8555-555555555555"],
+        },
+      ],
+    });
     const service = createReportDraftService(
       {
         providerKey: "fixture",
-        generate: vi.fn().mockResolvedValue({
-          paragraphs: [
-            {
-              text: "Unsupported.",
-              sourceFactIds: ["55555555-5555-4555-8555-555555555555"],
-            },
-          ],
-        }),
+        generate,
       },
       { maximumParagraphs: 8, maximumParagraphCharacters: 1_000 },
     );
     await expect(service.draft(source)).resolves.toEqual({
       kind: "invalid_output",
     });
+    expect(generate).toHaveBeenCalledTimes(2);
+  });
+
+  it("accepts a valid second candidate after one invalid provider output", async () => {
+    const generate = vi
+      .fn()
+      .mockResolvedValueOnce({
+        paragraphs: [
+          {
+            text: "Unsupported.",
+            sourceFactIds: ["55555555-5555-4555-8555-555555555555"],
+          },
+        ],
+      })
+      .mockResolvedValueOnce({
+        paragraphs: [
+          {
+            text: "Fictional draft for officer review.",
+            sourceFactIds: [source.confirmedFacts[0].id],
+          },
+        ],
+      });
+    const service = createReportDraftService(
+      { providerKey: "fixture", generate },
+      { maximumParagraphs: 8, maximumParagraphCharacters: 1_000 },
+    );
+
+    await expect(service.draft(source)).resolves.toMatchObject({
+      kind: "draft",
+    });
+    expect(generate).toHaveBeenCalledTimes(2);
   });
 
   it("preserves only the bounded budget reason for an honest degraded state", async () => {
