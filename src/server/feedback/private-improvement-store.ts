@@ -62,6 +62,56 @@ export function createPrivateImprovementStore() {
           }
         : null;
     },
+    async getReviewableFormCandidate(
+      requestId: string,
+      facilityId: string,
+    ): Promise<Readonly<{
+      storageBucket: string;
+      storagePath: string;
+      originalFilename: string;
+      actualMediaType: string;
+      actualByteSize: number;
+      actualSha256: string;
+    }> | null> {
+      const rows = await client<
+        ReadonlyArray<{
+          storage_bucket: string;
+          storage_path: string;
+          original_filename: string;
+          actual_media_type: string;
+          actual_byte_size: number;
+          actual_sha256: string;
+        }>
+      >`
+        select
+          file.storage_bucket,
+          file.storage_path,
+          file.original_filename,
+          file.actual_media_type,
+          file.actual_byte_size,
+          file.actual_sha256
+        from app_private.form_candidate_files as file
+        join app_private.improvement_requests as request
+          on request.id = file.request_id
+        where file.request_id = ${requestId}::uuid
+          and file.facility_id = ${facilityId}::uuid
+          and request.facility_id = ${facilityId}::uuid
+          and file.upload_state = 'uploaded'
+          and file.expires_at > statement_timestamp()
+        limit 1
+      `;
+      const row = rows.at(0);
+      return row
+        ? {
+            storageBucket: row.storage_bucket,
+            storagePath: row.storage_path,
+            originalFilename: row.original_filename,
+            actualMediaType: row.actual_media_type,
+            actualByteSize: Number(row.actual_byte_size),
+            actualSha256: row.actual_sha256,
+          }
+        : null;
+    },
     async recordReleaseSha(
       requestId: string,
       actorAccountId: string,
