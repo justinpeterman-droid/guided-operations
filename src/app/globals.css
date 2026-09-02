@@ -4715,7 +4715,8 @@ form.account-session-controls {
   gap: 0.7rem;
   margin-top: 1.1rem;
 }
-.improvement-choice-list button {
+.improvement-choice-list button,
+.improvement-choice-list a {
   display: grid;
   gap: 0.25rem;
   width: 100%;
@@ -4724,12 +4725,15 @@ form.account-session-controls {
   border: 1px solid #b8cbd4;
   border-radius: 0.8rem;
   text-align: left;
+  text-decoration: none;
   color: #123046;
   background: #fff;
   cursor: pointer;
 }
 .improvement-choice-list button:hover,
-.improvement-choice-list button:focus-visible {
+.improvement-choice-list button:focus-visible,
+.improvement-choice-list a:hover,
+.improvement-choice-list a:focus-visible {
   border-color: #2f6f90;
   box-shadow: 0 0 0 3px rgb(47 111 144 / 0.18);
 }
@@ -4799,7 +4803,8 @@ form.account-session-controls {
   outline-offset: 1px;
   border-color: #2f6f90;
 }
-.improvement-dialog-actions > button:last-child {
+.improvement-dialog-actions > button:last-child,
+.improvement-dialog-actions > a:last-child {
   border: 0;
   border-radius: 0.55rem;
   color: #fff;
@@ -4809,6 +4814,7 @@ form.account-session-controls {
   font: inherit;
   font-weight: 700;
   cursor: pointer;
+  text-decoration: none;
 }
 .improvement-error {
   margin: 0;
