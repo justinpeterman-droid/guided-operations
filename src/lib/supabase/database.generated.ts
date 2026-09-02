@@ -54,6 +54,111 @@ export type Database = {
           status: string
         }[]
       }
+      create_improvement_request: {
+        Args: {
+          p_category: string
+          p_description: string
+          p_file_byte_size: number | null
+          p_file_media_type: string | null
+          p_file_name: string | null
+          p_file_sha256: string | null
+          p_form_title: string | null
+          p_request_kind: string
+          p_request_nonce: string
+          p_requested_use: string | null
+          p_route_path: string | null
+          p_source_authority: string | null
+          p_source_revision: string | null
+          p_target_id: string | null
+          p_target_label: string | null
+          p_target_role: string | null
+          p_viewport_height: number | null
+          p_viewport_width: number | null
+        }
+        Returns: { request_id: string; upload_path: string | null }[]
+      }
+      add_improvement_request_message: {
+        Args: { p_body: string; p_request_id: string }
+        Returns: string
+      }
+      get_improvement_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          file_byte_size: number | null
+          file_media_type: string | null
+          file_name: string | null
+          file_uploaded: boolean | null
+          form_title: string | null
+          messages: Json
+          release_sha: string | null
+          request_id: string
+          request_kind: string
+          requested_use: string | null
+          route_path: string | null
+          source_authority: string | null
+          source_revision: string | null
+          status: string
+          status_history: Json
+          submitted_by_display_name: string
+          target_id: string | null
+          target_label: string | null
+          target_role: string | null
+          updated_at: string
+          viewport_height: number | null
+          viewport_width: number | null
+        }[]
+      }
+      list_admin_improvement_requests: {
+        Args: { p_limit?: number; p_status?: string | null }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          form_title: string | null
+          release_sha: string | null
+          request_id: string
+          request_kind: string
+          requested_use: string | null
+          route_path: string | null
+          source_authority: string | null
+          source_revision: string | null
+          status: string
+          submitted_by_display_name: string
+          target_id: string | null
+          target_label: string | null
+          target_role: string | null
+          updated_at: string
+          viewport_height: number | null
+          viewport_width: number | null
+        }[]
+      }
+      list_my_improvement_requests: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: string
+          created_at: string
+          form_title: string | null
+          request_id: string
+          request_kind: string
+          requested_use: string | null
+          route_path: string | null
+          status: string
+          target_label: string | null
+          updated_at: string
+        }[]
+      }
+      transition_improvement_request: {
+        Args: {
+          p_follow_up_message?: string | null
+          p_next_status: string
+          p_reason_code: string
+          p_request_id: string
+        }
+        Returns: boolean
+      }
       finalize_report_draft_candidate: {
         Args: {
           p_candidate_id: string

@@ -100,6 +100,19 @@ export default async function AdminPage() {
             View records controls
           </Link>
         </article>
+        <article>
+          <span aria-hidden="true">5</span>
+          <div>
+            <h2>Suggestions and form review</h2>
+            <p>
+              Review officer feedback and blank form candidates before any
+              protected publication step.
+            </p>
+          </div>
+          <Link className="reports-home-link" href="/admin/improvements">
+            Open review queue
+          </Link>
+        </article>
       </section>
     </AdminShell>
   );
