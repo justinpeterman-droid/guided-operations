@@ -38,9 +38,7 @@ test("an officer submits a blank form candidate and an administrator reviews it"
   await signIn(page, accounts.officer);
   await page.goto("/home");
   await page.getByRole("button", { name: "Suggest a change" }).click();
-  await page
-    .getByRole("link", { name: "Request or upload a form" })
-    .click();
+  await page.getByRole("link", { name: "Request or upload a form" }).click();
   await expect(
     page.getByRole("heading", {
       name: "Request a form, or send a blank candidate.",
@@ -49,23 +47,31 @@ test("an officer submits a blank form candidate and an administrator reviews it"
   await page.getByLabel("Form name").fill(title);
   await page
     .getByLabel("What should this form help staff do?")
-    .fill("Fictional blank form used only to qualify the protected review path.");
+    .fill(
+      "Fictional blank form used only to qualify the protected review path.",
+    );
   await page.getByLabel(/Attach a blank form candidate/).setInputFiles({
     name: "fictional-blank-form.pdf",
     mimeType: "application/pdf",
     buffer: Buffer.from("%PDF-1.4\n%fictional-browser-qualification\n"),
   });
 
-  await page.getByRole("button", { name: "Submit and upload for review" }).click();
+  await page
+    .getByRole("button", { name: "Submit and upload for review" })
+    .click();
   await page.waitForURL(/\/improvements\/[0-9a-f-]{36}\?submitted=1$/);
   const requestPath = new URL(page.url()).pathname;
-  await expect(page.getByText("Private file received: fictional-blank-form.pdf")).toBeVisible();
+  await expect(
+    page.getByText("Private file received: fictional-blank-form.pdf"),
+  ).toBeVisible();
   await expect(page.getByText(title)).toBeVisible();
 
   await signOut(page);
   await signIn(page, accounts.administrator);
   await page.goto("/admin/improvements");
-  await expect(page.getByRole("link", { name: new RegExp(title) })).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: new RegExp(title) }),
+  ).toBeVisible();
   await page.getByRole("link", { name: new RegExp(title) }).click();
   await expect(page).toHaveURL(requestPath);
   await expect(
