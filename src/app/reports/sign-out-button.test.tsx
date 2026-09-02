@@ -39,7 +39,7 @@ describe("SignOutButton", () => {
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
     expect(replace).toHaveBeenCalledWith("/login");
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("keeps the user on the page with a safe error when sign-out fails", async () => {
