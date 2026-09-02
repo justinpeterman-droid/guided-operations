@@ -71,6 +71,7 @@ describe("createReportDraftService", () => {
     );
     await expect(service.draft(source)).resolves.toEqual({
       kind: "invalid_output",
+      validationFailureCode: "unknown_source_fact",
     });
     expect(generate).toHaveBeenCalledTimes(2);
   });

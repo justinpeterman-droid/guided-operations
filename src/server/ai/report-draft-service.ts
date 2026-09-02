@@ -8,7 +8,10 @@ import {
   type GeneratedReportDraft,
   type ReportDraftValidationFailureCode,
 } from "@/features/incidents/generated-report-draft";
-import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
+import {
+  buildReportDraftGenerationSource,
+  type ReportDraftSource,
+} from "@/features/incidents/report-draft-source";
 import { reportTypeSchema } from "@/features/incidents/report-types";
 
 import type { ReportDraftGenerationProvider } from "./contracts";
@@ -42,7 +45,10 @@ export type ReportDraftOutcome =
         | "budget_exhausted"
         | "generation_disabled";
     }>
-  | Readonly<{ kind: "invalid_output" }>;
+  | Readonly<{
+      kind: "invalid_output";
+      validationFailureCode: ReportDraftValidationFailureCode;
+    }>;
 
 /**
  * Generates a review-only candidate from a single immutable, confirmed-fact
@@ -71,13 +77,9 @@ export function createReportDraftService(
       sourceCandidate: ReportDraftSource,
     ): Promise<ReportDraftOutcome> {
       const source = sourceSchema.parse(sourceCandidate);
+      const generationSource = buildReportDraftGenerationSource(source);
       const providerRequest = {
-        source: {
-          incidentId: source.incidentId,
-          sourceIncidentRevisionId: source.sourceIncidentRevisionId,
-          reportType: source.reportType,
-          confirmedFacts: source.confirmedFacts,
-        },
+        source: generationSource,
         ...options,
       };
       try {
@@ -91,7 +93,10 @@ export function createReportDraftService(
           try {
             return {
               kind: "draft",
-              draft: validateGeneratedReportDraft(candidate, source),
+              draft: validateGeneratedReportDraft(candidate, {
+                ...source,
+                confirmedFacts: generationSource.confirmedFacts,
+              }),
             };
           } catch (error) {
             const invalidCandidate =
@@ -104,7 +109,11 @@ export function createReportDraftService(
                 : "invalid_structure";
           }
         }
-        return { kind: "invalid_output" };
+        return {
+          kind: "invalid_output",
+          validationFailureCode:
+            previousValidationFailure ?? "invalid_structure",
+        };
       } catch (error) {
         if (error instanceof AiBudgetCircuitOpenError) {
           return {
@@ -114,7 +123,13 @@ export function createReportDraftService(
         }
         return error instanceof GeneratedReportDraftError ||
           error instanceof z.ZodError
-          ? { kind: "invalid_output" }
+          ? {
+              kind: "invalid_output",
+              validationFailureCode:
+                error instanceof GeneratedReportDraftError
+                  ? error.reasonCode
+                  : "invalid_structure",
+            }
           : { kind: "provider_unavailable", reasonCode: "generation_failed" };
       }
     },

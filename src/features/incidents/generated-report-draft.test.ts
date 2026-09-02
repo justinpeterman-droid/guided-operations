@@ -91,6 +91,33 @@ describe("validateGeneratedReportDraft", () => {
     );
   });
 
+  it("accepts a projected ISO incident timestamp in report-safe house style", () => {
+    const operationalSource: ReportDraftSource = {
+      ...source,
+      reportType: "first_person",
+      confirmedFacts: [
+        {
+          id: factOne,
+          field: "Incident date and time",
+          value: "2026-09-01 at 6:51 pm UTC",
+          sourceNoteIds: [],
+        },
+      ],
+    };
+    const candidate = {
+      paragraphs: [
+        {
+          text: "I documented the incident on 2026-09-01 at 6:51 pm UTC.",
+          sourceFactIds: [factOne],
+        },
+      ],
+    };
+
+    expect(validateGeneratedReportDraft(candidate, operationalSource)).toEqual(
+      candidate,
+    );
+  });
+
   it.each([
     ["Inmate Example ADC# 654321 was present.", "RW-030"],
     ["The event occurred at 10:15 pm.", "RW-030"],

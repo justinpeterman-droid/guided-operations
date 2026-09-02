@@ -167,4 +167,38 @@ describe("POST /api/web/v1/report-drafts", () => {
       expect.objectContaining({ reason_code: "generation_disabled" }),
     );
   });
+
+  it("records a bounded validation code without generated report content", async () => {
+    mockEnvironment();
+    vi.mocked(authorizeCurrentSession).mockResolvedValue(session);
+    vi.mocked(validateReportDraftEndpointRequest).mockResolvedValue({
+      ok: true,
+      request: {
+        schemaVersion: 2,
+        incidentId: "44444444-4444-4444-8444-444444444444",
+        sourceIncidentRevisionId: "55555555-5555-4555-8555-555555555555",
+        reportingStaffMemberId: "77777777-7777-4777-8777-777777777777",
+        reportType: "first_person",
+        confirmedFactIds: ["66666666-6666-4666-8666-666666666666"],
+      },
+      sourceRevisionNumber: 1,
+      idempotencyKey: "fictional-key-1234",
+    });
+    vi.mocked(createPersistedReportDraftWorkflow).mockReturnValue({
+      draftAndStore: vi.fn().mockResolvedValue({
+        kind: "invalid_output",
+        validationFailureCode: "RW-030",
+      }),
+    });
+
+    const response = await POST(new Request("https://app.example.test/api"));
+
+    expect(response.status).toBe(503);
+    expect(writeSafeOperationalEvent).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reason_code: "invalid_output",
+        validation_failure_code: "RW-030",
+      }),
+    );
+  });
 });
