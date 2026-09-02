@@ -43,6 +43,7 @@ describe("AccountSessionControls", () => {
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
     expect(replace).toHaveBeenCalledWith("/login");
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("requires a visible confirmation before account-wide sign-out", async () => {
@@ -70,7 +71,8 @@ describe("AccountSessionControls", () => {
       credentials: "same-origin",
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
-    expect(refresh).toHaveBeenCalledOnce();
+    expect(replace).toHaveBeenCalledWith("/login");
+    expect(refresh).not.toHaveBeenCalled();
   });
 
   it("keeps the person on the page when session revocation is unavailable", async () => {

@@ -46,7 +46,6 @@ export function AccountSessionControls() {
       if (!response.ok) throw new Error("sign_out_failed");
 
       router.replace("/login");
-      router.refresh();
     } catch {
       setState("failed");
     }

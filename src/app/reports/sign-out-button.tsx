@@ -37,7 +37,6 @@ export function SignOutButton() {
       if (!response.ok) throw new Error("sign_out_failed");
 
       router.replace("/login");
-      router.refresh();
       return;
     } catch {
       setState("failed");
