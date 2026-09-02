@@ -55,6 +55,9 @@ test("public signup stays disabled while private password sign-in remains availa
 test("a fictional officer signs in, saves, reopens, prints, and signs out", async ({
   page,
 }) => {
+  // This full authenticated journey includes a save, reload, print audit, and
+  // verified sign-out, so it needs its own CI budget rather than the default.
+  test.setTimeout(60_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
   page.on("console", (message) => {
