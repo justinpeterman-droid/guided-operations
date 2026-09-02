@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { SecretInput } from "@/app/components/secret-input";
 
+import { useTemporaryPasscodeHandoff } from "./use-temporary-passcode-handoff";
+
 type FormState = "idle" | "submitting" | "failed";
 type Handoff = Readonly<{
   employeeNumberHint: string;
@@ -74,7 +76,7 @@ function handoffFrom(body: unknown): Handoff | null {
 export function AccountInvitationForm() {
   const router = useRouter();
   const [state, setState] = useState<FormState>("idle");
-  const [handoff, setHandoff] = useState<Handoff | null>(null);
+  const handoffState = useTemporaryPasscodeHandoff<Handoff>();
 
   async function submit(form: HTMLFormElement) {
     setState("submitting");
@@ -134,7 +136,7 @@ export function AccountInvitationForm() {
         throw new Error("invitation_failed");
       }
       form.reset();
-      setHandoff(nextHandoff);
+      handoffState.show(nextHandoff);
       setState("idle");
       router.refresh();
     } catch {
@@ -142,7 +144,8 @@ export function AccountInvitationForm() {
     }
   }
 
-  if (handoff) {
+  if (handoffState.handoff) {
+    const handoff = handoffState.handoff;
     return (
       <section
         className="account-session-controls"
@@ -163,7 +166,7 @@ export function AccountInvitationForm() {
           Expires{" "}
           {new Date(handoff.temporaryPasscodeExpiresAt).toLocaleString()}.
         </p>
-        <button onClick={() => setHandoff(null)} type="button">
+        <button onClick={handoffState.dismiss} type="button">
           I have handed it over
         </button>
       </section>
@@ -181,6 +184,12 @@ export function AccountInvitationForm() {
         Public sign-up is disabled. You will confirm your own passcode before
         this account is created.
       </p>
+      {handoffState.expired ? (
+        <p className="account-session-message" role="status">
+          This temporary passcode has expired and is no longer shown. Reset it
+          only after a fresh administrator confirmation.
+        </p>
+      ) : null}
       <form
         onSubmit={(event) => {
           event.preventDefault();

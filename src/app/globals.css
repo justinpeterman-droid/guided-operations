@@ -3816,7 +3816,8 @@ form.account-session-controls {
   .workspace-navigation {
     position: absolute;
     top: calc(100% + 8px);
-    right: 0;
+    right: auto;
+    left: 0;
     z-index: 20;
     display: none;
     flex-direction: column;
