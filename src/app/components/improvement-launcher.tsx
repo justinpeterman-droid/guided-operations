@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 type SelectedTarget = Readonly<{
   id?: string;
@@ -51,7 +51,6 @@ async function csrfToken(): Promise<string> {
 
 /** Shared, authenticated entry point for private page-improvement feedback. */
 export function ImprovementLauncher() {
-  const router = useRouter();
   const [state, setState] = useState<LauncherState>("closed");
   const [selected, setSelected] = useState<SelectedTarget | null>(null);
   const [description, setDescription] = useState("");
@@ -198,17 +197,14 @@ export function ImprovementLauncher() {
               <strong>Report something not working</strong>
               <span>Tell us what happened and what you expected.</span>
             </button>
-            <button
-              onClick={() => router.push("/improvements/new?kind=form")}
-              type="button"
-            >
+            <Link href="/improvements/new?kind=form">
               <strong>Request or upload a form</strong>
               <span>Send a blank form candidate for review.</span>
-            </button>
-            <button onClick={() => router.push("/improvements")} type="button">
+            </Link>
+            <Link href="/improvements">
               <strong>My suggestions and requests</strong>
               <span>See the status or reply to a follow-up.</span>
-            </button>
+            </Link>
           </div>
         ) : null}
 
@@ -262,12 +258,7 @@ export function ImprovementLauncher() {
               <button onClick={close} type="button">
                 Done
               </button>
-              <button
-                onClick={() => router.push("/improvements")}
-                type="button"
-              >
-                View my requests
-              </button>
+              <Link href="/improvements">View my requests</Link>
             </div>
           </div>
         ) : null}

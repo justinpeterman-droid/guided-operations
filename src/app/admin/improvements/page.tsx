@@ -7,6 +7,7 @@ import {
 import { AdminAccountLink, AdminShell } from "@/app/components/admin-shell";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { improvementRpc } from "@/server/feedback/improvement-rpc";
 
 export const metadata = { title: "Suggestions and form review" };
 export const dynamic = "force-dynamic";
@@ -110,10 +111,14 @@ async function loadRequests(): Promise<
       requiredRole: "administrator",
     });
     if (!session.allowed) return { kind: "denied" };
-    const result = await client.rpc("list_admin_improvement_requests", {
-      p_limit: 100,
-      p_status: null,
-    });
+    const result = await improvementRpc<AdminRequest[]>(
+      client,
+      "list_admin_improvement_requests",
+      {
+        p_limit: 100,
+        p_status: null,
+      },
+    );
     return result.error
       ? { kind: "unavailable" }
       : { kind: "authorized", requests: result.data ?? [] };

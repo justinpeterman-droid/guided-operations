@@ -7,6 +7,7 @@ import {
 } from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { improvementRpc } from "@/server/feedback/improvement-rpc";
 
 export const metadata = { title: "My suggestions and requests" };
 export const dynamic = "force-dynamic";
@@ -109,9 +110,13 @@ async function loadRequests(): Promise<
     const client = await createSupabaseServerClient();
     const session = await authorizeCurrentSession(client);
     if (!session.allowed) return { kind: "denied" };
-    const result = await client.rpc("list_my_improvement_requests", {
-      p_limit: 100,
-    });
+    const result = await improvementRpc<RequestRow[]>(
+      client,
+      "list_my_improvement_requests",
+      {
+        p_limit: 100,
+      },
+    );
     if (result.error) return { kind: "unavailable" };
     return { kind: "authorized", requests: result.data ?? [] };
   } catch {

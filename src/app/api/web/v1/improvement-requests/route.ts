@@ -6,6 +6,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { validateImprovementRequest } from "@/server/feedback/improvement-request-endpoint";
 import { createPrivateImprovementStore } from "@/server/feedback/private-improvement-store";
+import { improvementRpc } from "@/server/feedback/improvement-rpc";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -39,7 +40,9 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const command = validation.command;
-    const result = await client.rpc("create_improvement_request", {
+    const result = await improvementRpc<
+      { request_id: string; upload_path: string | null }[]
+    >(client, "create_improvement_request", {
       p_request_nonce: command.requestNonce,
       p_request_kind: command.requestKind,
       p_category: command.category,

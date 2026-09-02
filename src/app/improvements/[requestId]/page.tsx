@@ -11,6 +11,7 @@ import {
 } from "@/app/components/workspace-message-presets";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
+import { improvementRpc } from "@/server/feedback/improvement-rpc";
 
 export const dynamic = "force-dynamic";
 
@@ -190,9 +191,13 @@ async function loadDetail(
     const client = await createSupabaseServerClient();
     const session = await authorizeCurrentSession(client);
     if (!session.allowed) return { kind: "denied" };
-    const result = await client.rpc("get_improvement_request", {
-      p_request_id: requestId,
-    });
+    const result = await improvementRpc<Detail[]>(
+      client,
+      "get_improvement_request",
+      {
+        p_request_id: requestId,
+      },
+    );
     if (result.error) return { kind: "unavailable" };
     return result.data?.[0]
       ? {
