@@ -6,6 +6,7 @@ import { getRuntimeEnvironment } from "@/lib/env/runtime";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+import { improvementRpc } from "@/server/feedback/improvement-rpc";
 
 const requestIdSchema = z.uuid();
 const bodySchema = z
@@ -61,12 +62,16 @@ export async function POST(
     if (!parsedRequestId.success || !parsedBody.success)
       return errorResponse(400, correlationId);
     const body = parsedBody.data;
-    const result = await client.rpc("transition_improvement_request", {
-      p_request_id: requestId,
-      p_next_status: body.nextStatus,
-      p_reason_code: body.reasonCode,
-      p_follow_up_message: body.followUpMessage ?? null,
-    });
+    const result = await improvementRpc<boolean>(
+      client,
+      "transition_improvement_request",
+      {
+        p_request_id: requestId,
+        p_next_status: body.nextStatus,
+        p_reason_code: body.reasonCode,
+        p_follow_up_message: body.followUpMessage ?? null,
+      },
+    );
     if (result.error || !result.data) return errorResponse(403, correlationId);
     return Response.json(
       {
