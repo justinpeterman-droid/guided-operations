@@ -336,6 +336,108 @@ paths:
           $ref: "#/components/responses/InvalidRequest"
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/improvement-requests:
+    post:
+      summary: Submit a private page suggestion or form intake request
+      operationId: createImprovementRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - $ref: "#/components/parameters/CsrfToken"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [requestNonce, requestKind, category, description]
+              properties:
+                requestNonce:
+                  type: string
+                  format: uuid
+                requestKind:
+                  type: string
+                  enum: [page_feedback, form_request, form_candidate]
+                category:
+                  type: string
+                description:
+                  type: string
+                  minLength: 3
+                  maxLength: 4000
+      responses:
+        "201":
+          description:
+            Private request created; a candidate may include one signed private
+            upload URL.
+        "400":
+          $ref: "#/components/responses/InvalidRequest"
+        "401":
+          $ref: "#/components/responses/AuthenticationRequired"
+        "403":
+          $ref: "#/components/responses/RequestNotAllowed"
+        "429":
+          description: Per-account request limit reached.
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+  /api/web/v1/improvement-requests/{requestId}/form-upload/finalize:
+    post:
+      summary: Verify a private blank form candidate after direct upload
+      operationId: finalizeFormCandidateUpload
+      security:
+        - cookieSession: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          {
+            description: Candidate integrity verified and available for review.,
+          }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/RequestNotAllowed" }
+        "409": { description: Upload is not ready. }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
+  /api/web/v1/improvement-requests/{requestId}/messages:
+    post:
+      summary: Add a bounded in-app reply to an authorized request
+      operationId: addImprovementRequestMessage
+      security:
+        - cookieSession: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200": { description: Reply recorded. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "403": { $ref: "#/components/responses/RequestNotAllowed" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
+  /api/web/v1/improvement-requests/{requestId}/status:
+    post:
+      summary: Record an administrator-only review status transition
+      operationId: transitionImprovementRequest
+      security:
+        - cookieSession: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+        - $ref: "#/components/parameters/CsrfToken"
+      responses:
+        "200":
+          { description: Review transition recorded; no form is published. }
+        "400": { $ref: "#/components/responses/InvalidRequest" }
+        "403": { $ref: "#/components/responses/RequestNotAllowed" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
   /api/web/v1/count-sheets/{recordId}/print:
     post:
       summary: Record a protected request to print the current saved Count Sheet

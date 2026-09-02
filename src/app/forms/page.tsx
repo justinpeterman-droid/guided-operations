@@ -39,6 +39,13 @@ export default async function FormsPage() {
           Every item shows what you can do with it. Unapproved paperwork stays
           unavailable, and official physical forms stay physical.
         </p>
+        <Link
+          className="forms-library-request"
+          data-feedback-id="forms-library-request"
+          href="/improvements/new?kind=form"
+        >
+          Request or upload a form <span aria-hidden="true">→</span>
+        </Link>
       </section>
 
       <section className="forms-library-group" aria-labelledby="ready-title">

@@ -5,6 +5,7 @@ import {
   WorkspaceNavigation,
   type WorkspaceNavigationProps,
 } from "@/app/components/workspace-navigation";
+import { ImprovementLauncher } from "@/app/components/improvement-launcher";
 
 export type WorkspaceShellProps = Readonly<{
   actions?: ReactNode;
@@ -33,6 +34,7 @@ export function WorkspaceShell({
           {actions ? (
             <div className="workspace-shell-actions">{actions}</div>
           ) : null}
+          <ImprovementLauncher />
         </div>
       </header>
       {children}
