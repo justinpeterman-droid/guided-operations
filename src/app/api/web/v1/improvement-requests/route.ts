@@ -39,6 +39,8 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     const command = validation.command;
+    // The generated Supabase type does not retain nullable function parameters.
+    // The SQL function explicitly distinguishes absent optional fields as NULL.
     const result = await client.rpc("create_improvement_request", {
       p_request_nonce: command.requestNonce,
       p_request_kind: command.requestKind,
@@ -58,7 +60,7 @@ export async function POST(request: Request): Promise<Response> {
       p_file_media_type: command.file?.mediaType ?? null,
       p_file_byte_size: command.file?.byteSize ?? null,
       p_file_sha256: command.file?.sha256 ?? null,
-    });
+    } as never);
     if (result.error || !result.data?.[0]) {
       return hasDatabaseCode(result.error, "54000")
         ? errorResponse(

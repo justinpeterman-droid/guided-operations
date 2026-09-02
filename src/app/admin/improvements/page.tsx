@@ -112,7 +112,7 @@ async function loadRequests(): Promise<
     if (!session.allowed) return { kind: "denied" };
     const result = await client.rpc("list_admin_improvement_requests", {
       p_limit: 100,
-      p_status: null,
+      p_status: undefined,
     });
     return result.error
       ? { kind: "unavailable" }

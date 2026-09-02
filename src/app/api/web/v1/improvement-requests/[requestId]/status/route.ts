@@ -65,7 +65,7 @@ export async function POST(
       p_request_id: requestId,
       p_next_status: body.nextStatus,
       p_reason_code: body.reasonCode,
-      p_follow_up_message: body.followUpMessage ?? null,
+      p_follow_up_message: body.followUpMessage ?? undefined,
     });
     if (result.error || !result.data) return errorResponse(403, correlationId);
     return Response.json(
