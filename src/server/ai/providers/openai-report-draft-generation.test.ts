@@ -45,7 +45,6 @@ describe("OpenAI report draft generation provider", () => {
             paragraphs: [
               {
                 text: "Fictional draft.",
-                sourceFactIds: [request.source.confirmedFacts[0].id],
               },
             ],
           }),
@@ -74,13 +73,7 @@ describe("OpenAI report draft generation provider", () => {
             properties: {
               paragraphs: {
                 items: {
-                  properties: {
-                    sourceFactIds: {
-                      items: {
-                        enum: [request.source.confirmedFacts[0].id],
-                      },
-                    },
-                  },
+                  required: ["text"],
                 },
               },
             },
@@ -89,6 +82,9 @@ describe("OpenAI report draft generation provider", () => {
       },
     });
     expect(body.instructions).toContain("ADC# 123456");
+    expect(body.instructions).toContain(
+      "The server will attach the confirmed-fact references",
+    );
     expect(JSON.parse(body.input)).toMatchObject({
       ruleProfile: REPORT_WRITING_RULE_PROFILE,
       reportType: request.source.reportType,
@@ -122,7 +118,6 @@ describe("OpenAI report draft generation provider", () => {
             paragraphs: [
               {
                 text: "Fictional draft.",
-                sourceFactIds: [request.source.confirmedFacts[0].id],
               },
             ],
           }),
@@ -149,6 +144,51 @@ describe("OpenAI report draft generation provider", () => {
     expect(JSON.parse(body.input)).not.toHaveProperty(
       "previousValidationFailure",
     );
+  });
+
+  it("attaches all immutable confirmed-fact references on the server", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "completed",
+          output_text: JSON.stringify({
+            paragraphs: [{ text: "Fictional draft." }],
+          }),
+        }),
+        { status: 200 },
+      ),
+    );
+    const provider = createOpenAiReportDraftGenerationProvider({
+      fetch: fetch as typeof globalThis.fetch,
+      environment,
+      budgetGuard,
+    });
+    const secondFactId = "99999999-9999-4999-8999-999999999999";
+
+    await expect(
+      provider.generate({
+        ...request,
+        source: {
+          ...request.source,
+          confirmedFacts: [
+            ...request.source.confirmedFacts,
+            {
+              id: secondFactId,
+              field: "Status",
+              value: "Fictional status",
+              sourceNoteIds: ["88888888-8888-4888-8888-888888888888"],
+            },
+          ],
+        },
+      }),
+    ).resolves.toEqual({
+      paragraphs: [
+        {
+          text: "Fictional draft.",
+          sourceFactIds: [request.source.confirmedFacts[0].id, secondFactId],
+        },
+      ],
+    });
   });
 
   it("does not contact OpenAI when the shared budget denies the request", async () => {
