@@ -2,17 +2,15 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const replace = vi.fn();
-const refresh = vi.fn();
+const { redirectToLogin } = vi.hoisted(() => ({ redirectToLogin: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh }) }));
+vi.mock("@/lib/navigation/full-login-redirect", () => ({ redirectToLogin }));
 
 import { SignOutButton } from "./sign-out-button";
 
 afterEach(() => {
   cleanup();
-  replace.mockReset();
-  refresh.mockReset();
+  redirectToLogin.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -38,8 +36,7 @@ describe("SignOutButton", () => {
       credentials: "same-origin",
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
-    expect(replace).toHaveBeenCalledWith("/login");
-    expect(refresh).not.toHaveBeenCalled();
+    expect(redirectToLogin).toHaveBeenCalledOnce();
   });
 
   it("keeps the user on the page with a safe error when sign-out fails", async () => {
@@ -55,6 +52,6 @@ describe("SignOutButton", () => {
     expect(
       await screen.findByText("We could not sign you out. Please try again."),
     ).toBeVisible();
-    expect(replace).not.toHaveBeenCalled();
+    expect(redirectToLogin).not.toHaveBeenCalled();
   });
 });

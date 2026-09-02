@@ -20,6 +20,8 @@ import { issueCsrfForCurrentSession } from "@/server/security/csrf-endpoint";
 import { GET } from "./route";
 
 const serverClient = {};
+const request = () =>
+  new Request("https://guided-operations.example.test/api/auth/csrf");
 
 function mockAuthorizedEnvironment() {
   vi.mocked(getAuthServerEnvironment).mockReturnValue({
@@ -47,7 +49,7 @@ describe("GET /api/auth/csrf", () => {
       token: { token: "browser-token", digest: "session-bound-digest" },
     });
 
-    const response = await GET();
+    const response = await GET(request());
 
     await expect(response.json()).resolves.toEqual({
       csrfToken: "browser-token",
@@ -65,11 +67,28 @@ describe("GET /api/auth/csrf", () => {
     expect(response.headers.get("set-cookie")).toContain("SameSite=strict");
   });
 
+  it("returns an existing valid token without rotating its cookie pair", async () => {
+    mockAuthorizedEnvironment();
+    vi.mocked(issueCsrfForCurrentSession).mockResolvedValue({
+      kind: "reused",
+      token: "browser-token",
+    });
+
+    const response = await GET(request());
+
+    await expect(response.json()).resolves.toEqual({
+      csrfToken: "browser-token",
+    });
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Cache-Control")).toBe("no-store");
+    expect(response.headers.get("set-cookie")).toBeNull();
+  });
+
   it("does not issue a browser token when current-session authorization denies", async () => {
     mockAuthorizedEnvironment();
     vi.mocked(issueCsrfForCurrentSession).mockResolvedValue({ kind: "denied" });
 
-    const response = await GET();
+    const response = await GET(request());
 
     await expect(response.json()).resolves.toEqual({
       error: "authentication_required",
@@ -83,7 +102,7 @@ describe("GET /api/auth/csrf", () => {
     mockAuthorizedEnvironment();
     vi.mocked(issueCsrfForCurrentSession).mockRejectedValue(new Error("nope"));
 
-    const response = await GET();
+    const response = await GET(request());
 
     await expect(response.json()).resolves.toEqual({
       error: "service_unavailable",

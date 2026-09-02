@@ -28,6 +28,7 @@ async function signOut(page: Page) {
   await page.goto("/account");
   await page.getByRole("button", { name: "Sign out of this browser" }).click();
   await page.waitForURL("**/login");
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
 }
 
 test("an officer submits a blank form candidate and an administrator reviews it", async ({
@@ -66,7 +67,7 @@ test("an officer submits a blank form candidate and an administrator reviews it"
   await expect(
     page.getByText("Private file received: fictional-blank-form.pdf"),
   ).toBeVisible();
-  await expect(page.getByText(title)).toBeVisible();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
 
   await signOut(page);
   await signIn(page, accounts.administrator);
