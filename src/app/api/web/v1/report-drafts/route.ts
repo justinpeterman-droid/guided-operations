@@ -157,6 +157,9 @@ export async function POST(request: Request): Promise<Response> {
             : outcome.kind === "provider_unavailable"
               ? outcome.reasonCode
               : "persistence_failed",
+        ...(outcome.kind === "invalid_output"
+          ? { validation_failure_code: outcome.validationFailureCode }
+          : {}),
         request_id: requestId,
         status_code: 503,
         duration_ms: boundedDuration(startedAt),

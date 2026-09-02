@@ -82,6 +82,24 @@ const safeOperationalEventInputSchema = z
         "unhandled_failure",
       ])
       .optional(),
+    validation_failure_code: z
+      .enum([
+        "RW-002",
+        "RW-003",
+        "RW-005",
+        "RW-006",
+        "RW-013",
+        "RW-014",
+        "RW-030",
+        "RW-031",
+        "RW-033",
+        "RW-034",
+        "RW-035",
+        "duplicate_source_fact",
+        "unknown_source_fact",
+        "invalid_structure",
+      ])
+      .optional(),
     request_id: z.uuid(),
     status_code: z.number().int().min(100).max(599),
     duration_ms: z.number().int().nonnegative().max(3_600_000),

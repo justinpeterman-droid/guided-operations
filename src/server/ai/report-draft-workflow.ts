@@ -86,7 +86,10 @@ export function createReportDraftWorkflow(
         ) {
           return { kind: "not_found" };
         }
-        return { kind: "invalid_output" };
+        return {
+          kind: "invalid_output",
+          validationFailureCode: "invalid_structure",
+        };
       }
     },
   };

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  buildReportDraftGenerationSource,
   buildReportDraftSource,
   ReportDraftSourceError,
 } from "./report-draft-source";
@@ -103,5 +104,42 @@ describe("buildReportDraftSource", () => {
         facts[1],
       ]),
     ).toThrow("scoped to its reporting officer");
+  });
+});
+
+describe("buildReportDraftGenerationSource", () => {
+  it("projects an exact UTC timestamp into report-safe prose without changing attribution", () => {
+    const source = buildReportDraftSource(request, revisionId, [
+      {
+        id: confirmedFactId,
+        state: "confirmed",
+        field: "Incident date and time",
+        value: "2026-09-01T18:51:00.000Z",
+        sourceNoteIds: ["44444444-4444-4444-8444-444444444444"],
+        reportingStaffMemberIds: [reportingStaffMemberId],
+      },
+      facts[1],
+    ]);
+
+    expect(buildReportDraftGenerationSource(source)).toEqual({
+      incidentId: request.incidentId,
+      sourceIncidentRevisionId: revisionId,
+      reportType: "cover_letter",
+      confirmedFacts: [
+        expect.objectContaining({
+          id: confirmedFactId,
+          value: "2026-09-01 at 6:51 pm UTC",
+        }),
+      ],
+    });
+    expect(source.confirmedFacts[0].value).toBe("2026-09-01T18:51:00.000Z");
+  });
+
+  it("preserves ordinary confirmed fact text exactly", () => {
+    const source = buildReportDraftSource(request, revisionId, facts);
+
+    expect(
+      buildReportDraftGenerationSource(source).confirmedFacts[0].value,
+    ).toBe("Fictional training room");
   });
 });

@@ -33,6 +33,41 @@ export type ReportDraftGenerationSource = Omit<
   "reportingStaffMemberId"
 >;
 
+const offsetTimestampPattern =
+  /^(\d{4}-\d{2}-\d{2})T(\d{2}):(\d{2})(?::\d{2}(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})$/u;
+
+/**
+ * Builds a provider-only projection of confirmed facts. Exact ISO timestamps
+ * are rendered in the report's required 12-hour style so the provider is not
+ * asked to choose between conflicting time-format and numeric-provenance rules.
+ * Stored reviewed facts remain unchanged.
+ */
+export function buildReportDraftGenerationSource(
+  source: ReportDraftSource,
+): ReportDraftGenerationSource {
+  return {
+    incidentId: source.incidentId,
+    sourceIncidentRevisionId: source.sourceIncidentRevisionId,
+    reportType: source.reportType,
+    confirmedFacts: source.confirmedFacts.map((fact) => ({
+      ...fact,
+      value: formatDraftingValue(fact.value),
+    })),
+  };
+}
+
+function formatDraftingValue(value: string): string {
+  const timestamp = offsetTimestampPattern.exec(value);
+  if (!timestamp) return value;
+
+  const [, date, hourText, minute, offset] = timestamp;
+  const hour = Number(hourText);
+  const narrativeHour = hour % 12 || 12;
+  const meridiem = hour < 12 ? "am" : "pm";
+  const timezone = offset === "Z" ? "UTC" : `UTC${offset.replace(":", "")}`;
+  return `${date} at ${narrativeHour}:${minute} ${meridiem} ${timezone}`;
+}
+
 /**
  * Select the only fact data a report-drafting adapter may receive. This keeps
  * proposed, unknown, and not-applicable facts outside both generated and
