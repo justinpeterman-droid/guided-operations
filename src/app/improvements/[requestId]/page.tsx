@@ -106,6 +106,16 @@ export default async function ImprovementRequestDetailPage({
                 {request.file_uploaded
                   ? `Private file received: ${request.file_name}`
                   : "File upload not finalized"}
+                {request.file_uploaded && loaded.role === "administrator" ? (
+                  <>
+                    {" "}
+                    <a
+                      href={`/api/web/v1/improvement-requests/${request.request_id}/form-candidate`}
+                    >
+                      Download private candidate
+                    </a>
+                  </>
+                ) : null}
               </dd>
             </div>
           ) : null}

@@ -97,6 +97,12 @@ review/registration workflow may promote an eligible source. A candidate may be
 reviewed, need more information, be declined, or be marked ready for the
 protected publication path; none of those states publishes it.
 
+An active same-facility administrator may download a verified candidate from the
+request detail through an authenticated no-store response. The route rechecks
+the current administrator role, facility, private-object metadata, byte length,
+and SHA-256 before returning an attachment; it never returns a public or signed
+Storage URL.
+
 ## Statuses and messages
 
 Every request uses one current status:

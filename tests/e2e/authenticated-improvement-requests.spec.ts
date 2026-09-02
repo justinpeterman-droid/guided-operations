@@ -1,3 +1,5 @@
+import { readFile } from "node:fs/promises";
+
 import { expect, test, type Page } from "@playwright/test";
 
 import {
@@ -77,6 +79,18 @@ test("an officer submits a blank form candidate and an administrator reviews it"
   await expect(
     page.getByRole("heading", { name: "Administrator review" }),
   ).toBeVisible();
+  const [candidateDownload] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("link", { name: "Download private candidate" }).click(),
+  ]);
+  expect(candidateDownload.suggestedFilename()).toBe(
+    "fictional-blank-form.pdf",
+  );
+  const candidatePath = await candidateDownload.path();
+  expect(candidatePath).not.toBeNull();
+  await expect(readFile(candidatePath!)).resolves.toEqual(
+    Buffer.from("%PDF-1.4\n%fictional-browser-qualification\n"),
+  );
   await page.getByLabel("Update status").selectOption("under_review");
   await page.getByLabel("Message to submitter").fill(reviewMessage);
   await page.getByRole("button", { name: "Save review update" }).click();

@@ -92,6 +92,9 @@ a public URL. `POST .../{requestId}/messages` adds an attributed bounded in-app
 reply. `POST .../{requestId}/status` is administrator-only and records one
 constrained review transition; it cannot publish a candidate to the Forms
 Library. Publication remains the existing protected template-registration path.
+`GET .../{requestId}/form-candidate` is administrator-only and streams one
+same-facility, still-valid candidate as a verified no-store attachment. It does
+not return a signed or public Storage URL.
 
 ### Authentication and account
 

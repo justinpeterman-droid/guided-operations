@@ -402,6 +402,25 @@ paths:
         "403": { $ref: "#/components/responses/RequestNotAllowed" }
         "409": { description: Upload is not ready. }
         "503": { $ref: "#/components/responses/ServiceUnavailable" }
+  /api/web/v1/improvement-requests/{requestId}/form-candidate:
+    get:
+      summary:
+        Download one verified private form candidate for administrator review
+      operationId: downloadImprovementFormCandidate
+      security:
+        - cookieSession: []
+      parameters:
+        - name: requestId
+          in: path
+          required: true
+          schema: { type: string, format: uuid }
+      responses:
+        "200":
+          description:
+            Verified private candidate attachment; no Storage URL is exposed.
+        "401": { $ref: "#/components/responses/AuthenticationRequired" }
+        "404": { $ref: "#/components/responses/NotFound" }
+        "503": { $ref: "#/components/responses/ServiceUnavailable" }
   /api/web/v1/improvement-requests/{requestId}/messages:
     post:
       summary: Add a bounded in-app reply to an authorized request
