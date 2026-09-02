@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+import { redirectToLogin } from "@/lib/navigation/full-login-redirect";
 
 type SessionAction = "local" | "all";
 type SessionControlState = "idle" | "submitting" | "failed";
@@ -17,7 +18,6 @@ function endpointFor(action: SessionAction) {
  * provider sessions. Both operations acquire a fresh session-bound CSRF token.
  */
 export function AccountSessionControls() {
-  const router = useRouter();
   const [state, setState] = useState<SessionControlState>("idle");
   const [confirmAll, setConfirmAll] = useState(false);
   const submitting = state === "submitting";
@@ -45,7 +45,10 @@ export function AccountSessionControls() {
       });
       if (!response.ok) throw new Error("sign_out_failed");
 
-      router.replace("/login");
+      // A full-document navigation makes the session boundary explicit. The
+      // server has just cleared the signed-in cookie, so an App Router cache
+      // transition can otherwise leave the protected account page visible.
+      redirectToLogin();
     } catch {
       setState("failed");
     }

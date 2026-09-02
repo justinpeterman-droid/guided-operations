@@ -30,6 +30,11 @@ import {
   SUPABASE_SESSION_STORAGE_KEY,
   type EncryptedSupabaseSessionStorage,
 } from "@/server/auth/encrypted-supabase-session-storage";
+import {
+  CSRF_DIGEST_COOKIE,
+  CSRF_TOKEN_COOKIE,
+  issueSessionCsrfToken,
+} from "@/server/security/session-csrf";
 
 import { refreshSupabaseSession } from "./proxy";
 
@@ -177,6 +182,77 @@ describe("refreshSupabaseSession", () => {
     expect(privateDigest).toContain("HttpOnly");
     expect(privateDigest).toContain("SameSite=strict");
     expect(privateDigest).toContain("Secure");
+  });
+
+  it("retains an existing valid account-page CSRF pair", async () => {
+    const sessionId = "22222222-2222-4222-8222-222222222222";
+    const hmacKey = "k".repeat(32);
+    const existing = issueSessionCsrfToken(sessionId, hmacKey);
+    createSupabaseSessionClient.mockReturnValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "11111111-1111-4111-8111-111111111111",
+              session_id: sessionId,
+              app_metadata: { auth_version: 1 },
+            },
+          },
+          error: null,
+        }),
+      },
+    });
+
+    const response = await refreshSupabaseSession(
+      new NextRequest("https://guided-operations.example.test/account", {
+        headers: {
+          cookie: `${CSRF_TOKEN_COOKIE}=${existing.token}; ${CSRF_DIGEST_COOKIE}=${existing.digest}`,
+        },
+      }),
+    );
+
+    expect(response.headers.getSetCookie()).toEqual([]);
+  });
+
+  it("replaces an account-page CSRF pair bound to another session", async () => {
+    const sessionId = "22222222-2222-4222-8222-222222222222";
+    const hmacKey = "k".repeat(32);
+    const stale = issueSessionCsrfToken(
+      "33333333-3333-4333-8333-333333333333",
+      hmacKey,
+    );
+    createSupabaseSessionClient.mockReturnValue({
+      auth: {
+        getClaims: vi.fn().mockResolvedValue({
+          data: {
+            claims: {
+              sub: "11111111-1111-4111-8111-111111111111",
+              session_id: sessionId,
+              app_metadata: { auth_version: 1 },
+            },
+          },
+          error: null,
+        }),
+      },
+    });
+
+    const response = await refreshSupabaseSession(
+      new NextRequest("https://guided-operations.example.test/account", {
+        headers: {
+          cookie: `${CSRF_TOKEN_COOKIE}=${stale.token}; ${CSRF_DIGEST_COOKIE}=${stale.digest}`,
+        },
+      }),
+    );
+
+    const setCookies = response.headers.getSetCookie();
+    expect(setCookies).toEqual(
+      expect.arrayContaining([
+        expect.stringMatching(/^go-csrf=/),
+        expect.stringMatching(/^go-csrf-digest=/),
+      ]),
+    );
+    expect(setCookies.join(";")).not.toContain(stale.token);
+    expect(setCookies.join(";")).not.toContain(stale.digest);
   });
 
   it("expires a malformed encrypted session without disclosing its value", async () => {

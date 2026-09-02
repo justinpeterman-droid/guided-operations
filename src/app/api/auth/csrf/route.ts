@@ -16,11 +16,11 @@ const NO_STORE_HEADERS = { "Cache-Control": "no-store" };
 const CSRF_MAX_AGE_SECONDS = 30 * 60;
 
 /**
- * Returns a fresh CSRF token only to an authenticated, currently authorized
- * session. The digest remains HTTP-only and cannot be reused by another
- * session.
+ * Returns a session-bound CSRF token only to an authenticated, currently
+ * authorized session. A still-valid browser pair is reused so closely spaced
+ * mutations cannot race cookie rotation; the digest remains HTTP-only.
  */
-export async function GET(): Promise<Response> {
+export async function GET(request: Request): Promise<Response> {
   try {
     const [authEnvironment, runtimeEnvironment, client] = await Promise.all([
       getAuthServerEnvironment(),
@@ -31,13 +31,18 @@ export async function GET(): Promise<Response> {
       client,
       authEnvironment.CSRF_HMAC_KEY,
       { allowForcedPasscodeChange: true },
+      request.headers,
     );
-    if (result.kind !== "issued") return unauthorizedResponse();
+    if (result.kind === "denied") return unauthorizedResponse();
 
     const response = NextResponse.json(
-      { csrfToken: result.token.token },
+      {
+        csrfToken: result.kind === "reused" ? result.token : result.token.token,
+      },
       { headers: NO_STORE_HEADERS },
     );
+    if (result.kind === "reused") return response;
+
     const secure = runtimeEnvironment.APP_ENV !== "development";
 
     response.cookies.set(CSRF_TOKEN_COOKIE, result.token.token, {

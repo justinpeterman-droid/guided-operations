@@ -11,7 +11,9 @@ import { parseSessionAuthority } from "@/server/auth/session-claims";
 import {
   CSRF_DIGEST_COOKIE,
   CSRF_TOKEN_COOKIE,
+  hasValidSessionCsrfToken,
   issueSessionCsrfToken,
+  readSessionCsrfToken,
 } from "@/server/security/session-csrf";
 import { getAuthServerEnvironment } from "@/lib/env/auth-server";
 
@@ -69,31 +71,43 @@ export async function refreshSupabaseSession(request: NextRequest) {
     authority
   ) {
     const authEnvironment = getAuthServerEnvironment();
-    const token = issueSessionCsrfToken(
-      authority.sessionId,
-      authEnvironment.CSRF_HMAC_KEY,
-    );
-    const secure = runtimeEnvironment.APP_ENV !== "development";
-    request.cookies.set(CSRF_TOKEN_COOKIE, token.token);
-    request.cookies.set(CSRF_DIGEST_COOKIE, token.digest);
-    response = nextResponseWithRequestHeaders(request);
-    for (const { name, value, options } of pendingChanges.values()) {
-      response.cookies.set(name, value, options);
+    const existingToken = readSessionCsrfToken(request.headers);
+    const hasValidPair =
+      existingToken !== null &&
+      hasValidSessionCsrfToken(
+        existingToken,
+        request.headers,
+        authority.sessionId,
+        authEnvironment.CSRF_HMAC_KEY,
+      );
+
+    if (!hasValidPair) {
+      const token = issueSessionCsrfToken(
+        authority.sessionId,
+        authEnvironment.CSRF_HMAC_KEY,
+      );
+      const secure = runtimeEnvironment.APP_ENV !== "development";
+      request.cookies.set(CSRF_TOKEN_COOKIE, token.token);
+      request.cookies.set(CSRF_DIGEST_COOKIE, token.digest);
+      response = nextResponseWithRequestHeaders(request);
+      for (const { name, value, options } of pendingChanges.values()) {
+        response.cookies.set(name, value, options);
+      }
+      response.cookies.set(CSRF_TOKEN_COOKIE, token.token, {
+        httpOnly: false,
+        sameSite: "strict",
+        secure,
+        path: "/",
+        maxAge: 30 * 60,
+      });
+      response.cookies.set(CSRF_DIGEST_COOKIE, token.digest, {
+        httpOnly: true,
+        sameSite: "strict",
+        secure,
+        path: "/",
+        maxAge: 30 * 60,
+      });
     }
-    response.cookies.set(CSRF_TOKEN_COOKIE, token.token, {
-      httpOnly: false,
-      sameSite: "strict",
-      secure,
-      path: "/",
-      maxAge: 30 * 60,
-    });
-    response.cookies.set(CSRF_DIGEST_COOKIE, token.digest, {
-      httpOnly: true,
-      sameSite: "strict",
-      secure,
-      path: "/",
-      maxAge: 30 * 60,
-    });
   }
   response.headers.set("Cache-Control", "private, no-store, max-age=0");
   response.headers.set("Pragma", "no-cache");

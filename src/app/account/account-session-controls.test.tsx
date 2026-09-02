@@ -2,17 +2,15 @@ import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-const replace = vi.fn();
-const refresh = vi.fn();
+const { redirectToLogin } = vi.hoisted(() => ({ redirectToLogin: vi.fn() }));
 
-vi.mock("next/navigation", () => ({ useRouter: () => ({ replace, refresh }) }));
+vi.mock("@/lib/navigation/full-login-redirect", () => ({ redirectToLogin }));
 
 import { AccountSessionControls } from "./account-session-controls";
 
 afterEach(() => {
   cleanup();
-  replace.mockReset();
-  refresh.mockReset();
+  redirectToLogin.mockReset();
   vi.unstubAllGlobals();
 });
 
@@ -42,8 +40,7 @@ describe("AccountSessionControls", () => {
       credentials: "same-origin",
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
-    expect(replace).toHaveBeenCalledWith("/login");
-    expect(refresh).not.toHaveBeenCalled();
+    expect(redirectToLogin).toHaveBeenCalledOnce();
   });
 
   it("requires a visible confirmation before account-wide sign-out", async () => {
@@ -71,8 +68,7 @@ describe("AccountSessionControls", () => {
       credentials: "same-origin",
       headers: { "X-CSRF-Token": "fictional-session-bound-token" },
     });
-    expect(replace).toHaveBeenCalledWith("/login");
-    expect(refresh).not.toHaveBeenCalled();
+    expect(redirectToLogin).toHaveBeenCalledOnce();
   });
 
   it("keeps the person on the page when session revocation is unavailable", async () => {
@@ -92,6 +88,6 @@ describe("AccountSessionControls", () => {
         "We could not update your sessions. Please try again.",
       ),
     ).toBeVisible();
-    expect(replace).not.toHaveBeenCalled();
+    expect(redirectToLogin).not.toHaveBeenCalled();
   });
 });

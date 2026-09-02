@@ -1,7 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+
+import { redirectToLogin } from "@/lib/navigation/full-login-redirect";
 
 type SignOutState = "idle" | "submitting" | "failed";
 
@@ -9,7 +10,6 @@ const FAILURE_MESSAGE = "We could not sign you out. Please try again.";
 
 /** Small client boundary for the CSRF-protected, local browser sign-out flow. */
 export function SignOutButton() {
-  const router = useRouter();
   const [state, setState] = useState<SignOutState>("idle");
   const submitting = state === "submitting";
 
@@ -36,7 +36,10 @@ export function SignOutButton() {
       });
       if (!response.ok) throw new Error("sign_out_failed");
 
-      router.replace("/login");
+      // A full-document navigation makes the session boundary explicit. The
+      // server has just cleared the signed-in cookie, so an App Router cache
+      // transition can otherwise leave the protected reports page visible.
+      redirectToLogin();
       return;
     } catch {
       setState("failed");
