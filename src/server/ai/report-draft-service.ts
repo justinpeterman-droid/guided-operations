@@ -6,6 +6,7 @@ import {
   GeneratedReportDraftError,
   validateGeneratedReportDraft,
   type GeneratedReportDraft,
+  type ReportDraftValidationFailureCode,
 } from "@/features/incidents/generated-report-draft";
 import type { ReportDraftSource } from "@/features/incidents/report-draft-source";
 import { reportTypeSchema } from "@/features/incidents/report-types";
@@ -80,8 +81,13 @@ export function createReportDraftService(
         ...options,
       };
       try {
+        let previousValidationFailure:
+          ReportDraftValidationFailureCode | undefined;
         for (let attempt = 0; attempt < 2; attempt += 1) {
-          const candidate = await generation.generate(providerRequest);
+          const candidate = await generation.generate({
+            ...providerRequest,
+            ...(previousValidationFailure ? { previousValidationFailure } : {}),
+          });
           try {
             return {
               kind: "draft",
@@ -92,6 +98,10 @@ export function createReportDraftService(
               error instanceof GeneratedReportDraftError ||
               error instanceof z.ZodError;
             if (!invalidCandidate || attempt === 1) throw error;
+            previousValidationFailure =
+              error instanceof GeneratedReportDraftError
+                ? error.reasonCode
+                : "invalid_structure";
           }
         }
         return { kind: "invalid_output" };
