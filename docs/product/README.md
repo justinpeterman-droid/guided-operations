@@ -16,6 +16,9 @@ no accepted complete migrated product route.
   active, source-linked execution waves for the approved UI audit findings.
 - [Roles and Permissions](roles-and-permissions.md) — identity concepts,
   officer/admin matrix, RLS/server enforcement, and open decisions.
+- [Officer Feedback and Form Intake](officer-feedback-and-form-intake.md) —
+  private page-improvement reporting, exact-element references, blank-form
+  candidate intake, review, and publication boundaries.
 - [Feature Catalog and Parity](feature-catalog-and-parity.md) — old canonical
   behavior, target routes, known gaps, and cross-cutting acceptance gates.
 - [Domain Glossary](domain-glossary.md) — canonical terms for UI, domain,

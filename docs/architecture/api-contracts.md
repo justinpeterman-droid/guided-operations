@@ -77,6 +77,22 @@ prompts, answers, or record content.
 
 ## Endpoint groups
 
+### Improvement requests and form-candidate quarantine
+
+`POST /api/web/v1/improvement-requests` is the authenticated, same-origin,
+CSRF-protected intake boundary for page feedback, form requests, and one blank
+form candidate. It accepts only a closed request kind/category pair, a bounded
+description, an opaque UUID retry nonce, and deliberately minimal page-target
+metadata. A form candidate receives at most one short-lived private upload URL.
+
+`POST /api/web/v1/improvement-requests/{requestId}/form-upload/finalize`
+re-reads the private object server-side and verifies its bound path, byte size,
+type signature, and SHA-256 before it is reviewable. The browser never receives
+a public URL. `POST .../{requestId}/messages` adds an attributed bounded in-app
+reply. `POST .../{requestId}/status` is administrator-only and records one
+constrained review transition; it cannot publish a candidate to the Forms
+Library. Publication remains the existing protected template-registration path.
+
 ### Authentication and account
 
 | Method/path                     | Purpose                                 | Special controls                                                          |
