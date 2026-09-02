@@ -280,6 +280,22 @@ if (target) {
       );
     }
     await resetLocalDatabase(target.databaseUrl);
+    const improvementRequestsResult = command(
+      playwrightCli,
+      [
+        "test",
+        "tests/e2e/authenticated-improvement-requests.spec.ts",
+        "--workers=1",
+        "--retries=0",
+      ],
+      { env: qualificationEnvironment },
+    );
+    if (improvementRequestsResult.status !== 0) {
+      throw new Error(
+        "The authenticated improvement-request qualification failed.",
+      );
+    }
+    await resetLocalDatabase(target.databaseUrl);
     const adminResult = command(
       playwrightCli,
       [
