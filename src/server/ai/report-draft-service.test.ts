@@ -103,6 +103,12 @@ describe("createReportDraftService", () => {
       kind: "draft",
     });
     expect(generate).toHaveBeenCalledTimes(2);
+    expect(generate.mock.calls[0][0]).not.toHaveProperty(
+      "previousValidationFailure",
+    );
+    expect(generate.mock.calls[1][0]).toMatchObject({
+      previousValidationFailure: "unknown_source_fact",
+    });
   });
 
   it("preserves only the bounded budget reason for an honest degraded state", async () => {

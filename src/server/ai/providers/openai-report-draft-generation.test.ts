@@ -113,6 +113,44 @@ describe("OpenAI report draft generation provider", () => {
     );
   });
 
+  it("adds only bounded corrective feedback to a validation retry", async () => {
+    const fetch = vi.fn().mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          status: "completed",
+          output_text: JSON.stringify({
+            paragraphs: [
+              {
+                text: "Fictional draft.",
+                sourceFactIds: [request.source.confirmedFacts[0].id],
+              },
+            ],
+          }),
+        }),
+        { status: 200 },
+      ),
+    );
+    const provider = createOpenAiReportDraftGenerationProvider({
+      fetch: fetch as typeof globalThis.fetch,
+      environment,
+      budgetGuard,
+    });
+
+    await provider.generate({
+      ...request,
+      previousValidationFailure: "RW-030",
+    });
+
+    const [, init] = fetch.mock.calls[0] as [string, RequestInit];
+    const body = JSON.parse(init.body as string);
+    expect(body.instructions).toContain(
+      "copy every number exactly from a cited confirmed fact",
+    );
+    expect(JSON.parse(body.input)).not.toHaveProperty(
+      "previousValidationFailure",
+    );
+  });
+
   it("does not contact OpenAI when the shared budget denies the request", async () => {
     const fetch = vi.fn();
     const provider = createOpenAiReportDraftGenerationProvider({

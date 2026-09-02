@@ -1,7 +1,10 @@
 import { z } from "zod";
 
 import type { ReportDraftSource } from "./report-draft-source";
-import { findBlockingReportWritingRule } from "./report-writing-rules";
+import {
+  findBlockingReportWritingRule,
+  type ReportWritingRuleId,
+} from "./report-writing-rules";
 
 const opaqueIdSchema = z.uuid();
 
@@ -23,10 +26,19 @@ export const generatedReportDraftSchema = z
 
 export type GeneratedReportDraft = z.infer<typeof generatedReportDraftSchema>;
 
+export type ReportDraftValidationFailureCode =
+  | ReportWritingRuleId
+  | "duplicate_source_fact"
+  | "unknown_source_fact"
+  | "invalid_structure";
+
 export class GeneratedReportDraftError extends Error {
-  constructor(message: string) {
+  readonly reasonCode: ReportDraftValidationFailureCode;
+
+  constructor(message: string, reasonCode: ReportDraftValidationFailureCode) {
     super(message);
     this.name = "GeneratedReportDraftError";
+    this.reasonCode = reasonCode;
   }
 }
 
@@ -47,6 +59,7 @@ export function validateGeneratedReportDraft(
     if (uniqueFactIds.size !== paragraph.sourceFactIds.length) {
       throw new GeneratedReportDraftError(
         `Paragraph ${paragraphIndex + 1} repeats a source fact reference.`,
+        "duplicate_source_fact",
       );
     }
 
@@ -54,6 +67,7 @@ export function validateGeneratedReportDraft(
       if (!allowedFactIds.has(factId)) {
         throw new GeneratedReportDraftError(
           "A generated report draft referenced a fact outside its confirmed source.",
+          "unknown_source_fact",
         );
       }
     }
@@ -63,6 +77,7 @@ export function validateGeneratedReportDraft(
   if (blockingRule) {
     throw new GeneratedReportDraftError(
       `Generated report draft failed ${blockingRule}.`,
+      blockingRule,
     );
   }
 

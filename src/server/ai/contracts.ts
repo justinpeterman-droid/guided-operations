@@ -4,7 +4,10 @@ import type {
   PolicyCollection,
   SourceCitation,
 } from "@/features/policy/grounding";
-import type { GeneratedReportDraft } from "@/features/incidents/generated-report-draft";
+import type {
+  GeneratedReportDraft,
+  ReportDraftValidationFailureCode,
+} from "@/features/incidents/generated-report-draft";
 import type { ReportDraftGenerationSource } from "@/features/incidents/report-draft-source";
 import type { IncidentFactExtractionRequest } from "@/features/incidents/incident-fact-extraction";
 
@@ -63,6 +66,8 @@ export interface ReportDraftGenerationRequest {
   source: ReportDraftGenerationSource;
   maximumParagraphs: number;
   maximumParagraphCharacters: number;
+  /** Safe validator feedback for one corrective retry; never includes draft text. */
+  previousValidationFailure?: ReportDraftValidationFailureCode;
 }
 
 export interface ReportDraftGenerationProvider {
