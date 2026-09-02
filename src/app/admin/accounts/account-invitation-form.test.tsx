@@ -1,6 +1,6 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const refresh = vi.fn();
 
@@ -18,6 +18,8 @@ function response(body: unknown, ok = true): Response {
 }
 
 describe("AccountInvitationForm", () => {
+  afterEach(cleanup);
+
   beforeEach(() => {
     refresh.mockReset();
     vi.unstubAllGlobals();
@@ -35,7 +37,9 @@ describe("AccountInvitationForm", () => {
           data: {
             employeeNumberHint: "0002",
             temporaryPasscode: "OneTimePasscode",
-            temporaryPasscodeExpiresAt: "2026-08-26T18:30:00.000Z",
+            temporaryPasscodeExpiresAt: new Date(
+              Date.now() + 60_000,
+            ).toISOString(),
           },
         }),
       );
@@ -111,5 +115,37 @@ describe("AccountInvitationForm", () => {
     );
     expect(fetch).toHaveBeenCalledTimes(2);
     expect(refresh).not.toHaveBeenCalled();
+  });
+
+  it("never displays an expired temporary passcode", async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(response({ csrfToken: "csrf-token" }))
+      .mockResolvedValueOnce(
+        response({ data: { requestId: "request-id", token: "proof-token" } }),
+      )
+      .mockResolvedValueOnce(
+        response({
+          data: {
+            employeeNumberHint: "0002",
+            temporaryPasscode: "ExpiredPasscode",
+            temporaryPasscodeExpiresAt: "2000-01-01T00:00:00.000Z",
+          },
+        }),
+      );
+    vi.stubGlobal("fetch", fetch);
+    const user = userEvent.setup();
+    render(<AccountInvitationForm />);
+
+    await user.type(screen.getByLabelText("Employee number"), "FIXTURE-0002");
+    await user.type(screen.getByLabelText("Name"), "Fictional Officer");
+    await user.type(
+      screen.getByLabelText("Your administrator passcode"),
+      "FreshPasscode9!",
+    );
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await screen.findByText(/temporary passcode has expired/i);
+    expect(screen.queryByText("ExpiredPasscode")).not.toBeInTheDocument();
   });
 });

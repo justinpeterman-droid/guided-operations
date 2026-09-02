@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 
 import { SecretInput } from "@/app/components/secret-input";
 
+import { useTemporaryPasscodeHandoff } from "./use-temporary-passcode-handoff";
+
 type State = "idle" | "confirming" | "submitting" | "failed";
 type Handoff = Readonly<{
   temporaryPasscode: string;
@@ -68,7 +70,7 @@ export function AccountPasscodeResetControl({
 }: Readonly<{ accountId: string; displayName: string }>) {
   const router = useRouter();
   const [state, setState] = useState<State>("idle");
-  const [handoff, setHandoff] = useState<Handoff | null>(null);
+  const handoffState = useTemporaryPasscodeHandoff<Handoff>();
 
   async function reset(form: HTMLFormElement) {
     const passcode = new FormData(form).get("administratorPasscode");
@@ -102,7 +104,7 @@ export function AccountPasscodeResetControl({
       );
       const nextHandoff = handoffFrom(await response.json());
       if (!response.ok || !nextHandoff) throw new Error("reset_failed");
-      setHandoff(nextHandoff);
+      handoffState.show(nextHandoff);
       setState("idle");
       router.refresh();
     } catch {
@@ -110,7 +112,8 @@ export function AccountPasscodeResetControl({
     }
   }
 
-  if (handoff)
+  if (handoffState.handoff) {
+    const handoff = handoffState.handoff;
     return (
       <section
         className="account-session-controls"
@@ -128,11 +131,12 @@ export function AccountPasscodeResetControl({
           Expires{" "}
           {new Date(handoff.temporaryPasscodeExpiresAt).toLocaleString()}.
         </p>
-        <button onClick={() => setHandoff(null)} type="button">
+        <button onClick={handoffState.dismiss} type="button">
           I have handed it over
         </button>
       </section>
     );
+  }
   if (state !== "confirming" && state !== "submitting")
     return (
       <div className="account-session-actions">
@@ -142,6 +146,12 @@ export function AccountPasscodeResetControl({
         {state === "failed" ? (
           <p aria-live="polite" className="account-session-message">
             This passcode could not be reset.
+          </p>
+        ) : null}
+        {handoffState.expired ? (
+          <p className="account-session-message" role="status">
+            This temporary passcode has expired and is no longer shown. Reset it
+            only after a fresh administrator confirmation.
           </p>
         ) : null}
       </div>
