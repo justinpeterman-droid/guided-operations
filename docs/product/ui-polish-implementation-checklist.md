@@ -1,10 +1,12 @@
 # UI Polish Implementation Checklist
 
-- **Status:** Active execution checklist
+- **Status:** Active execution checklist (Waves 1–5 complete; Waves 6–8 planned)
 - **Created:** 2026-08-31
+- **Updated:** 2026-09-04 (site-wide Waves 6–8 sequence)
 - **Scope:** Public previews, Count Sheet truthfulness, local
-  authenticated-route readiness, responsive polish, shared UI consistency, and
-  later authenticated-flow review
+  authenticated-route readiness, responsive polish, shared UI consistency,
+  authenticated-flow review, then site-wide token/primitive consolidation,
+  page-family density, and the hands-on accessibility/print gate
 
 This checklist turns the multi-plugin UI audit into narrow implementation waves.
 It is an execution aid, not a second product contract. The governing decisions
@@ -190,6 +192,166 @@ dialog are intentionally not claimed by this local automated qualification.
 to capture the tester, exact commit, environment, assistive technology, and
 fictional-only observations. Do not mark this item complete until a human test
 on the intended browser/operating-system combination is recorded.
+
+## Site-wide improvement sequence (Waves 6–8)
+
+Waves 1–5 locked the visual direction and Count Sheet / Document Studio truth.
+Waves 6–8 close remaining consistency debt, page-family density, and the open
+accessibility/print gate **without** redesigning the accepted navy/gold
+direction. Governing contracts remain
+[Experience Design Brief](experience-design-brief.md),
+[DESIGN.md](../../DESIGN.md), and
+[Workflow and Report Safety](workflow-and-report-safety.md).
+
+Execute in order. Do not start Wave 7 until Wave 6 exits. Do not claim Wave 8
+complete until a human AT + OS print record exists. Keep preview routes and
+authenticated routes visually aligned in every wave.
+
+### Wave 6 — Tokens and shared control primitives
+
+**Goal:** One accent system and a small set of recurring controls so later
+page-family work does not invent new colors or button styles.
+
+- [ ] Replace hard-coded teal/cyan accents outside the design system with
+      `--gow-*` tokens. Known offenders:
+      - Incident primary CTA and draft-request focus/accent in
+        `src/app/globals.css` (`.incident-*` / `#176f72`) and
+        `src/app/incidents/[incidentId]/report-draft-request-form.module.css`
+      - Improvements surfaces using `#1d5e80`, `#2f6f90`, and undefined
+        `var(--color-accent, #2f6f90)` in `src/app/globals.css`
+- [ ] Add any missing shared tokens only when they replace real duplicates
+      (for example a single `--gow-action` / status-accent alias). Do not
+      introduce a second token system or dark theme.
+- [ ] Extract or extend shared control classes (or tiny presentational
+      components) only for patterns that already recur: primary action,
+      secondary/text action, status/empty/error notice, busy lock. Prefer
+      CSS reuse over a component library rewrite. Do not add shadcn/Tailwind.
+- [ ] Remove or rewrite dead landing styles that assume a disabled gray
+      `.sign-in-card` form while the live control is a `.primary-action` link
+      (`src/app/page.tsx`, related rules in `src/app/globals.css`).
+- [ ] Begin modularizing `src/app/globals.css` by moving clearly isolated
+      feature blocks (improvements, landing leftovers, one large page family)
+      into existing or new CSS modules without changing visual output. Target
+      behavior-preserving extraction, not a full stylesheet rewrite in one PR.
+- [ ] Keep `--gow-focus` as the only focus ring; improvements must not keep a
+      parallel focus color.
+- [ ] Capture before/after desktop and mobile screenshots for Home, Policy
+      Expert, Document Studio (or new-incident CTA), Improvements launcher, and
+      landing. Run format, lint, typecheck, focused component/CSS-adjacent
+      tests, and a production build.
+
+**Exit evidence:** No `#176f72` / `#1d5e80` / `#2f6f90` / `--color-accent`
+remains in app CSS except historical comments if any; primary actions share one
+navy treatment; landing CSS matches the live link CTA; screenshots show no
+unintended redesign.
+
+### Wave 7 — Page-family density and information architecture
+
+**Goal:** Match each surface to the brief’s density rules and fix shell/IA
+inconsistencies that make the site feel unfinished after Wave 6 tokens land.
+
+#### Landing (`/`)
+
+- [ ] Tighten the first viewport to brand, one headline, one short supporting
+      sentence, and the sign-in CTA group. Move Capture→Review→Confirm,
+      principle list, and preview links below the first viewport so the entry
+      reads as one composition rather than a packed marketing column
+      (`src/app/page.tsx`).
+- [ ] Preserve “Advisory only,” fictional-preview labeling, and no facility
+      name in display copy (OQ-003).
+
+#### Officer Home (`/home`)
+
+- [ ] Keep Report Assistant and Policy Expert equal and primary.
+- [ ] Reduce competing secondary bands: tools strip, progress path, and current
+      work should read as one command center with clear priority, not three
+      equal marketing blocks (`workspace-command-center.tsx` + related CSS).
+- [ ] Empty current-work state remains legitimate; never invent rows or metrics.
+
+#### Policy Expert (`/policy-expert`)
+
+- [ ] Treat insufficient-evidence / no-sources as a first-class calm empty
+      state: clear limitation, what the officer should do next (source or
+      supervisor), no fake citations. Align preview and authenticated copy.
+- [ ] Keep question + cited answer as the two-part workspace; do not add
+      dashboard chrome.
+
+#### Document Studio and reports
+
+- [ ] Confirm mobile native section `<select>` is the only narrow-width section
+      switcher; remove or neutralize any leftover horizontally scrolling tab
+      styles that compete with it
+      (`document-studio.module.css` vs `globals.css` `.document-studio-tabs`).
+- [ ] Align print/download/sign-out control treatment with Wave 6 shared
+      secondary actions (text-link vs filled CTA consistency).
+- [ ] Keep honest labeling on 005/409 Word download: generic reviewed-report
+      export until the authoritative source form lands (do not claim official
+      form fidelity in UI copy).
+
+#### Forms Library and Count Sheet
+
+- [ ] Prefer large composed catalog sections over interchangeable small cards
+      where card chrome does not aid interaction.
+- [ ] Preserve Count Sheet truthfulness and owner-approved desktop fit; Wave 7
+      is density/consistency only.
+
+#### Improvements
+
+- [ ] Keep the global launcher; do not force Improvements into
+      `WORKSPACE_NAV_ITEMS` unless the owner asks for nav clutter.
+- [ ] After Wave 6 token unification, verify launcher + `/improvements*` +
+      admin review share shell density, focus, and status patterns with the
+      rest of the workspace.
+
+#### Administrator shell and home
+
+- [ ] Fix `AdminShell` so officer nav `current` highlighting is not always
+      cleared (`current={undefined}` in `admin-shell.tsx`). Prefer highlighting
+      nothing on admin-only routes **or** a deliberate admin-home affordance—
+      pick one pattern and apply it on every admin page; do not leave the nav
+      looking broken.
+- [ ] Keep Admin as a secondary intentional entry from Home (not a peer nav
+      item competing with Report Assistant / Policy Expert).
+- [ ] Reduce card-stack admin overview and daily-paperwork grids toward denser
+      actionable lists with honest empty/error states; no planned-feature cards
+      or fabricated metrics.
+
+#### Cross-cutting Wave 7 checks
+
+- [ ] Desktop + mobile browser evidence for landing, Home, Policy Expert,
+      Document Studio, Forms, Admin home, Improvements.
+- [ ] Preview routes stay in visual lockstep with authenticated counterparts.
+- [ ] Keyboard order, focus visibility, and reduced-motion still pass automated
+      checks on changed routes.
+
+**Exit evidence:** Landing first viewport matches the brief; Home remains equal
+primary tools without secondary clutter winning; Admin nav state is intentional;
+Policy Expert no-sources state is calm and honest; no new accent colors
+reintroduced.
+
+### Wave 8 — Accessibility and print gate + defect repair
+
+**Goal:** Close the open manual gate and fix defects the human pass finds.
+Automation remains necessary but not sufficient.
+
+- [ ] Run the
+      [hands-on accessibility and print validation runbook](../quality/hands-on-accessibility-print-validation.md)
+      on the intended browser/OS with a representative AT user and fictional
+      data only. Record commit SHA, environment, AT, and Pass/Issue/Not
+      exercised per check.
+- [ ] Fix every **Issue** from that record in narrow follow-up commits:
+      announcement gaps, unlabeled controls, focus traps, print chrome leaking
+      into OS print preview, clipped/overlapping print content, false
+      reconciled announcements, and conflict-recovery speech gaps.
+- [ ] Re-run only the failed AT/print scenarios after fixes; do not mass-
+      regenerate visual baselines to paper over defects.
+- [ ] Mark the checklist follow-on item and ROADMAP open item #8 complete only
+      when the human evidence record exists and blocking Issues are resolved or
+      explicitly owner-accepted.
+
+**Exit evidence:** Dated human AT + OS print record attached or linked from
+`docs/quality/`; blocking Issues closed or owner-accepted; automated a11y
+suite still green.
 
 ## Final verification
 

@@ -659,8 +659,11 @@ lines:
    provider budgets and cost caps, and a rehearsed rollback.
 3. **Records controls:** the retention and deletion rehearsal, hosted Storage
    and backup reconciliation, and live backup-expiry evidence.
-4. **Product follow-through:** the authoritative 005/409 source form, the manual
-   accessibility and print validation, and any owner-requested UI work.
+4. **Product follow-through:** the authoritative 005/409 source form; the
+   sequenced site-wide UI Waves 6–8 in
+   [UI polish implementation checklist](docs/product/ui-polish-implementation-checklist.md)
+   (tokens/primitives → page-family density → hands-on accessibility and print
+   validation); and any further owner-requested UI work.
 5. **Repository controls:** restoring continuous integration and settling
    repository enforcement (OQ-016).
 
