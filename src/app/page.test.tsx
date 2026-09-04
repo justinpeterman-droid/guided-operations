@@ -59,5 +59,11 @@ describe("PublicLandingPage", () => {
         name: "Clear guidance for the work that has to be right.",
       }),
     ).toBeVisible();
+    expect(
+      screen.getByRole("region", { name: "From first note to final review" }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("link", { name: "Officer workspace" }),
+    ).toHaveAttribute("href", "/preview/workspace");
   });
 });

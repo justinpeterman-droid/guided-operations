@@ -210,9 +210,75 @@ a:focus-visible,
 
 .brand-bar,
 .foundation-grid,
-.foundation-footer {
+.foundation-footer,
+.landing-secondary {
   width: min(1180px, calc(100% - 40px));
   margin-inline: auto;
+}
+
+.landing-hero {
+  min-height: min(72vh, 40rem);
+  align-items: center;
+}
+
+.landing-secondary {
+  display: grid;
+  gap: 28px;
+  margin-top: 8px;
+  padding: 28px 0 8px;
+  border-top: 1px solid rgba(158, 176, 191, 0.55);
+}
+
+.landing-preview-band {
+  padding: 22px 0 4px;
+}
+
+.landing-preview-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+}
+
+.policy-answer-empty {
+  border-left: 4px solid var(--gow-gold-400);
+}
+
+.policy-next-step {
+  margin: 14px 0 0;
+  padding: 12px 14px;
+  color: var(--gow-navy-900);
+  background: var(--gow-tint);
+  border: 1px solid var(--gow-tint-border);
+  border-radius: var(--gow-radius-control);
+  font-size: 0.9rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.workspace-shell-admin .workspace-header {
+  border-bottom-color: color-mix(
+    in srgb,
+    var(--gow-gold-400) 55%,
+    var(--gow-border)
+  );
+}
+
+.command-center-tools-supporting {
+  margin-top: 18px;
+  padding: 18px 20px;
+  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(158, 176, 191, 0.55);
+  border-radius: var(--gow-radius-card);
+  box-shadow: none;
+}
+
+.command-center-tools-supporting h2 {
+  margin: 0 0 12px;
+  color: var(--gow-muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .brand-bar {
@@ -1281,10 +1347,10 @@ a:focus-visible,
   grid-template-columns: 52px minmax(0, 1fr) auto;
   gap: 20px;
   align-items: center;
-  padding: 22px;
-  background: rgba(255, 255, 255, 0.84);
+  padding: 14px 16px;
+  background: var(--gow-surface);
   border: 1px solid var(--gow-border);
-  border-radius: 14px;
+  border-radius: var(--gow-radius-control);
 }
 .admin-action-list article > span {
   display: grid;
@@ -1508,10 +1574,10 @@ a:focus-visible,
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 22px 24px;
-  background: rgba(255, 255, 255, 0.84);
+  padding: 18px 20px;
+  background: var(--gow-surface);
   border: 1px solid var(--gow-border);
-  border-radius: 14px;
+  border-radius: var(--gow-radius-control);
 }
 .forms-library-list h3 {
   margin: 0;
@@ -2932,7 +2998,6 @@ form.account-session-controls {
 
   .workspace-header,
   .workspace-shell-toolbar,
-  .document-studio-tabs,
   .report-print-button,
   .report-output-button,
   .count-sheet-heading-actions,
@@ -3213,52 +3278,6 @@ form.account-session-controls {
 
 .document-studio {
   margin-top: 28px;
-}
-
-.document-studio-tabs {
-  border-bottom: 1px solid rgba(158, 176, 191, 0.75);
-}
-
-.document-studio-tabs ul {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0;
-  padding: 0 0 12px;
-  list-style: none;
-}
-
-.document-studio-tabs button {
-  display: grid;
-  gap: 2px;
-  min-height: 44px;
-  padding: 10px 14px;
-  color: var(--gow-muted);
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: var(--gow-radius-control);
-  cursor: pointer;
-  text-align: left;
-}
-
-.document-studio-tabs button span {
-  color: var(--gow-navy-900);
-  font-size: 0.88rem;
-  font-weight: 800;
-}
-
-.document-studio-tabs button small {
-  color: var(--gow-muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-}
-
-.document-studio-tabs button:hover,
-.document-studio-tabs button.is-current,
-.document-studio-tabs button[aria-selected="true"] {
-  color: var(--gow-navy-900);
-  background: #e4eef5;
-  border-color: rgba(158, 176, 191, 0.75);
 }
 
 .document-studio-panel-wrap {
@@ -4067,21 +4086,6 @@ form.account-session-controls {
 
   .sign-in-card {
     width: min(100%, 560px);
-  }
-
-  .document-studio-tabs ul {
-    flex-wrap: nowrap;
-    overflow-x: auto;
-    padding-bottom: 8px;
-    scrollbar-width: thin;
-  }
-
-  .document-studio-tabs button {
-    min-width: 148px;
-  }
-
-  .document-studio-tabs button small {
-    display: none;
   }
 
   .document-studio-form-list li {

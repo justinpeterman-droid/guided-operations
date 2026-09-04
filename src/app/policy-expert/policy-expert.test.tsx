@@ -77,6 +77,11 @@ describe("PolicyExpert", () => {
     expect(
       screen.getByText("No fictional evidence is available."),
     ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /This is not policy guidance\. Open the approved source document or ask a supervisor/,
+      ),
+    ).toBeInTheDocument();
   });
 
   it("sends only bounded prior user questions with a follow-up", async () => {

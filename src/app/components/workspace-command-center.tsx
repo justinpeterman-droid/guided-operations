@@ -225,10 +225,10 @@ export function WorkspaceCommandCenter() {
       </section>
 
       <section
-        className="command-center-tools"
+        className="command-center-tools command-center-tools-supporting"
         aria-labelledby="all-tools-title"
       >
-        <h2 id="all-tools-title">All tools</h2>
+        <h2 id="all-tools-title">More tools</h2>
         <ul>
           {allTools.map((tool) => (
             <li key={tool.label}>
@@ -346,10 +346,10 @@ export function OfficerCommandCenter({
       </section>
 
       <section
-        className="command-center-tools command-center-tools-expanded"
+        className="command-center-tools command-center-tools-expanded command-center-tools-supporting"
         aria-labelledby="all-tools-title"
       >
-        <h2 id="all-tools-title">All tools</h2>
+        <h2 id="all-tools-title">More tools</h2>
         <ul>
           {officerTools.map((tool) => (
             <li key={tool.label}>

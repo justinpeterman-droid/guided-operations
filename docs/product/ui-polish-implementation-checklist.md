@@ -259,67 +259,67 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
 
 #### Landing (`/`)
 
-- [ ] Tighten the first viewport to brand, one headline, one short supporting
+- [x] Tighten the first viewport to brand, one headline, one short supporting
       sentence, and the sign-in CTA group. Move Capture→Review→Confirm,
       principle list, and preview links below the first viewport so the entry
       reads as one composition rather than a packed marketing column
       (`src/app/page.tsx`).
-- [ ] Preserve “Advisory only,” fictional-preview labeling, and no facility name
+- [x] Preserve “Advisory only,” fictional-preview labeling, and no facility name
       in display copy (OQ-003).
 
 #### Officer Home (`/home`)
 
-- [ ] Keep Report Assistant and Policy Expert equal and primary.
-- [ ] Reduce competing secondary bands: tools strip, progress path, and current
+- [x] Keep Report Assistant and Policy Expert equal and primary.
+- [x] Reduce competing secondary bands: tools strip, progress path, and current
       work should read as one command center with clear priority, not three
       equal marketing blocks (`workspace-command-center.tsx` + related CSS).
-- [ ] Empty current-work state remains legitimate; never invent rows or metrics.
+- [x] Empty current-work state remains legitimate; never invent rows or metrics.
 
 #### Policy Expert (`/policy-expert`)
 
-- [ ] Treat insufficient-evidence / no-sources as a first-class calm empty
+- [x] Treat insufficient-evidence / no-sources as a first-class calm empty
       state: clear limitation, what the officer should do next (source or
       supervisor), no fake citations. Align preview and authenticated copy.
-- [ ] Keep question + cited answer as the two-part workspace; do not add
+- [x] Keep question + cited answer as the two-part workspace; do not add
       dashboard chrome.
 
 #### Document Studio and reports
 
-- [ ] Confirm mobile native section `<select>` is the only narrow-width section
+- [x] Confirm mobile native section `<select>` is the only narrow-width section
       switcher; remove or neutralize any leftover horizontally scrolling tab
       styles that compete with it (`document-studio.module.css` vs `globals.css`
       `.document-studio-tabs`).
-- [ ] Align print/download/sign-out control treatment with Wave 6 shared
+- [x] Align print/download/sign-out control treatment with Wave 6 shared
       secondary actions (text-link vs filled CTA consistency).
-- [ ] Keep honest labeling on 005/409 Word download: generic reviewed-report
+- [x] Keep honest labeling on 005/409 Word download: generic reviewed-report
       export until the authoritative source form lands (do not claim official
       form fidelity in UI copy).
 
 #### Forms Library and Count Sheet
 
-- [ ] Prefer large composed catalog sections over interchangeable small cards
+- [x] Prefer large composed catalog sections over interchangeable small cards
       where card chrome does not aid interaction.
-- [ ] Preserve Count Sheet truthfulness and owner-approved desktop fit; Wave 7
+- [x] Preserve Count Sheet truthfulness and owner-approved desktop fit; Wave 7
       is density/consistency only.
 
 #### Improvements
 
-- [ ] Keep the global launcher; do not force Improvements into
+- [x] Keep the global launcher; do not force Improvements into
       `WORKSPACE_NAV_ITEMS` unless the owner asks for nav clutter.
-- [ ] After Wave 6 token unification, verify launcher + `/improvements*` + admin
+- [x] After Wave 6 token unification, verify launcher + `/improvements*` + admin
       review share shell density, focus, and status patterns with the rest of
       the workspace.
 
 #### Administrator shell and home
 
-- [ ] Fix `AdminShell` so officer nav `current` highlighting is not always
+- [x] Fix `AdminShell` so officer nav `current` highlighting is not always
       cleared (`current={undefined}` in `admin-shell.tsx`). Prefer highlighting
       nothing on admin-only routes **or** a deliberate admin-home affordance—
       pick one pattern and apply it on every admin page; do not leave the nav
       looking broken.
-- [ ] Keep Admin as a secondary intentional entry from Home (not a peer nav item
+- [x] Keep Admin as a secondary intentional entry from Home (not a peer nav item
       competing with Report Assistant / Policy Expert).
-- [ ] Reduce card-stack admin overview and daily-paperwork grids toward denser
+- [x] Reduce card-stack admin overview and daily-paperwork grids toward denser
       actionable lists with honest empty/error states; no planned-feature cards
       or fabricated metrics.
 
@@ -330,6 +330,12 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
 - [ ] Preview routes stay in visual lockstep with authenticated counterparts.
 - [ ] Keyboard order, focus visibility, and reduced-motion still pass automated
       checks on changed routes.
+
+**Progress (2026-09-04):** Landing hero tightened; Home tools band demoted to
+"More tools"; Policy Expert insufficient-evidence next-step copy; dead
+`.document-studio-tabs` CSS removed (module mobile select remains); AdminShell
+intentionally leaves officer nav unhighlighted and marks admin chrome; admin and
+forms list cards densified. Browser screenshot evidence still open.
 
 **Exit evidence:** Landing first viewport matches the brief; Home remains equal
 primary tools without secondary clutter winning; Admin nav state is intentional;

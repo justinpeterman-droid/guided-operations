@@ -275,13 +275,25 @@ function PolicyAnswer({
 }) {
   const heading =
     outcome.kind === "answer" ? "Cited guidance" : "Evidence is not sufficient";
+  const isInsufficient = outcome.kind === "insufficient_evidence";
   return (
-    <section className="policy-answer" aria-labelledby={headingId}>
+    <section
+      className={
+        isInsufficient ? "policy-answer policy-answer-empty" : "policy-answer"
+      }
+      aria-labelledby={headingId}
+    >
       <h2 id={headingId}>{heading}</h2>
       <p className="policy-answer-copy">{outcome.answer.answer}</p>
       {outcome.answer.limitations.length ? (
         <p className="policy-limitation">
           {outcome.answer.limitations.join(" ")}
+        </p>
+      ) : null}
+      {isInsufficient ? (
+        <p className="policy-next-step" role="status">
+          This is not policy guidance. Open the approved source document or ask
+          a supervisor before acting.
         </p>
       ) : null}
       {outcome.answer.citations.length ? (
