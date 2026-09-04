@@ -13,21 +13,21 @@
   min-height: 3.5rem;
   padding: 0.9rem;
   color: var(--gow-navy-900);
-  background: #fff;
-  border: 1px solid #b9c9d5;
+  background: var(--gow-surface);
+  border: 1px solid var(--gow-border);
   border-radius: var(--gow-radius-control);
   cursor: pointer;
   line-height: 1.45;
 }
 
 .option:has(.choice:checked) {
-  background: #eef7f8;
-  border-color: #176f72;
-  box-shadow: 0 0 0 1px #176f72;
+  background: var(--gow-tint);
+  border-color: var(--gow-blue);
+  box-shadow: 0 0 0 1px var(--gow-blue);
 }
 
 .option:focus-within {
-  outline: 3px solid #82b9dc;
+  outline: 3px solid var(--gow-focus);
   outline-offset: 2px;
 }
 
@@ -35,7 +35,7 @@
   width: 1.1rem;
   height: 1.1rem;
   margin: 0.15rem 0 0;
-  accent-color: #176f72;
+  accent-color: var(--gow-blue);
 }
 
 .factText {
@@ -54,8 +54,8 @@
   margin-top: 1rem;
   padding: 0.9rem 1rem;
   color: var(--gow-navy-900);
-  background: #eef7f8;
-  border: 1px solid #9cc9ca;
+  background: var(--gow-tint);
+  border: 1px solid var(--gow-tint-border);
   border-radius: var(--gow-radius-control);
 }
 
@@ -72,13 +72,13 @@
   width: fit-content;
   min-height: 2.75rem;
   padding: 0.7rem 0;
-  color: #0d6265;
+  color: var(--gow-navy-800);
   cursor: pointer;
   font-weight: 800;
 }
 
 .factEditor summary:focus-visible {
-  outline: 3px solid #82b9dc;
+  outline: 3px solid var(--gow-focus);
   outline-offset: 2px;
 }
 
@@ -100,14 +100,14 @@
   min-height: 3rem;
   padding: 0.65rem 2.5rem 0.65rem 0.8rem;
   color: var(--gow-ink);
-  background: #fff;
-  border: 1px solid #9eb3c3;
+  background: var(--gow-surface);
+  border: 1px solid var(--gow-border);
   border-radius: var(--gow-radius-control);
   font: inherit;
 }
 
 .select:focus-visible {
-  outline: 3px solid #82b9dc;
+  outline: 3px solid var(--gow-focus);
   outline-offset: 2px;
 }
 

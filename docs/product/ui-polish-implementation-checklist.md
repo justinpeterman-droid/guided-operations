@@ -212,28 +212,28 @@ authenticated routes visually aligned in every wave.
 **Goal:** One accent system and a small set of recurring controls so later
 page-family work does not invent new colors or button styles.
 
-- [ ] Replace hard-coded teal/cyan accents outside the design system with
-      `--gow-*` tokens. Known offenders:
-      - Incident primary CTA and draft-request focus/accent in
-        `src/app/globals.css` (`.incident-*` / `#176f72`) and
-        `src/app/incidents/[incidentId]/report-draft-request-form.module.css`
-      - Improvements surfaces using `#1d5e80`, `#2f6f90`, and undefined
-        `var(--color-accent, #2f6f90)` in `src/app/globals.css`
-- [ ] Add any missing shared tokens only when they replace real duplicates
-      (for example a single `--gow-action` / status-accent alias). Do not
-      introduce a second token system or dark theme.
-- [ ] Extract or extend shared control classes (or tiny presentational
+- [x] Replace hard-coded teal/cyan accents outside the design system with
+      `--gow-*` tokens. Known offenders: - Incident primary CTA and
+      draft-request focus/accent in `src/app/globals.css` (`.incident-*` /
+      `#176f72`) and
+      `src/app/incidents/[incidentId]/report-draft-request-form.module.css` -
+      Improvements surfaces using `#1d5e80`, `#2f6f90`, and undefined
+      `var(--color-accent, #2f6f90)` in `src/app/globals.css`
+- [x] Add any missing shared tokens only when they replace real duplicates (for
+      example a single `--gow-action` / status-accent alias). Do not introduce a
+      second token system or dark theme.
+- [x] Extract or extend shared control classes (or tiny presentational
       components) only for patterns that already recur: primary action,
-      secondary/text action, status/empty/error notice, busy lock. Prefer
-      CSS reuse over a component library rewrite. Do not add shadcn/Tailwind.
-- [ ] Remove or rewrite dead landing styles that assume a disabled gray
+      secondary/text action, status/empty/error notice, busy lock. Prefer CSS
+      reuse over a component library rewrite. Do not add shadcn/Tailwind.
+- [x] Remove or rewrite dead landing styles that assume a disabled gray
       `.sign-in-card` form while the live control is a `.primary-action` link
       (`src/app/page.tsx`, related rules in `src/app/globals.css`).
-- [ ] Begin modularizing `src/app/globals.css` by moving clearly isolated
+- [x] Begin modularizing `src/app/globals.css` by moving clearly isolated
       feature blocks (improvements, landing leftovers, one large page family)
       into existing or new CSS modules without changing visual output. Target
       behavior-preserving extraction, not a full stylesheet rewrite in one PR.
-- [ ] Keep `--gow-focus` as the only focus ring; improvements must not keep a
+- [x] Keep `--gow-focus` as the only focus ring; improvements must not keep a
       parallel focus color.
 - [ ] Capture before/after desktop and mobile screenshots for Home, Policy
       Expert, Document Studio (or new-incident CTA), Improvements launcher, and
@@ -244,6 +244,13 @@ page-family work does not invent new colors or button styles.
 remains in app CSS except historical comments if any; primary actions share one
 navy treatment; landing CSS matches the live link CTA; screenshots show no
 unintended redesign.
+
+**Progress (2026-09-04):** Added `--gow-action`, `--gow-tint`, and
+`--gow-tint-border`; introduced `.gow-primary-control`,
+`.gow-secondary-control`, and `.gow-text-control`; converted incident and
+improvements accents to navy/blue tokens; removed dead `.sign-in-card`
+form/input/button styles; extracted `src/app/improvements-surfaces.css`.
+Screenshot/gate evidence follows in the same wave before Wave 7 starts.
 
 ### Wave 7 — Page-family density and information architecture
 
@@ -257,8 +264,8 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
       principle list, and preview links below the first viewport so the entry
       reads as one composition rather than a packed marketing column
       (`src/app/page.tsx`).
-- [ ] Preserve “Advisory only,” fictional-preview labeling, and no facility
-      name in display copy (OQ-003).
+- [ ] Preserve “Advisory only,” fictional-preview labeling, and no facility name
+      in display copy (OQ-003).
 
 #### Officer Home (`/home`)
 
@@ -280,8 +287,8 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
 
 - [ ] Confirm mobile native section `<select>` is the only narrow-width section
       switcher; remove or neutralize any leftover horizontally scrolling tab
-      styles that compete with it
-      (`document-studio.module.css` vs `globals.css` `.document-studio-tabs`).
+      styles that compete with it (`document-studio.module.css` vs `globals.css`
+      `.document-studio-tabs`).
 - [ ] Align print/download/sign-out control treatment with Wave 6 shared
       secondary actions (text-link vs filled CTA consistency).
 - [ ] Keep honest labeling on 005/409 Word download: generic reviewed-report
@@ -299,9 +306,9 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
 
 - [ ] Keep the global launcher; do not force Improvements into
       `WORKSPACE_NAV_ITEMS` unless the owner asks for nav clutter.
-- [ ] After Wave 6 token unification, verify launcher + `/improvements*` +
-      admin review share shell density, focus, and status patterns with the
-      rest of the workspace.
+- [ ] After Wave 6 token unification, verify launcher + `/improvements*` + admin
+      review share shell density, focus, and status patterns with the rest of
+      the workspace.
 
 #### Administrator shell and home
 
@@ -310,8 +317,8 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
       nothing on admin-only routes **or** a deliberate admin-home affordance—
       pick one pattern and apply it on every admin page; do not leave the nav
       looking broken.
-- [ ] Keep Admin as a secondary intentional entry from Home (not a peer nav
-      item competing with Report Assistant / Policy Expert).
+- [ ] Keep Admin as a secondary intentional entry from Home (not a peer nav item
+      competing with Report Assistant / Policy Expert).
 - [ ] Reduce card-stack admin overview and daily-paperwork grids toward denser
       actionable lists with honest empty/error states; no planned-feature cards
       or fabricated metrics.
@@ -341,8 +348,8 @@ Automation remains necessary but not sufficient.
       exercised per check.
 - [ ] Fix every **Issue** from that record in narrow follow-up commits:
       announcement gaps, unlabeled controls, focus traps, print chrome leaking
-      into OS print preview, clipped/overlapping print content, false
-      reconciled announcements, and conflict-recovery speech gaps.
+      into OS print preview, clipped/overlapping print content, false reconciled
+      announcements, and conflict-recovery speech gaps.
 - [ ] Re-run only the failed AT/print scenarios after fixes; do not mass-
       regenerate visual baselines to paper over defects.
 - [ ] Mark the checklist follow-on item and ROADMAP open item #8 complete only
@@ -350,8 +357,8 @@ Automation remains necessary but not sufficient.
       explicitly owner-accepted.
 
 **Exit evidence:** Dated human AT + OS print record attached or linked from
-`docs/quality/`; blocking Issues closed or owner-accepted; automated a11y
-suite still green.
+`docs/quality/`; blocking Issues closed or owner-accepted; automated a11y suite
+still green.
 
 ## Final verification
 

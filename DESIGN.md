@@ -14,6 +14,8 @@ colors:
   navy-800: "#123d66"
   navy-700: "#185687"
   action: "#176aa6"
+  tint: "#e8f2f8"
+  tint-border: "#9cb8cc"
   gold-100: "#f5e5b5"
   gold-300: "#e7bd5a"
   gold-400: "#d7a640"

@@ -133,7 +133,11 @@ release, in rough order of user impact. They are tracked here and summarized in
    may not be called an official 005/409 form until the source kind, revision,
    and SHA-256 are recorded. See
    [Official 005/409 source-form review](docs/quality/2026-08-30-official-005-409-source-review.md).
-8. **Manual accessibility and print validation is outstanding.** The runbook in
+8. **Manual accessibility and print validation is outstanding.** It is Wave 8 of
+   the site-wide UI sequence in
+   [UI polish implementation checklist](docs/product/ui-polish-implementation-checklist.md)
+   (after Wave 6 tokens/primitives and Wave 7 page-family density). The runbook
+   in
    [Hands-on accessibility and print validation](docs/quality/hands-on-accessibility-print-validation.md)
    requires a representative assistive-technology user and an operating-system
    print dialog; automation cannot observe either.
