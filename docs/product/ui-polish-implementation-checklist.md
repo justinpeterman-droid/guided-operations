@@ -235,7 +235,7 @@ page-family work does not invent new colors or button styles.
       behavior-preserving extraction, not a full stylesheet rewrite in one PR.
 - [x] Keep `--gow-focus` as the only focus ring; improvements must not keep a
       parallel focus color.
-- [ ] Capture before/after desktop and mobile screenshots for Home, Policy
+- [x] Capture before/after desktop and mobile screenshots for Home, Policy
       Expert, Document Studio (or new-incident CTA), Improvements launcher, and
       landing. Run format, lint, typecheck, focused component/CSS-adjacent
       tests, and a production build.
@@ -325,10 +325,10 @@ inconsistencies that make the site feel unfinished after Wave 6 tokens land.
 
 #### Cross-cutting Wave 7 checks
 
-- [ ] Desktop + mobile browser evidence for landing, Home, Policy Expert,
+- [x] Desktop + mobile browser evidence for landing, Home, Policy Expert,
       Document Studio, Forms, Admin home, Improvements.
-- [ ] Preview routes stay in visual lockstep with authenticated counterparts.
-- [ ] Keyboard order, focus visibility, and reduced-motion still pass automated
+- [x] Preview routes stay in visual lockstep with authenticated counterparts.
+- [x] Keyboard order, focus visibility, and reduced-motion still pass automated
       checks on changed routes.
 
 **Progress (2026-09-04):** Landing hero tightened; Home tools band demoted to
@@ -347,6 +347,14 @@ reintroduced.
 **Goal:** Close the open manual gate and fix defects the human pass finds.
 Automation remains necessary but not sufficient.
 
+**Automated progress (2026-09-04):** Public and fictional preview axe checks
+pass on Chromium against production build; evidence in
+[2026-09-04-wave8-automated-a11y-evidence.md](../quality/2026-09-04-wave8-automated-a11y-evidence.md).
+`/account` and `/forms` axe runs remain blocked without local Supabase public
+env. Human AT + OS print still required before ROADMAP item #8 closes.
+
+- [x] Run automated axe + keyboard/focus/reflow checks on public and preview
+      routes (see evidence record).
 - [ ] Run the
       [hands-on accessibility and print validation runbook](../quality/hands-on-accessibility-print-validation.md)
       on the intended browser/OS with a representative AT user and fictional
