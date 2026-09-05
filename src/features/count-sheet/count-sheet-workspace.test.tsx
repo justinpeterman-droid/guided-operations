@@ -67,7 +67,13 @@ describe("CountSheetWorkspace", () => {
       });
     const user = userEvent.setup();
     render(<CountSheetWorkspace initialWorkDate="2026-08-26" shiftCode="A" />);
-    await screen.findByText("Fictional earlier sheet.", { exact: false });
+    // The full count grid renders before its separate history request completes.
+    // Shared CI runners can take longer than Testing Library's default second.
+    await screen.findByText(
+      "Fictional earlier sheet.",
+      { exact: false },
+      { timeout: 5000 },
+    );
     expect(
       screen.getByRole("button", { name: "Restore this version" }),
     ).toBeEnabled();
