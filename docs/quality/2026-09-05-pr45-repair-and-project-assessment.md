@@ -138,8 +138,8 @@ results. Hosted recovery, monitoring, and corpus activation remain documented
 gaps whose current operational state was not independently verified here.
 
 The initial assessment stopped before publication under its no-deployment
-instruction. The owner subsequently authorized pushing and merging PR #45.
-The next action is to publish this correction and require the complete GitHub
-checks to pass on the updated head before merging. Publishing may trigger the
-existing Vercel integration; no manual deployment, hosted data migration, or
-production infrastructure change is included in that authorization.
+instruction. The owner subsequently authorized pushing and merging PR #45. The
+next action is to publish this correction and require the complete GitHub checks
+to pass on the updated head before merging. Publishing may trigger the existing
+Vercel integration; no manual deployment, hosted data migration, or production
+infrastructure change is included in that authorization.
