@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { getReportTypeDefinition } from "@/features/incidents/report-types";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
@@ -51,7 +52,10 @@ export default async function ReportDraftReviewPage({
       <section className="draft-review-card" aria-labelledby="draft-copy-title">
         <div className="draft-review-meta">
           <span className="not-saved-label">Unreviewed draft</span>
-          <span>Report type: {result.candidate.reportType}</span>
+          <span>
+            Report type:{" "}
+            {getReportTypeDefinition(result.candidate.reportType).label}
+          </span>
           <span>
             Reporting officer: {result.candidate.reportingOfficerDisplayName}
           </span>

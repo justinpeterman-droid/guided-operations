@@ -102,176 +102,219 @@ describe("NewIncidentWorkspace", () => {
     );
   });
 
-  it("keeps missing information explicit through review before a protected save", async () => {
-    const fetch = vi
-      .spyOn(globalThis, "fetch")
-      .mockResolvedValueOnce(
-        new Response(
-          JSON.stringify({
-            data: {
-              staff: [
-                {
-                  staffMemberId: "11111111-1111-4111-8111-111111111111",
-                  displayName: "Fictional Officer",
-                  employeeNumberHint: "11",
-                  shiftCode: "A",
-                  isCurrentAccount: true,
-                },
-              ],
-            },
+  it.each([503, 401])(
+    "preserves facts and safely retries an unconfirmed save (%s) before opening the saved incident",
+    async (status) => {
+      const fetch = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(
+          new Response(
+            JSON.stringify({
+              data: {
+                staff: [
+                  {
+                    staffMemberId: "11111111-1111-4111-8111-111111111111",
+                    displayName: "Fictional Officer",
+                    employeeNumberHint: "11",
+                    shiftCode: "A",
+                    isCurrentAccount: true,
+                  },
+                ],
+              },
+            }),
+            { status: 200 },
+          ),
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ csrfToken: "csrf-token" }), {
+            status: 200,
           }),
-          { status: 200 },
-        ),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ csrfToken: "csrf-token" }), {
-          status: 200,
+        )
+        .mockResolvedValueOnce(
+          new Response(JSON.stringify({ error: "unavailable" }), { status }),
+        )
+        .mockResolvedValueOnce(Response.json({ csrfToken: "retry-csrf" }))
+        .mockResolvedValueOnce(
+          Response.json(
+            { data: { incidentId: "22222222-2222-4222-8222-222222222222" } },
+            { status: 201 },
+          ),
+        );
+      vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("a".repeat(32));
+      const user = userEvent.setup();
+      render(<NewIncidentWorkspace />);
+
+      await user.click(
+        await screen.findByRole("button", {
+          name: "Confirm officer relationships",
         }),
-      )
-      .mockResolvedValueOnce(
-        new Response(JSON.stringify({ data: {} }), { status: 201 }),
       );
-    vi.spyOn(globalThis.crypto, "randomUUID").mockReturnValue("a".repeat(32));
-    const user = userEvent.setup();
-    render(<NewIncidentWorkspace />);
-
-    await user.click(
-      await screen.findByRole("button", {
-        name: "Confirm officer relationships",
-      }),
-    );
-    await user.type(screen.getByLabelText("Incident number"), "FICTIONAL-101");
-    await user.type(
-      screen.getByLabelText("Incident name"),
-      "Training scenario",
-    );
-    fireEvent.change(screen.getByLabelText("Date and time occurred"), {
-      target: { value: "2026-08-27T12:00" },
-    });
-    await user.type(screen.getByLabelText("Location"), "Training room");
-    await user.selectOptions(
-      screen.getByLabelText("Incident category"),
-      "incident_no_disciplinary",
-    );
-    await user.type(
-      screen.getByLabelText("Your field notes"),
-      "Fictional observed note.",
-    );
-    await user.click(
-      screen.getByRole("button", {
-        name: "Confirm category and review facts",
-      }),
-    );
-    expect(screen.getByText("Source note")).toBeVisible();
-    expect(screen.getByDisplayValue("Fictional observed note.")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Confirm fact" }));
-    await user.type(
-      screen.getByLabelText("Information not yet known"),
-      "Fictional missing detail.",
-    );
-    await user.click(
-      screen.getByRole("button", {
-        name: "Continue to missing information",
-      }),
-    );
-
-    await user.selectOptions(
-      screen.getByLabelText(
-        "What was the medical disposition for the inmate or inmates? answer",
-      ),
-      "N/A - no injuries reported",
-    );
-    const investigationQuestion = screen
-      .getByText(/Did an investigation occur\?/)
-      .closest("fieldset");
-    expect(investigationQuestion).not.toBeNull();
-    await user.click(
-      within(investigationQuestion as HTMLFieldSetElement).getByRole("button", {
-        name: "No",
-      }),
-    );
-    await user.click(
-      screen.getByRole("button", { name: "Review report types" }),
-    );
-
-    expect(screen.getByText("Fictional missing detail.")).toBeVisible();
-    expect(screen.getByText("first person")).toBeVisible();
-    await user.click(
-      screen.getByRole("button", { name: "Continue to Forms & Export" }),
-    );
-    expect(screen.getByText("005 / 409 designation")).toBeVisible();
-    await user.click(screen.getByRole("button", { name: "Save incident" }));
-
-    expect(fetch).toHaveBeenNthCalledWith(1, "/api/web/v1/staff?limit=100", {
-      credentials: "same-origin",
-    });
-    expect(fetch).toHaveBeenNthCalledWith(2, "/api/auth/csrf", {
-      credentials: "same-origin",
-    });
-    expect(fetch).toHaveBeenNthCalledWith(
-      3,
-      "/api/web/v1/incidents",
-      expect.objectContaining({ method: "POST", credentials: "same-origin" }),
-    );
-    const [, request] = fetch.mock.calls[2] as [string, RequestInit];
-    const savedBody = JSON.parse(request.body as string) as {
-      staffRelationships: Array<{
-        staffMemberId: string;
-        relationship: string;
-      }>;
-      revision: {
-        schemaVersion: number;
-        category: string;
-        fieldNotes: Array<{ text: string }>;
-        reviewedFacts: Array<{
-          field: string;
-          state: string;
-          reportingStaffMemberIds?: string[];
-        }>;
-      };
-    };
-    expect(savedBody.staffRelationships).toEqual([
-      {
-        staffMemberId: "11111111-1111-4111-8111-111111111111",
-        relationship: "preparer",
-      },
-      {
-        staffMemberId: "11111111-1111-4111-8111-111111111111",
-        relationship: "reporting_officer",
-      },
-    ]);
-    expect(savedBody.revision.schemaVersion).toBe(2);
-    expect(savedBody.revision.category).toBe("incident_no_disciplinary");
-    expect(savedBody.revision.fieldNotes).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          text: expect.stringContaining("Training room"),
+      await user.type(
+        screen.getByLabelText("Incident number"),
+        "FICTIONAL-101",
+      );
+      await user.type(
+        screen.getByLabelText("Incident name"),
+        "Training scenario",
+      );
+      fireEvent.change(screen.getByLabelText("Date and time occurred"), {
+        target: { value: "2026-08-27T12:00" },
+      });
+      await user.type(screen.getByLabelText("Location"), "Training room");
+      await user.selectOptions(
+        screen.getByLabelText("Incident category"),
+        "incident_no_disciplinary",
+      );
+      await user.type(
+        screen.getByLabelText("Your field notes"),
+        "Fictional observed note.",
+      );
+      await user.click(
+        screen.getByRole("button", {
+          name: "Confirm category and review facts",
         }),
-      ]),
-    );
-    expect(savedBody.revision.reviewedFacts).toEqual(
-      expect.arrayContaining([
-        expect.objectContaining({
-          field: "Officer-confirmed fact 1",
-          state: "confirmed",
-          value: "Fictional observed note.",
+      );
+      expect(screen.getByText("Source note")).toBeVisible();
+      expect(
+        screen.getByDisplayValue("Fictional observed note."),
+      ).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "Confirm fact" }));
+      await user.type(
+        screen.getByLabelText("Information not yet known"),
+        "Fictional missing detail.",
+      );
+      await user.click(
+        screen.getByRole("button", {
+          name: "Continue to missing information",
         }),
-        expect.objectContaining({
-          field: expect.stringContaining(
-            "[report-checklist:bmu-legacy-pilot@1:medical_disposition]",
-          ),
-        }),
-      ]),
-    );
-    expect(
-      savedBody.revision.reviewedFacts
-        .filter(({ state }) => state === "confirmed")
-        .every(({ reportingStaffMemberIds }) =>
-          reportingStaffMemberIds?.includes(
-            "11111111-1111-4111-8111-111111111111",
-          ),
+      );
+
+      await user.selectOptions(
+        screen.getByLabelText(
+          "What was the medical disposition for the inmate or inmates? answer",
         ),
-    ).toBe(true);
-    expect(await screen.findByText(/Incident saved/)).toBeVisible();
-  });
+        "N/A - no injuries reported",
+      );
+      const investigationQuestion = screen
+        .getByText(/Did an investigation occur\?/)
+        .closest("fieldset");
+      expect(investigationQuestion).not.toBeNull();
+      await user.click(
+        within(investigationQuestion as HTMLFieldSetElement).getByRole(
+          "button",
+          {
+            name: "No",
+          },
+        ),
+      );
+      await user.click(
+        screen.getByRole("button", { name: "Review report types" }),
+      );
+
+      expect(screen.getByText("Fictional missing detail.")).toBeVisible();
+      expect(screen.getByText("first person")).toBeVisible();
+      await user.click(
+        screen.getByRole("button", { name: "Continue to Forms & Export" }),
+      );
+      expect(screen.getByText("005 / 409 designation")).toBeVisible();
+      await user.click(screen.getByRole("button", { name: "Save incident" }));
+
+      expect(fetch).toHaveBeenNthCalledWith(1, "/api/web/v1/staff?limit=100", {
+        credentials: "same-origin",
+      });
+      expect(fetch).toHaveBeenNthCalledWith(2, "/api/auth/csrf", {
+        credentials: "same-origin",
+      });
+      expect(fetch).toHaveBeenNthCalledWith(
+        3,
+        "/api/web/v1/incidents",
+        expect.objectContaining({ method: "POST", credentials: "same-origin" }),
+      );
+      const [, request] = fetch.mock.calls[2] as [string, RequestInit];
+      const savedBody = JSON.parse(request.body as string) as {
+        staffRelationships: Array<{
+          staffMemberId: string;
+          relationship: string;
+        }>;
+        revision: {
+          schemaVersion: number;
+          category: string;
+          fieldNotes: Array<{ text: string }>;
+          reviewedFacts: Array<{
+            field: string;
+            state: string;
+            reportingStaffMemberIds?: string[];
+          }>;
+        };
+      };
+      expect(savedBody.staffRelationships).toEqual([
+        {
+          staffMemberId: "11111111-1111-4111-8111-111111111111",
+          relationship: "preparer",
+        },
+        {
+          staffMemberId: "11111111-1111-4111-8111-111111111111",
+          relationship: "reporting_officer",
+        },
+      ]);
+      expect(savedBody.revision.schemaVersion).toBe(2);
+      expect(savedBody.revision.category).toBe("incident_no_disciplinary");
+      expect(savedBody.revision.fieldNotes).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            text: expect.stringContaining("Training room"),
+          }),
+        ]),
+      );
+      expect(savedBody.revision.reviewedFacts).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            field: "Officer-confirmed fact 1",
+            state: "confirmed",
+            value: "Fictional observed note.",
+          }),
+          expect.objectContaining({
+            field: expect.stringContaining(
+              "[report-checklist:bmu-legacy-pilot@1:medical_disposition]",
+            ),
+          }),
+        ]),
+      );
+      expect(
+        savedBody.revision.reviewedFacts
+          .filter(({ state }) => state === "confirmed")
+          .every(({ reportingStaffMemberIds }) =>
+            reportingStaffMemberIds?.includes(
+              "11111111-1111-4111-8111-111111111111",
+            ),
+          ),
+      ).toBe(true);
+      expect(
+        await screen.findByText(
+          status === 401 ? /Your session ended/ : /Save could not be confirmed/,
+        ),
+      ).toBeVisible();
+      if (status === 401)
+        expect(
+          screen.getByRole("link", { name: "Sign in again (opens a new tab)" }),
+        ).toHaveAttribute("target", "_blank");
+      await user.click(screen.getByRole("button", { name: "Save incident" }));
+      expect(
+        await screen.findByRole("heading", { name: "Incident saved." }),
+      ).toBeVisible();
+      expect(fetch.mock.calls[4][1]?.body).toBe(request.body);
+      expect(
+        new Headers(fetch.mock.calls[4][1]?.headers).get("idempotency-key"),
+      ).toBe(new Headers(request.headers).get("idempotency-key"));
+      expect(
+        screen.getByRole("link", { name: "Open saved incident" }),
+      ).toHaveAttribute(
+        "href",
+        "/incidents/22222222-2222-4222-8222-222222222222",
+      );
+      expect(
+        screen.queryByRole("button", { name: "Save incident" }),
+      ).not.toBeInTheDocument();
+    },
+  );
 });

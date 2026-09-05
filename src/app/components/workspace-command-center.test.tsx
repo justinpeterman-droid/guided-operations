@@ -59,6 +59,7 @@ describe("OfficerCommandCenter", () => {
       commandCenter.getByRole("link", { name: /Ask Policy Expert/ }),
     ).toHaveAttribute("href", "/policy-expert");
     expect(commandCenter.getByText("INC-100")).toBeVisible();
+    expect(commandCenter.getByText("Fictional test incident")).toBeVisible();
     expect(
       commandCenter.queryByText("Training example"),
     ).not.toBeInTheDocument();
@@ -70,5 +71,16 @@ describe("OfficerCommandCenter", () => {
     expect(
       screen.getByText("No reports are available for your account yet."),
     ).toBeVisible();
+  });
+
+  it("keeps unavailable report data distinct from an empty list", () => {
+    render(<OfficerCommandCenter reports={null} />);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Your report list cannot load right now",
+    );
+    expect(screen.queryByText("Training example")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("No reports are available for your account yet."),
+    ).not.toBeInTheDocument();
   });
 });

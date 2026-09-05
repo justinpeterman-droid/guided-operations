@@ -7,6 +7,33 @@ import { PolicyExpert } from "./policy-expert";
 describe("PolicyExpert", () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => cleanup());
+  it("keeps a question and offers separate-tab sign-in after session expiration", async () => {
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json({ csrfToken: "csrf-token" }))
+      .mockResolvedValueOnce(Response.json({}, { status: 401 }));
+    const user = userEvent.setup();
+    render(<PolicyExpert />);
+    await user.type(
+      screen.getByLabelText("Policy question"),
+      "Fictional policy question?",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Find cited guidance" }),
+    );
+    expect(await screen.findByText(/Your session ended/)).toBeVisible();
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/web/v1/policy-answer",
+      expect.objectContaining({ method: "POST" }),
+    );
+    expect(screen.getByLabelText("Policy question")).toHaveValue(
+      "Fictional policy question?",
+    );
+    expect(
+      screen.getByRole("link", { name: "Sign in again (opens a new tab)" }),
+    ).toHaveAttribute("target", "_blank");
+  });
 
   it("keeps native question validation and allows vertical expansion", () => {
     render(<PolicyExpert />);
@@ -76,6 +103,11 @@ describe("PolicyExpert", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByText("No fictional evidence is available."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /This is not policy guidance\. Open the approved source document or ask a supervisor/,
+      ),
     ).toBeInTheDocument();
   });
 

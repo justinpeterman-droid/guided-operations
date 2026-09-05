@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 import { GuidedMark } from "@/app/components/workspace-brand";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -24,7 +25,10 @@ export default async function PublicLandingPage() {
         <span className="foundation-badge">Advisory only</span>
       </header>
 
-      <section className="foundation-grid" aria-labelledby="page-title">
+      <section
+        className="foundation-grid landing-hero"
+        aria-labelledby="page-title"
+      >
         <div className="product-intro">
           <p className="eyebrow">Policy grounded. Officer controlled.</p>
           <h1 id="page-title">
@@ -36,55 +40,9 @@ export default async function PublicLandingPage() {
             every answer and every document before anything becomes official.
           </p>
 
-          <div className="landing-workflow" aria-label="Review workflow">
-            <div className="landing-workflow-heading">
-              <span className="eyebrow">One clear loop</span>
-              <span>From first note to final review</span>
-            </div>
-            <ol>
-              <li>
-                <span>01</span>
-                <strong>Capture</strong>
-                <small>Start with what is known.</small>
-              </li>
-              <li>
-                <span>02</span>
-                <strong>Review</strong>
-                <small>Keep gaps and sources visible.</small>
-              </li>
-              <li>
-                <span>03</span>
-                <strong>Confirm</strong>
-                <small>Decide before anything is official.</small>
-              </li>
-            </ol>
-          </div>
-
           <Link className="mobile-sign-in-action" href="/login">
             Sign in to Guided Operations
           </Link>
-
-          <ul className="principle-list">
-            <li>
-              <strong>Your facts stay yours.</strong>
-              <span>
-                AI may organize or draft; it may never invent missing facts.
-              </span>
-            </li>
-            <li>
-              <strong>Sources stay visible.</strong>
-              <span>
-                Policy answers must point back to the approved source.
-              </span>
-            </li>
-            <li>
-              <strong>Nothing files itself.</strong>
-              <span>
-                People remain responsible for review, correction, and
-                submission.
-              </span>
-            </li>
-          </ul>
         </div>
 
         <aside className="sign-in-card" aria-labelledby="sign-in-title">
@@ -95,36 +53,93 @@ export default async function PublicLandingPage() {
             are issued by the unit administrator.
           </p>
 
-          <Link className="primary-action" href="/login">
-            Go to sign in
-          </Link>
+          <div className="go-ui landing-sign-in-action">
+            <Button asChild size="lg" className="w-full">
+              <Link href="/login">Go to sign in</Link>
+            </Button>
+          </div>
 
           <p className="connection-status" id="connection-status" role="status">
             This is a working tool, not the system of record. Reports and
             paperwork you finish here are still filed through the agency&rsquo;s
             own system.
           </p>
+        </aside>
+      </section>
 
+      <section
+        className="landing-secondary"
+        aria-label="How Guided Operations works"
+      >
+        <section
+          className="landing-workflow"
+          aria-labelledby="landing-how-title"
+        >
+          <div className="landing-workflow-heading">
+            <span className="eyebrow">One clear loop</span>
+            <span id="landing-how-title">From first note to final review</span>
+          </div>
+          <ol>
+            <li>
+              <span>01</span>
+              <strong>Capture</strong>
+              <small>Start with what is known.</small>
+            </li>
+            <li>
+              <span>02</span>
+              <strong>Review</strong>
+              <small>Keep gaps and sources visible.</small>
+            </li>
+            <li>
+              <span>03</span>
+              <strong>Confirm</strong>
+              <small>Decide before anything is official.</small>
+            </li>
+          </ol>
+        </section>
+
+        <ul className="principle-list">
+          <li>
+            <strong>Your facts stay yours.</strong>
+            <span>
+              AI may organize or draft; it may never invent missing facts.
+            </span>
+          </li>
+          <li>
+            <strong>Sources stay visible.</strong>
+            <span>Policy answers must point back to the approved source.</span>
+          </li>
+          <li>
+            <strong>Nothing files itself.</strong>
+            <span>
+              People remain responsible for review, correction, and submission.
+            </span>
+          </li>
+        </ul>
+
+        <div className="landing-preview-band">
           <p className="eyebrow">See it before you sign in</p>
           <p className="preview-intro">
             Explore the workspace with fictional training data. Nothing here is
             saved or submitted.
           </p>
-          <Link className="preview-link" href="/preview/workspace">
-            Officer workspace
-          </Link>
-          <Link className="preview-link" href="/preview/count-sheet">
-            Count sheet
-          </Link>
-          <Link className="preview-link" href="/preview/report-assistant">
-            Report workspace
-          </Link>
-        </aside>
+          <div className="landing-preview-links">
+            <Link className="preview-link" href="/preview/workspace">
+              Officer workspace
+            </Link>
+            <Link className="preview-link" href="/preview/count-sheet">
+              Count sheet
+            </Link>
+            <Link className="preview-link" href="/preview/report-assistant">
+              Report workspace
+            </Link>
+          </div>
+        </div>
       </section>
 
       <footer className="foundation-footer">
         <span>Guided Operations</span>
-        <span>Next.js · Vercel · Supabase</span>
+        <span>Policy grounded. Officer controlled.</span>
       </footer>
     </main>
   );

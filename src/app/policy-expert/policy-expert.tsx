@@ -1,7 +1,11 @@
 "use client";
 
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { BookOpen } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { useState, type FormEvent } from "react";
+import { useUnsavedChanges } from "@/app/components/use-unsaved-changes";
 
 import type {
   GroundedPolicyAnswer,
@@ -9,7 +13,7 @@ import type {
 } from "@/features/policy/grounding";
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 
-type SubmissionState = "idle" | "submitting" | "failed";
+type SubmissionState = "idle" | "submitting" | "failed" | "expired";
 type CollectionScope = "all" | PolicyCollection;
 
 type AnswerOutcome =
@@ -26,6 +30,7 @@ async function getCsrfToken(): Promise<string> {
     cache: "no-store",
     credentials: "same-origin",
   });
+  if (response.status === 401) throw new Error("session_expired");
   if (!response.ok) throw new Error("CSRF token unavailable");
   const data: unknown = await response.json();
   if (
@@ -41,6 +46,7 @@ async function getCsrfToken(): Promise<string> {
 
 export function PolicyExpert() {
   const [question, setQuestion] = useState("");
+  useUnsavedChanges(Boolean(question));
   const [collectionScope, setCollectionScope] =
     useState<CollectionScope>("all");
   const [state, setState] = useState<SubmissionState>("idle");
@@ -48,6 +54,7 @@ export function PolicyExpert() {
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (state === "submitting") return;
     setState("submitting");
     try {
       const csrfToken = await getCsrfToken();
@@ -68,6 +75,7 @@ export function PolicyExpert() {
             : { collections: [collectionScope] }),
         }),
       });
+      if (response.status === 401) throw new Error("session_expired");
       const data: unknown = await response.json();
       if (
         response.ok &&
@@ -101,7 +109,11 @@ export function PolicyExpert() {
           return;
         }
       }
-    } catch {
+    } catch (error) {
+      if (error instanceof Error && error.message === "session_expired") {
+        setState("expired");
+        return;
+      }
       // Safe generic failure; never render provider or restricted-content details.
     }
     setState("failed");
@@ -115,7 +127,7 @@ export function PolicyExpert() {
       current="Policy"
       title="Policy Expert"
     >
-      <div className="policy-layout">
+      <div className="policy-layout policy-layout-focused">
         <section className="policy-main" aria-labelledby="policy-title">
           <div className="policy-intro">
             <h1 id="policy-title">Policy Expert</h1>
@@ -153,15 +165,41 @@ export function PolicyExpert() {
               required
               value={question}
             />
-            <button disabled={submitting} type="submit">
-              {submitting ? "Finding cited guidance…" : "Find cited guidance"}
-            </button>
+            <div className="go-ui policy-submit">
+              <Button size="lg" disabled={submitting} type="submit">
+                {submitting ? "Finding cited guidance…" : "Find cited guidance"}
+              </Button>
+            </div>
             <p aria-live="polite" className="policy-form-status">
-              {state === "failed"
-                ? "Guidance could not be loaded. Your question was not saved."
-                : null}
+              {state === "expired"
+                ? "Your session ended. Your question is still here. Sign in in a separate tab, then return and try again."
+                : state === "failed"
+                  ? "Guidance could not be loaded. Your question is still here; try again when the service is available."
+                  : null}
             </p>
+            {state === "expired" ? (
+              <a href="/login" target="_blank" rel="noopener noreferrer">
+                Sign in again (opens a new tab)
+              </a>
+            ) : null}
           </form>
+
+          <aside
+            className="go-ui policy-guidance"
+            aria-label="Policy Expert guidance"
+          >
+            <Alert role="note">
+              <BookOpen aria-hidden="true" />
+              <AlertTitle>
+                No citation means no authoritative answer.
+              </AlertTitle>
+              <AlertDescription>
+                Use cited source material to verify guidance before acting. When
+                evidence is missing or conflicting, check the source or ask a
+                supervisor.
+              </AlertDescription>
+            </Alert>
+          </aside>
 
           {conversation.length ? (
             <section aria-label="Policy conversation">
@@ -180,18 +218,6 @@ export function PolicyExpert() {
             </section>
           ) : null}
         </section>
-
-        <aside className="policy-rail" aria-label="Policy Expert guidance">
-          <div aria-hidden="true" className="policy-rail-icon">
-            §
-          </div>
-          <h2>No citation means no authoritative answer.</h2>
-          <p>
-            Use cited source material to verify guidance before acting. When
-            evidence is missing or conflicting, check the source or ask a
-            supervisor.
-          </p>
-        </aside>
       </div>
     </WorkspaceShell>
   );
@@ -275,13 +301,25 @@ function PolicyAnswer({
 }) {
   const heading =
     outcome.kind === "answer" ? "Cited guidance" : "Evidence is not sufficient";
+  const isInsufficient = outcome.kind === "insufficient_evidence";
   return (
-    <section className="policy-answer" aria-labelledby={headingId}>
+    <section
+      className={
+        isInsufficient ? "policy-answer policy-answer-empty" : "policy-answer"
+      }
+      aria-labelledby={headingId}
+    >
       <h2 id={headingId}>{heading}</h2>
       <p className="policy-answer-copy">{outcome.answer.answer}</p>
       {outcome.answer.limitations.length ? (
         <p className="policy-limitation">
           {outcome.answer.limitations.join(" ")}
+        </p>
+      ) : null}
+      {isInsufficient ? (
+        <p className="policy-next-step" role="status">
+          This is not policy guidance. Open the approved source document or ask
+          a supervisor before acting.
         </p>
       ) : null}
       {outcome.answer.citations.length ? (

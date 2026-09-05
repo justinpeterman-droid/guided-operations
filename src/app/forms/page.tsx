@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
@@ -39,13 +40,16 @@ export default async function FormsPage() {
           Every item shows what you can do with it. Unapproved paperwork stays
           unavailable, and official physical forms stay physical.
         </p>
-        <Link
-          className="forms-library-request"
-          data-feedback-id="forms-library-request"
-          href="/improvements/new?kind=form"
-        >
-          Request or upload a form <span aria-hidden="true">→</span>
-        </Link>
+        <div className="go-ui forms-library-request-action">
+          <Button asChild variant="outline">
+            <Link
+              data-feedback-id="forms-library-request"
+              href="/improvements/new?kind=form"
+            >
+              Request or upload a form <span aria-hidden="true">→</span>
+            </Link>
+          </Button>
+        </div>
       </section>
 
       <section className="forms-library-group" aria-labelledby="ready-title">
@@ -68,9 +72,13 @@ export default async function FormsPage() {
               <CapabilityList items={countSheetCapabilities} />
             </div>
             {access.shiftCode ? (
-              <Link className="forms-library-action" href="/count-sheet">
-                Open Count Sheet <span aria-hidden="true">→</span>
-              </Link>
+              <div className="go-ui">
+                <Button asChild>
+                  <Link href="/count-sheet">
+                    Open Count Sheet <span aria-hidden="true">→</span>
+                  </Link>
+                </Button>
+              </div>
             ) : (
               <span className="forms-not-ready">Shift assignment needed</span>
             )}
@@ -96,12 +104,13 @@ export default async function FormsPage() {
               <CapabilityList items={dailyPaperworkCapabilities} />
             </div>
             {access.role === "administrator" ? (
-              <Link
-                className="forms-library-action"
-                href="/admin/paperwork/daily"
-              >
-                Open Daily Paperwork <span aria-hidden="true">→</span>
-              </Link>
+              <div className="go-ui">
+                <Button asChild>
+                  <Link href="/admin/paperwork/daily">
+                    Open Daily Paperwork <span aria-hidden="true">→</span>
+                  </Link>
+                </Button>
+              </div>
             ) : (
               <span className="forms-not-ready">Administrator only</span>
             )}

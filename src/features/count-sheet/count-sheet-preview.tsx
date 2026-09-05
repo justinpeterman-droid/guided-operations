@@ -8,6 +8,8 @@ import {
   isCountSheetReconciliationComplete,
   parseCountValue,
 } from "./calculations";
+import { CountSheetColumnTotal } from "./count-sheet-column-total";
+import { CountSheetAreaLabel } from "./count-sheet-area-label";
 import printStyles from "./count-sheet-print.module.css";
 import { PrintCountSheetButton } from "./print-count-sheet-button";
 import type { CountSheetPayload, CountSheetStructure } from "./types";
@@ -65,6 +67,20 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
     createBlankCountPayload(structure),
   );
   const [error, setError] = useState<string | null>(null);
+  const [flaggedColumns, setFlaggedColumns] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  function toggleColumn(column: string) {
+    setFlaggedColumns((current) => {
+      const next = new Set(current);
+      if (next.has(column)) next.delete(column);
+      else next.add(column);
+      return next;
+    });
+  }
+  const [flaggedAreas, setFlaggedAreas] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const totals = useMemo(
     () => calculateCountTotals(structure, payload),
     [payload, structure],
@@ -152,7 +168,15 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               <tr>
                 <th scope="col">Area</th>
                 {structure.columns.map((column) => (
-                  <th key={column} scope="col">
+                  <th
+                    key={column}
+                    scope="col"
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
                     {column}
                   </th>
                 ))}
@@ -160,31 +184,71 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               </tr>
             </thead>
             <tbody>
-              {structure.areas.map((area) => (
-                <tr key={area}>
-                  <th scope="row">{area}</th>
-                  {structure.columns.map((column) => (
-                    <td key={column}>
-                      {renderCountInput(
-                        { group: "cell", area, field: column },
-                        `${area}, ${column}`,
-                      )}
-                    </td>
-                  ))}
-                  <td className="count-total">{totals.row_totals[area]}</td>
-                </tr>
-              ))}
+              {structure.areas.map((area) => {
+                const flagged = flaggedAreas.has(area);
+                return (
+                  <tr
+                    className={flagged ? "count-sheet-row-flagged" : undefined}
+                    key={area}
+                  >
+                    <CountSheetAreaLabel
+                      area={area}
+                      flagged={flagged}
+                      onToggle={() => {
+                        setFlaggedAreas((current) => {
+                          const next = new Set(current);
+                          if (next.has(area)) next.delete(area);
+                          else next.add(area);
+                          return next;
+                        });
+                      }}
+                    />
+                    {structure.columns.map((column) => (
+                      <td
+                        key={column}
+                        className={
+                          flaggedColumns.has(column)
+                            ? "count-sheet-column-flagged"
+                            : undefined
+                        }
+                      >
+                        {renderCountInput(
+                          { group: "cell", area, field: column },
+                          `${area}, ${column}`,
+                        )}
+                      </td>
+                    ))}
+                    <td className="count-total">{totals.row_totals[area]}</td>
+                  </tr>
+                );
+              })}
               <tr className="count-sheet-subtotal">
                 <th scope="row">Out of housing</th>
                 {structure.columns.map((column) => (
-                  <td key={column}>{totals.out_of_housing[column]}</td>
+                  <td
+                    key={column}
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
+                    {totals.out_of_housing[column]}
+                  </td>
                 ))}
                 <td aria-hidden="true">—</td>
               </tr>
               <tr>
                 <th scope="row">In housing</th>
                 {structure.columns.map((column) => (
-                  <td key={column}>
+                  <td
+                    key={column}
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
                     {renderCountInput(
                       { group: "housing", field: column },
                       `In housing, ${column}`,
@@ -196,9 +260,22 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               <tr className="count-sheet-total-row">
                 <th scope="row">Housing total</th>
                 {structure.columns.map((column) => (
-                  <td key={column}>{totals.unit_totals[column]}</td>
+                  <CountSheetColumnTotal
+                    key={column}
+                    column={column}
+                    total={totals.unit_totals[column]}
+                    flagged={flaggedColumns.has(column)}
+                    onToggle={() => toggleColumn(column)}
+                  />
                 ))}
                 <td>{totals.housing_total}</td>
+              </tr>
+              <tr className="count-sheet-unit-label-row">
+                <td />
+                {structure.columns.map((column) => (
+                  <td key={column}>{column}</td>
+                ))}
+                <td />
               </tr>
             </tbody>
           </table>
@@ -219,16 +296,18 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               <dd>{totals.operational_total}</dd>
             </div>
             <div
-              className={
-                reconciliationState === "reconciled"
-                  ? "is-reconciled"
-                  : reconciliationState === "open"
-                    ? "is-open"
-                    : "is-incomplete"
-              }
+              className={`count-sheet-difference ${totals.difference !== 0 ? "has-difference" : ""}`}
             >
-              <dt>Difference</dt>
-              <dd>{totals.difference}</dd>
+              <dt>
+                {reconciliationState === "incomplete"
+                  ? "Current difference"
+                  : "Difference"}
+                <span>Housing − operational</span>
+              </dt>
+              <dd>
+                {totals.difference > 0 ? "+" : ""}
+                {totals.difference}
+              </dd>
             </div>
           </dl>
           <p

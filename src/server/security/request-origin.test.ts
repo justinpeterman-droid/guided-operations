@@ -45,4 +45,30 @@ describe("isTrustedMutationRequest", () => {
 
     expect(isTrustedMutationRequest(request, applicationOrigin)).toBe(false);
   });
+
+  it("accepts localhost Origin when APP_ORIGIN is the loopback IP on the same port", () => {
+    const request = new Request("http://localhost:3000/api/auth/sign-in", {
+      headers: {
+        origin: "http://localhost:3000",
+        "sec-fetch-site": "same-origin",
+      },
+    });
+
+    expect(isTrustedMutationRequest(request, "http://127.0.0.1:3000")).toBe(
+      true,
+    );
+  });
+
+  it("rejects loopback Origin when the port differs from APP_ORIGIN", () => {
+    const request = new Request("http://localhost:3001/api/auth/sign-in", {
+      headers: {
+        origin: "http://localhost:3001",
+        "sec-fetch-site": "same-origin",
+      },
+    });
+
+    expect(isTrustedMutationRequest(request, "http://127.0.0.1:3000")).toBe(
+      false,
+    );
+  });
 });

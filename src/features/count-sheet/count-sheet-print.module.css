@@ -3,6 +3,29 @@
 }
 
 @media print {
+  .printLayout :global(.count-sheet-unit-label-row td) {
+    font-size: inherit;
+    padding: 2px;
+  }
+  .printLayout :global(.count-sheet-column-total-value) {
+    font-size: inherit;
+  }
+  .printLayout :global(.count-sheet-column-marker) {
+    display: none;
+  }
+  .printLayout :global(.count-sheet-column-flag) {
+    min-width: 0;
+    min-height: 0;
+    padding: 0;
+    font-size: inherit;
+  }
+  .printLayout
+    :global(.count-sheet-table-wrap tr > .count-sheet-column-flagged) {
+    background: #fee4e2 !important;
+    color: #912018 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
   @page {
     size: landscape;
     margin: 0.35in;
@@ -51,6 +74,18 @@
     font-size: 6.5pt;
   }
 
+  .printLayout :global(.count-sheet-area-flag) {
+    display: none;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap tr.count-sheet-row-flagged > th),
+  .printLayout
+    :global(.count-sheet-table-wrap tr.count-sheet-row-flagged > td) {
+    background: #fee4e2 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .printLayout :global(.count-sheet-table-wrap input) {
     min-height: 15px;
     padding: 0 1px;
@@ -83,6 +118,10 @@
     min-width: 1.25in;
     padding: 0;
     border: 0;
+  }
+
+  .printLayout :global(.count-sheet-summary dd) {
+    font-size: 12pt;
   }
 
   .printLayout :global(.operational-inputs) {

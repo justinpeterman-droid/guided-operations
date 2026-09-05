@@ -1,7 +1,10 @@
 "use client";
+import { Button } from "@/components/ui/button";
 
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { z } from "zod";
+import { useUnsavedChanges } from "./use-unsaved-changes";
 
 const ALLOWED_TYPES = new Set([
   "application/pdf",
@@ -11,12 +14,51 @@ const ALLOWED_TYPES = new Set([
   "image/png",
 ]);
 const MAX_FILE_BYTES = 10 * 1024 * 1024;
+const createdResponseSchema = z.object({
+  data: z.object({
+    requestId: z.uuid(),
+    signedUploadUrl: z.string().url().nullable(),
+  }),
+});
+
+async function confirmUpload(requestId: string): Promise<boolean> {
+  const response = await fetch(
+    `/api/web/v1/improvement-requests/${requestId}/form-upload/finalize`,
+    {
+      method: "POST",
+      credentials: "same-origin",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRF-Token": await getCsrfToken(),
+      },
+      body: "{}",
+    },
+  );
+  if (response.status === 401) throw new Error("session_expired");
+  const body: unknown = await response.json();
+  if (
+    response.status === 409 &&
+    z
+      .object({ error: z.object({ code: z.literal("upload_not_ready") }) })
+      .safeParse(body).success
+  )
+    return false;
+  if (
+    !response.ok ||
+    !z
+      .object({ data: z.object({ finalized: z.literal(true) }) })
+      .safeParse(body).success
+  )
+    throw new Error("finalize_failed");
+  return true;
+}
 
 async function getCsrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
     credentials: "same-origin",
     cache: "no-store",
   });
+  if (response.status === 401) throw new Error("session_expired");
   const body: unknown = await response.json();
   if (
     !response.ok ||
@@ -41,30 +83,49 @@ async function sha256(file: File): Promise<string> {
 /** A deliberately narrow intake: blank form candidates are quarantined before any review. */
 export function FormCandidateRequestForm() {
   const router = useRouter();
-  const requestNonce = useRef(crypto.randomUUID());
+  const attemptRef = useRef<{
+    fingerprint: string;
+    nonce: string;
+    requestId?: string;
+  } | null>(null);
+  const [createdRequestId, setCreatedRequestId] = useState<string | null>(null);
+  const [progress, setProgress] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [dirty, setDirty] = useState(false);
+  const [sessionExpired, setSessionExpired] = useState(false);
+  const submittingRef = useRef(false);
+  const locked = submitting || submitted;
+  useUnsavedChanges(dirty && !submitted);
   const [error, setError] = useState<string | null>(null);
 
   async function submit(form: HTMLFormElement) {
+    if (submittingRef.current || submitted) return;
     const values = new FormData(form);
     const title = String(values.get("title") ?? "").trim();
     const description = String(values.get("description") ?? "").trim();
-    if (!title || !description) {
+    if (title.length < 2 || description.length < 3) {
       setError("Add a title and tell the reviewer what this form is for.");
       return;
     }
-    if (file && (!ALLOWED_TYPES.has(file.type) || file.size > MAX_FILE_BYTES)) {
+    if (
+      file &&
+      (!ALLOWED_TYPES.has(file.type) ||
+        file.size < 1 ||
+        file.size > MAX_FILE_BYTES)
+    ) {
       setError("Use a PDF, DOCX, XLSX, JPG, or PNG file no larger than 10 MB.");
       return;
     }
 
+    submittingRef.current = true;
     setSubmitting(true);
+    setSessionExpired(false);
     setError(null);
     try {
-      const csrfToken = await getCsrfToken();
-      const request = {
-        requestNonce: requestNonce.current,
+      setProgress("Preparing your request…");
+      const details = {
         requestKind: file ? "form_candidate" : "form_request",
         category: String(values.get("category")),
         description,
@@ -87,65 +148,96 @@ export function FormCandidateRequestForm() {
             }
           : {}),
       };
+      const fingerprint = JSON.stringify(details);
+      if (attemptRef.current?.fingerprint !== fingerprint) {
+        attemptRef.current = { fingerprint, nonce: crypto.randomUUID() };
+        setCreatedRequestId(null);
+      }
+      const attempt = attemptRef.current;
+      if (file && attempt.requestId) {
+        setProgress("Checking the existing upload…");
+        if (await confirmUpload(attempt.requestId)) {
+          setSubmitted(true);
+          router.replace(`/improvements/${attempt.requestId}?submitted=1`);
+          return;
+        }
+      }
+      setProgress("Creating or recovering your request…");
       const created = await fetch("/api/web/v1/improvement-requests", {
         method: "POST",
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
-          "X-CSRF-Token": csrfToken,
+          "X-CSRF-Token": await getCsrfToken(),
         },
-        body: JSON.stringify(request),
+        body: JSON.stringify({ requestNonce: attempt.nonce, ...details }),
       });
-      const createdBody: unknown = await created.json();
-      if (
-        !created.ok ||
-        !createdBody ||
-        typeof createdBody !== "object" ||
-        !("data" in createdBody)
-      )
-        throw new Error("create_failed");
-      const data = createdBody.data as {
-        requestId?: unknown;
-        signedUploadUrl?: unknown;
-      };
-      if (typeof data.requestId !== "string") throw new Error("create_failed");
+      if (created.status === 401) throw new Error("session_expired");
+      const createdBody = createdResponseSchema.safeParse(await created.json());
+      if (!created.ok || !createdBody.success) throw new Error("create_failed");
+      const data = createdBody.data.data;
+      if (attempt.requestId && attempt.requestId !== data.requestId)
+        throw new Error("request_mismatch");
+      attempt.requestId = data.requestId;
+      setCreatedRequestId(data.requestId);
 
       if (file) {
         if (typeof data.signedUploadUrl !== "string")
           throw new Error("upload_unavailable");
-        const uploaded = await fetch(data.signedUploadUrl, {
+        setProgress("Uploading your blank form…");
+        // A lost PUT response or existing object is resolved only by the
+        // authenticated server's content-integrity check; never overwrite it.
+        await fetch(data.signedUploadUrl, {
           method: "PUT",
           headers: { "Content-Type": file.type, "x-upsert": "false" },
           body: file,
-        });
-        if (!uploaded.ok) throw new Error("upload_failed");
-        const finalized = await fetch(
-          `/api/web/v1/improvement-requests/${data.requestId}/form-upload/finalize`,
-          {
-            method: "POST",
-            credentials: "same-origin",
-            headers: {
-              "Content-Type": "application/json",
-              "X-CSRF-Token": await getCsrfToken(),
-            },
-            body: "{}",
-          },
-        );
-        if (!finalized.ok) throw new Error("finalize_failed");
+        }).catch(() => undefined);
+        setProgress("Verifying the uploaded form…");
+        if (!(await confirmUpload(data.requestId)))
+          throw new Error("upload_failed");
       }
+      setSubmitted(true);
       router.replace(`/improvements/${data.requestId}?submitted=1`);
-    } catch {
+    } catch (error) {
+      const expired =
+        error instanceof Error && error.message === "session_expired";
+      setSessionExpired(expired);
       setError(
-        "Your request was not completed. No form was made available. You can try again.",
+        expired
+          ? "Your session ended. Your entries are still here. Sign in in a separate tab, then return and retry."
+          : "Completion could not be confirmed. Your entries are still here. Retry unchanged to recover the same request; editing starts a separate request. Uploaded forms remain unavailable for use until approved.",
       );
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
+      setProgress("");
     }
   }
 
   return (
     <form
       className="improvement-intake-form"
+      aria-busy={submitting}
+      onChange={(event) => {
+        const values = new FormData(event.currentTarget);
+        const hasText = [
+          "title",
+          "description",
+          "sourceAuthority",
+          "sourceRevision",
+        ].some((name) => Boolean(values.get(name)));
+        const hasFile = Boolean(
+          event.currentTarget.querySelector<HTMLInputElement>(
+            'input[type="file"]',
+          )?.files?.length,
+        );
+        setDirty(
+          hasText ||
+            hasFile ||
+            values.get("category") !== "missing_form" ||
+            values.get("requestedUse") !== "view_only",
+        );
+      }}
       onSubmit={(event) => {
         event.preventDefault();
         void submit(event.currentTarget);
@@ -157,11 +249,20 @@ export function FormCandidateRequestForm() {
         candidates stay private and unavailable until reviewed.
       </div>
       <label htmlFor="form-title">Form name</label>
-      <input id="form-title" maxLength={160} name="title" required />
+      <input
+        disabled={locked}
+        id="form-title"
+        maxLength={160}
+        minLength={2}
+        name="title"
+        required
+      />
       <label htmlFor="form-purpose">What should this form help staff do?</label>
       <textarea
+        disabled={locked}
         id="form-purpose"
         maxLength={4000}
+        minLength={3}
         name="description"
         required
         rows={6}
@@ -170,6 +271,7 @@ export function FormCandidateRequestForm() {
         <label htmlFor="form-category">
           What kind of request is this?
           <select
+            disabled={locked}
             defaultValue="missing_form"
             id="form-category"
             name="category"
@@ -185,6 +287,7 @@ export function FormCandidateRequestForm() {
         <label htmlFor="form-requested-use">
           Requested use
           <select
+            disabled={locked}
             defaultValue="view_only"
             id="form-requested-use"
             name="requestedUse"
@@ -200,16 +303,28 @@ export function FormCandidateRequestForm() {
       <div className="improvement-form-grid">
         <label htmlFor="form-authority">
           Source or authority <span>(optional)</span>
-          <input id="form-authority" maxLength={240} name="sourceAuthority" />
+          <input
+            disabled={locked}
+            id="form-authority"
+            maxLength={160}
+            minLength={2}
+            name="sourceAuthority"
+          />
         </label>
         <label htmlFor="form-revision">
           Revision or date <span>(optional)</span>
-          <input id="form-revision" maxLength={120} name="sourceRevision" />
+          <input
+            disabled={locked}
+            id="form-revision"
+            maxLength={120}
+            name="sourceRevision"
+          />
         </label>
       </div>
       <label className="improvement-file-input" htmlFor="form-file">
         Attach a blank form candidate <span>(optional)</span>
         <input
+          disabled={locked}
           accept=".pdf,.docx,.xlsx,image/jpeg,image/png"
           id="form-file"
           onChange={(event) => setFile(event.target.files?.[0] ?? null)}
@@ -226,14 +341,29 @@ export function FormCandidateRequestForm() {
           {error}
         </p>
       ) : null}
-      <div className="improvement-form-actions">
-        <button disabled={submitting} type="submit">
+      {sessionExpired ? (
+        <a href="/login" target="_blank" rel="noopener noreferrer">
+          Sign in again (opens a new tab)
+        </a>
+      ) : null}
+      {createdRequestId && error ? (
+        <a
+          href={`/improvements/${createdRequestId}`}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Check this request (opens a new tab)
+        </a>
+      ) : null}
+      <p role="status">{progress}</p>
+      <div className="go-ui improvement-form-actions">
+        <Button disabled={locked} type="submit">
           {submitting
             ? "Sending securely…"
             : file
               ? "Submit and upload for review"
               : "Send form request"}
-        </button>
+        </Button>
       </div>
     </form>
   );

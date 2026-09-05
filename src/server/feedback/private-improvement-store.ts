@@ -20,14 +20,16 @@ function sql(): ReturnType<typeof postgres> {
 export function createPrivateImprovementStore() {
   const client = sql();
   return {
-    async getPendingFormCandidate(
+    async getFormCandidateForUpload(
       requestId: string,
       actorAccountId: string,
+      facilityId: string,
     ): Promise<Readonly<{
       storagePath: string;
       declaredMediaType: string;
       declaredByteSize: number;
       declaredSha256: string;
+      uploadState: "uploading" | "uploaded";
     }> | null> {
       const rows = await client<
         ReadonlyArray<{
@@ -35,20 +37,32 @@ export function createPrivateImprovementStore() {
           declared_media_type: string;
           declared_byte_size: number;
           declared_sha256: string;
+          upload_state: "uploading" | "uploaded";
         }>
       >`
         select
           file.storage_path,
           file.declared_media_type,
           file.declared_byte_size,
-          file.declared_sha256
+          file.declared_sha256,
+          file.upload_state
         from app_private.form_candidate_files as file
         join app_private.improvement_requests as request
           on request.id = file.request_id
         where file.request_id = ${requestId}::uuid
           and file.uploaded_by_account_id = ${actorAccountId}::uuid
           and request.submitted_by_account_id = ${actorAccountId}::uuid
-          and file.upload_state = 'uploading'
+          and request.facility_id = ${facilityId}::uuid
+          and file.facility_id = request.facility_id
+          and (
+            file.upload_state = 'uploading'
+            or (
+              file.upload_state = 'uploaded'
+              and file.actual_sha256 = file.declared_sha256
+              and file.actual_byte_size = file.declared_byte_size
+              and file.actual_media_type = file.declared_media_type
+            )
+          )
           and file.expires_at > statement_timestamp()
         limit 1
       `;
@@ -59,6 +73,7 @@ export function createPrivateImprovementStore() {
             declaredMediaType: row.declared_media_type,
             declaredByteSize: Number(row.declared_byte_size),
             declaredSha256: row.declared_sha256,
+            uploadState: row.upload_state,
           }
         : null;
     },

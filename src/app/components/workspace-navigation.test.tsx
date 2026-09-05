@@ -5,6 +5,34 @@ import { describe, expect, it } from "vitest";
 import { WorkspaceNavigation } from "./workspace-navigation";
 
 describe("WorkspaceNavigation", () => {
+  it("links preview tools to fictional routes and keeps history protected", () => {
+    const view = render(
+      <WorkspaceNavigation preview current="Report Assistant" />,
+    );
+    const nav = within(view.container);
+    expect(nav.getByRole("link", { name: "Report Assistant" })).toHaveAttribute(
+      "href",
+      "/preview/report-assistant",
+    );
+    expect(nav.getByRole("link", { name: "Report Assistant" })).toHaveAttribute(
+      "aria-current",
+      "page",
+    );
+    expect(nav.getByRole("link", { name: "Home" })).toHaveAttribute(
+      "href",
+      "/preview/workspace",
+    );
+    expect(
+      nav.getByRole("link", { name: "Reports & History" }),
+    ).toHaveAttribute("href", "/reports");
+    expect(
+      nav.queryByRole("link", { name: "Account" }),
+    ).not.toBeInTheDocument();
+    expect(
+      view.container.querySelectorAll('[aria-current="page"]'),
+    ).toHaveLength(1);
+  });
+
   it("shows the officer tools and marks only the current page", () => {
     const view = render(<WorkspaceNavigation current="Policy" />);
 
@@ -15,10 +43,10 @@ describe("WorkspaceNavigation", () => {
       within(view.container).getByRole("link", { name: "Home" }),
     ).toHaveAttribute("href", "/home");
     expect(
-      within(view.container).getByRole("link", { name: "Reports" }),
+      within(view.container).getByRole("link", { name: "Reports & History" }),
     ).toHaveAttribute("href", "/reports");
     expect(
-      within(view.container).getByRole("link", { name: "Policy" }),
+      within(view.container).getByRole("link", { name: "Policy Expert" }),
     ).toHaveAttribute("aria-current", "page");
     expect(
       within(view.container).getByRole("link", { name: "Forms" }),
@@ -53,7 +81,7 @@ describe("WorkspaceNavigation", () => {
 
     await user.click(toggle);
     await user.click(
-      within(view.container).getByRole("link", { name: "Reports" }),
+      within(view.container).getByRole("link", { name: "Reports & History" }),
     );
 
     expect(toggle).toHaveAccessibleName("Menu");

@@ -1,7 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useUnsavedChanges } from "@/app/components/use-unsaved-changes";
+import { useIdempotentRequest } from "@/app/components/use-idempotent-request";
 
+import { CountSheetColumnTotal } from "./count-sheet-column-total";
+import { CountSheetComparison } from "./count-sheet-comparison";
+import { CountSheetAreaLabel } from "./count-sheet-area-label";
 import {
   calculateCountTotals,
   createBlankCountPayload,
@@ -71,6 +76,7 @@ async function csrfToken(): Promise<string> {
     cache: "no-store",
     credentials: "same-origin",
   });
+  if (response.status === 401) throw new Error("session_expired");
   const body: unknown = await response.json();
   if (
     !response.ok ||
@@ -131,6 +137,8 @@ export function CountSheetWorkspace({
   shiftCode,
 }: Readonly<{ initialWorkDate: string; shiftCode: ShiftCode }>) {
   const [workDate, setWorkDate] = useState(initialWorkDate);
+  const [selectedWorkDate, setSelectedWorkDate] = useState(initialWorkDate);
+  const dateSelectionPending = selectedWorkDate !== workDate;
   const [payload, setPayload] = useState(() =>
     createBlankCountPayload(APPROVED_COUNT_SHEET_STRUCTURE),
   );
@@ -138,6 +146,10 @@ export function CountSheetWorkspace({
   const [revisionNumber, setRevisionNumber] = useState(0);
   const [loadVersion, setLoadVersion] = useState(0);
   const [dirty, setDirty] = useState(false);
+  const [historyBusy, setHistoryBusy] = useState(false);
+  const prepareRequest = useIdempotentRequest();
+  const [sessionExpired, setSessionExpired] = useState(false);
+  useUnsavedChanges(dirty);
   const [reviewedRevision, setReviewedRevision] =
     useState<ReviewedCountSheetRevision | null>(null);
   const [state, setState] = useState<
@@ -145,6 +157,20 @@ export function CountSheetWorkspace({
   >("loading");
   const [message, setMessage] = useState("Loading your shift Count Sheet…");
   const [inputError, setInputError] = useState<string | null>(null);
+  const [flaggedColumns, setFlaggedColumns] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
+  function toggleColumn(column: string) {
+    setFlaggedColumns((current) => {
+      const next = new Set(current);
+      if (next.has(column)) next.delete(column);
+      else next.add(column);
+      return next;
+    });
+  }
+  const [flaggedAreas, setFlaggedAreas] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const displayedPayload = reviewedRevision?.payload ?? payload;
   const totals = useMemo(
     () =>
@@ -186,6 +212,8 @@ export function CountSheetWorkspace({
         setRecordId(loaded.recordId);
         setRevisionNumber(loaded.revisionNumber);
         setReviewedRevision(null);
+        setFlaggedAreas(new Set());
+        setFlaggedColumns(new Set());
         setDirty(false);
         setInputError(null);
         setState("ready");
@@ -226,22 +254,21 @@ export function CountSheetWorkspace({
   }
 
   async function save() {
-    if (!workDate || state !== "ready" || !dirty) return;
+    if (
+      !workDate ||
+      historyBusy ||
+      dateSelectionPending ||
+      state !== "ready" ||
+      !dirty
+    )
+      return;
     setState("saving");
+    setSessionExpired(false);
     setMessage("Saving a new revision…");
     try {
       validateCountPayload(APPROVED_COUNT_SHEET_STRUCTURE, payload);
-      const token = await csrfToken();
-      const response = await fetch("/api/web/v1/count-sheets", {
-        method: "POST",
-        cache: "no-store",
-        credentials: "same-origin",
-        headers: {
-          "content-type": "application/json",
-          "idempotency-key": crypto.randomUUID().replaceAll("-", ""),
-          "x-csrf-token": token,
-        },
-        body: JSON.stringify({
+      const request = prepareRequest(
+        JSON.stringify({
           workDate,
           baseRevisionNumber: revisionNumber,
           structure: APPROVED_COUNT_SHEET_STRUCTURE,
@@ -251,7 +278,20 @@ export function CountSheetWorkspace({
               ? "Initial shift Count Sheet."
               : "Shift Count Sheet update.",
         }),
+      );
+      const token = await csrfToken();
+      const response = await fetch("/api/web/v1/count-sheets", {
+        method: "POST",
+        cache: "no-store",
+        credentials: "same-origin",
+        headers: {
+          "content-type": "application/json",
+          "idempotency-key": request.key,
+          "x-csrf-token": token,
+        },
+        body: request.body,
       });
+      if (response.status === 401) throw new Error("session_expired");
       const body: unknown = await response.json();
       if (response.status === 409) {
         setState("ready");
@@ -278,10 +318,15 @@ export function CountSheetWorkspace({
       setDirty(false);
       setState("ready");
       setMessage(`Saved as revision ${body.data.revisionNumber}.`);
-    } catch {
+    } catch (error) {
       setState("ready");
+      const expired =
+        error instanceof Error && error.message === "session_expired";
+      setSessionExpired(expired);
       setMessage(
-        "The sheet could not be saved. Your entries remain on this screen.",
+        expired
+          ? "Your session ended. Your entries are still here. Sign in again in a separate tab, then return here and save."
+          : "Save could not be confirmed. Your entries remain here. Retry without changing them to check the same save.",
       );
     }
   }
@@ -343,7 +388,12 @@ export function CountSheetWorkspace({
     return (
       <input
         aria-label={label}
-        disabled={state !== "ready" || reviewedRevision !== null}
+        disabled={
+          state !== "ready" ||
+          historyBusy ||
+          dateSelectionPending ||
+          reviewedRevision !== null
+        }
         id={inputId(target)}
         inputMode="numeric"
         min="0"
@@ -385,7 +435,13 @@ export function CountSheetWorkspace({
           </span>
           <button
             className="count-sheet-print-button"
-            disabled={state !== "ready" || !dirty || reviewedRevision !== null}
+            disabled={
+              state !== "ready" ||
+              historyBusy ||
+              dateSelectionPending ||
+              !dirty ||
+              reviewedRevision !== null
+            }
             onClick={() => void save()}
             type="button"
           >
@@ -394,6 +450,8 @@ export function CountSheetWorkspace({
           <PrintCountSheetButton
             disabled={
               dirty ||
+              dateSelectionPending ||
+              historyBusy ||
               !recordId ||
               state !== "ready" ||
               reviewedRevision !== null
@@ -403,8 +461,15 @@ export function CountSheetWorkspace({
           />
           <button
             className="count-sheet-print-button"
-            disabled={state === "saving" || state === "printing"}
+            disabled={state === "saving" || state === "printing" || historyBusy}
             onClick={() => {
+              if (
+                dirty &&
+                !window.confirm(
+                  "Discard your unsaved counts and reload the saved sheet?",
+                )
+              )
+                return;
               setState("loading");
               setMessage("Loading your shift Count Sheet…");
               setLoadVersion((current) => current + 1);
@@ -418,6 +483,7 @@ export function CountSheetWorkspace({
           {reviewedRevision ? (
             <button
               className="count-sheet-print-button"
+              disabled={historyBusy}
               onClick={() => {
                 setReviewedRevision(null);
                 setMessage(`Saved revision ${revisionNumber} is shown.`);
@@ -441,7 +507,27 @@ export function CountSheetWorkspace({
         <strong>{message}</strong> Do not guess a number just to make the sheet
         balance.
       </div>
+      {sessionExpired ? (
+        <p>
+          <a
+            className="reports-home-link"
+            href="/login"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Sign in again (opens a new tab)
+          </a>
+        </p>
+      ) : null}
 
+      {reviewedRevision ? (
+        <CountSheetComparison
+          current={payload}
+          reviewed={reviewedRevision.payload}
+          currentRevision={revisionNumber}
+          reviewedRevision={reviewedRevision.revisionNumber}
+        />
+      ) : null}
       <div className="count-sheet-grid">
         <div
           aria-describedby="count-scroll-cue"
@@ -458,7 +544,15 @@ export function CountSheetWorkspace({
               <tr>
                 <th scope="col">Area</th>
                 {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                  <th key={column} scope="col">
+                  <th
+                    key={column}
+                    scope="col"
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
                     {column}
                   </th>
                 ))}
@@ -466,31 +560,71 @@ export function CountSheetWorkspace({
               </tr>
             </thead>
             <tbody>
-              {APPROVED_COUNT_SHEET_STRUCTURE.areas.map((area) => (
-                <tr key={area}>
-                  <th scope="row">{area}</th>
-                  {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                    <td key={column}>
-                      {renderCountInput(
-                        { group: "cell", area, field: column },
-                        `${area}, ${column}`,
-                      )}
-                    </td>
-                  ))}
-                  <td className="count-total">{totals.row_totals[area]}</td>
-                </tr>
-              ))}
+              {APPROVED_COUNT_SHEET_STRUCTURE.areas.map((area) => {
+                const flagged = flaggedAreas.has(area);
+                return (
+                  <tr
+                    className={flagged ? "count-sheet-row-flagged" : undefined}
+                    key={area}
+                  >
+                    <CountSheetAreaLabel
+                      area={area}
+                      flagged={flagged}
+                      onToggle={() => {
+                        setFlaggedAreas((current) => {
+                          const next = new Set(current);
+                          if (next.has(area)) next.delete(area);
+                          else next.add(area);
+                          return next;
+                        });
+                      }}
+                    />
+                    {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
+                      <td
+                        key={column}
+                        className={
+                          flaggedColumns.has(column)
+                            ? "count-sheet-column-flagged"
+                            : undefined
+                        }
+                      >
+                        {renderCountInput(
+                          { group: "cell", area, field: column },
+                          `${area}, ${column}`,
+                        )}
+                      </td>
+                    ))}
+                    <td className="count-total">{totals.row_totals[area]}</td>
+                  </tr>
+                );
+              })}
               <tr className="count-sheet-subtotal">
                 <th scope="row">Out of housing</th>
                 {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                  <td key={column}>{totals.out_of_housing[column]}</td>
+                  <td
+                    key={column}
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
+                    {totals.out_of_housing[column]}
+                  </td>
                 ))}
                 <td aria-hidden="true">—</td>
               </tr>
               <tr>
                 <th scope="row">In housing</th>
                 {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                  <td key={column}>
+                  <td
+                    key={column}
+                    className={
+                      flaggedColumns.has(column)
+                        ? "count-sheet-column-flagged"
+                        : undefined
+                    }
+                  >
                     {renderCountInput(
                       { group: "housing", field: column },
                       `In housing, ${column}`,
@@ -502,9 +636,22 @@ export function CountSheetWorkspace({
               <tr className="count-sheet-total-row">
                 <th scope="row">Housing total</th>
                 {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                  <td key={column}>{totals.unit_totals[column]}</td>
+                  <CountSheetColumnTotal
+                    key={column}
+                    column={column}
+                    total={totals.unit_totals[column]}
+                    flagged={flaggedColumns.has(column)}
+                    onToggle={() => toggleColumn(column)}
+                  />
                 ))}
                 <td>{totals.housing_total}</td>
+              </tr>
+              <tr className="count-sheet-unit-label-row">
+                <td />
+                {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
+                  <td key={column}>{column}</td>
+                ))}
+                <td />
               </tr>
             </tbody>
           </table>
@@ -525,16 +672,18 @@ export function CountSheetWorkspace({
               <dd>{totals.operational_total}</dd>
             </div>
             <div
-              className={
-                reconciliationState === "reconciled"
-                  ? "is-reconciled"
-                  : reconciliationState === "open"
-                    ? "is-open"
-                    : "is-incomplete"
-              }
+              className={`count-sheet-difference ${totals.difference !== 0 ? "has-difference" : ""}`}
             >
-              <dt>Difference</dt>
-              <dd>{totals.difference}</dd>
+              <dt>
+                {reconciliationState === "incomplete"
+                  ? "Current difference"
+                  : "Difference"}
+                <span>Housing − operational</span>
+              </dt>
+              <dd>
+                {totals.difference > 0 ? "+" : ""}
+                {totals.difference}
+              </dd>
             </div>
           </dl>
           <p
@@ -554,27 +703,71 @@ export function CountSheetWorkspace({
           </p>
           <div className="operational-inputs">
             <h2>Sheet details</h2>
+            <p>
+              {state === "loading" || state === "error"
+                ? "Requested sheet"
+                : "Loaded sheet"}
+              : {workDate} · Shift {shiftCode}
+            </p>
             <label>
               Work date
               <input
                 aria-label="Work date"
                 disabled={
-                  state !== "ready" || dirty || reviewedRevision !== null
+                  (state !== "ready" && state !== "error") ||
+                  historyBusy ||
+                  dirty ||
+                  reviewedRevision !== null
                 }
                 onChange={(event) => {
-                  setState("loading");
-                  setMessage("Loading your shift Count Sheet…");
-                  setWorkDate(event.target.value);
+                  setSelectedWorkDate(event.target.value);
                 }}
                 type="date"
-                value={workDate}
+                value={selectedWorkDate}
               />
             </label>
+            {dateSelectionPending ? (
+              <div>
+                <p role="status">
+                  Choose a complete date, then load its sheet to enter counts.
+                </p>
+                <div className="count-sheet-date-actions">
+                  <button
+                    className="count-sheet-print-button"
+                    disabled={
+                      !/^\d{4}-\d{2}-\d{2}$/.test(selectedWorkDate) ||
+                      (state !== "ready" && state !== "error") ||
+                      dirty
+                    }
+                    onClick={() => {
+                      setState("loading");
+                      setMessage("Loading your shift Count Sheet…");
+                      setWorkDate(selectedWorkDate);
+                    }}
+                    type="button"
+                  >
+                    Load date
+                  </button>
+                  <button
+                    className="count-sheet-print-button"
+                    onClick={() => setSelectedWorkDate(workDate)}
+                    type="button"
+                  >
+                    Cancel date change
+                  </button>
+                </div>
+              </div>
+            ) : null}
             <label>
               Count started
               <input
                 aria-label="Count started"
-                disabled={state !== "ready" || reviewedRevision !== null}
+                disabled={
+                  state !== "ready" ||
+                  historyBusy ||
+                  dateSelectionPending ||
+                  reviewedRevision !== null
+                }
                 onChange={(event) =>
                   changeTime("count_started", event.target.value)
                 }
@@ -586,7 +779,12 @@ export function CountSheetWorkspace({
               Count ended
               <input
                 aria-label="Count ended"
-                disabled={state !== "ready" || reviewedRevision !== null}
+                disabled={
+                  state !== "ready" ||
+                  historyBusy ||
+                  dateSelectionPending ||
+                  reviewedRevision !== null
+                }
                 onChange={(event) =>
                   changeTime("count_ended", event.target.value)
                 }
@@ -614,6 +812,8 @@ export function CountSheetWorkspace({
       ) : null}
       {recordId && revisionNumber > 0 ? (
         <CountSheetHistory
+          disabled={dirty || state !== "ready" || dateSelectionPending}
+          onBusyChange={setHistoryBusy}
           currentRevisionNumber={revisionNumber}
           key={recordId}
           onRestored={() => {

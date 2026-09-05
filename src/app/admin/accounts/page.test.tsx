@@ -5,6 +5,7 @@ vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: vi.fn().mockResolvedValue({}),
 }));
 vi.mock("next/navigation", () => ({
+  usePathname: () => null,
   useRouter: vi.fn(() => ({ refresh: vi.fn() })),
 }));
 vi.mock("@/server/auth/list-admin-accounts", () => ({

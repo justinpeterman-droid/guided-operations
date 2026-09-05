@@ -8,20 +8,21 @@ export const metadata = {
 
 const actions = [
   {
-    title: "Roster",
+    title: "Roster and accounts",
     copy: "Invite and manage individual officer and administrator accounts.",
   },
   {
-    title: "Account safety",
-    copy: "Disable, reset, unlock, or change a role with a fresh security check.",
+    title: "Daily paperwork",
+    copy: "Review the source-package layout for the six daily forms.",
+    href: "/preview/admin-paperwork-packages",
   },
   {
-    title: "Policy sources",
-    copy: "Review approved document versions and citation coverage.",
+    title: "Suggestions and form review",
+    copy: "Review officer feedback and blank form requests before publication.",
   },
   {
     title: "System health",
-    copy: "See safe, redacted health and backup signals before they become release evidence.",
+    copy: "Review safe service status and activity in the protected administrator workspace.",
   },
   {
     title: "Records safety",
@@ -44,8 +45,9 @@ export default function AdministratorPreviewPage() {
         </h1>
         <p>
           Administrators use the same reports, forms, history, and policy tools
-          as officers. The sections below appear only after the role and a fresh
-          step-up check are verified.
+          as officers. These layouts use fictional examples. Live administrator
+          pages verify the current role, and account changes require a fresh
+          passcode confirmation.
         </p>
       </section>
 
@@ -65,7 +67,7 @@ export default function AdministratorPreviewPage() {
                 Review fictional layout
               </Link>
             ) : (
-              <em>Planned protected area</em>
+              <em>Available in the protected workspace</em>
             )}
           </article>
         ))}

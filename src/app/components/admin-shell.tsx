@@ -2,12 +2,20 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import { AdminNavigation } from "@/app/components/admin-navigation";
+import type { WorkspaceNavigationProps } from "@/app/components/workspace-navigation";
 
 export type AdminShellProps = Readonly<{
   actions?: ReactNode;
   brandHref?: string;
   children: ReactNode;
   className?: string;
+  /**
+   * Officer-nav highlight. Admin routes intentionally leave this unset so no
+   * officer destination appears current while the administrator workspace is
+   * active; pass a label only when an admin page is also that officer route.
+   */
+  current?: WorkspaceNavigationProps["current"];
   title: string;
 }>;
 
@@ -17,16 +25,18 @@ export function AdminShell({
   brandHref = "/admin",
   children,
   className = "reports-page",
+  current,
   title,
 }: AdminShellProps) {
   return (
     <WorkspaceShell
       actions={actions ?? <AdminHomeLink />}
       brandHref={brandHref}
-      className={className}
-      current={undefined}
+      className={`workspace-shell-admin ${className}`.trim()}
+      current={current}
       title={title}
     >
+      <AdminNavigation />
       {children}
     </WorkspaceShell>
   );

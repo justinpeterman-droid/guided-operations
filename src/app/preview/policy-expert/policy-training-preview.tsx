@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
 
 import { PreviewShell } from "@/app/components/preview-shell";
 
@@ -25,6 +26,7 @@ export function PolicyTrainingPreview() {
 
   return (
     <PreviewShell
+      current="Policy"
       className="policy-training-page"
       headerClassName="workspace-preview-header command-center-page-header"
       title="Policy Expert"
@@ -48,16 +50,18 @@ export function PolicyTrainingPreview() {
             These examples are local to this preview. No question is sent,
             retained, or matched against a real policy source.
           </p>
-          <div>
+          <div className="go-ui">
             {trainingQuestions.map((question, index) => (
-              <button
+              <Button
+                variant={selectedQuestion === index ? "default" : "outline"}
+                className="h-auto min-h-12 justify-start whitespace-normal px-4 py-3 text-left"
                 aria-pressed={selectedQuestion === index}
                 key={question.label}
                 onClick={() => setSelectedQuestion(index)}
                 type="button"
               >
                 {question.label}
-              </button>
+              </Button>
             ))}
           </div>
         </div>

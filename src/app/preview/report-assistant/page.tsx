@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 import { PreviewShell } from "@/app/components/preview-shell";
 
 export const metadata = {
@@ -7,6 +9,7 @@ export const metadata = {
 export default function ReportAssistantPreviewPage() {
   return (
     <PreviewShell
+      current="Report Assistant"
       brandHref="/"
       className="workspace-page"
       title="Report assistant"
@@ -25,34 +28,30 @@ export default function ReportAssistantPreviewPage() {
         <nav className="workflow-steps" aria-label="Report workflow">
           <p className="eyebrow">Workflow</p>
           <ol>
-            <li className="workflow-step is-current">
-              <span>1</span>
-              <div>
-                <strong>Field notes</strong>
-                <p>Capture only what the preparer observed.</p>
-              </div>
-            </li>
-            <li className="workflow-step">
-              <span>2</span>
-              <div>
-                <strong>Confirm facts</strong>
-                <p>Review each fact before a draft can use it.</p>
-              </div>
-            </li>
-            <li className="workflow-step">
-              <span>3</span>
-              <div>
-                <strong>Review draft</strong>
-                <p>Keep the final decision with the officer.</p>
-              </div>
-            </li>
+            {[
+              "Officers",
+              "Field notes",
+              "Review facts",
+              "Missing information",
+              "Reports",
+              "Forms & Export",
+            ].map((label, index) => (
+              <li
+                className={`workflow-step ${index === 1 ? "is-current" : ""}`}
+                key={label}
+                aria-current={index === 1 ? "step" : undefined}
+              >
+                <span>{index + 1}</span>
+                <strong>{label}</strong>
+              </li>
+            ))}
           </ol>
         </nav>
 
         <section className="report-stage" aria-labelledby="notes-heading">
           <div className="stage-heading">
             <div>
-              <p className="eyebrow">Step 1 of 3</p>
+              <p className="eyebrow">Step 2 of 6</p>
               <h2 id="notes-heading">Field notes</h2>
             </div>
             <span className="not-saved-label">Not saved</span>
@@ -88,9 +87,11 @@ export default function ReportAssistantPreviewPage() {
               Missing information stays visible. It cannot be guessed by the
               report assistant.
             </p>
-            <button disabled type="button">
-              Continue to fact review
-            </button>
+            <div className="go-ui">
+              <Button disabled type="button">
+                Continue to fact review
+              </Button>
+            </div>
           </div>
         </section>
       </div>
@@ -99,22 +100,20 @@ export default function ReportAssistantPreviewPage() {
         className="review-promise"
         aria-labelledby="review-promise-title"
       >
-        <p className="eyebrow">How this becomes a working site</p>
-        <h2 id="review-promise-title">
-          The interface comes first; the safeguards make it usable.
-        </h2>
+        <p className="eyebrow">Your review stays in control</p>
+        <h2 id="review-promise-title">From your notes to a reviewed report.</h2>
         <div>
           <p>
-            <strong>Secure account layer:</strong> private staff access and
-            protected sessions are being completed before real data can enter.
+            <strong>Confirm the facts:</strong> Review proposed facts and leave
+            out anything that is not supported by your notes.
           </p>
           <p>
-            <strong>Report layer:</strong> confirmed facts, drafts, revisions,
-            and printing will be added as reviewable, tested steps.
+            <strong>Keep gaps visible:</strong> Required questions and unknown
+            information stay visible through review.
           </p>
           <p>
-            <strong>Policy layer:</strong> the policy assistant will answer only
-            from approved documents with visible citations.
+            <strong>Review before saving:</strong> Check the report package and
+            forms before choosing to save. This preview saves nothing.
           </p>
         </div>
       </section>

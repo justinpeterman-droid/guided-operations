@@ -438,6 +438,10 @@ test("an officer and administrator can use the protected per-officer report work
 
   const currentCorrection =
     "Fictional current narrative preserved as revision three.";
+  await expect(page.getByLabel("Corrected narrative")).toBeDisabled();
+  await page.getByRole("link", { name: "Open updated report" }).click();
+  await expectCurrentRevision(page, 2);
+  await expect(page.getByLabel("Corrected narrative")).toBeEnabled();
   await appendFictionalCompetingRevision(reportId, currentCorrection);
 
   const staleCorrection =
@@ -461,6 +465,8 @@ test("an officer and administrator can use the protected per-officer report work
     staleCorrection,
   );
   expectingRevisionConflict = false;
+  // The retained correction is deliberately discarded to review the newer report.
+  page.once("dialog", (dialog) => dialog.accept());
   await page.reload();
   await expectCurrentRevision(page, 3);
   await expect(

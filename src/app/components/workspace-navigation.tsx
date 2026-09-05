@@ -5,15 +5,20 @@ import { useEffect, useId, useRef, useState } from "react";
 
 import {
   WORKSPACE_NAV_ITEMS,
+  PREVIEW_NAV_ROUTES,
   type WorkspaceNavLabel,
 } from "@/app/components/workspace-navigation-items";
 
 export type WorkspaceNavigationProps = Readonly<{
   current?: WorkspaceNavLabel;
+  preview?: boolean;
 }>;
 
 /** Plain-language officer navigation with a compact mobile menu. */
-export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
+export function WorkspaceNavigation({
+  current,
+  preview = false,
+}: WorkspaceNavigationProps) {
   const [open, setOpen] = useState(false);
   const panelId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
@@ -73,14 +78,20 @@ export function WorkspaceNavigation({ current }: WorkspaceNavigationProps) {
         }
         id={panelId}
       >
-        {WORKSPACE_NAV_ITEMS.map(([label, href]) => (
+        {WORKSPACE_NAV_ITEMS.filter(
+          ([label]) => !preview || label !== "Account",
+        ).map(([label, href, displayLabel]) => (
           <Link
             aria-current={current === label ? "page" : undefined}
-            href={href}
+            href={preview ? (PREVIEW_NAV_ROUTES[label] ?? href) : href}
+            prefetch={false}
+            className={
+              label === "Account" ? "workspace-navigation-account" : undefined
+            }
             key={href}
             onClick={() => setOpen(false)}
           >
-            {label}
+            {displayLabel}
           </Link>
         ))}
       </nav>

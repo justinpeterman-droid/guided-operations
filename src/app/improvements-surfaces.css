@@ -1,0 +1,443 @@
+/* Officer feedback and form-intake surfaces. */
+.improvement-form-actions button:not([data-slot="button"]) {
+  border: 0;
+  border-radius: 999px;
+  background: var(--gow-navy-800);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  min-height: 44px;
+  padding: 0.7rem 1rem;
+  cursor: pointer;
+}
+
+.workspace-shell-toolbar {
+  align-items: center;
+}
+.improvement-dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+  background: rgb(4 20 32 / 0.52);
+}
+.improvement-dialog {
+  width: min(100%, 38rem);
+  max-height: min(42rem, calc(100dvh - 2rem));
+  overflow: auto;
+  border: 1px solid rgb(255 255 255 / 0.25);
+  border-radius: 1.25rem;
+  padding: 1.25rem;
+  background: var(--gow-surface-raised);
+  box-shadow: 0 1.25rem 4rem rgb(1 17 28 / 0.35);
+}
+.improvement-dialog-heading,
+.improvement-dialog-actions,
+.improvement-request-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.improvement-dialog h2,
+.improvement-dialog h3 {
+  margin: 0.15rem 0 0;
+  color: var(--gow-ink);
+}
+.improvement-dialog-heading > button,
+.improvement-dialog-actions > button:first-child {
+  border: 0;
+  background: transparent;
+  color: var(--gow-navy-800);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  min-height: 44px;
+}
+.improvement-choice-list {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.1rem;
+}
+.improvement-choice-list button,
+.improvement-choice-list a {
+  display: grid;
+  gap: 0.25rem;
+  width: 100%;
+  min-height: 76px;
+  padding: 1rem;
+  border: 1px solid var(--gow-border);
+  border-radius: 0.8rem;
+  text-align: left;
+  text-decoration: none;
+  color: var(--gow-navy-900);
+  background: #fff;
+  cursor: pointer;
+}
+.improvement-choice-list button:hover,
+.improvement-choice-list button:focus-visible,
+.improvement-choice-list a:hover,
+.improvement-choice-list a:focus-visible {
+  border-color: var(--gow-blue);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--gow-focus) 28%, transparent);
+}
+.improvement-choice-list span,
+.improvement-privacy-note,
+.improvement-target-summary {
+  color: var(--gow-muted);
+}
+.improvement-selection-notice {
+  position: fixed;
+  left: 50%;
+  bottom: 1.25rem;
+  z-index: 81;
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  transform: translateX(-50%);
+  width: min(calc(100% - 2rem), 38rem);
+  padding: 0.8rem 1rem;
+  border-radius: 0.8rem;
+  color: #fff;
+  background: var(--gow-navy-900);
+  box-shadow: 0 0.75rem 2rem rgb(1 17 28 / 0.35);
+}
+.improvement-selection-notice span {
+  flex: 1;
+  font-size: 0.9rem;
+}
+.improvement-selection-notice button {
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 0.5rem;
+  color: inherit;
+  background: transparent;
+  min-height: 38px;
+  padding: 0.4rem 0.65rem;
+  font: inherit;
+  cursor: pointer;
+}
+[data-feedback-selected="true"] {
+  outline: 4px solid var(--gow-gold-400) !important;
+  outline-offset: 4px;
+  border-radius: 0.3rem;
+}
+.improvement-compose-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+.improvement-compose-form textarea,
+.improvement-intake-form input,
+.improvement-intake-form select,
+.improvement-intake-form textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--gow-border);
+  border-radius: 0.55rem;
+  padding: 0.7rem;
+  color: var(--gow-ink);
+  background: #fff;
+  font: inherit;
+}
+.improvement-compose-form textarea:focus-visible,
+.improvement-intake-form input:focus-visible,
+.improvement-intake-form select:focus-visible,
+.improvement-intake-form textarea:focus-visible {
+  outline: 3px solid var(--gow-focus);
+  outline-offset: 2px;
+  border-color: var(--gow-blue);
+}
+.improvement-dialog-actions > button:last-child,
+.improvement-dialog-actions > a:last-child {
+  border: 0;
+  border-radius: 0.55rem;
+  color: #fff;
+  background: var(--gow-navy-700);
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  text-decoration: none;
+}
+.improvement-error {
+  margin: 0;
+  color: #a01d31;
+  font-weight: 700;
+}
+.improvement-success {
+  margin-top: 1.25rem;
+}
+.improvement-page {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
+  min-height: 100vh;
+  padding-bottom: 3rem;
+  background: transparent;
+}
+.improvement-page-intro,
+.improvement-intake-card,
+.improvement-request-list {
+  width: min(100% - 2rem, 62rem);
+  margin-inline: auto;
+}
+.improvement-page-intro {
+  padding: 3rem 0 1.25rem;
+}
+.improvement-page-intro h1 {
+  max-width: 28ch;
+  margin: 0.25rem 0 0.7rem;
+  color: var(--gow-ink);
+  font-family: var(--gow-font-sans);
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
+}
+.improvement-page-intro p {
+  max-width: 58ch;
+  color: var(--gow-muted);
+  font-size: 1.05rem;
+}
+.improvement-page-intro a:not([data-slot="button"]) {
+  color: var(--gow-navy-700);
+  font-weight: 700;
+}
+.improvement-intake-card,
+.improvement-request-list {
+  padding: 1.25rem;
+  border: 1px solid var(--gow-border);
+  border-radius: 1rem;
+  background: #fff;
+  box-shadow: 0 0.4rem 1rem rgb(20 55 73 / 0.06);
+}
+.improvement-intake-form {
+  display: grid;
+  gap: 0.65rem;
+}
+.improvement-intake-form > label {
+  color: var(--gow-navy-900);
+  font-weight: 700;
+}
+.improvement-intake-form label span {
+  color: var(--gow-muted);
+  font-weight: 400;
+}
+.improvement-form-warning {
+  padding: 0.9rem 1rem;
+  border-left: 4px solid #c9801d;
+  border-radius: 0.4rem;
+  color: #5b3a0b;
+  background: #fff6e6;
+}
+.improvement-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.improvement-form-grid label,
+.improvement-file-input {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--gow-navy-900);
+  font-weight: 700;
+}
+.improvement-file-input small {
+  color: var(--gow-muted);
+  font-weight: 400;
+}
+.improvement-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 0.6rem;
+}
+.improvement-request-list {
+  display: grid;
+  gap: 0.65rem;
+  padding: 0.65rem;
+}
+.improvement-request-card {
+  padding: 1rem;
+  border-radius: 0.75rem;
+  color: inherit;
+  text-decoration: none;
+}
+.improvement-request-card:hover,
+.improvement-request-card:focus-visible {
+  background: var(--gow-tint);
+}
+.improvement-request-card:focus-visible {
+  outline: 3px solid var(--gow-focus);
+  outline-offset: 2px;
+}
+.improvement-request-card h2 {
+  margin: 0;
+  color: var(--gow-navy-900);
+  font-size: 1.05rem;
+}
+.improvement-request-card p {
+  margin: 0.3rem 0 0;
+  color: var(--gow-muted);
+}
+.improvement-status {
+  min-width: 7.5rem;
+  border-radius: 999px;
+  padding: 0.35rem 0.6rem;
+  color: var(--gow-ink-600);
+  background: var(--gow-tint);
+  text-align: center;
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+.improvement-status-ready_for_publication,
+.improvement-status-completed {
+  color: #0a5538;
+  background: #d9f0e2;
+}
+.improvement-status-needs_information,
+.improvement-status-declined {
+  color: #7b3514;
+  background: #fae5d4;
+}
+.improvement-empty {
+  padding: 2rem;
+  text-align: center;
+  color: var(--gow-muted);
+}
+.improvement-detail dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0 0 1.5rem;
+}
+.improvement-detail dt {
+  color: var(--gow-muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+.improvement-detail dd {
+  margin: 0.25rem 0 0;
+  color: var(--gow-ink);
+}
+.improvement-update-list {
+  display: grid;
+  gap: 0.55rem;
+  padding-left: 1.15rem;
+  color: var(--gow-ink-600);
+}
+.improvement-review-controls {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--gow-border);
+}
+.improvement-message-composer {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--gow-border);
+}
+.improvement-message-composer h2 {
+  margin: 0;
+  color: var(--gow-navy-900);
+}
+.improvement-message-composer p {
+  margin: 0;
+  color: var(--gow-muted);
+}
+.improvement-message-composer label {
+  color: var(--gow-navy-900);
+  font-weight: 700;
+}
+.improvement-message-composer textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--gow-border);
+  border-radius: 0.55rem;
+  padding: 0.7rem;
+  color: var(--gow-ink);
+  background: #fff;
+  font: inherit;
+}
+.improvement-message-composer button {
+  justify-self: start;
+  border: 0;
+  border-radius: 0.55rem;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  color: #fff;
+  background: var(--gow-navy-700);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.improvement-review-controls h2 {
+  margin: 0;
+  color: var(--gow-navy-900);
+}
+.improvement-review-controls p {
+  margin: 0;
+  color: var(--gow-muted);
+}
+.improvement-review-controls label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--gow-navy-900);
+  font-weight: 700;
+}
+.improvement-review-controls label span {
+  color: var(--gow-muted);
+  font-weight: 400;
+}
+.improvement-review-controls select,
+.improvement-review-controls textarea {
+  width: 100%;
+  box-sizing: border-box;
+  border: 1px solid var(--gow-border);
+  border-radius: 0.55rem;
+  padding: 0.7rem;
+  color: var(--gow-ink);
+  background: #fff;
+  font: inherit;
+}
+.improvement-review-controls button {
+  justify-self: start;
+  border: 0;
+  border-radius: 0.55rem;
+  min-height: 44px;
+  padding: 0.65rem 1rem;
+  color: #fff;
+  background: var(--gow-navy-700);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+@media (max-width: 760px) {
+  .workspace-shell-toolbar {
+    flex-wrap: wrap;
+  }
+  .improvement-launcher-trigger {
+    width: 100%;
+  }
+  .improvement-selection-notice {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .improvement-form-grid {
+    grid-template-columns: 1fr;
+  }
+  .improvement-request-card {
+    align-items: flex-start;
+  }
+  .improvement-status {
+    min-width: auto;
+  }
+  .improvement-detail dl {
+    grid-template-columns: 1fr;
+  }
+}
