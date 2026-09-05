@@ -320,6 +320,18 @@ passing synthetic scorecard proves the harness behavior, not the real corpus or
 pinned Production model; those still require a private custodian-approved suite
 and owner review.
 
+Version-2 correctness qualification now wraps that harness in
+`src/server/ai/policy-correctness-evaluation.ts`. It requires reviewed expected
+facts and forbidden claims linked to exact source passages, plus an independent
+review bound to the specific observed answer, limitations, rubric, and
+configuration. Correct citation identity alone cannot pass this gate. Missing or
+stale reviews fail closed; content-bearing review packets remain private, while
+scorecards retain only bounded metadata and review-evidence hashes. This adds
+offline evaluation, not runtime semantic enforcement. See
+[Answer-correctness evaluation](../quality/policy-answer-correctness-evaluation.md)
+for the two-pass review process, scoring rules, fictional evidence, and
+remaining production qualification.
+
 ## Synchronous versus queued
 
 Short bounded policy questions may run in a Vercel request only after measured
