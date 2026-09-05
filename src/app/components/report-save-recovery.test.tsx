@@ -100,14 +100,20 @@ describe.each(["correction", "finalization"] as const)(
       expect(savedLeave.defaultPrevented).toBe(false);
     });
     it("retains edits after session expiration and offers sign-in in a separate tab", async () => {
-      vi.spyOn(globalThis, "fetch").mockResolvedValue(
-        Response.json({}, { status: 401 }),
-      );
+      const fetch = vi
+        .spyOn(globalThis, "fetch")
+        .mockResolvedValueOnce(Response.json({ csrfToken: "fictional-token" }))
+        .mockResolvedValueOnce(Response.json({}, { status: 401 }));
       const user = userEvent.setup();
       showForm();
       await enterReview(user);
       await user.click(screen.getByRole("button", { name: action }));
       expect(await screen.findByText(/Your session ended/)).toBeVisible();
+      expect(fetch).toHaveBeenNthCalledWith(
+        2,
+        expect.any(String),
+        expect.objectContaining({ method: "POST" }),
+      );
       expect(screen.getByLabelText(label)).toHaveValue(
         "Fictional original. Fictional correction.",
       );

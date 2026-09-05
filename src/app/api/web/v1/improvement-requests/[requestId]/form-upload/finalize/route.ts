@@ -9,6 +9,7 @@ import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { MAX_FORM_CANDIDATE_BYTES } from "@/server/feedback/improvement-request-endpoint";
 import { createPrivateImprovementStore } from "@/server/feedback/private-improvement-store";
 import { hasValidSessionCsrfRequest } from "@/server/security/session-csrf";
+import { isTrustedMutationRequest } from "@/server/security/request-origin";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -40,7 +41,7 @@ export async function POST(
     if (!session.allowed) {
       return errorResponse(401, "authentication_required", correlationId);
     }
-    if (request.headers.get("origin") !== runtimeEnvironment.APP_ORIGIN) {
+    if (!isTrustedMutationRequest(request, runtimeEnvironment.APP_ORIGIN)) {
       return errorResponse(403, "invalid_origin", correlationId);
     }
     if (

@@ -65,6 +65,9 @@ retain the owner's approved treatment; document print typography is unchanged.
   now preserves text and offers separate-tab sign-in at either 401 boundary.
   Sixteen focused tests and four Count Sheet browser checks passed; the policy
   expiry test now specifically exercises the answer endpoint after valid CSRF.
+- Upload finalization now uses the shared origin validator for local hostname
+  aliases, with cross-site metadata and CSRF rejection retained. Seventeen
+  focused origin, upload-integrity and report-save recovery tests passed.
 - An unfiltered browser-suite invocation also selected the separate protected
   qualification suites. Seven stopped at missing `NEXT_PUBLIC_SUPABASE_URL`
   qualification setup and three dependent tests did not run. They did not reach

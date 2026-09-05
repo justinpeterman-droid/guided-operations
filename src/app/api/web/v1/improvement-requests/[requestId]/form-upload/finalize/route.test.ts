@@ -12,7 +12,7 @@ vi.mock("@/lib/env/auth-server", () => ({
   getAuthServerEnvironment: () => ({ CSRF_HMAC_KEY: "fictional-key" }),
 }));
 vi.mock("@/lib/env/runtime", () => ({
-  getRuntimeEnvironment: () => ({ APP_ORIGIN: "http://localhost:3000" }),
+  getRuntimeEnvironment: () => ({ APP_ORIGIN: "http://127.0.0.1:3000" }),
 }));
 vi.mock("@/lib/supabase/server", () => ({
   createSupabaseServerClient: () => ({
@@ -80,6 +80,16 @@ it("verifies bytes before finalizing a pending upload", async () => {
     createHash("sha256").update(bytes).digest("hex"),
     "application/pdf",
   );
+});
+it("accepts the local hostname alias while rejecting cross-site fetch metadata", async () => {
+  expect((await POST(request("http://localhost:3000"), context)).status).toBe(
+    200,
+  );
+  mocks.candidate.mockClear();
+  const crossSite = request("http://localhost:3000");
+  crossSite.headers.set("sec-fetch-site", "cross-site");
+  expect((await POST(crossSite, context)).status).toBe(403);
+  expect(mocks.candidate).not.toHaveBeenCalled();
 });
 it("keeps a missing object recoverable without confirming it", async () => {
   mocks.download.mockResolvedValue({ error: { message: "fictional missing" } });
