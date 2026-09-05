@@ -135,14 +135,38 @@ test("fictional preview routes remain usable at mobile size and reduced motion",
       "Fictional training preview",
     );
     await expect
-      .poll(() =>
-        page.evaluate(
-          () => document.documentElement.scrollWidth <= window.innerWidth,
-        ),
+      .poll(
+        () =>
+          page.evaluate(
+            () => document.documentElement.scrollWidth <= window.innerWidth,
+          ),
+        { message: `${route} must fit the mobile viewport` },
       )
       .toBe(true);
     await expect(page.locator("main")).toBeVisible();
   }
+});
+
+test("the workspace review path fits small phones with wider fallback fonts", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 568 });
+  await page.goto("/preview/workspace");
+  await page.addStyleTag({
+    content: ":root { --gow-font-sans: Verdana, sans-serif; }",
+  });
+  await page.getByText("Capture", { exact: true }).scrollIntoViewIfNeeded();
+
+  for (const label of ["Capture", "Review", "Confirm"]) {
+    await expect(page.getByText(label, { exact: true })).toBeInViewport();
+  }
+  await expect
+    .poll(() =>
+      page.evaluate(
+        () => document.documentElement.scrollWidth <= window.innerWidth,
+      ),
+    )
+    .toBe(true);
 });
 
 test("the report workflow shows all six steps in a compact two-column mobile rail", async ({

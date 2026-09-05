@@ -50,6 +50,11 @@ retain the owner's approved treatment; document print typography is unchanged.
   production build and Git whitespace checks passed. **30 UI browser tests
   passed**, covering preview accessibility, navigation, reflow, Count Sheet and
   output guards.
+- GitHub's Linux browser run exposed a 4px overflow in Home's review path at
+  320px. Reduced the small-screen gaps and added a wider-font regression check;
+  the regression reproduced 324px before the fix and 320px afterward. Both the
+  targeted regression and the existing mobile preview-route checks passed
+  locally.
 - An unfiltered browser-suite invocation also selected the separate protected
   qualification suites. Seven stopped at missing `NEXT_PUBLIC_SUPABASE_URL`
   qualification setup and three dependent tests did not run. They did not reach
@@ -59,9 +64,9 @@ retain the owner's approved treatment; document print typography is unchanged.
   in the audit below.
 
 No records, feedback, uploads or identities were created in this design pass.
-Changes remain local. The next functional work remains the ordered backlog
-below; the design pass does not claim durable draft recovery or new service
-capabilities.
+Changes are submitted in PR #46. The next functional work remains the ordered
+backlog below; the design pass does not claim durable draft recovery or new
+service capabilities.
 
 ## Officer workflow audit - 2026-09-05
 

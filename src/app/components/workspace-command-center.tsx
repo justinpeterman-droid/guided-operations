@@ -222,13 +222,16 @@ function CommandCenter({
           <h2 id="review-path-title" className="sr-only">
             Review path
           </h2>
-          <ol className="flex items-center justify-between gap-4 md:gap-6">
+          <ol className="flex items-center justify-between gap-2 sm:gap-4 md:gap-6">
             {[
               { label: "Capture", icon: FilePenLine },
               { label: "Review", icon: Search },
               { label: "Confirm", icon: CheckCheck },
             ].map(({ label, icon: Icon }, index) => (
-              <li key={label} className="flex items-center gap-4 md:gap-6">
+              <li
+                key={label}
+                className="flex items-center gap-2 sm:gap-4 md:gap-6"
+              >
                 {index > 0 && (
                   <ArrowRight
                     aria-hidden="true"
