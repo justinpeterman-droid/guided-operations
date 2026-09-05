@@ -152,15 +152,17 @@ acceptance. No hosted reads or writes are required for the local tests.
 
 ## Local implementation verification — 2026-09-05
 
-Prepared on `feat/policy-answer-correctness`, based on main commit
-`2b8783597e9d37302cf9c06ce11fc7e8901235fd`, independently of the PR #45 repair.
-Formatting, full ESLint, TypeScript, and the production build passed. The full
-application run passed 815 tests with one existing skipped test; all 69
-operations tests passed. After the final runner-metadata privacy regression was
-added, all 33 focused evaluation tests, TypeScript, focused ESLint, the build,
-and the runtime logging boundary passed again.
+Prepared on `feat/policy-answer-correctness` and rebased onto main commit
+`e40715bf15482ca01947065753db0ad657b8dca3` after PR #45 merged. The refreshed
+application run passed 816 tests with one existing skipped test; all 69
+operations tests and all 33 focused evaluation tests passed. Secret and runtime
+logging checks passed; npm audit found no vulnerabilities, and all 461 registry
+signatures and 132 attestations verified. Formatting, full ESLint, TypeScript,
+and the production build also passed on the rebased branch.
 
 No database schema, UI, production generation prompt, or model setting changed.
-The pre-existing main-branch database types/inventory omissions are addressed by
-the separate PR #45 repair; database qualification was not rerun for this
-evaluation-only branch. GitHub checks and publication remain outstanding.
+The pre-existing main-branch database types/inventory omissions were addressed
+by PR #45, whose post-merge Database quality and Web quality checks passed.
+Database qualification was not rerun locally for this evaluation-only branch;
+the package script change also triggers Database quality on its PR. Publication
+and fresh PR checks are the next handoff gates, not production qualification.
