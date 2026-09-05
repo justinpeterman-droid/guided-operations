@@ -64,6 +64,17 @@ jobs are configured. Entries with a pending `release_status` or
   artifact-integrity evidence remains for its own two-year period.
 - Backups remain protected until every included source record is deletion
   eligible and any hold has cleared.
+- Private improvement requests and their append-only messages and status history
+  follow the two-year record rule as one parent-linked package. The existing
+  incident/paperwork deletion workflow does not delete these records; their
+  deletion procedure remains required.
+- Blank form candidates and their `form_candidate_files` metadata remain
+  quarantined, unapproved sources. The seven-day `expires_at` field bounds
+  upload eligibility; it does not delete the object or establish an approved
+  retention period. The candidate-specific retention decision and coordinated
+  database/Storage cleanup procedure remain pending, represented by
+  `form-candidate-review-pending`. A candidate is never automatically promoted
+  to `form_templates` or `policy-sources`.
 
 This describes the owner's operating decision and engineering controls; it is
 not legal advice or a compliance certification.
