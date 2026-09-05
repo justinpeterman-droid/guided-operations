@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
+import { Button } from "@/components/ui/button";
 
 import { GuidedMark } from "@/app/components/workspace-brand";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
@@ -52,9 +53,11 @@ export default async function PublicLandingPage() {
             are issued by the unit administrator.
           </p>
 
-          <Link className="primary-action" href="/login">
-            Go to sign in
-          </Link>
+          <div className="go-ui landing-sign-in-action">
+            <Button asChild size="lg" className="w-full">
+              <Link href="/login">Go to sign in</Link>
+            </Button>
+          </div>
 
           <p className="connection-status" id="connection-status" role="status">
             This is a working tool, not the system of record. Reports and
@@ -136,7 +139,7 @@ export default async function PublicLandingPage() {
 
       <footer className="foundation-footer">
         <span>Guided Operations</span>
-        <span>Next.js · Vercel · Supabase</span>
+        <span>Policy grounded. Officer controlled.</span>
       </footer>
     </main>
   );

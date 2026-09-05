@@ -4,6 +4,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 
 import { SecretInput } from "@/app/components/secret-input";
+import { Button } from "@/components/ui/button";
 
 type SubmissionState = "idle" | "invalid" | "submitting" | "failed";
 
@@ -119,9 +120,16 @@ export function LoginForm() {
         required
       />
 
-      <button disabled={submitting} type="submit">
-        {submitting ? "Signing in…" : "Sign in"}
-      </button>
+      <div className="go-ui login-submit">
+        <Button
+          disabled={submitting}
+          type="submit"
+          size="lg"
+          className="w-full"
+        >
+          {submitting ? "Signing in…" : "Sign in"}
+        </Button>
+      </div>
       <p
         aria-live="polite"
         className="login-status"

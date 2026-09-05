@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
+import { useIdempotentRequest } from "@/app/components/use-idempotent-request";
 
 import { calculateCountTotals, validateCountPayload } from "./calculations";
 import { APPROVED_COUNT_SHEET_STRUCTURE } from "./approved-structure";
@@ -135,17 +136,26 @@ export function CountSheetHistory({
   currentRevisionNumber,
   onReview,
   onRestored,
+  disabled = false,
+  onBusyChange,
 }: Readonly<{
   recordId: string;
   currentRevisionNumber: number;
   onReview: (revision: ReviewedCountSheetRevision) => void;
   onRestored: () => void;
+  disabled?: boolean;
+  onBusyChange?: (busy: boolean) => void;
 }>) {
   const [revisions, setRevisions] = useState<readonly RevisionSummary[]>([]);
   const [selectedRevision, setSelectedRevision] = useState<number | null>(null);
   const [reason, setReason] = useState("");
   const [message, setMessage] = useState("Loading revision history…");
-  const [busy, setBusy] = useState(false);
+  const [busy, updateBusy] = useState(false);
+  const prepareRequest = useIdempotentRequest();
+  function setBusy(value: boolean) {
+    updateBusy(value);
+    onBusyChange?.(value);
+  }
 
   useEffect(() => {
     const controller = new AbortController();
@@ -173,6 +183,7 @@ export function CountSheetHistory({
   }, [currentRevisionNumber, recordId]);
 
   async function review(revisionNumber: number) {
+    if (disabled || busy) return;
     setBusy(true);
     setMessage(`Loading revision ${revisionNumber}…`);
     try {
@@ -196,10 +207,17 @@ export function CountSheetHistory({
 
   async function restore(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedRevision || !reason.trim() || busy) return;
+    if (disabled || !selectedRevision || !reason.trim() || busy) return;
     setBusy(true);
     setMessage("Creating a restored revision…");
     try {
+      const request = prepareRequest(
+        JSON.stringify({
+          baseRevisionNumber: currentRevisionNumber,
+          restoreRevisionNumber: selectedRevision,
+          reason: reason.trim(),
+        }),
+      );
       const token = await csrfToken();
       const response = await fetch(
         `/api/web/v1/count-sheets/${recordId}/restore`,
@@ -209,14 +227,10 @@ export function CountSheetHistory({
           credentials: "same-origin",
           headers: {
             "content-type": "application/json",
-            "idempotency-key": crypto.randomUUID().replaceAll("-", ""),
+            "idempotency-key": request.key,
             "x-csrf-token": token,
           },
-          body: JSON.stringify({
-            baseRevisionNumber: currentRevisionNumber,
-            restoreRevisionNumber: selectedRevision,
-            reason: reason.trim(),
-          }),
+          body: request.body,
         },
       );
       const body: unknown = await response.json();
@@ -224,7 +238,7 @@ export function CountSheetHistory({
         setMessage(
           response.status === 409
             ? "A newer revision exists. Reload the saved date before restoring."
-            : "The restore could not be saved. Nothing was changed.",
+            : "Restore could not be confirmed. Retry with the same revision and reason to check the same request.",
         );
         return;
       }
@@ -244,7 +258,9 @@ export function CountSheetHistory({
       setReason("");
       onRestored();
     } catch {
-      setMessage("The restore could not be saved. Nothing was changed.");
+      setMessage(
+        "Restore could not be confirmed. Retry with the same revision and reason to check the same request.",
+      );
     } finally {
       setBusy(false);
     }
@@ -260,6 +276,12 @@ export function CountSheetHistory({
         Every saved version remains preserved. Restoring creates a new version;
         it never replaces the old one.
       </p>
+      {disabled ? (
+        <p>
+          Save your counts or finish the current sheet action before reviewing
+          or restoring history.
+        </p>
+      ) : null}
       <ol className="report-history-list">
         {revisions.map((revision) => (
           <li key={revision.revisionNumber}>
@@ -279,14 +301,14 @@ export function CountSheetHistory({
               {new Date(revision.createdAt).toLocaleString()}
             </time>
             <button
-              disabled={busy}
+              disabled={busy || disabled}
               onClick={() => void review(revision.revisionNumber)}
               type="button"
             >
               Review this version
             </button>
             <button
-              disabled={busy || revision.isCurrent}
+              disabled={busy || disabled || revision.isCurrent}
               onClick={() => {
                 setSelectedRevision(revision.revisionNumber);
                 setMessage("");
@@ -304,6 +326,7 @@ export function CountSheetHistory({
           <label>
             Restore reason
             <input
+              disabled={busy || disabled}
               maxLength={500}
               onChange={(event) => setReason(event.target.value)}
               required
@@ -312,7 +335,7 @@ export function CountSheetHistory({
           </label>
           <button
             className="incident-primary"
-            disabled={busy || !reason.trim()}
+            disabled={busy || disabled || !reason.trim()}
             type="submit"
           >
             Create restored revision

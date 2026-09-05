@@ -1,5 +1,39 @@
 import { expect, test } from "@playwright/test";
 
+test("top navigation follows pages and the mobile menu supports keyboard dismissal", async ({
+  page,
+}) => {
+  await page.goto("/preview/workspace");
+  const navigation = page.getByRole("navigation", { name: "Workspace" });
+  await expect(
+    navigation.getByRole("link", { name: "Home", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await navigation
+    .getByRole("link", { name: "Policy Expert", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/preview\/policy-expert$/);
+  await expect(
+    navigation.getByRole("link", { name: "Policy Expert", exact: true }),
+  ).toHaveAttribute("aria-current", "page");
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(navigation).toBeHidden();
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await expect(navigation).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(navigation).toBeHidden();
+  await expect(
+    page.getByRole("button", { name: "Menu", exact: true }),
+  ).toBeFocused();
+  await page.getByRole("button", { name: "Menu", exact: true }).click();
+  await navigation
+    .getByRole("link", { name: "Report Assistant", exact: true })
+    .click();
+  await expect(page).toHaveURL(/\/preview\/report-assistant$/);
+  await expect(
+    page.getByRole("button", { name: "Menu", exact: true }),
+  ).toHaveAttribute("aria-expanded", "false");
+});
+
 test("keeps report and policy as equal working preview paths", async ({
   page,
 }) => {

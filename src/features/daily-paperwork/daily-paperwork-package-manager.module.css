@@ -31,13 +31,14 @@
 .historyList h3 {
   margin: 0;
   color: var(--gow-navy-950);
-  font-family: var(--gow-font-brand);
+  font-family: var(--gow-font-sans);
   font-weight: 600;
 }
 
 .sectionHeading h2 {
-  font-size: clamp(1.7rem, 2.8vw, 2.3rem);
-  letter-spacing: -0.03em;
+  font-size: 1.25rem;
+  line-height: 1.35;
+  letter-spacing: -0.02em;
 }
 
 .sectionHeading > span {

@@ -2,6 +2,11 @@
 
 import type { ReactNode } from "react";
 
+import {
+  WorkspaceNavigation,
+  type WorkspaceNavigationProps,
+} from "@/app/components/workspace-navigation";
+
 import { WorkspaceBrand } from "@/app/components/workspace-brand";
 
 export type PreviewShellProps = Readonly<{
@@ -11,6 +16,7 @@ export type PreviewShellProps = Readonly<{
   className?: string;
   headerClassName?: string;
   title: string;
+  current?: WorkspaceNavigationProps["current"];
 }>;
 
 /** Shared fictional preview chrome with GuidedMark branding. */
@@ -21,6 +27,7 @@ export function PreviewShell({
   className = "workspace-preview-page",
   headerClassName = "workspace-preview-header",
   title,
+  current,
 }: PreviewShellProps) {
   return (
     <main className={className}>
@@ -31,6 +38,7 @@ export function PreviewShell({
           {actions}
         </div>
       </header>
+      <WorkspaceNavigation preview current={current} />
       {children}
     </main>
   );

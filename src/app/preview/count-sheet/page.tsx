@@ -11,6 +11,7 @@ export const metadata = {
 export default function CountSheetPreviewPage() {
   return (
     <PreviewShell
+      current="Count Sheet"
       actions={
         <Link className="preview-nav-link" href="/preview/report-assistant">
           Report assistant preview

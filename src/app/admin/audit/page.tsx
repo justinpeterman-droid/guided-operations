@@ -56,7 +56,9 @@ export default async function AdminAuditPage() {
                     {event.targetType
                       ? `Area: ${event.targetType}`
                       : "System activity"}
-                    {event.outcome ? ` · ${event.outcome}` : ""}
+                    {event.outcome
+                      ? ` · ${event.outcome.replaceAll("_", " ")}`
+                      : ""}
                   </p>
                 </div>
                 <span className="report-status">Recorded</span>

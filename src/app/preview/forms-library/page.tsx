@@ -1,9 +1,9 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 import { PreviewShell } from "@/app/components/preview-shell";
 import {
   chainOfCustodyGuidance,
-  countSheetCapabilities,
   dailyPaperworkCapabilities,
   unavailableForms,
 } from "@/features/forms-library/catalog";
@@ -18,7 +18,11 @@ export const metadata = {
  */
 export default function FormsLibraryPreviewPage() {
   return (
-    <PreviewShell className="forms-library-page" title="Forms Library">
+    <PreviewShell
+      current="Forms"
+      className="forms-library-page"
+      title="Forms Library"
+    >
       <section className="forms-library-intro" aria-labelledby="forms-title">
         <p className="eyebrow">Forms Library</p>
         <h1 id="forms-title">Find the right paperwork.</h1>
@@ -43,11 +47,21 @@ export default function FormsLibraryPreviewPage() {
                 The fictional practice version demonstrates the approved
                 structure without creating an official record.
               </p>
-              <CapabilityList items={countSheetCapabilities} />
+              <CapabilityList
+                items={[
+                  "Local calculation",
+                  "Fictional print preview",
+                  "Not saved",
+                ]}
+              />
             </div>
-            <Link className="forms-library-action" href="/preview/count-sheet">
-              Open Count Sheet <span aria-hidden="true">→</span>
-            </Link>
+            <div className="go-ui">
+              <Button asChild>
+                <Link href="/preview/count-sheet">
+                  Open Count Sheet <span aria-hidden="true">→</span>
+                </Link>
+              </Button>
+            </div>
           </article>
         </div>
       </section>

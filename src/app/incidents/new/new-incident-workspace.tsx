@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
+import { z } from "zod";
+import { useUnsavedChanges } from "@/app/components/use-unsaved-changes";
+import { WorkspaceMessage } from "@/app/components/workspace-message";
+
+import { Button } from "@/components/ui/button";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 
@@ -29,7 +34,7 @@ import type {
 import { INCIDENT_SCHEMA_VERSION } from "@/features/incidents/schema";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
-type SaveState = "idle" | "saving" | "failed" | "saved";
+type SaveState = "idle" | "saving" | "failed" | "expired" | "saved";
 type StaffLoadState = "loading" | "failed" | "loaded";
 type ExtractionState = "idle" | "loading" | "suggested" | "unavailable";
 type StaffSelectionItem = Readonly<{
@@ -51,6 +56,7 @@ async function csrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
     credentials: "same-origin",
   });
+  if (response.status === 401) throw new Error("session_expired");
   const data: unknown = await response.json();
   if (
     !response.ok ||
@@ -77,6 +83,13 @@ export function NewIncidentWorkspace() {
   >({});
   const [reportsReviewed, setReportsReviewed] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
+  const [savedIncidentId, setSavedIncidentId] = useState<string | null>(null);
+  const savingRef = useRef(false);
+  const saveRequestRef = useRef<{
+    fingerprint: string;
+    key: string;
+    body: string;
+  } | null>(null);
   const [incidentNumber, setIncidentNumber] = useState("");
   const [incidentName, setIncidentName] = useState("");
   const [occurredAt, setOccurredAt] = useState("");
@@ -97,6 +110,10 @@ export function NewIncidentWorkspace() {
   const answerList = useMemo(
     () => Object.values(checklistAnswers),
     [checklistAnswers],
+  );
+  useUnsavedChanges(
+    !savedIncidentId &&
+      Boolean(officerConfirmed || incidentNumber || incidentName || notes),
   );
   const currentStaff = staff.find((item) => item.isCurrentAccount);
   const staffRelationships = useMemo<IncidentStaffRelationship[]>(() => {
@@ -387,12 +404,15 @@ export function NewIncidentWorkspace() {
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
+      savingRef.current ||
+      savedIncidentId ||
       !readyForFactReview ||
       !factReviewComplete ||
       !checklistReview.complete ||
       !factReportingScopesComplete
     )
       return;
+    savingRef.current = true;
     setSaveState("saving");
     try {
       const token = await csrfToken();
@@ -483,20 +503,70 @@ export function NewIncidentWorkspace() {
           ],
         },
       };
+      const fingerprint = JSON.stringify({
+        staffRelationships,
+        incidentNumber,
+        incidentName,
+        category,
+        occurredAt,
+        location,
+        notes,
+        unknown,
+        factProposals,
+        factReportingScopes,
+        answerList,
+      });
+      if (saveRequestRef.current?.fingerprint !== fingerprint) {
+        saveRequestRef.current = {
+          fingerprint,
+          key: crypto.randomUUID().replaceAll("-", ""),
+          body: JSON.stringify(body),
+        };
+      }
+      const request = saveRequestRef.current;
       const response = await fetch("/api/web/v1/incidents", {
         method: "POST",
         credentials: "same-origin",
         headers: {
           "Content-Type": "application/json",
           "x-csrf-token": token,
-          "idempotency-key": crypto.randomUUID().replaceAll("-", ""),
+          "idempotency-key": request.key,
         },
-        body: JSON.stringify(body),
+        body: request.body,
       });
-      setSaveState(response.ok ? "saved" : "failed");
-    } catch {
-      setSaveState("failed");
+      if (response.status === 401) throw new Error("session_expired");
+      if (!response.ok) throw new Error("save");
+      const result = z
+        .object({ data: z.object({ incidentId: z.uuid() }) })
+        .parse(await response.json());
+      setSavedIncidentId(result.data.incidentId);
+      setSaveState("saved");
+    } catch (error) {
+      setSaveState(
+        error instanceof Error && error.message === "session_expired"
+          ? "expired"
+          : "failed",
+      );
+    } finally {
+      savingRef.current = false;
     }
+  }
+
+  if (savedIncidentId) {
+    return (
+      <WorkspaceMessage
+        eyebrow="Saved incident"
+        title="Incident saved."
+        description={`${incidentNumber} — ${incidentName}. Your reviewed facts are saved. Open the incident to create a report draft or review its paperwork.`}
+        actions={[
+          {
+            href: `/incidents/${savedIncidentId}`,
+            label: "Open saved incident",
+          },
+          { href: "/reports", label: "Reports & History" },
+        ]}
+      />
+    );
   }
 
   const reviewedFactCount = factProposals.filter(
@@ -505,14 +575,15 @@ export function NewIncidentWorkspace() {
   const stepCount = 6;
 
   return (
-    <WorkspaceShell current="Reports" title="New incident">
+    <WorkspaceShell current="Report Assistant" title="New incident">
       <div className="incident-workspace">
         <nav className="incident-steps" aria-label="Incident workflow">
           <ol>
             {([1, 2, 3, 4, 5, 6] as const).map((item) => (
               <li className={item === step ? "is-current" : ""} key={item}>
                 <button
-                  disabled={!canOpenStep(item)}
+                  aria-current={item === step ? "step" : undefined}
+                  disabled={saveState === "saving" || !canOpenStep(item)}
                   onClick={() => setStep(item)}
                   type="button"
                 >
@@ -535,7 +606,16 @@ export function NewIncidentWorkspace() {
             ))}
           </ol>
         </nav>
-        <form className="incident-stage" onSubmit={save}>
+        <form
+          className="incident-stage"
+          onSubmit={save}
+          inert={saveState === "saving"}
+          aria-busy={saveState === "saving"}
+        >
+          <p className="workspace-status-message">
+            Not saved yet. Complete the review and choose Save incident in step
+            6. Keep this page open until saving is confirmed.
+          </p>
           <div className="incident-stage-progress">
             <div className="incident-stage-progress-heading">
               <p className="eyebrow">Report workflow</p>
@@ -637,21 +717,24 @@ export function NewIncidentWorkspace() {
                   </>
                 ) : null}
               </section>
-              <button
-                className="incident-primary"
-                disabled={
-                  staffLoadState !== "loaded" ||
-                  !currentStaff ||
-                  reportingOfficerCount < 1
-                }
-                onClick={() => {
-                  setOfficerConfirmed(true);
-                  setStep(2);
-                }}
-                type="button"
-              >
-                Confirm officer relationships
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={
+                    staffLoadState !== "loaded" ||
+                    !currentStaff ||
+                    reportingOfficerCount < 1
+                  }
+                  onClick={() => {
+                    setOfficerConfirmed(true);
+                    setStep(2);
+                  }}
+                  type="button"
+                >
+                  Confirm officer relationships
+                </Button>
+              </div>
             </>
           ) : null}
           {step === 2 ? (
@@ -776,14 +859,17 @@ export function NewIncidentWorkspace() {
                 This recovered checklist is approved for the limited production
                 pilot. Review every answer before saving.
               </p>
-              <button
-                className="incident-primary"
-                disabled={!readyForFactReview || !factSourceSupported}
-                onClick={beginFactReview}
-                type="button"
-              >
-                Confirm category and review facts
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={!readyForFactReview || !factSourceSupported}
+                  onClick={beginFactReview}
+                  type="button"
+                >
+                  Confirm category and review facts
+                </Button>
+              </div>
               {deterministicFactProposals.length > 200 ? (
                 <p className="workspace-status-message" role="alert">
                   Field notes have more than 200 non-empty lines. Combine
@@ -864,14 +950,17 @@ export function NewIncidentWorkspace() {
                   placeholder="Keep missing information visible"
                 />
               </label>
-              <button
-                className="incident-primary"
-                disabled={!factReviewComplete}
-                onClick={() => setStep(4)}
-                type="button"
-              >
-                Continue to missing information
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={!factReviewComplete}
+                  onClick={() => setStep(4)}
+                  type="button"
+                >
+                  Continue to missing information
+                </Button>
+              </div>
             </>
           ) : null}
           {step === 4 ? (
@@ -894,14 +983,17 @@ export function NewIncidentWorkspace() {
                   ? "Required missing-information questions are reviewed."
                   : `${checklistReview.issues.length} required or invalid checklist item${checklistReview.issues.length === 1 ? " remains" : "s remain"}.`}
               </p>
-              <button
-                className="incident-primary"
-                disabled={!checklistReview.complete}
-                onClick={() => setStep(5)}
-                type="button"
-              >
-                Review report types
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={!checklistReview.complete}
+                  onClick={() => setStep(5)}
+                  type="button"
+                >
+                  Review report types
+                </Button>
+              </div>
             </>
           ) : null}
           {step === 5 ? (
@@ -978,17 +1070,20 @@ export function NewIncidentWorkspace() {
                     : "Choose at least one reporting officer for every confirmed fact."}
                 </p>
               </section>
-              <button
-                className="incident-primary"
-                disabled={!factReportingScopesComplete}
-                onClick={() => {
-                  setReportsReviewed(true);
-                  setStep(6);
-                }}
-                type="button"
-              >
-                Continue to Forms &amp; Export
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={!factReportingScopesComplete}
+                  onClick={() => {
+                    setReportsReviewed(true);
+                    setStep(6);
+                  }}
+                  type="button"
+                >
+                  Continue to Forms &amp; Export
+                </Button>
+              </div>
             </>
           ) : null}
           {step === 6 ? (
@@ -1010,30 +1105,52 @@ export function NewIncidentWorkspace() {
                   filed.
                 </p>
               </section>
-              <button
-                className="incident-primary"
-                disabled={
-                  saveState === "saving" ||
-                  !readyForFactReview ||
-                  !factReviewComplete ||
-                  !checklistReview.complete ||
-                  !factReportingScopesComplete
-                }
-                type="submit"
-              >
-                {saveState === "saving" ? "Saving incident…" : "Save incident"}
-              </button>
+              <div className="go-ui">
+                <Button
+                  size="lg"
+                  className="mt-6 h-auto min-h-12 whitespace-normal py-3"
+                  disabled={
+                    saveState === "saving" ||
+                    !readyForFactReview ||
+                    !factReviewComplete ||
+                    !checklistReview.complete ||
+                    !factReportingScopesComplete
+                  }
+                  type="submit"
+                >
+                  {saveState === "saving"
+                    ? "Saving incident…"
+                    : "Save incident"}
+                </Button>
+              </div>
               <p aria-live="polite" className="workspace-status-message">
                 {saveState === "saved"
                   ? "Incident saved. Return to Reports to view the authorized list."
-                  : saveState === "failed"
-                    ? "The incident could not be saved. Nothing was changed."
-                    : null}
+                  : saveState === "expired"
+                    ? "Your session ended. Your entries are still here. Sign in again in a separate tab, then return here and try Save incident."
+                    : saveState === "failed"
+                      ? "Save could not be confirmed. Your entries are still here. Try Save incident again to check the same save."
+                      : null}
               </p>
+              {saveState === "expired" ? (
+                <a
+                  className="reports-home-link"
+                  href="/login"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  Sign in again (opens a new tab)
+                </a>
+              ) : null}
             </>
           ) : null}
         </form>
         <aside className="incident-rail">
+          <p role="status">
+            {saveState === "saving"
+              ? "Saving incident. Keep this page open."
+              : null}
+          </p>
           <h2>Report Assistant rules</h2>
           <p>
             Category questions come from one versioned pilot checklist. Required
@@ -1041,7 +1158,10 @@ export function NewIncidentWorkspace() {
             confirmed facts.
           </p>
           <ul>
-            <li>Checklist status: {REPORT_CHECKLIST_APPROVAL_STATUS}</li>
+            <li>
+              Checklist status:{" "}
+              {REPORT_CHECKLIST_APPROVAL_STATUS.replaceAll("_", " ")}
+            </li>
             <li>
               {unknown.trim()
                 ? "Unknown information is recorded."

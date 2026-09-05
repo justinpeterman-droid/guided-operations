@@ -7,6 +7,34 @@ import { ReportsList } from "./reports-list";
 afterEach(cleanup);
 
 describe("ReportsList", () => {
+  it("displays and searches the category label without exposing its internal code", async () => {
+    const user = userEvent.setup();
+    render(
+      <ReportsList
+        reports={[]}
+        incidents={[
+          {
+            incidentId: "fictional",
+            incidentNumber: "F-003",
+            displayName: "Fictional category review",
+            status: "draft",
+            occurredAt: "2026-09-05T12:00:00Z",
+            category: "incident_no_disciplinary",
+            currentRevisionNumber: 1,
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("Incident (No Disciplinary)")).toBeVisible();
+    expect(
+      screen.queryByText("incident_no_disciplinary"),
+    ).not.toBeInTheDocument();
+    await user.type(
+      screen.getByLabelText("Search your authorized reports"),
+      "No Disciplinary",
+    );
+    expect(screen.getByRole("link", { name: "F-003" })).toBeVisible();
+  });
   it("filters only the authorized summaries it was given", async () => {
     const user = userEvent.setup();
     const view = render(
@@ -61,9 +89,31 @@ describe("ReportsList", () => {
       "/incidents/two",
     );
 
-    expect(view.container.querySelectorAll(".status-badge")).toHaveLength(2);
+    expect(view.container.querySelectorAll('[data-slot="badge"]')).toHaveLength(
+      2,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Showing 1 of 2 incidents and 1 of 1 reports",
+    );
+    await user.clear(screen.getByLabelText("Search your authorized reports"));
+    await user.type(
+      screen.getByLabelText("Search your authorized reports"),
+      "Cover letter",
+    );
+    expect(screen.getByRole("link", { name: "Cover letter" })).toBeVisible();
+    await user.clear(screen.getByLabelText("Search your authorized reports"));
+    await user.type(
+      screen.getByLabelText("Search your authorized reports"),
+      "no matching fictional record",
+    );
     expect(
-      view.container.querySelectorAll('[class~=".status-badge"]'),
-    ).toHaveLength(0);
+      screen.getByText("No authorized reports match this search."),
+    ).toBeVisible();
+    await user.click(screen.getByRole("button", { name: "Clear search" }));
+    expect(
+      screen.getByLabelText("Search your authorized reports"),
+    ).toHaveFocus();
+    expect(screen.getByRole("link", { name: "F-001" })).toBeVisible();
+    expect(screen.getByRole("link", { name: "Cover letter" })).toBeVisible();
   });
 });

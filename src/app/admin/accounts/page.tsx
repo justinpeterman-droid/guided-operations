@@ -35,8 +35,6 @@ export default async function AdminAccountsPage() {
         </p>
       </section>
 
-      <AccountInvitationForm />
-
       {result.accounts.length === 0 ? (
         <section className="reports-empty-state" aria-labelledby="empty-title">
           <h2 id="empty-title">No accounts are available.</h2>
@@ -109,6 +107,9 @@ export default async function AdminAccountsPage() {
           </div>
         </section>
       )}
+      <section className="admin-account-create" aria-label="Add an account">
+        <AccountInvitationForm />
+      </section>
     </AdminShell>
   );
 }

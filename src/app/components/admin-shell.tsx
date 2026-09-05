@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
+import { AdminNavigation } from "@/app/components/admin-navigation";
 import type { WorkspaceNavigationProps } from "@/app/components/workspace-navigation";
 
 export type AdminShellProps = Readonly<{
@@ -35,6 +36,7 @@ export function AdminShell({
       current={current}
       title={title}
     >
+      <AdminNavigation />
       {children}
     </WorkspaceShell>
   );

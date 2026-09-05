@@ -1,7 +1,5 @@
 /* Officer feedback and form-intake surfaces. */
-.improvement-launcher-trigger,
-.forms-library-request,
-.improvement-form-actions button {
+.improvement-form-actions button:not([data-slot="button"]) {
   border: 0;
   border-radius: 999px;
   background: var(--gow-navy-800);
@@ -173,9 +171,11 @@
   margin-top: 1.25rem;
 }
 .improvement-page {
+  width: min(1180px, calc(100% - 32px));
+  margin-inline: auto;
   min-height: 100vh;
   padding-bottom: 3rem;
-  background: var(--gow-canvas);
+  background: transparent;
 }
 .improvement-page-intro,
 .improvement-intake-card,
@@ -187,18 +187,21 @@
   padding: 3rem 0 1.25rem;
 }
 .improvement-page-intro h1 {
-  max-width: 18ch;
+  max-width: 28ch;
   margin: 0.25rem 0 0.7rem;
   color: var(--gow-ink);
-  font-size: clamp(2rem, 5vw, 3.4rem);
-  line-height: 1.04;
+  font-family: var(--gow-font-sans);
+  font-size: clamp(1.8rem, 3.2vw, 2.5rem);
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  line-height: 1.18;
 }
 .improvement-page-intro p {
   max-width: 58ch;
   color: var(--gow-muted);
   font-size: 1.05rem;
 }
-.improvement-page-intro a {
+.improvement-page-intro a:not([data-slot="button"]) {
   color: var(--gow-navy-700);
   font-weight: 700;
 }

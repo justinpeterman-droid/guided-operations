@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useUnsavedChanges } from "./use-unsaved-changes";
 
 async function csrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
@@ -29,9 +30,10 @@ export function ImprovementMessageComposer({
   const [body, setBody] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  useUnsavedChanges(Boolean(body));
 
   async function submit() {
-    if (body.trim().length < 1) return;
+    if (pending || body.trim().length < 1) return;
     setPending(true);
     setError(null);
     try {
@@ -51,7 +53,9 @@ export function ImprovementMessageComposer({
       setBody("");
       router.refresh();
     } catch {
-      setError("Your reply was not sent. Please try again.");
+      setError(
+        "Sending could not be confirmed. Your reply is still here. Check the conversation in a separate tab before sending it again.",
+      );
     } finally {
       setPending(false);
     }
@@ -69,6 +73,7 @@ export function ImprovementMessageComposer({
       </p>
       <label htmlFor="improvement-message">Your reply</label>
       <textarea
+        disabled={pending}
         id="improvement-message"
         maxLength={3000}
         onChange={(event) => setBody(event.target.value)}

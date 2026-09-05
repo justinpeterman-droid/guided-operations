@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 import { WorkspaceBrand } from "@/app/components/workspace-brand";
 
@@ -65,25 +66,25 @@ export function WorkspaceMessage({
         <p className="eyebrow">{eyebrow}</p>
         <h1 id={titleId}>{title}</h1>
         <p>{description}</p>
-        <div className="workspace-message-actions">
-          {actions.map((action) =>
+        <div className="go-ui workspace-message-actions">
+          {actions.map((action, index) =>
             "href" in action ? (
-              <Link
-                className="reports-home-link"
-                href={action.href}
+              <Button
+                asChild
+                variant={index === 0 ? "default" : "outline"}
                 key={action.href}
               >
-                {action.label}
-              </Link>
+                <Link href={action.href}>{action.label}</Link>
+              </Button>
             ) : (
-              <button
-                className="reports-home-link workspace-retry-button"
+              <Button
+                variant={index === 0 ? "default" : "outline"}
                 key={action.label}
                 onClick={action.onClick}
                 type="button"
               >
                 {action.label}
-              </button>
+              </Button>
             ),
           )}
         </div>

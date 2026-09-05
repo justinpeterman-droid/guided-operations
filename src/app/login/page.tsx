@@ -16,12 +16,15 @@ export default function LoginPage() {
       </header>
 
       <section className="login-card" aria-labelledby="login-title">
+        <p className="eyebrow">Your facility workspace</p>
         <h1 id="login-title">Sign in</h1>
-        <p>
-          Use your employee number and personal passcode. This private workspace
-          does not offer public registration or password recovery.
-        </p>
+        <p>Use your employee number and personal passcode.</p>
         <LoginForm />
+        <p className="login-help">
+          Accounts are issued by your unit administrator. Contact them if you
+          need access or help signing in. This workspace does not offer public
+          registration or password recovery.
+        </p>
       </section>
     </main>
   );

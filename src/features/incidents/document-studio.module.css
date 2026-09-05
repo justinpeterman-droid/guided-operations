@@ -44,10 +44,10 @@
   overflow-wrap: anywhere;
   color: var(--gow-navy-950);
   font-family: var(--gow-font-brand);
-  font-size: clamp(2.35rem, 5vw, 4.6rem);
+  font-size: clamp(2.2rem, 4vw, 3.5rem);
   font-weight: 600;
   letter-spacing: -0.045em;
-  line-height: 0.98;
+  line-height: 1.1;
 }
 
 .metadata {
@@ -360,7 +360,7 @@
   }
 
   .identity h1 {
-    font-size: clamp(2.15rem, 12vw, 3.5rem);
+    font-size: clamp(2rem, 8vw, 2.6rem);
   }
 
   .metadata {

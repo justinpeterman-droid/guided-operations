@@ -30,13 +30,13 @@ export function WorkspaceShell({
       <header className="workspace-header workspace-shell-header">
         <WorkspaceBrand href={brandHref} title={title} />
         <div className="workspace-shell-toolbar">
-          <WorkspaceNavigation current={current} />
           {actions ? (
             <div className="workspace-shell-actions">{actions}</div>
           ) : null}
           <ImprovementLauncher />
         </div>
       </header>
+      <WorkspaceNavigation current={current} />
       {children}
     </main>
   );

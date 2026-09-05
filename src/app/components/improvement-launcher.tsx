@@ -2,6 +2,10 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import { Dialog as DialogPrimitive } from "radix-ui";
+import { MessageSquare } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useUnsavedChanges } from "./use-unsaved-changes";
 
 type SelectedTarget = Readonly<{
   id?: string;
@@ -57,6 +61,9 @@ export function ImprovementLauncher() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selectedElementRef = useRef<HTMLElement | null>(null);
+  const requestRef = useRef<{ fingerprint: string; body: string } | null>(null);
+  const submittingRef = useRef(false);
+  useUnsavedChanges(Boolean(description) && state !== "sent");
 
   function clearSelectedElement() {
     selectedElementRef.current?.removeAttribute("data-feedback-selected");
@@ -95,21 +102,48 @@ export function ImprovementLauncher() {
   useEffect(() => clearSelectedElement, []);
 
   function close() {
+    if (submittingRef.current) return;
+    if (
+      description &&
+      state !== "sent" &&
+      !window.confirm("Discard your unsent suggestion?")
+    )
+      return;
     clearSelectedElement();
     setSelected(null);
     setDescription("");
+    requestRef.current = null;
     setError(null);
     setState("closed");
   }
 
   async function submit() {
+    if (submittingRef.current) return;
     if (description.trim().length < 3) {
       setError("Describe what should change before sending it.");
       return;
     }
+    submittingRef.current = true;
     setSubmitting(true);
     setError(null);
     try {
+      const content = {
+        requestKind: "page_feedback",
+        category: "idea",
+        description,
+        routePath: window.location.pathname,
+        target: selected ?? undefined,
+      };
+      const fingerprint = JSON.stringify(content);
+      if (requestRef.current?.fingerprint !== fingerprint)
+        requestRef.current = {
+          fingerprint,
+          body: JSON.stringify({
+            requestNonce: crypto.randomUUID(),
+            ...content,
+            viewport: { width: window.innerWidth, height: window.innerHeight },
+          }),
+        };
       const token = await csrfToken();
       const response = await fetch("/api/web/v1/improvement-requests", {
         method: "POST",
@@ -118,37 +152,19 @@ export function ImprovementLauncher() {
           "Content-Type": "application/json",
           "X-CSRF-Token": token,
         },
-        body: JSON.stringify({
-          requestNonce: crypto.randomUUID(),
-          requestKind: "page_feedback",
-          category: "idea",
-          description,
-          routePath: window.location.pathname,
-          target: selected ?? undefined,
-          viewport: { width: window.innerWidth, height: window.innerHeight },
-        }),
+        body: requestRef.current.body,
       });
       if (!response.ok) throw new Error("request_failed");
       clearSelectedElement();
       setState("sent");
     } catch {
-      setError("Your suggestion could not be sent. Nothing was changed.");
+      setError(
+        "Sending could not be confirmed. Your suggestion is still here. Retry unchanged to check the same suggestion; editing starts a separate request.",
+      );
     } finally {
+      submittingRef.current = false;
       setSubmitting(false);
     }
-  }
-
-  if (state === "closed") {
-    return (
-      <button
-        className="improvement-launcher-trigger"
-        data-feedback-id="suggest-change-trigger"
-        onClick={() => setState("menu")}
-        type="button"
-      >
-        Suggest a change
-      </button>
-    );
   }
 
   if (state === "selecting") {
@@ -164,105 +180,144 @@ export function ImprovementLauncher() {
   }
 
   return (
-    <div className="improvement-dialog-backdrop" data-feedback-ignore>
-      <section
-        aria-labelledby="improvement-dialog-title"
-        aria-modal="true"
-        className="improvement-dialog"
-        role="dialog"
-      >
-        <div className="improvement-dialog-heading">
-          <div>
-            <p className="eyebrow">Help improve Guided Operations</p>
-            <h2 id="improvement-dialog-title">Suggest a change</h2>
-          </div>
-          <button aria-label="Close suggestion" onClick={close} type="button">
-            Close
-          </button>
-        </div>
-
-        {state === "menu" ? (
-          <div className="improvement-choice-list">
-            <button onClick={() => setState("selecting")} type="button">
-              <strong>Point to this page</strong>
-              <span>Tap the exact button, field, heading, or section.</span>
-            </button>
-            <button
-              onClick={() => {
-                setSelected({ label: "Whole page" });
-                setState("compose");
-              }}
-              type="button"
-            >
-              <strong>Report something not working</strong>
-              <span>Tell us what happened and what you expected.</span>
-            </button>
-            <Link href="/improvements/new?kind=form">
-              <strong>Request or upload a form</strong>
-              <span>Send a blank form candidate for review.</span>
-            </Link>
-            <Link href="/improvements">
-              <strong>My suggestions and requests</strong>
-              <span>See the status or reply to a follow-up.</span>
-            </Link>
-          </div>
-        ) : null}
-
-        {state === "compose" ? (
-          <form
-            className="improvement-compose-form"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
+    <DialogPrimitive.Root
+      open={state !== "closed"}
+      onOpenChange={(open) => {
+        if (open) setState("menu");
+        else close();
+      }}
+    >
+      <div className="go-ui">
+        <DialogPrimitive.Trigger asChild>
+          <Button
+            variant="outline"
+            data-feedback-id="suggest-change-trigger"
+            type="button"
           >
-            <p className="improvement-target-summary">
-              About: <strong>{selected?.label ?? "This page"}</strong>
-            </p>
-            <label htmlFor="improvement-description">What should change?</label>
-            <textarea
-              autoFocus
-              id="improvement-description"
-              maxLength={4000}
-              onChange={(event) => setDescription(event.target.value)}
-              placeholder="Explain what was confusing, missing, or not working."
-              required
-              rows={6}
-              value={description}
-            />
-            <p className="improvement-privacy-note">
-              The site records this page and the selected item. It does not take
-              a screen capture or copy what is on the page.
-            </p>
-            {error ? (
-              <p className="improvement-error" role="alert">
-                {error}
-              </p>
-            ) : null}
-            <div className="improvement-dialog-actions">
-              <button onClick={() => setState("menu")} type="button">
-                Back
-              </button>
-              <button disabled={submitting} type="submit">
-                {submitting ? "Sending…" : "Send suggestion"}
+            <MessageSquare aria-hidden="true" />
+            Suggest a change
+          </Button>
+        </DialogPrimitive.Trigger>
+      </div>
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Overlay
+          className="improvement-dialog-backdrop"
+          data-feedback-ignore
+        >
+          <DialogPrimitive.Content
+            aria-labelledby="improvement-dialog-title"
+            aria-describedby={undefined}
+            className="improvement-dialog"
+            onInteractOutside={(event) => event.preventDefault()}
+          >
+            <div className="improvement-dialog-heading">
+              <div>
+                <p className="eyebrow">Help improve Guided Operations</p>
+                <DialogPrimitive.Title id="improvement-dialog-title">
+                  Suggest a change
+                </DialogPrimitive.Title>
+              </div>
+              <button
+                disabled={submitting}
+                aria-label="Close suggestion"
+                onClick={close}
+                type="button"
+              >
+                Close
               </button>
             </div>
-          </form>
-        ) : null}
 
-        {state === "sent" ? (
-          <div className="improvement-success">
-            <h3>Suggestion sent</h3>
-            <p>You can keep working. You will see any follow-up here.</p>
-            <div className="improvement-dialog-actions">
-              <button onClick={close} type="button">
-                Done
-              </button>
-              <Link href="/improvements">View my requests</Link>
-            </div>
-          </div>
-        ) : null}
-      </section>
-    </div>
+            {state === "menu" ? (
+              <div className="improvement-choice-list">
+                <button onClick={() => setState("selecting")} type="button">
+                  <strong>Point to this page</strong>
+                  <span>Tap the exact button, field, heading, or section.</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelected({ label: "Whole page" });
+                    setState("compose");
+                  }}
+                  type="button"
+                >
+                  <strong>Report something not working</strong>
+                  <span>Tell us what happened and what you expected.</span>
+                </button>
+                <Link href="/improvements/new?kind=form">
+                  <strong>Request or upload a form</strong>
+                  <span>Send a blank form candidate for review.</span>
+                </Link>
+                <Link href="/improvements">
+                  <strong>My suggestions and requests</strong>
+                  <span>See the status or reply to a follow-up.</span>
+                </Link>
+              </div>
+            ) : null}
+
+            {state === "compose" ? (
+              <form
+                className="improvement-compose-form"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void submit();
+                }}
+              >
+                <p className="improvement-target-summary">
+                  About: <strong>{selected?.label ?? "This page"}</strong>
+                </p>
+                <label htmlFor="improvement-description">
+                  What should change?
+                </label>
+                <textarea
+                  disabled={submitting}
+                  autoFocus
+                  id="improvement-description"
+                  maxLength={4000}
+                  onChange={(event) => setDescription(event.target.value)}
+                  placeholder="Explain what was confusing, missing, or not working."
+                  required
+                  rows={6}
+                  value={description}
+                />
+                <p className="improvement-privacy-note">
+                  The site records this page and the selected item. It does not
+                  take a screen capture or copy what is on the page.
+                </p>
+                {error ? (
+                  <p className="improvement-error" role="alert">
+                    {error}
+                  </p>
+                ) : null}
+                <div className="improvement-dialog-actions">
+                  <button
+                    disabled={submitting}
+                    onClick={() => setState("menu")}
+                    type="button"
+                  >
+                    Back
+                  </button>
+                  <button disabled={submitting} type="submit">
+                    {submitting ? "Sending…" : "Send suggestion"}
+                  </button>
+                </div>
+              </form>
+            ) : null}
+
+            {state === "sent" ? (
+              <div className="improvement-success">
+                <h3>Suggestion sent</h3>
+                <p>You can keep working. You will see any follow-up here.</p>
+                <div className="improvement-dialog-actions">
+                  <button onClick={close} type="button">
+                    Done
+                  </button>
+                  <Link href="/improvements">View my requests</Link>
+                </div>
+              </div>
+            ) : null}
+          </DialogPrimitive.Content>
+        </DialogPrimitive.Overlay>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   );
 }

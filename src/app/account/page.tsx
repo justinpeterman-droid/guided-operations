@@ -56,14 +56,15 @@ export default async function AccountPage() {
         <p className="eyebrow">Private workspace</p>
         <h1 id="account-title">Account safety</h1>
         <p>
-          Your current role is <strong>{result.role}</strong>. This page never
-          displays your employee number, internal sign-in alias, or session
-          tokens.
+          Manage your passcode and signed-in devices. Your current role is{" "}
+          <strong>{result.role}</strong>.
         </p>
       </section>
 
-      <AccountSessionControls />
-      <PersonalPasscodeChangeForm />
+      <div className="account-safety-grid">
+        <AccountSessionControls />
+        <PersonalPasscodeChangeForm />
+      </div>
     </WorkspaceShell>
   );
 }

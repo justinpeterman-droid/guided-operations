@@ -1,14 +1,18 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
+import { useUnsavedChanges } from "@/app/components/use-unsaved-changes";
+import { useIdempotentRequest } from "@/app/components/use-idempotent-request";
 
-type SubmissionState = "idle" | "saving" | "failed" | "conflict";
+type SubmissionState =
+  "idle" | "saving" | "failed" | "conflict" | "expired" | "saved";
 
 async function getCsrfToken(): Promise<string> {
   const response = await fetch("/api/auth/csrf", {
     credentials: "same-origin",
   });
+  if (response.status === 401) throw new Error("session_expired");
   const data: unknown = await response.json();
   if (
     !response.ok ||
@@ -33,13 +37,35 @@ export function ReportRevisionForm({
   const router = useRouter();
   const [narrative, setNarrative] = useState(initialNarrative);
   const [reason, setReason] = useState("");
+  const [baseRevisionNumber] = useState(revisionNumber);
+  const revisionChanged = baseRevisionNumber !== revisionNumber;
   const [state, setState] = useState<SubmissionState>("idle");
+  const saving = useRef(false);
+  const prepareRequest = useIdempotentRequest();
+  useUnsavedChanges(
+    state !== "saved" && (narrative !== initialNarrative || Boolean(reason)),
+  );
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!narrative.trim() || !reason.trim()) return;
+    if (
+      saving.current ||
+      revisionChanged ||
+      state === "saved" ||
+      !narrative.trim() ||
+      !reason.trim()
+    )
+      return;
+    saving.current = true;
     setState("saving");
     try {
+      const request = prepareRequest(
+        JSON.stringify({
+          baseRevisionNumber,
+          narrative: narrative.trim(),
+          reason: reason.trim(),
+        }),
+      );
       const csrfToken = await getCsrfToken();
       const response = await fetch(
         `/api/web/v1/reports/${reportId}/revisions`,
@@ -49,15 +75,12 @@ export function ReportRevisionForm({
           headers: {
             "Content-Type": "application/json",
             "x-csrf-token": csrfToken,
-            "idempotency-key": crypto.randomUUID().replaceAll("-", ""),
+            "idempotency-key": request.key,
           },
-          body: JSON.stringify({
-            baseRevisionNumber: revisionNumber,
-            narrative: narrative.trim(),
-            reason: reason.trim(),
-          }),
+          body: request.body,
         },
       );
+      if (response.status === 401) throw new Error("session_expired");
       if (response.status === 409) {
         setState("conflict");
         return;
@@ -66,24 +89,50 @@ export function ReportRevisionForm({
         setState("failed");
         return;
       }
-      setState("idle");
+      const result: unknown = await response.json();
+      if (
+        !result ||
+        typeof result !== "object" ||
+        !("data" in result) ||
+        !result.data ||
+        typeof result.data !== "object" ||
+        !("revisionNumber" in result.data) ||
+        result.data.revisionNumber !== baseRevisionNumber + 1
+      )
+        throw new Error("response");
+      setState("saved");
       setReason("");
       router.refresh();
-    } catch {
-      setState("failed");
+    } catch (error) {
+      setState(
+        error instanceof Error && error.message === "session_expired"
+          ? "expired"
+          : "failed",
+      );
+    } finally {
+      saving.current = false;
     }
   }
 
   return (
-    <form className="draft-finalization-form" onSubmit={submit}>
+    <form
+      className="draft-finalization-form"
+      onSubmit={submit}
+      aria-busy={state === "saving"}
+    >
       <h2>Create a corrected revision</h2>
       <p>
         This adds a new immutable version. The current report is never edited or
         removed.
       </p>
       <label>
-        Corrected narrative
+        <span id={`corrected-narrative-label-${reportId}`}>
+          Corrected narrative
+        </span>
         <textarea
+          aria-labelledby={`corrected-narrative-label-${reportId}`}
+          disabled={state === "saving" || state === "saved"}
+          maxLength={50000}
           className="resize-vertical"
           onChange={(event) => setNarrative(event.target.value)}
           required
@@ -93,6 +142,7 @@ export function ReportRevisionForm({
       <label>
         Correction reason
         <input
+          disabled={state === "saving" || state === "saved"}
           maxLength={500}
           onChange={(event) => setReason(event.target.value)}
           required
@@ -101,7 +151,13 @@ export function ReportRevisionForm({
       </label>
       <button
         className="incident-primary"
-        disabled={state === "saving" || !narrative.trim() || !reason.trim()}
+        disabled={
+          state === "saving" ||
+          state === "saved" ||
+          revisionChanged ||
+          !narrative.trim() ||
+          !reason.trim()
+        }
         type="submit"
       >
         {state === "saving"
@@ -109,12 +165,27 @@ export function ReportRevisionForm({
           : "Create corrected revision"}
       </button>
       <p aria-live="polite" className="workspace-status-message">
-        {state === "conflict"
-          ? "A newer revision was saved. Your correction is still here; copy it, then reload the report before trying again."
-          : state === "failed"
-            ? "The correction could not be saved. Nothing was changed."
-            : null}
+        {state === "saved"
+          ? "Correction saved. Open the updated report before making another correction."
+          : state === "expired"
+            ? "Your session ended. Your correction is still here. Sign in in a separate tab, then return and retry."
+            : state === "conflict" || revisionChanged
+              ? "A newer revision was saved. Your correction is still here; copy it, then reload the report before trying again."
+              : state === "failed"
+                ? "Save could not be confirmed. Your correction is still here. Retry without changing it to check the same save."
+                : null}
       </p>
+      {state === "expired" ? (
+        <a href="/login" target="_blank" rel="noopener noreferrer">
+          Sign in again (opens a new tab)
+        </a>
+      ) : null}
+      {state === "saved" ? (
+        <a href={`/reports/${reportId}`}>Open updated report</a>
+      ) : null}
+      {revisionChanged && state !== "saved" ? (
+        <a href={`/reports/${reportId}`}>Reload current report</a>
+      ) : null}
     </form>
   );
 }

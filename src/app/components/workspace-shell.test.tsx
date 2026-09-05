@@ -15,10 +15,9 @@ describe("WorkspaceShell", () => {
       screen.getByRole("link", { name: /Guided Operations/i }),
     ).toHaveAttribute("href", "/home");
     expect(screen.getByRole("navigation", { name: "Workspace" })).toBeVisible();
-    expect(screen.getByRole("link", { name: "Reports" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    expect(
+      screen.getByRole("link", { name: "Reports & History" }),
+    ).toHaveAttribute("aria-current", "page");
     expect(screen.getByText("Authorized report list")).toBeVisible();
   });
 });

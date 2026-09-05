@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
@@ -53,7 +54,13 @@ export default async function ImprovementsPage() {
           Use the detail page to see a review update. Nothing is published
           automatically.
         </p>
-        <Link href="/improvements/new?kind=form">Request or upload a form</Link>
+        <div className="go-ui">
+          <Button asChild variant="outline">
+            <Link href="/improvements/new?kind=form">
+              Request or upload a form
+            </Link>
+          </Button>
+        </div>
       </section>
       <section className="improvement-request-list" aria-label="Your requests">
         {requests.length ? (

@@ -7,6 +7,27 @@ import { PolicyExpert } from "./policy-expert";
 describe("PolicyExpert", () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => cleanup());
+  it("keeps a question and offers separate-tab sign-in after session expiration", async () => {
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(
+      Response.json({}, { status: 401 }),
+    );
+    const user = userEvent.setup();
+    render(<PolicyExpert />);
+    await user.type(
+      screen.getByLabelText("Policy question"),
+      "Fictional policy question?",
+    );
+    await user.click(
+      screen.getByRole("button", { name: "Find cited guidance" }),
+    );
+    expect(await screen.findByText(/Your session ended/)).toBeVisible();
+    expect(screen.getByLabelText("Policy question")).toHaveValue(
+      "Fictional policy question?",
+    );
+    expect(
+      screen.getByRole("link", { name: "Sign in again (opens a new tab)" }),
+    ).toHaveAttribute("target", "_blank");
+  });
 
   it("keeps native question validation and allows vertical expansion", () => {
     render(<PolicyExpert />);

@@ -125,7 +125,26 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
   });
   await page.getByRole("button", { name: "Print training preview" }).focus();
   await page.keyboard.press("Tab");
+  await expect(
+    page.getByRole("button", {
+      name: "Mark A/W Office as needing attention",
+      exact: true,
+    }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
   await expect(firstCell).toBeFocused();
+  const firstColumn = page.getByRole("button", {
+    name: "Highlight column 1 red",
+    exact: true,
+  });
+  await expect(page.locator("thead button")).toHaveCount(0);
+  await expect(page.locator(".count-sheet-total-row button")).toHaveCount(16);
+  await firstColumn.focus();
+  await page.keyboard.press("Space");
+  await expect(firstColumn).toHaveAttribute("aria-pressed", "true");
+  await expect(firstCell.locator("..")).toHaveClass(
+    /count-sheet-column-flagged/,
+  );
   await firstCell.fill("1");
   await expect(firstCell).toHaveValue("1");
   await page.emulateMedia({ media: "print", reducedMotion: "reduce" });

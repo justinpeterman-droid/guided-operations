@@ -40,7 +40,7 @@ export default async function AdminImprovementsPage() {
   return (
     <AdminShell
       actions={<AdminAccountLink />}
-      className="improvement-page"
+      className="reports-page improvement-page"
       title="Suggestions and form review"
     >
       <section className="improvement-page-intro">

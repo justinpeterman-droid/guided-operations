@@ -54,11 +54,16 @@ export async function POST(
     }
 
     const store = createPrivateImprovementStore();
-    const candidate = await store.getPendingFormCandidate(
+    const candidate = await store.getFormCandidateForUpload(
       requestId,
       session.account.authUserId,
+      session.account.facilityId,
     );
     if (!candidate) return errorResponse(404, "not_found", correlationId);
+    // Only the authorized owner's unexpired, already integrity-verified upload
+    // can reach this branch. A lost response must not require another upload.
+    if (candidate.uploadState === "uploaded")
+      return finalizedResponse(correlationId);
 
     const download = await client.storage
       .from(FORM_CANDIDATE_BUCKET)
@@ -89,16 +94,20 @@ export async function POST(
       actualMediaType,
     );
 
-    return Response.json(
-      {
-        data: { finalized: true },
-        meta: { request_id: correlationId, api_version: API_VERSION },
-      },
-      { status: 200, headers: NO_STORE_HEADERS },
-    );
+    return finalizedResponse(correlationId);
   } catch {
     return errorResponse(503, "service_unavailable", correlationId);
   }
+}
+
+function finalizedResponse(requestId: string) {
+  return Response.json(
+    {
+      data: { finalized: true },
+      meta: { request_id: requestId, api_version: API_VERSION },
+    },
+    { status: 200, headers: NO_STORE_HEADERS },
+  );
 }
 
 function detectMediaType(

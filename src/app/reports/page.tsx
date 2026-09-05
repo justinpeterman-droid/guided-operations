@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 import { WorkspaceShell } from "@/app/components/workspace-shell";
 import {
@@ -57,8 +58,9 @@ export default async function ReportsPage() {
         <p className="eyebrow">Your authorized work</p>
         <h1 id="reports-title">Reports and incidents</h1>
         <p>
-          This workspace contains only records your current account is allowed
-          to see. It never substitutes a training example for a missing record.
+          Find your saved incidents and reports, review their status, and open
+          the version you need. Only records available to your account appear
+          here.
         </p>
       </section>
 
@@ -70,9 +72,11 @@ export default async function ReportsPage() {
             authorized incident is created, it will appear here with its current
             review status.
           </p>
-          <Link className="reports-home-link" href="/incidents/new">
-            Start a new incident
-          </Link>
+          <div className="go-ui workspace-message-actions">
+            <Button asChild>
+              <Link href="/incidents/new">Start a new incident</Link>
+            </Button>
+          </div>
         </section>
       ) : (
         <ReportsList incidents={result.incidents} reports={result.reports} />
