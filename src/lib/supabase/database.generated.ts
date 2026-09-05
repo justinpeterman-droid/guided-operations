@@ -15,6 +15,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      add_improvement_request_message: {
+        Args: { p_body: string; p_request_id: string }
+        Returns: string
+      }
       append_report_revision: {
         Args: {
           p_base_revision_number: number
@@ -25,6 +29,32 @@ export type Database = {
           p_request_digest: string
         }
         Returns: number
+      }
+      create_improvement_request: {
+        Args: {
+          p_category: string
+          p_description: string
+          p_file_byte_size: number
+          p_file_media_type: string
+          p_file_name: string
+          p_file_sha256: string
+          p_form_title: string
+          p_request_kind: string
+          p_request_nonce: string
+          p_requested_use: string
+          p_route_path: string
+          p_source_authority: string
+          p_source_revision: string
+          p_target_id: string
+          p_target_label: string
+          p_target_role: string
+          p_viewport_height: number
+          p_viewport_width: number
+        }
+        Returns: {
+          request_id: string
+          upload_path: string
+        }[]
       }
       create_incident: {
         Args: {
@@ -62,6 +92,14 @@ export type Database = {
           p_request_digest: string
         }
         Returns: string
+      }
+      form_candidate_object_is_readable: {
+        Args: { p_object_name: string }
+        Returns: boolean
+      }
+      form_candidate_upload_object_is_writable: {
+        Args: { p_object_name: string }
+        Returns: boolean
       }
       get_count_sheet: {
         Args: { p_record_id: string }
@@ -172,6 +210,36 @@ export type Database = {
           template_version: number
           title: string
           validation: Json
+        }[]
+      }
+      get_improvement_request: {
+        Args: { p_request_id: string }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          file_byte_size: number
+          file_media_type: string
+          file_name: string
+          file_uploaded: boolean
+          form_title: string
+          messages: Json
+          release_sha: string
+          request_id: string
+          request_kind: string
+          requested_use: string
+          route_path: string
+          source_authority: string
+          source_revision: string
+          status: string
+          status_history: Json
+          submitted_by_display_name: string
+          target_id: string
+          target_label: string
+          target_role: string
+          updated_at: string
+          viewport_height: number
+          viewport_width: number
         }[]
       }
       get_incident_report_workspace: {
@@ -299,6 +367,30 @@ export type Database = {
           target_type: string
         }[]
       }
+      list_admin_improvement_requests: {
+        Args: { p_limit?: number; p_status?: string }
+        Returns: {
+          category: string
+          created_at: string
+          description: string
+          form_title: string
+          release_sha: string
+          request_id: string
+          request_kind: string
+          requested_use: string
+          route_path: string
+          source_authority: string
+          source_revision: string
+          status: string
+          submitted_by_display_name: string
+          target_id: string
+          target_label: string
+          target_role: string
+          updated_at: string
+          viewport_height: number
+          viewport_width: number
+        }[]
+      }
       list_count_sheet_revisions: {
         Args: { p_record_id: string }
         Returns: {
@@ -385,6 +477,21 @@ export type Database = {
           incident_number: string
           occurred_at: string
           status: string
+          updated_at: string
+        }[]
+      }
+      list_my_improvement_requests: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: string
+          created_at: string
+          form_title: string
+          request_id: string
+          request_kind: string
+          requested_use: string
+          route_path: string
+          status: string
+          target_label: string
           updated_at: string
         }[]
       }
@@ -641,6 +748,15 @@ export type Database = {
           p_source_incident_revision_id: string
         }
         Returns: string
+      }
+      transition_improvement_request: {
+        Args: {
+          p_follow_up_message?: string
+          p_next_status: string
+          p_reason_code: string
+          p_request_id: string
+        }
+        Returns: boolean
       }
     }
     Enums: {
