@@ -788,6 +788,58 @@ describe("Policy Expert answer correctness", () => {
     ).toBe("not_reviewed");
   });
 
+  it.each([
+    { kind: "provider_unavailable" },
+    { kind: "provider_unavailable", reasonCode: "private-invalid-reason" },
+    { kind: "provider_unavailable", reasonCode: null },
+    { kind: "provider_unavailable", reasonCode: 123 },
+  ])("rejects a malformed provider outage: %j", async (outage) => {
+    const { suite, runner, reviewer } = setup();
+    suite.cases = suite.cases.filter((item) => !item.caseId.endsWith("-2"));
+    const result = await evaluatePolicyCorrectnessSuite(
+      {
+        async answer(request) {
+          return request.question.includes("provider outage")
+            ? (outage as PolicyAnswerOutcome)
+            : runner.answer(request);
+        },
+      },
+      suite,
+      { reviewer, clock: clock() },
+    );
+    expect(result.cases.at(-1)).toMatchObject({
+      observedStatus: "runner_error",
+      passed: false,
+    });
+    expect(result.passed).toBe(false);
+    expect(JSON.stringify(result)).not.toContain("private-invalid-reason");
+  });
+
+  it.each([
+    "retrieval_failed",
+    "generation_failed",
+    "invalid_output",
+    "budget_check_failed",
+    "budget_exhausted",
+    "generation_disabled",
+  ] as const)("accepts the registered outage reason %s", async (reasonCode) => {
+    const { suite, runner, reviewer } = setup();
+    suite.cases = suite.cases.filter((item) => !item.caseId.endsWith("-2"));
+    const result = await evaluatePolicyCorrectnessSuite(
+      {
+        async answer(request) {
+          return request.question.includes("provider outage")
+            ? { kind: "provider_unavailable", reasonCode }
+            : runner.answer(request);
+        },
+      },
+      suite,
+      { reviewer, clock: clock() },
+    );
+    expect(result.cases.at(-1)?.passed).toBe(true);
+    expect(result.passed).toBe(true);
+  });
+
   it("does not forward unexpected runner metadata to the reviewer", async () => {
     const { suite, runner } = setup();
     const review = vi.fn();

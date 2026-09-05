@@ -124,8 +124,11 @@ provenance and expected status are checked independently of the reviewer.
 
 Missing, duplicate, malformed, incomplete, or wrong-packet reviews cannot pass.
 Malformed answer output and runner/reviewer failures are reported without raw
-error content. Provider-outage cases do not claim correctness for nonexistent
-answers, but still must satisfy their baseline expected outcome.
+error content. Every runner response is parsed as a strict discriminated union;
+provider outages require one of the service's six registered reason codes.
+Missing, unknown, null, or non-string reasons fail as runner errors.
+Provider-outage cases do not claim correctness for nonexistent answers, but
+still must satisfy their baseline expected outcome.
 
 ## Fictional evidence and remaining qualification
 
@@ -154,11 +157,14 @@ acceptance. No hosted reads or writes are required for the local tests.
 
 Prepared on `feat/policy-answer-correctness` and rebased onto main commit
 `e40715bf15482ca01947065753db0ad657b8dca3` after PR #45 merged. The refreshed
-application run passed 816 tests with one existing skipped test; all 69
-operations tests and all 33 focused evaluation tests passed. Secret and runtime
+application run passed 826 tests with one existing skipped test; all 69
+operations tests and all 43 focused evaluation tests passed. Secret and runtime
 logging checks passed; npm audit found no vulnerabilities, and all 461 registry
 signatures and 132 attestations verified. Formatting, full ESLint, TypeScript,
-and the production build also passed on the rebased branch.
+and the production build also passed on the rebased branch. PR review identified
+an unvalidated outage reason; four new negative regressions reproduced the false
+passes before the strict outcome parser fixed them. Six positive tests preserve
+all registered outage reasons.
 
 No database schema, UI, production generation prompt, or model setting changed.
 The pre-existing main-branch database types/inventory omissions were addressed

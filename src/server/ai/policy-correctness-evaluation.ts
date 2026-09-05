@@ -20,6 +20,32 @@ const alias = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{7,159}$/);
 const statement = z.string().trim().min(3).max(1200);
 const digest = z.string().regex(/^[a-f0-9]{64}$/);
 
+// Parse every runner variant before either qualification lane can accept it.
+const evaluationOutcomeSchema = z.discriminatedUnion("kind", [
+  z
+    .object({ kind: z.literal("answer"), answer: groundedPolicyAnswerSchema })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("insufficient_evidence"),
+      answer: groundedPolicyAnswerSchema,
+    })
+    .strict(),
+  z
+    .object({
+      kind: z.literal("provider_unavailable"),
+      reasonCode: z.enum([
+        "retrieval_failed",
+        "generation_failed",
+        "invalid_output",
+        "budget_check_failed",
+        "budget_exhausted",
+        "generation_disabled",
+      ]),
+    })
+    .strict(),
+]);
+
 export const policyCorrectnessRubricSchema = z
   .object({
     referenceAnswer: z.string().trim().min(3).max(8000),
@@ -296,21 +322,15 @@ export async function evaluatePolicyCorrectnessSuite(
     {
       async answer(request) {
         try {
-          const outcome = structuredClone(await runner.answer(request));
-          const allowedKeys =
-            outcome.kind === "provider_unavailable"
-              ? ["kind", "reasonCode"]
-              : ["kind", "answer"];
-          if (Object.keys(outcome).some((key) => !allowedKeys.includes(key))) {
-            throw new Error("Unexpected evaluation outcome fields.");
-          }
+          const outcome = evaluationOutcomeSchema.parse(
+            structuredClone(await runner.answer(request)),
+          );
           if (outcome.kind !== "provider_unavailable") {
-            const answer = groundedPolicyAnswerSchema.parse(outcome.answer);
+            const answer = outcome.answer;
             if (
               (outcome.kind === "answer" && answer.status !== "answered") ||
               (outcome.kind === "insufficient_evidence" &&
-                answer.status === "answered") ||
-              !["answer", "insufficient_evidence"].includes(outcome.kind)
+                answer.status === "answered")
             ) {
               throw new Error("Invalid evaluation outcome.");
             }
