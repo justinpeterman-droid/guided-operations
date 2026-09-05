@@ -99,11 +99,13 @@ release, in rough order of user impact. They are tracked here and summarized in
    reports that it has no sources instead of citing policy. This is the designed
    refusal behavior, not a fault, but the feature is not usable until it clears.
    Assessment on 2026-09-05 did not query hosted corpus readiness, so these
-   counts remain historical. The highest-value next code improvement is to
-   extend the existing evaluation with independently reviewed answer
-   correctness: an exact citation alone does not establish that an answer
-   follows its source. See the
-   [bounded assignment and evidence](docs/quality/2026-09-05-pr45-repair-and-project-assessment.md#highest-value-next-improvement-measure-answer-correctness).
+   counts remain historical. Following the
+   [PR #45 assessment](docs/quality/2026-09-05-pr45-repair-and-project-assessment.md#highest-value-next-improvement-measure-answer-correctness),
+   a separate implementation on 2026-09-05 adds version-2 answer
+   correctness evaluation with reviewed fact/source expectations, independently
+   recorded answer reviews, and 29 fictional cases. It does not verify these
+   older hosted corpus counts or qualify the live model. See
+   [evaluation evidence and operator workflow](docs/quality/policy-answer-correctness-evaluation.md).
 2. **One policy is absent from the corpus.**
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The normalization fix re-keys all 236
