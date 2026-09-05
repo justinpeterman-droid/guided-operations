@@ -51,6 +51,18 @@
     font-size: 6.5pt;
   }
 
+  .printLayout :global(.count-sheet-area-flag) {
+    display: none;
+  }
+
+  .printLayout :global(.count-sheet-table-wrap tr.count-sheet-row-flagged > th),
+  .printLayout
+    :global(.count-sheet-table-wrap tr.count-sheet-row-flagged > td) {
+    background: #fee4e2 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .printLayout :global(.count-sheet-table-wrap input) {
     min-height: 15px;
     padding: 0 1px;

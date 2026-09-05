@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 
+import { CountSheetAreaLabel } from "./count-sheet-area-label";
 import {
   calculateCountTotals,
   createBlankCountPayload,
@@ -145,6 +146,9 @@ export function CountSheetWorkspace({
   >("loading");
   const [message, setMessage] = useState("Loading your shift Count Sheet…");
   const [inputError, setInputError] = useState<string | null>(null);
+  const [flaggedAreas, setFlaggedAreas] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const displayedPayload = reviewedRevision?.payload ?? payload;
   const totals = useMemo(
     () =>
@@ -186,6 +190,7 @@ export function CountSheetWorkspace({
         setRecordId(loaded.recordId);
         setRevisionNumber(loaded.revisionNumber);
         setReviewedRevision(null);
+        setFlaggedAreas(new Set());
         setDirty(false);
         setInputError(null);
         setState("ready");
@@ -466,20 +471,37 @@ export function CountSheetWorkspace({
               </tr>
             </thead>
             <tbody>
-              {APPROVED_COUNT_SHEET_STRUCTURE.areas.map((area) => (
-                <tr key={area}>
-                  <th scope="row">{area}</th>
-                  {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
-                    <td key={column}>
-                      {renderCountInput(
-                        { group: "cell", area, field: column },
-                        `${area}, ${column}`,
-                      )}
-                    </td>
-                  ))}
-                  <td className="count-total">{totals.row_totals[area]}</td>
-                </tr>
-              ))}
+              {APPROVED_COUNT_SHEET_STRUCTURE.areas.map((area) => {
+                const flagged = flaggedAreas.has(area);
+                return (
+                  <tr
+                    className={flagged ? "count-sheet-row-flagged" : undefined}
+                    key={area}
+                  >
+                    <CountSheetAreaLabel
+                      area={area}
+                      flagged={flagged}
+                      onToggle={() => {
+                        setFlaggedAreas((current) => {
+                          const next = new Set(current);
+                          if (next.has(area)) next.delete(area);
+                          else next.add(area);
+                          return next;
+                        });
+                      }}
+                    />
+                    {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
+                      <td key={column}>
+                        {renderCountInput(
+                          { group: "cell", area, field: column },
+                          `${area}, ${column}`,
+                        )}
+                      </td>
+                    ))}
+                    <td className="count-total">{totals.row_totals[area]}</td>
+                  </tr>
+                );
+              })}
               <tr className="count-sheet-subtotal">
                 <th scope="row">Out of housing</th>
                 {APPROVED_COUNT_SHEET_STRUCTURE.columns.map((column) => (
@@ -523,18 +545,6 @@ export function CountSheetWorkspace({
             <div>
               <dt>Operational total</dt>
               <dd>{totals.operational_total}</dd>
-            </div>
-            <div
-              className={
-                reconciliationState === "reconciled"
-                  ? "is-reconciled"
-                  : reconciliationState === "open"
-                    ? "is-open"
-                    : "is-incomplete"
-              }
-            >
-              <dt>Difference</dt>
-              <dd>{totals.difference}</dd>
             </div>
           </dl>
           <p

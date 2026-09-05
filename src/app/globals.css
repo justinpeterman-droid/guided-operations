@@ -263,24 +263,6 @@ a:focus-visible,
   );
 }
 
-.command-center-tools-supporting {
-  margin-top: 18px;
-  padding: 18px 20px;
-  background: rgba(255, 255, 255, 0.55);
-  border: 1px solid rgba(158, 176, 191, 0.55);
-  border-radius: var(--gow-radius-card);
-  box-shadow: none;
-}
-
-.command-center-tools-supporting h2 {
-  margin: 0 0 12px;
-  color: var(--gow-muted);
-  font-size: 0.78rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-
 .brand-bar {
   display: flex;
   align-items: center;
@@ -744,10 +726,46 @@ a:focus-visible,
   display: flex;
   flex-wrap: wrap;
   gap: 16px 28px;
-  margin-top: 17px;
+  margin-top: 22px;
 }
 
-.command-center-quick-actions a,
+.command-center-quick-actions a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  box-sizing: border-box;
+  min-width: 20rem;
+  min-height: 52px;
+  padding: 0 18px;
+  color: var(--gow-navy-900);
+  background: var(--gow-scrollbar-track);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-control);
+  box-shadow: 0 1px 0 rgba(12, 44, 76, 0.04);
+  font-size: 1rem;
+  font-weight: 800;
+  text-decoration: none;
+}
+
+.command-center-quick-actions a::after {
+  content: "→";
+  color: var(--gow-navy-700);
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.command-center-quick-actions a:hover,
+.command-center-quick-actions a:focus-visible {
+  color: var(--gow-navy-950);
+  background: color-mix(
+    in srgb,
+    var(--gow-scrollbar-track) 62%,
+    var(--gow-border)
+  );
+  border-color: var(--gow-blue);
+}
+
 .command-center-history-link {
   display: inline-flex;
   align-items: center;
@@ -965,6 +983,7 @@ a:focus-visible,
 .command-center-tools ul {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
 }
 
 .command-center-tools-expanded ul {
@@ -972,19 +991,32 @@ a:focus-visible,
 }
 
 .command-center-tools li + li {
-  border-left: 1px solid rgba(157, 179, 195, 0.7);
+  border-left: 0;
 }
 
 .command-center-tools a {
   display: flex;
   align-items: center;
-  gap: 13px;
-  min-height: 52px;
-  padding: 0 18px;
+  gap: 12px;
+  box-sizing: border-box;
+  min-height: 64px;
+  height: 100%;
+  padding: 12px 14px;
   color: var(--gow-navy-900);
-  font-size: 0.9rem;
+  background: #d5dee7;
+  border: 1px solid #a8b9c8;
+  border-radius: var(--gow-radius-control);
+  box-shadow: 0 1px 0 rgba(12, 44, 76, 0.04);
+  font-size: 0.92rem;
   font-weight: 800;
   text-decoration: none;
+}
+
+.command-center-tools a:hover,
+.command-center-tools a:focus-visible {
+  color: var(--gow-navy-950);
+  background: #c6d1dc;
+  border-color: var(--gow-navy-700);
 }
 
 .command-center-tools a > span:not(.command-center-tool-icon) {
@@ -998,6 +1030,7 @@ a:focus-visible,
   flex: 0 0 auto;
   place-items: center;
   color: var(--gow-navy-800);
+  background: var(--gow-surface-raised);
   border: 1px solid rgba(140, 165, 184, 0.76);
   border-radius: 9px;
 }
@@ -1009,6 +1042,25 @@ a:focus-visible,
   stroke-linecap: round;
   stroke-linejoin: round;
   stroke-width: 1.45;
+}
+
+.command-center-tools-supporting {
+  margin-top: 18px;
+  padding: 20px 22px 22px;
+  background: var(--gow-surface);
+  border: 1px solid var(--gow-border);
+  border-radius: var(--gow-radius-card);
+  box-shadow: var(--gow-shadow-soft);
+}
+
+.command-center-tools-supporting h2 {
+  margin: 0 0 14px;
+  color: var(--gow-muted);
+  font-family: var(--gow-font-sans);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .policy-training-page {
@@ -2171,6 +2223,61 @@ a:focus-visible,
 .count-sheet-table-wrap tbody th {
   min-width: 148px;
   font-size: 0.8rem;
+}
+
+.count-sheet-area-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.35rem;
+}
+
+.count-sheet-area-flag {
+  flex: 0 0 auto;
+  width: 1.5rem;
+  height: 1.5rem;
+  padding: 0;
+  border: 1px solid var(--gow-navy-400, #6b7c8f);
+  border-radius: 0.25rem;
+  background: #ffffff;
+  color: var(--gow-navy-900, #1a2b3c);
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.count-sheet-area-flag:hover,
+.count-sheet-area-flag:focus-visible {
+  border-color: #b42318;
+  color: #b42318;
+  outline: 2px solid #f97066;
+  outline-offset: 1px;
+}
+
+.count-sheet-area-flag.is-active {
+  border-color: #912018;
+  background: #b42318;
+  color: #ffffff;
+}
+
+.count-sheet-table-wrap tr.count-sheet-row-flagged > th,
+.count-sheet-table-wrap tr.count-sheet-row-flagged > td {
+  background: #fee4e2;
+}
+
+.count-sheet-table-wrap tr.count-sheet-row-flagged > th {
+  box-shadow: 1px 0 0 #fecdca;
+}
+
+.count-sheet-table-wrap tr.count-sheet-row-flagged > td.count-total {
+  background: #fecdca;
+  color: #912018;
+}
+
+.count-sheet-table-wrap tr.count-sheet-row-flagged input {
+  background: #fffbfa;
+  border-color: #f97066;
 }
 
 .count-sheet-table-wrap input,
@@ -3925,6 +4032,7 @@ form.account-session-controls {
 
   .command-center-tools ul {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
   }
 
   .command-center-tools-expanded ul {
@@ -3936,11 +4044,11 @@ form.account-session-controls {
   }
 
   .command-center-tools li:nth-child(n + 3) {
-    border-top: 1px solid rgba(157, 179, 195, 0.7);
+    border-top: 0;
   }
 
   .command-center-tools-expanded li:nth-child(5) {
-    grid-column: 1 / -1;
+    grid-column: auto;
   }
 
   .policy-training-workspace {
@@ -4174,8 +4282,9 @@ form.account-session-controls {
 
   .command-center-quick-actions a {
     display: flex;
-    align-items: center;
-    min-height: 44px;
+    width: 100%;
+    min-width: 0;
+    min-height: 52px;
   }
 
   .command-center-work-heading {
@@ -4235,6 +4344,7 @@ form.account-session-controls {
 
   .command-center-tools ul {
     grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .command-center-tools li,
@@ -4244,11 +4354,16 @@ form.account-session-controls {
   }
 
   .command-center-tools li + li {
-    border-top: 1px solid rgba(157, 179, 195, 0.7);
+    border-top: 0;
   }
 
   .command-center-tools a {
-    padding: 10px 4px;
+    min-height: 56px;
+    padding: 12px 14px;
+  }
+
+  .command-center-tools-supporting {
+    padding: 18px 16px 16px;
   }
 
   .policy-training-page {

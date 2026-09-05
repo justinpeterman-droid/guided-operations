@@ -8,6 +8,7 @@ import {
   isCountSheetReconciliationComplete,
   parseCountValue,
 } from "./calculations";
+import { CountSheetAreaLabel } from "./count-sheet-area-label";
 import printStyles from "./count-sheet-print.module.css";
 import { PrintCountSheetButton } from "./print-count-sheet-button";
 import type { CountSheetPayload, CountSheetStructure } from "./types";
@@ -65,6 +66,9 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
     createBlankCountPayload(structure),
   );
   const [error, setError] = useState<string | null>(null);
+  const [flaggedAreas, setFlaggedAreas] = useState<ReadonlySet<string>>(
+    () => new Set(),
+  );
   const totals = useMemo(
     () => calculateCountTotals(structure, payload),
     [payload, structure],
@@ -160,20 +164,37 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
               </tr>
             </thead>
             <tbody>
-              {structure.areas.map((area) => (
-                <tr key={area}>
-                  <th scope="row">{area}</th>
-                  {structure.columns.map((column) => (
-                    <td key={column}>
-                      {renderCountInput(
-                        { group: "cell", area, field: column },
-                        `${area}, ${column}`,
-                      )}
-                    </td>
-                  ))}
-                  <td className="count-total">{totals.row_totals[area]}</td>
-                </tr>
-              ))}
+              {structure.areas.map((area) => {
+                const flagged = flaggedAreas.has(area);
+                return (
+                  <tr
+                    className={flagged ? "count-sheet-row-flagged" : undefined}
+                    key={area}
+                  >
+                    <CountSheetAreaLabel
+                      area={area}
+                      flagged={flagged}
+                      onToggle={() => {
+                        setFlaggedAreas((current) => {
+                          const next = new Set(current);
+                          if (next.has(area)) next.delete(area);
+                          else next.add(area);
+                          return next;
+                        });
+                      }}
+                    />
+                    {structure.columns.map((column) => (
+                      <td key={column}>
+                        {renderCountInput(
+                          { group: "cell", area, field: column },
+                          `${area}, ${column}`,
+                        )}
+                      </td>
+                    ))}
+                    <td className="count-total">{totals.row_totals[area]}</td>
+                  </tr>
+                );
+              })}
               <tr className="count-sheet-subtotal">
                 <th scope="row">Out of housing</th>
                 {structure.columns.map((column) => (
@@ -217,18 +238,6 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
             <div>
               <dt>Operational total</dt>
               <dd>{totals.operational_total}</dd>
-            </div>
-            <div
-              className={
-                reconciliationState === "reconciled"
-                  ? "is-reconciled"
-                  : reconciliationState === "open"
-                    ? "is-open"
-                    : "is-incomplete"
-              }
-            >
-              <dt>Difference</dt>
-              <dd>{totals.difference}</dd>
             </div>
           </dl>
           <p
