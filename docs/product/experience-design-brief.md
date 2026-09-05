@@ -55,6 +55,10 @@ retain the owner's approved treatment; document print typography is unchanged.
   the regression reproduced 324px before the fix and 320px afterward. Both the
   targeted regression and the existing mobile preview-route checks passed
   locally.
+- The next Linux run passed all 28 public browser checks and the two protected
+  officer checks. The report-workspace scenario still assumed immediate editing
+  after a correction save. Updated it to assert the saved form is locked, follow
+  Open updated report, and then exercise the existing stale-revision conflict.
 - An unfiltered browser-suite invocation also selected the separate protected
   qualification suites. Seven stopped at missing `NEXT_PUBLIC_SUPABASE_URL`
   qualification setup and three dependent tests did not run. They did not reach
