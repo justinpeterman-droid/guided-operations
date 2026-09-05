@@ -1,6 +1,6 @@
 {
   "inventory_version": 1,
-  "last_reviewed_on": "2026-08-27",
+  "last_reviewed_on": "2026-09-05",
   "status": "repository-complete-hosted-verification-pending",
   "authority": {
     "decision_ids": ["OQ-011", "OQ-012"],
@@ -63,6 +63,11 @@
     "legal-hold-lifecycle": {
       "duration_days": 730,
       "trigger": "released_at",
+      "legal_hold": true
+    },
+    "form-candidate-review-pending": {
+      "duration_days": null,
+      "trigger": "owner-approved-candidate-lifecycle",
       "legal_hold": true
     }
   },
@@ -449,6 +454,72 @@
       "retention_profile": "event-two-years",
       "real_data_boundary": "production_only",
       "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:improvement_requests",
+      "kind": "database_table",
+      "locator": "app_private.improvement_requests",
+      "data_classes": [
+        "product_feedback",
+        "account_identity",
+        "form_source_metadata"
+      ],
+      "purpose": "Private officer feedback and blank-form intake requests with bounded page context and review status",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "procedure-required"
+    },
+    {
+      "id": "db:improvement_request_messages",
+      "kind": "database_table",
+      "locator": "app_private.improvement_request_messages",
+      "data_classes": [
+        "product_feedback",
+        "account_identity",
+        "revision_history"
+      ],
+      "purpose": "Append-only private follow-up messages retained with the parent improvement request",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "append-only-parent-linked-procedure-required"
+    },
+    {
+      "id": "db:improvement_request_status_events",
+      "kind": "database_table",
+      "locator": "app_private.improvement_request_status_events",
+      "data_classes": [
+        "account_identity",
+        "revision_history",
+        "review_status_metadata"
+      ],
+      "purpose": "Append-only actor, reason, and status history retained with the parent improvement request",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "append-only-parent-linked-procedure-required"
+    },
+    {
+      "id": "db:form_candidate_files",
+      "kind": "database_table",
+      "locator": "app_private.form_candidate_files",
+      "data_classes": [
+        "form_source_metadata",
+        "source_integrity",
+        "account_identity"
+      ],
+      "purpose": "Request-bound quarantine file identity, declared and verified integrity, and upload eligibility",
+      "retention_profile": "form-candidate-review-pending",
+      "real_data_boundary": "production_only",
+      "deletion_status": "upload-expiry-present-retention-and-cleanup-procedure-required"
+    },
+    {
+      "id": "storage:form-candidate-quarantine",
+      "kind": "storage_bucket",
+      "locator": "form-candidate-quarantine",
+      "data_classes": ["unapproved_blank_form_source"],
+      "purpose": "Private unapproved blank-form candidates pending attributable administrator review",
+      "retention_profile": "form-candidate-review-pending",
+      "real_data_boundary": "production_only",
+      "deletion_status": "retention-and-cleanup-procedure-required"
     },
     {
       "id": "storage:generated-exports",

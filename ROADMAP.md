@@ -98,6 +98,12 @@ release, in rough order of user impact. They are tracked here and summarized in
    Until the owner approves them and an embedding batch runs, Policy Expert
    reports that it has no sources instead of citing policy. This is the designed
    refusal behavior, not a fault, but the feature is not usable until it clears.
+   Assessment on 2026-09-05 did not query hosted corpus readiness, so these
+   counts remain historical. The highest-value next code improvement is to
+   extend the existing evaluation with independently reviewed answer
+   correctness: an exact citation alone does not establish that an answer
+   follows its source. See the
+   [bounded assignment and evidence](docs/quality/2026-09-05-pr45-repair-and-project-assessment.md#highest-value-next-improvement-measure-answer-correctness).
 2. **One policy is absent from the corpus.**
    `SD 2022-01 Revised COVID Visitation Directive.pdf` failed import on NUL
    bytes in its page 5 checkbox glyphs. The normalization fix re-keys all 236
@@ -113,7 +119,12 @@ release, in rough order of user impact. They are tracked here and summarized in
    `main` commit. Evidence and run links are in
    [Post-merge qualification](docs/quality/2026-09-01-post-merge-qualification.md).
    Watch consumption: four workflows at roughly 22 minutes per push exhausted
-   the allowance in three days last month.
+   the allowance in three days last month. The 2026-09-05 assessment reproduced
+   a newer omission on PR #45 and its main-branch base: the feedback migration's
+   generated types and inventory entries were missing. The local correction
+   passes type drift and full inventory coverage after migration replay and 666
+   pgTAP tests; the updated GitHub PR check remains pending publication. See
+   [PR #45 repair evidence](docs/quality/2026-09-05-pr45-repair-and-project-assessment.md).
 4. **Hosted recovery is unproven.** The guarded encrypted off-provider backup
    tool exists but has never been run against hosted production. Its protected
    operator host, schedule, key custody, decryption proof, and restore into an
