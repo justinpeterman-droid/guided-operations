@@ -24,16 +24,17 @@ describe("CountSheetPreview", () => {
     );
     await user.type(screen.getByLabelText("In housing, 1"), "8");
     const first = screen.getByRole("button", {
-      name: "Highlight column 1 red",
+      name: "Column 1 total 8. Highlight red",
     });
     const second = screen.getByRole("button", {
-      name: "Highlight column 2 red",
+      name: "Column 2 total 0. Highlight red",
     });
     expect(first.closest("tr")).toHaveClass("count-sheet-total-row");
     expect(first).toHaveTextContent("8");
     expect(container.querySelectorAll("thead button")).toHaveLength(0);
     await user.click(first);
     expect(first).toHaveAttribute("aria-pressed", "true");
+    expect(first).toHaveAccessibleName("Column 1 total 8. Clear red highlight");
     expect(second).toHaveAttribute("aria-pressed", "false");
     expect(
       container.querySelectorAll(".count-sheet-column-flagged"),

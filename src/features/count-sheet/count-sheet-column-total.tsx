@@ -17,7 +17,7 @@ export function CountSheetColumnTotal({
       <button
         type="button"
         className="count-sheet-column-flag"
-        aria-label={`Highlight column ${column} red`}
+        aria-label={`Column ${column} total ${total}. ${flagged ? "Clear red highlight" : "Highlight red"}`}
         aria-pressed={flagged}
         title={
           flagged

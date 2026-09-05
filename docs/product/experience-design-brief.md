@@ -59,6 +59,12 @@ retain the owner's approved treatment; document print typography is unchanged.
   officer checks. The report-workspace scenario still assumed immediate editing
   after a correction save. Updated it to assert the saved form is locked, follow
   Open updated report, and then exercise the existing stale-revision conflict.
+- PR review follow-up restored the suggestion-card keyboard focus ring, included
+  totals and the current highlight action in Count Sheet accessible names, and
+  fixed report-history timestamps to explicit UTC. Reply session-expiry recovery
+  now preserves text and offers separate-tab sign-in at either 401 boundary.
+  Sixteen focused tests and four Count Sheet browser checks passed; the policy
+  expiry test now specifically exercises the answer endpoint after valid CSRF.
 - An unfiltered browser-suite invocation also selected the separate protected
   qualification suites. Seven stopped at missing `NEXT_PUBLIC_SUPABASE_URL`
   qualification setup and three dependent tests did not run. They did not reach

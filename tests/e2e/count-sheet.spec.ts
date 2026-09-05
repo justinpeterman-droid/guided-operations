@@ -134,8 +134,7 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
   await page.keyboard.press("Tab");
   await expect(firstCell).toBeFocused();
   const firstColumn = page.getByRole("button", {
-    name: "Highlight column 1 red",
-    exact: true,
+    name: /^Column 1 total /,
   });
   await expect(page.locator("thead button")).toHaveCount(0);
   await expect(page.locator(".count-sheet-total-row button")).toHaveCount(16);

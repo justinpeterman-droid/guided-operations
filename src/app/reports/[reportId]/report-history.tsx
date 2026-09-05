@@ -156,7 +156,12 @@ export function ReportHistory({
                 : (revision.reason ?? "Initial final report.")}
             </span>
             <time dateTime={revision.createdAt}>
-              {new Date(revision.createdAt).toLocaleString()}
+              {new Intl.DateTimeFormat("en-US", {
+                dateStyle: "medium",
+                timeStyle: "short",
+                timeZone: "UTC",
+              }).format(new Date(revision.createdAt))}{" "}
+              UTC
             </time>
             <div className="go-ui">
               <Button

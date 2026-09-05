@@ -267,7 +267,10 @@
 .improvement-request-card:hover,
 .improvement-request-card:focus-visible {
   background: var(--gow-tint);
-  outline: none;
+}
+.improvement-request-card:focus-visible {
+  outline: 3px solid var(--gow-focus);
+  outline-offset: 2px;
 }
 .improvement-request-card h2 {
   margin: 0;

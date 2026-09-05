@@ -9,6 +9,7 @@ async function csrfToken(): Promise<string> {
     credentials: "same-origin",
     cache: "no-store",
   });
+  if (response.status === 401) throw new Error("session_expired");
   const body: unknown = await response.json();
   if (
     !response.ok ||
@@ -30,12 +31,14 @@ export function ImprovementMessageComposer({
   const [body, setBody] = useState("");
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [sessionExpired, setSessionExpired] = useState(false);
   useUnsavedChanges(Boolean(body));
 
   async function submit() {
     if (pending || body.trim().length < 1) return;
     setPending(true);
     setError(null);
+    setSessionExpired(false);
     try {
       const response = await fetch(
         `/api/web/v1/improvement-requests/${requestId}/messages`,
@@ -49,12 +52,18 @@ export function ImprovementMessageComposer({
           body: JSON.stringify({ body: body.trim() }),
         },
       );
+      if (response.status === 401) throw new Error("session_expired");
       if (!response.ok) throw new Error("message_failed");
       setBody("");
       router.refresh();
-    } catch {
+    } catch (error) {
+      const expired =
+        error instanceof Error && error.message === "session_expired";
+      setSessionExpired(expired);
       setError(
-        "Sending could not be confirmed. Your reply is still here. Check the conversation in a separate tab before sending it again.",
+        expired
+          ? "Your session ended. Your reply is still here. Sign in in a separate tab, then return and retry."
+          : "Sending could not be confirmed. Your reply is still here. Check the conversation in a separate tab before sending it again.",
       );
     } finally {
       setPending(false);
@@ -84,6 +93,11 @@ export function ImprovementMessageComposer({
         <p className="improvement-error" role="alert">
           {error}
         </p>
+      ) : null}
+      {sessionExpired ? (
+        <a href="/login" target="_blank" rel="noopener noreferrer">
+          Sign in again (opens a new tab)
+        </a>
       ) : null}
       <button
         disabled={pending || body.trim().length < 1}

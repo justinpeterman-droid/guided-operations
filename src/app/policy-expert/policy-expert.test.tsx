@@ -8,9 +8,10 @@ describe("PolicyExpert", () => {
   beforeEach(() => vi.restoreAllMocks());
   afterEach(() => cleanup());
   it("keeps a question and offers separate-tab sign-in after session expiration", async () => {
-    vi.spyOn(globalThis, "fetch").mockResolvedValue(
-      Response.json({}, { status: 401 }),
-    );
+    const fetch = vi
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValueOnce(Response.json({ csrfToken: "csrf-token" }))
+      .mockResolvedValueOnce(Response.json({}, { status: 401 }));
     const user = userEvent.setup();
     render(<PolicyExpert />);
     await user.type(
@@ -21,6 +22,11 @@ describe("PolicyExpert", () => {
       screen.getByRole("button", { name: "Find cited guidance" }),
     );
     expect(await screen.findByText(/Your session ended/)).toBeVisible();
+    expect(fetch).toHaveBeenNthCalledWith(
+      2,
+      "/api/web/v1/policy-answer",
+      expect.objectContaining({ method: "POST" }),
+    );
     expect(screen.getByLabelText("Policy question")).toHaveValue(
       "Fictional policy question?",
     );
