@@ -315,11 +315,7 @@ test("an officer and administrator can use the protected per-officer report work
     page.getByRole("radio", { name: /Fictional Qualification Officer/ }),
   ).toBeChecked();
   await expect(page.getByText("Officer observation")).toBeHidden();
-  await expect(
-    page
-      .getByRole("region", { name: "Not attributed to a reporting officer" })
-      .getByText("Unassigned observation"),
-  ).toBeVisible();
+  await expect(page.getByText("Unassigned observation")).toHaveCount(0);
   await expect(page.getByText(/raw note that must not reach/)).toHaveCount(0);
   await expect(
     page.getByRole("heading", { name: "Copy to Records" }),
@@ -333,6 +329,11 @@ test("an officer and administrator can use the protected per-officer report work
     page.getByRole("heading", { name: "Notes & Facts" }),
   ).toBeVisible();
   await expect(page.getByText("Officer observation")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Not attributed to a reporting officer" })
+      .getByText("Unassigned observation"),
+  ).toBeVisible();
   await page.getByRole("tab", { name: /^Paperwork/ }).click();
   await expect(page.getByRole("heading", { name: "Paperwork" })).toBeVisible();
   await expect(
