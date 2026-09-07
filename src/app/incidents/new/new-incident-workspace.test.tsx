@@ -387,6 +387,12 @@ it("preserves restored roster relationships but requires fresh fact decisions", 
   );
   const group = await screen.findByRole("group", { name: /Fictional Two/ });
   expect(
+    screen.getByText("Draft saved privately to your work list."),
+  ).toBeVisible();
+  expect(
+    screen.queryByText("Your changes are not saved to the draft yet."),
+  ).not.toBeInTheDocument();
+  expect(
     within(group).getByRole("checkbox", { name: "Witness" }),
   ).toBeChecked();
   const user = userEvent.setup();

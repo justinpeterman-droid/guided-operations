@@ -20,6 +20,18 @@ export default async function NewIncidentPage({
 }: Readonly<{ searchParams: Promise<{ draft?: string }> }>) {
   const { draft: draftId } = await searchParams;
   const access = await loadIncidentAccess(draftId);
+  if (access.kind === "not_found")
+    return (
+      <OfficerUnavailableMessage
+        actions={[
+          { href: "/incidents/new", label: "Start a new incident" },
+          { href: "/home", label: "Return Home" },
+        ]}
+        description="This saved draft is no longer available to your account. No new incident has been created."
+        eyebrow="Draft unavailable"
+        title="This draft cannot be reopened."
+      />
+    );
   if (access.kind === "unavailable") return <Unavailable />;
   if (access.kind === "denied") return <SignInRequired />;
   return <NewIncidentWorkspace initialDraft={access.draft} />;
@@ -31,6 +43,7 @@ async function loadIncidentAccess(
   | { kind: "authorized"; draft: IncidentDraft | null }
   | { kind: "denied" }
   | { kind: "unavailable" }
+  | { kind: "not_found" }
 > {
   try {
     const client = await createSupabaseServerClient();
@@ -38,6 +51,7 @@ async function loadIncidentAccess(
     if (!session.allowed) return { kind: "denied" };
     if (!draftId) return { kind: "authorized", draft: null };
     const draft = await getIncidentDraftForCurrentSession(draftId, client);
+    if (draft.kind === "not_found") return { kind: "not_found" };
     return draft.kind === "found"
       ? { kind: "authorized", draft: draft.draft }
       : { kind: draft.kind === "denied" ? "denied" : "unavailable" };

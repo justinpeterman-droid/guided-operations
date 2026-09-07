@@ -109,7 +109,12 @@ function PriorityAction({
 function CommandCenter({
   preview,
   work,
-}: Readonly<{ preview: boolean; work: readonly WorkItem[] | null }>) {
+  workNotice,
+}: Readonly<{
+  preview: boolean;
+  work: readonly WorkItem[] | null;
+  workNotice?: string;
+}>) {
   const tools = preview ? previewTools : officerTools;
   return (
     <div className="go-ui my-8 flex flex-col gap-6 md:my-10">
@@ -161,6 +166,11 @@ function CommandCenter({
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {workNotice ? (
+                <p role="status" className="text-sm text-muted-foreground">
+                  {workNotice}
+                </p>
+              ) : null}
               {work === null ? (
                 <p role="status" className="py-5 text-sm text-muted-foreground">
                   Your report list cannot load right now. Your work has not been
@@ -310,10 +320,10 @@ export function OfficerCommandCenter({
   drafts?: readonly IncidentDraftSummary[] | null;
 }>) {
   const work =
-    reports === null || drafts === null
+    reports === null && (drafts ?? []).length === 0
       ? null
       : [
-          ...drafts.slice(0, 2).map((draft) => ({
+          ...(drafts ?? []).slice(0, 2).map((draft) => ({
             id: `draft-${draft.draftId}`,
             label: "Saved draft",
             title:
@@ -324,7 +334,7 @@ export function OfficerCommandCenter({
             detail: `Saved ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(draft.savedAt))} UTC`,
             href: `/incidents/new?draft=${draft.draftId}`,
           })),
-          ...reports.slice(0, 2).map((report) => ({
+          ...(reports ?? []).slice(0, 2).map((report) => ({
             id: report.reportId,
             label: report.incidentNumber,
             title: report.incidentName,
@@ -332,5 +342,17 @@ export function OfficerCommandCenter({
             href: `/reports/${report.reportId}`,
           })),
         ];
-  return <CommandCenter preview={false} work={work} />;
+  return (
+    <CommandCenter
+      preview={false}
+      work={work}
+      workNotice={
+        drafts === null
+          ? "Saved drafts cannot load right now. Your saved work has not been changed."
+          : reports === null && work !== null
+            ? "Reports cannot load right now. Your saved drafts are still available."
+            : undefined
+      }
+    />
+  );
 }

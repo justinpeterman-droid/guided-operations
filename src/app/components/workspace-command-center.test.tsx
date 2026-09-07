@@ -35,6 +35,7 @@ describe("OfficerCommandCenter", () => {
   it("uses real destinations and never substitutes training work", () => {
     const { container } = render(
       <OfficerCommandCenter
+        drafts={null}
         reports={[
           {
             reportId: "11111111-1111-4111-8111-111111111111",

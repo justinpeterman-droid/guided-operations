@@ -61,6 +61,16 @@ paths:
               properties:
                 revision:
                   $ref: "#/components/schemas/IncidentRevisionInput"
+                draftId:
+                  type: string
+                  format: uuid
+                  description:
+                    Saved draft identifier; must be paired with draftRevision.
+                draftRevision:
+                  type: integer
+                  minimum: 1
+                  description:
+                    Expected saved revision for atomic draft promotion.
       responses:
         "201":
           description:
@@ -81,6 +91,10 @@ paths:
           $ref: "#/components/responses/AuthenticationRequired"
         "403":
           $ref: "#/components/responses/RequestNotAllowed"
+        "409":
+          description:
+            Draft changed, was discarded, or was already promoted with another
+            request. Reopen the current draft; do not retry stale input.
         "503":
           $ref: "#/components/responses/ServiceUnavailable"
   /api/web/v1/policy-answer:

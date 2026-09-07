@@ -141,14 +141,13 @@ export function NewIncidentWorkspace({
   >(initialDraft ? "saved" : "idle");
   const draftSavingRef = useRef(false);
   const newDraftIdRef = useRef<string | null>(null);
-  const [savedDraftFingerprint, setSavedDraftFingerprint] = useState<
-    string | null
-  >(initialDraft ? JSON.stringify(initialDraft.envelope) : null);
-
   const answerList = useMemo(
     () => Object.values(checklistAnswers),
     [checklistAnswers],
   );
+  const [savedDraftFingerprint, setSavedDraftFingerprint] = useState<
+    string | null
+  >(() => (initialDraft ? JSON.stringify(currentDraftEnvelope()) : null));
   useUnsavedChanges(
     !savedIncidentId &&
       JSON.stringify(currentDraftEnvelope()) !== savedDraftFingerprint &&
