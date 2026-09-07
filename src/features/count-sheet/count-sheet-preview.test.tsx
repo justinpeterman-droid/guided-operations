@@ -84,6 +84,25 @@ describe("CountSheetPreview", () => {
     ).toBeVisible();
   });
 
+  it("fills an explicit fictional zero example for status-announcement practice", async () => {
+    const user = userEvent.setup();
+    render(<CountSheetPreview structure={structure} />);
+
+    await user.click(
+      screen.getByRole("button", { name: "Fill fictional zeros" }),
+    );
+
+    expect(screen.getByLabelText("Dining, 1")).toHaveValue("0");
+    expect(screen.getByLabelText("In housing, 1")).toHaveValue("0");
+    expect(screen.getByLabelText("Operational total, on site")).toHaveValue(
+      "0",
+    );
+    expect(
+      screen.getByText("Reconciled — review before any future save."),
+    ).toBeVisible();
+    expect(screen.getByText("Not saved")).toBeVisible();
+  });
+
   it("keeps an unresolved difference visible instead of changing input values", async () => {
     const user = userEvent.setup();
     render(<CountSheetPreview structure={structure} />);
@@ -97,12 +116,19 @@ describe("CountSheetPreview", () => {
 
     expect(
       screen.getByText(
-        "Open difference — review the values; do not balance by guessing.",
+        "Open difference +3 — housing total is higher than operational total. Review the values; do not balance by guessing.",
       ),
     ).toBeVisible();
     expect(screen.getByLabelText("In housing, 1")).toHaveValue("8");
     expect(screen.getByLabelText("Operational total, on site")).toHaveValue(
       "5",
     );
+    await user.clear(screen.getByLabelText("Operational total, on site"));
+    await user.type(screen.getByLabelText("Operational total, on site"), "10");
+    expect(
+      screen.getByText(
+        "Open difference -2 — housing total is lower than operational total. Review the values; do not balance by guessing.",
+      ),
+    ).toBeVisible();
   });
 });

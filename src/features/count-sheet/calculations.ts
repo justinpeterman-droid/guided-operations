@@ -98,6 +98,29 @@ export function createBlankCountPayload(
   };
 }
 
+/** Creates an explicit all-zero fixture for the unsaved training preview. */
+export function createZeroCountPayload(
+  structure: CountSheetStructure,
+): CountSheetPayload {
+  return {
+    schema_version: 1,
+    count_started: null,
+    count_ended: null,
+    cells: Object.fromEntries(
+      structure.areas.map((area) => [
+        area,
+        Object.fromEntries(structure.columns.map((column) => [column, 0])),
+      ]),
+    ),
+    in_housing: Object.fromEntries(
+      structure.columns.map((column) => [column, 0]),
+    ),
+    operational: Object.fromEntries(
+      structure.operational_fields.map((field) => [field, 0]),
+    ),
+  };
+}
+
 export function parseCountValue(value: string): CountValue {
   if (value === "") return null;
   if (!/^[0-9]+$/.test(value)) {
