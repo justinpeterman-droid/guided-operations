@@ -10,6 +10,7 @@ import {
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { authorizeCurrentSession } from "@/server/auth/current-session";
 import { listReportsForCurrentSession } from "@/server/incidents/list-reports";
+import { listIncidentDraftsForCurrentSession } from "@/server/incidents/incident-drafts";
 
 export const metadata = {
   title: "Officer workspace",
@@ -32,7 +33,7 @@ export default async function HomePage() {
       current="Home"
       title="Officer workspace"
     >
-      <OfficerCommandCenter reports={access.reports} />
+      <OfficerCommandCenter reports={access.reports} drafts={access.drafts} />
       {access.role === "administrator" ? (
         <section
           className="workspace-preview-admin"
@@ -58,9 +59,10 @@ export default async function HomePage() {
 async function loadAccess() {
   try {
     const client = await createSupabaseServerClient();
-    const [session, reports] = await Promise.all([
+    const [session, reports, drafts] = await Promise.all([
       authorizeCurrentSession(client),
       listReportsForCurrentSession(client, 2),
+      listIncidentDraftsForCurrentSession(client, 2),
     ]);
     if (!session.allowed) {
       return session.reason === "passcode_change_required"
@@ -72,6 +74,7 @@ async function loadAccess() {
       kind: "authorized" as const,
       role: session.account.role,
       reports: reports.kind === "listed" ? reports.reports : null,
+      drafts: drafts.kind === "listed" ? drafts.drafts : null,
     };
   } catch {
     return { kind: "unavailable" } as const;

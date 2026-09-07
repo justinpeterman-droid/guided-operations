@@ -15,6 +15,19 @@ function validateFactReportingScopes(
   }>,
   context: z.RefinementCtx,
 ) {
+  const draftInput = input as typeof input & {
+    draftId?: string;
+    draftRevision?: number;
+  };
+  if (
+    (draftInput.draftId === undefined) !==
+    (draftInput.draftRevision === undefined)
+  ) {
+    context.addIssue({
+      code: "custom",
+      message: "Draft promotion requires its saved revision.",
+    });
+  }
   const reportingStaffMemberIds = new Set(
     input.staffRelationships
       .filter(({ relationship }) => relationship === "reporting_officer")
@@ -45,6 +58,8 @@ export const createIncidentRequestSchema = z
   .object({
     revision: incidentRevisionInputSchema,
     staffRelationships: incidentStaffRelationshipsSchema,
+    draftId: z.uuid().optional(),
+    draftRevision: z.number().int().positive().optional(),
   })
   .strict()
   .superRefine(validateFactReportingScopes);
@@ -53,6 +68,8 @@ export const createIncidentCommandSchema = z
   .object({
     revision: incidentRevisionInputSchema,
     staffRelationships: incidentStaffRelationshipsSchema,
+    draftId: z.uuid().optional(),
+    draftRevision: z.number().int().positive().optional(),
     idempotencyKey: idempotencyKeySchema,
   })
   .strict()

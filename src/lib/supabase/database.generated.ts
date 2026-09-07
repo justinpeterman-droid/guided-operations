@@ -72,6 +72,24 @@ export type Database = {
         }
         Returns: string
       }
+      create_incident_from_draft: {
+        Args: {
+          p_category: string
+          p_display_name: string
+          p_draft_id: string
+          p_draft_revision: number
+          p_facility_id: string
+          p_field_notes: Json
+          p_idempotency_key_digest: string
+          p_incident_number: string
+          p_occurred_at: string
+          p_request_digest: string
+          p_reviewed_facts: Json
+          p_schema_version: number
+          p_staff_relationships: Json
+        }
+        Returns: string
+      }
       current_account: {
         Args: never
         Returns: {
@@ -83,6 +101,10 @@ export type Database = {
           shift_code: string
           status: string
         }[]
+      }
+      discard_incident_draft: {
+        Args: { p_draft_id: string; p_expected_revision: number }
+        Returns: boolean
       }
       finalize_report_draft_candidate: {
         Args: {
@@ -240,6 +262,18 @@ export type Database = {
           updated_at: string
           viewport_height: number
           viewport_width: number
+        }[]
+      }
+      get_incident_draft: {
+        Args: { p_draft_id: string }
+        Returns: {
+          draft_id: string
+          incident_name: string
+          incident_number: string
+          payload: Json
+          revision_number: number
+          saved_at: string
+          schema_version: number
         }[]
       }
       get_incident_report_workspace: {
@@ -455,6 +489,16 @@ export type Database = {
           updated_at: string
         }[]
       }
+      list_incident_drafts: {
+        Args: { p_limit?: number }
+        Returns: {
+          draft_id: string
+          incident_name: string
+          incident_number: string
+          revision_number: number
+          saved_at: string
+        }[]
+      }
       list_incident_reports: {
         Args: { p_incident_id: string }
         Returns: {
@@ -526,6 +570,10 @@ export type Database = {
           shift_code: string
           staff_member_id: string
         }[]
+      }
+      mark_incident_draft_promoted: {
+        Args: { p_draft_id: string; p_incident_id: string }
+        Returns: boolean
       }
       policy_source_object_is_readable: {
         Args: { p_object_name: string }
@@ -733,6 +781,23 @@ export type Database = {
         Returns: {
           record_id: string
           revision_number: number
+        }[]
+      }
+      save_incident_draft: {
+        Args: {
+          p_draft_id: string
+          p_expected_revision: number
+          p_incident_name: string
+          p_incident_number: string
+          p_payload: Json
+          p_request_digest: string
+          p_schema_version: number
+        }
+        Returns: {
+          draft_id: string
+          outcome: string
+          revision_number: number
+          saved_at: string
         }[]
       }
       store_report_draft_candidate: {

@@ -187,6 +187,16 @@
       "deletion_status": "procedure-required"
     },
     {
+      "id": "db:incident_drafts",
+      "kind": "database_table",
+      "locator": "app_private.incident_drafts",
+      "data_classes": ["operational_record", "personal_data"],
+      "purpose": "Private unfinished incident input and recovery state",
+      "retention_profile": "record-final-revision-two-years",
+      "real_data_boundary": "production_only",
+      "deletion_status": "discard-lifecycle-only-procedure-required"
+    },
+    {
       "id": "db:incident_staff_relationships",
       "kind": "database_table",
       "locator": "app_private.incident_staff_relationships",

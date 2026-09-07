@@ -75,6 +75,36 @@ const accountRow = {
 };
 
 describe("createIncidentForCurrentSession", () => {
+  it("atomically promotes only the named saved draft revision", async () => {
+    const c = client();
+    expect(
+      await createIncidentForCurrentSession(
+        {
+          ...command,
+          draftId: "77777777-7777-4777-8777-777777777777",
+          draftRevision: 2,
+        },
+        c,
+        "k".repeat(32),
+      ),
+    ).toMatchObject({ kind: "created" });
+    expect(c.rpc).toHaveBeenLastCalledWith(
+      "create_incident_from_draft",
+      expect.objectContaining({
+        p_draft_id: "77777777-7777-4777-8777-777777777777",
+        p_draft_revision: 2,
+      }),
+    );
+    const missing = client();
+    expect(
+      await createIncidentForCurrentSession(
+        { ...command, draftId: "77777777-7777-4777-8777-777777777777" },
+        missing,
+        "k".repeat(32),
+      ),
+    ).toEqual({ kind: "denied" });
+    expect(missing.rpc).not.toHaveBeenCalled();
+  });
   it("uses only the verified facility scope and opaque digests", async () => {
     const sessionClient = client();
 

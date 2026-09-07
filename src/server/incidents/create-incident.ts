@@ -31,8 +31,11 @@ type IncidentCreateRpcArguments = Readonly<{
 
 type IncidentCreateRpcClient = Readonly<{
   rpc(
-    functionName: "create_incident",
-    arguments_: IncidentCreateRpcArguments,
+    functionName: "create_incident" | "create_incident_from_draft",
+    arguments_: IncidentCreateRpcArguments & {
+      p_draft_id?: string;
+      p_draft_revision?: number;
+    },
   ): PromiseLike<Readonly<{ data: unknown; error: unknown | null }>>;
 }>;
 
@@ -53,6 +56,9 @@ function digest(value: string, key: string, purpose: string): string {
 function canonicalRequest(command: CreateIncidentCommand): string {
   const revision = command.revision;
   return JSON.stringify({
+    ...(command.draftId
+      ? { draftId: command.draftId, draftRevision: command.draftRevision }
+      : {}),
     schemaVersion: revision.schemaVersion,
     incidentName: revision.incidentName,
     incidentNumber: revision.incidentNumber,
@@ -100,27 +106,36 @@ export async function createIncidentForAuthorizedSession(
 ): Promise<CreateIncidentResult> {
   const revision = command.revision;
   try {
-    const result = await client.rpc("create_incident", {
-      p_facility_id: session.account.facilityId,
-      p_incident_number: revision.incidentNumber,
-      p_display_name: revision.incidentName,
-      p_occurred_at: revision.occurredAt,
-      p_category: revision.category,
-      p_schema_version: revision.schemaVersion,
-      p_field_notes: revision.fieldNotes,
-      p_reviewed_facts: revision.reviewedFacts,
-      p_staff_relationships: command.staffRelationships,
-      p_idempotency_key_digest: digest(
-        command.idempotencyKey,
-        idempotencyHmacKey,
-        `${INCIDENT_CREATE_ACTION}.key`,
-      ),
-      p_request_digest: digest(
-        canonicalRequest(command),
-        idempotencyHmacKey,
-        `${INCIDENT_CREATE_ACTION}.request`,
-      ),
-    });
+    const result = await client.rpc(
+      command.draftId ? "create_incident_from_draft" : "create_incident",
+      {
+        ...(command.draftId
+          ? {
+              p_draft_id: command.draftId,
+              p_draft_revision: command.draftRevision,
+            }
+          : {}),
+        p_facility_id: session.account.facilityId,
+        p_incident_number: revision.incidentNumber,
+        p_display_name: revision.incidentName,
+        p_occurred_at: revision.occurredAt,
+        p_category: revision.category,
+        p_schema_version: revision.schemaVersion,
+        p_field_notes: revision.fieldNotes,
+        p_reviewed_facts: revision.reviewedFacts,
+        p_staff_relationships: command.staffRelationships,
+        p_idempotency_key_digest: digest(
+          command.idempotencyKey,
+          idempotencyHmacKey,
+          `${INCIDENT_CREATE_ACTION}.key`,
+        ),
+        p_request_digest: digest(
+          canonicalRequest(command),
+          idempotencyHmacKey,
+          `${INCIDENT_CREATE_ACTION}.request`,
+        ),
+      },
+    );
     if (result.error || typeof result.data !== "string") {
       return { kind: "unavailable" };
     }

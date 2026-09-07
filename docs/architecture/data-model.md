@@ -164,6 +164,25 @@ fact against these immutable relationships inside the server and database.
 Unique active relationship per report/account. This table supports explicit
 future collaboration without broadening facility tenancy.
 
+### app_private.incident_drafts
+
+Private, versioned unfinished incident input owned by one active account and its
+facility. It stores an envelope schema version, optimistic revision number, last
+acknowledged request digest, summary-only Home fields, lifecycle state, and an
+optional promoted incident link. A discard records lifecycle state only; discard
+does not erase the payload. Unpromoted drafts remain retained; there is no user
+hard-delete or automatic expiry. Promoted drafts cascade only when the linked
+incident passes the existing controlled retention and legal-hold deletion
+procedure. The table is included in encrypted backup and data inventory
+coverage.
+
+All draft RPCs require current session authority and owner/facility scope. Save
+and discard compare revisions; stable client IDs and request digests acknowledge
+retries without duplicate drafts. Incident creation and draft promotion share
+one transaction. Restoring unfinished input requires renewed officer, category,
+and report review before incident creation. Payloads are bounded to 1 MiB and
+are never placed in browser storage or telemetry.
+
 ### app_private.report_draft_candidates
 
 Each immutable review-only candidate records its incident and source revision,

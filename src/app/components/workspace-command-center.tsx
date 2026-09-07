@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import type { ReportSummary } from "@/server/incidents/list-reports";
+import type { IncidentDraftSummary } from "@/features/incidents/incident-draft";
 
 export { GuidedMark };
 
@@ -32,6 +33,7 @@ type WorkItem = {
   title: string;
   status: string;
   href: string;
+  detail?: string;
 };
 type Tool = { label: string; href: string; icon: LucideIcon };
 
@@ -153,7 +155,9 @@ function CommandCenter({
                 <h2 id="your-work-title">Your work</h2>
               </CardTitle>
               <CardDescription>
-                {preview ? "Fictional training examples" : "Authorized reports"}
+                {preview
+                  ? "Fictional training examples"
+                  : "Authorized reports and saved drafts"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -187,6 +191,11 @@ function CommandCenter({
                             {item.title}
                           </strong>
                           <Badge variant="secondary">{item.status}</Badge>
+                          {item.detail ? (
+                            <span className="text-xs text-muted-foreground">
+                              {item.detail}
+                            </span>
+                          ) : null}
                         </div>
                         <ArrowRight
                           aria-hidden="true"
@@ -295,16 +304,33 @@ export function WorkspaceCommandCenter() {
 /** Receives only server-authorized summaries, with no fallback sample data. */
 export function OfficerCommandCenter({
   reports,
-}: Readonly<{ reports: readonly ReportSummary[] | null }>) {
+  drafts = [],
+}: Readonly<{
+  reports: readonly ReportSummary[] | null;
+  drafts?: readonly IncidentDraftSummary[] | null;
+}>) {
   const work =
-    reports === null
+    reports === null || drafts === null
       ? null
-      : reports.slice(0, 2).map((report) => ({
-          id: report.reportId,
-          label: report.incidentNumber,
-          title: report.incidentName,
-          status: report.status.replaceAll("_", " "),
-          href: `/reports/${report.reportId}`,
-        }));
+      : [
+          ...drafts.slice(0, 2).map((draft) => ({
+            id: `draft-${draft.draftId}`,
+            label: "Saved draft",
+            title:
+              [draft.incidentNumber, draft.incidentName]
+                .filter(Boolean)
+                .join(" · ") || "Untitled incident draft",
+            status: "Resume draft",
+            detail: `Saved ${new Intl.DateTimeFormat("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" }).format(new Date(draft.savedAt))} UTC`,
+            href: `/incidents/new?draft=${draft.draftId}`,
+          })),
+          ...reports.slice(0, 2).map((report) => ({
+            id: report.reportId,
+            label: report.incidentNumber,
+            title: report.incidentName,
+            status: report.status.replaceAll("_", " "),
+            href: `/reports/${report.reportId}`,
+          })),
+        ];
   return <CommandCenter preview={false} work={work} />;
 }

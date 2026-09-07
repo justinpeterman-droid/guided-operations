@@ -32,6 +32,11 @@ import type {
   IncidentStaffRelationshipType,
 } from "@/features/incidents/incident-staff-relationships";
 import { INCIDENT_SCHEMA_VERSION } from "@/features/incidents/schema";
+import {
+  INCIDENT_DRAFT_SCHEMA_VERSION,
+  type IncidentDraft,
+  type IncidentDraftEnvelope,
+} from "@/features/incidents/incident-draft";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type SaveState = "idle" | "saving" | "failed" | "expired" | "saved";
@@ -69,7 +74,10 @@ async function csrfToken(): Promise<string> {
   return data.csrfToken;
 }
 
-export function NewIncidentWorkspace() {
+export function NewIncidentWorkspace({
+  initialDraft = null,
+}: Readonly<{ initialDraft?: IncidentDraft | null }>) {
+  const restored = initialDraft?.envelope;
   const [step, setStep] = useState<Step>(1);
   const [officerConfirmed, setOfficerConfirmed] = useState(false);
   const [staffLoadState, setStaffLoadState] =
@@ -77,10 +85,10 @@ export function NewIncidentWorkspace() {
   const [staff, setStaff] = useState<readonly StaffSelectionItem[]>([]);
   const [selectedRelationships, setSelectedRelationships] = useState<
     ReadonlySet<string>
-  >(new Set());
+  >(new Set(restored?.selectedRelationships ?? []));
   const [factReportingScopes, setFactReportingScopes] = useState<
     Readonly<Record<string, readonly string[]>>
-  >({});
+  >(restored?.factReportingScopes ?? {});
   const [reportsReviewed, setReportsReviewed] = useState(false);
   const [saveState, setSaveState] = useState<SaveState>("idle");
   const [savedIncidentId, setSavedIncidentId] = useState<string | null>(null);
@@ -90,22 +98,47 @@ export function NewIncidentWorkspace() {
     key: string;
     body: string;
   } | null>(null);
-  const [incidentNumber, setIncidentNumber] = useState("");
-  const [incidentName, setIncidentName] = useState("");
-  const [occurredAt, setOccurredAt] = useState("");
-  const [location, setLocation] = useState("");
-  const [category, setCategory] = useState("");
+  const [incidentNumber, setIncidentNumber] = useState(
+    restored?.incidentNumber ?? "",
+  );
+  const [incidentName, setIncidentName] = useState(
+    restored?.incidentName ?? "",
+  );
+  const [occurredAt, setOccurredAt] = useState(restored?.occurredAt ?? "");
+  const [location, setLocation] = useState(restored?.location ?? "");
+  const [category, setCategory] = useState(restored?.category ?? "");
   const [categoryConfirmed, setCategoryConfirmed] = useState(false);
-  const [notes, setNotes] = useState("");
+  const [notes, setNotes] = useState(restored?.notes ?? "");
   const [factProposals, setFactProposals] = useState<
     readonly FactProposalReview[]
-  >([]);
+  >(restored?.factProposals ?? []);
   const [extractionState, setExtractionState] =
     useState<ExtractionState>("idle");
-  const [unknown, setUnknown] = useState("");
+  const [unknown, setUnknown] = useState(restored?.unknown ?? "");
   const [checklistAnswers, setChecklistAnswers] = useState<
     Record<string, ReportChecklistAnswer>
-  >({});
+  >(
+    Object.fromEntries(
+      (restored?.checklistAnswers ?? []).map((answer) => [
+        answer.questionId,
+        answer,
+      ]),
+    ),
+  );
+  const [draftId, setDraftId] = useState<string | null>(
+    initialDraft?.draftId ?? null,
+  );
+  const [draftRevision, setDraftRevision] = useState<number | null>(
+    initialDraft?.revisionNumber ?? null,
+  );
+  const [draftState, setDraftState] = useState<
+    "idle" | "saving" | "saved" | "failed" | "conflict" | "expired"
+  >(initialDraft ? "saved" : "idle");
+  const draftSavingRef = useRef(false);
+  const newDraftIdRef = useRef<string | null>(null);
+  const [savedDraftFingerprint, setSavedDraftFingerprint] = useState<
+    string | null
+  >(initialDraft ? JSON.stringify(initialDraft.envelope) : null);
 
   const answerList = useMemo(
     () => Object.values(checklistAnswers),
@@ -113,6 +146,7 @@ export function NewIncidentWorkspace() {
   );
   useUnsavedChanges(
     !savedIncidentId &&
+      JSON.stringify(currentDraftEnvelope()) !== savedDraftFingerprint &&
       Boolean(officerConfirmed || incidentNumber || incidentName || notes),
   );
   const currentStaff = staff.find((item) => item.isCurrentAccount);
@@ -401,9 +435,125 @@ export function NewIncidentWorkspace() {
     setSaveState("idle");
   }
 
+  function currentDraftEnvelope(): IncidentDraftEnvelope {
+    return {
+      schemaVersion: INCIDENT_DRAFT_SCHEMA_VERSION,
+      step,
+      officerConfirmed,
+      selectedRelationships: [...selectedRelationships],
+      factReportingScopes: Object.fromEntries(
+        Object.entries(factReportingScopes).map(([key, value]) => [
+          key,
+          [...value],
+        ]),
+      ),
+      reportsReviewed,
+      incidentNumber,
+      incidentName,
+      occurredAt,
+      location,
+      category,
+      categoryConfirmed,
+      notes,
+      factProposals: factProposals.map((proposal) => ({ ...proposal })),
+      unknown,
+      checklistAnswers: answerList,
+    };
+  }
+
+  async function saveDraft() {
+    if (draftSavingRef.current || savingRef.current || savedIncidentId) return;
+    draftSavingRef.current = true;
+    const envelope = currentDraftEnvelope();
+    setDraftState("saving");
+    try {
+      const token = await csrfToken();
+      const response = await fetch("/api/web/v1/incident-drafts", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json", "x-csrf-token": token },
+        body: JSON.stringify({
+          draftId: draftId ?? (newDraftIdRef.current ??= crypto.randomUUID()),
+          expectedRevision: draftRevision ?? 0,
+          envelope,
+        }),
+      });
+      if (response.status === 401) throw new Error("session_expired");
+      if (response.status === 409) {
+        setDraftState("conflict");
+        return;
+      }
+      const result = z
+        .object({
+          data: z.object({
+            draft: z.object({
+              draftId: z.uuid(),
+              revisionNumber: z.number().int().positive(),
+              incidentNumber: z.string().nullable(),
+              incidentName: z.string().nullable(),
+              savedAt: z.string(),
+            }),
+          }),
+        })
+        .safeParse(await response.json());
+      if (!response.ok || !result.success) throw new Error("draft_save");
+      setDraftId(result.data.data.draft.draftId);
+      setDraftRevision(result.data.data.draft.revisionNumber);
+      setSavedDraftFingerprint(JSON.stringify(envelope));
+      setDraftState("saved");
+    } catch (error) {
+      setDraftState(
+        error instanceof Error && error.message === "session_expired"
+          ? "expired"
+          : "failed",
+      );
+    } finally {
+      draftSavingRef.current = false;
+    }
+  }
+
+  async function discardDraft() {
+    if (draftSavingRef.current || savingRef.current || savedIncidentId) return;
+    if (
+      !draftId ||
+      !window.confirm(
+        "Discard this saved draft? This removes it from your work list, but record retention may still apply.",
+      )
+    )
+      return;
+    draftSavingRef.current = true;
+    setDraftState("saving");
+    try {
+      const token = await csrfToken();
+      const response = await fetch(
+        `/api/web/v1/incident-drafts/${draftId}?revision=${draftRevision}`,
+        {
+          method: "DELETE",
+          credentials: "same-origin",
+          headers: { "x-csrf-token": token },
+        },
+      );
+      if (response.status === 409) {
+        setDraftState("conflict");
+        return;
+      }
+      if (!response.ok) throw new Error("discard");
+      setDraftId(null);
+      newDraftIdRef.current = null;
+      setSavedDraftFingerprint(null);
+      setDraftRevision(null);
+      setDraftState("idle");
+    } catch {
+      setDraftState("failed");
+    } finally {
+      draftSavingRef.current = false;
+    }
+  }
+
   async function save(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (
+      draftSavingRef.current ||
       savingRef.current ||
       savedIncidentId ||
       !readyForFactReview ||
@@ -453,6 +603,7 @@ export function NewIncidentWorkspace() {
       });
       const body = {
         staffRelationships,
+        ...(draftId ? { draftId, draftRevision } : {}),
         revision: {
           schemaVersion: INCIDENT_SCHEMA_VERSION,
           incidentNumber: incidentNumber.trim(),
@@ -504,6 +655,8 @@ export function NewIncidentWorkspace() {
         },
       };
       const fingerprint = JSON.stringify({
+        draftId,
+        draftRevision,
         staffRelationships,
         incidentNumber,
         incidentName,
@@ -576,6 +729,46 @@ export function NewIncidentWorkspace() {
 
   return (
     <WorkspaceShell current="Report Assistant" title="New incident">
+      <section
+        className="go-ui mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border bg-card px-4 py-3"
+        aria-label="Draft controls"
+      >
+        <p className="text-sm text-muted-foreground" aria-live="polite">
+          {draftState === "saved"
+            ? JSON.stringify(currentDraftEnvelope()) === savedDraftFingerprint
+              ? "Draft saved privately to your work list."
+              : "Your changes are not saved to the draft yet."
+            : draftState === "saving"
+              ? "Saving draft…"
+              : draftState === "conflict"
+                ? "This draft changed elsewhere. Reopen it from Home before saving again."
+                : draftState === "expired"
+                  ? "Your session ended. Sign in again, then save this draft."
+                  : draftState === "failed"
+                    ? "Draft save was not confirmed. Your entries remain on this page."
+                    : "Save a private draft at any point. It is not an incident yet."}
+        </p>
+        <div className="flex items-center gap-2">
+          {draftId ? (
+            <Button
+              variant="ghost"
+              type="button"
+              onClick={discardDraft}
+              disabled={draftState === "saving" || saveState === "saving"}
+            >
+              Discard draft
+            </Button>
+          ) : null}
+          <Button
+            type="button"
+            onClick={saveDraft}
+            disabled={draftState === "saving" || saveState === "saving"}
+          >
+            {" "}
+            {draftState === "saving" ? "Saving draft…" : "Save draft"}{" "}
+          </Button>
+        </div>
+      </section>
       <div className="incident-workspace">
         <nav className="incident-steps" aria-label="Incident workflow">
           <ol>
