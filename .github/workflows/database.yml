@@ -10,6 +10,8 @@ on:
       - "docs/operations/production-data-inventory.json"
       - "docs/operations/production-data-inventory.md"
       - "tools/policy-ingestion/**"
+      - "scripts/*policy-corpus*"
+      - "scripts/corpus-tools.integration.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/database.yml"
@@ -23,6 +25,8 @@ on:
       - "docs/operations/production-data-inventory.json"
       - "docs/operations/production-data-inventory.md"
       - "tools/policy-ingestion/**"
+      - "scripts/*policy-corpus*"
+      - "scripts/corpus-tools.integration.test.mjs"
       - "package.json"
       - "package-lock.json"
       - ".github/workflows/database.yml"
@@ -84,6 +88,11 @@ jobs:
         env:
           POLICY_INGESTION_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: npm run test:policy-ingestion
+
+      - name: Test fictional corpus approval and concurrency
+        env:
+          CORPUS_TOOLS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
+        run: npm run test:corpus:integration
 
       - name: Verify generated database types
         run: npm run db:types:check

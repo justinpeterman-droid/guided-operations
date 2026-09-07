@@ -12,7 +12,7 @@
     "lint": "eslint --max-warnings=0",
     "typecheck": "tsc --noEmit",
     "test": "vitest run && npm run test:operations",
-    "test:operations": "node --test scripts/create-production-backup.test.mjs scripts/fictional-test-administrator-bootstrap-guard.test.mjs scripts/local-auth-config.test.mjs scripts/local-authenticated-browser-qualification-guard.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-fictional-development-data.test.mjs scripts/verify-openai-data-controls.test.mjs scripts/verify-policy-corpus-manifest.test.mjs scripts/verify-production-migration-history.test.mjs scripts/verify-production-release-record.test.mjs scripts/verify-runtime-logging.test.mjs scripts/write-production-migration-evidence.test.mjs",
+    "test:operations": "node --test scripts/approve-policy-corpus.test.mjs scripts/embed-policy-corpus.test.mjs scripts/create-production-backup.test.mjs scripts/fictional-test-administrator-bootstrap-guard.test.mjs scripts/local-auth-config.test.mjs scripts/local-authenticated-browser-qualification-guard.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-fictional-development-data.test.mjs scripts/verify-openai-data-controls.test.mjs scripts/verify-policy-corpus-manifest.test.mjs scripts/verify-production-migration-history.test.mjs scripts/verify-production-release-record.test.mjs scripts/verify-runtime-logging.test.mjs scripts/write-production-migration-evidence.test.mjs",
     "test:policy-ingestion": "python -m unittest discover -s tools/policy-ingestion/tests -v",
     "test:watch": "vitest",
     "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts src/server/ai/policy-correctness-evaluation.test.ts",
@@ -37,10 +37,13 @@
     "db:types:check": "node scripts/verify-database-types.mjs",
     "data:inventory:check": "node scripts/verify-production-data-inventory.mjs",
     "development:data-boundary:check": "node scripts/verify-fictional-development-data.mjs --confirm-read-only-fictional-development-audit",
+    "corpus:approve": "node scripts/approve-policy-corpus.mjs",
+    "corpus:embed": "node scripts/embed-policy-corpus.mjs",
     "corpus:verify": "node scripts/verify-policy-corpus-manifest.mjs",
     "backup:production": "node scripts/create-production-backup.mjs",
     "release:verify": "node scripts/verify-production-release-record.mjs",
-    "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations"
+    "recovery:local": "node scripts/rehearse-local-recovery.mjs --confirm-local-guided-operations",
+    "test:corpus:integration": "node --test scripts/corpus-tools.integration.test.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "2.112.4",
