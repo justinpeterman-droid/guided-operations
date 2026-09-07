@@ -39,6 +39,16 @@ export const policyEvaluationCaseSchema = z
         facilityId: z.uuid(),
         question: z.string().trim().min(3).max(2_000),
         approvedDocumentVersionIds: z.array(z.uuid()).max(50).optional(),
+        history: z
+          .array(
+            z
+              .object({
+                question: z.string().trim().min(3).max(2_000),
+              })
+              .strict(),
+          )
+          .max(6)
+          .optional(),
       })
       .strict(),
     expectedStatus: z.enum([

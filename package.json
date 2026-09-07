@@ -15,7 +15,7 @@
     "test:operations": "node --test scripts/create-production-backup.test.mjs scripts/fictional-test-administrator-bootstrap-guard.test.mjs scripts/local-auth-config.test.mjs scripts/local-authenticated-browser-qualification-guard.test.mjs scripts/production-backup-guard.test.mjs scripts/production-migration-guard.test.mjs scripts/verify-fictional-development-data.test.mjs scripts/verify-openai-data-controls.test.mjs scripts/verify-policy-corpus-manifest.test.mjs scripts/verify-production-migration-history.test.mjs scripts/verify-production-release-record.test.mjs scripts/verify-runtime-logging.test.mjs scripts/write-production-migration-evidence.test.mjs",
     "test:policy-ingestion": "python -m unittest discover -s tools/policy-ingestion/tests -v",
     "test:watch": "vitest",
-    "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts",
+    "test:eval": "vitest run src/server/ai/policy-evaluation.test.ts src/server/ai/policy-evaluation.synthetic.test.ts src/server/ai/policy-correctness-evaluation.test.ts",
     "test:e2e": "playwright test",
     "test:e2e:preview": "playwright test tests/e2e/admin-paperwork-packages.spec.ts tests/e2e/admin-retention.spec.ts tests/e2e/accessibility.spec.ts tests/e2e/count-sheet.spec.ts tests/e2e/forms-library.spec.ts tests/e2e/foundation.spec.ts tests/e2e/workspace-command-center.spec.ts tests/e2e/report-print.spec.ts",
     "test:e2e:local-public": "node scripts/run-local-public-browser-qualification.mjs --confirm-local-guided-operations",
