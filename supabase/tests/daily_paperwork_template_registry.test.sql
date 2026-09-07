@@ -1,6 +1,6 @@
 begin;
 
-select plan(26);
+select plan(27);
 
 select has_table(
   'app_private',
@@ -52,11 +52,6 @@ select ok(
     'anon',
     'api.list_daily_paperwork_status_v2(date,text)',
     'execute'
-  )
-  and not has_function_privilege(
-    'authenticated',
-    'api.list_daily_paperwork_status(date,text)',
-    'execute'
   ),
   'only authenticated callers can execute the session-bound Daily Paperwork catalog RPC'
 );
@@ -71,13 +66,14 @@ select ok(
     'anon',
     'api.get_daily_paperwork_template_v2(uuid,date)',
     'execute'
-  )
-  and not has_function_privilege(
-    'authenticated',
-    'api.get_daily_paperwork_template(uuid,date)',
-    'execute'
   ),
   'only authenticated callers can execute the session-bound private template reader RPC'
+);
+
+select ok(
+  to_regprocedure('api.list_daily_paperwork_status(date,text)') is null
+  and to_regprocedure('api.get_daily_paperwork_template(uuid,date)') is null,
+  'the superseded v1 Daily Paperwork RPCs no longer exist in the catalog'
 );
 
 insert into auth.users (id, email)

@@ -155,21 +155,6 @@ export type Database = {
           work_date: string
         }[]
       }
-      get_daily_paperwork_template: {
-        Args: { p_template_id: string; p_work_date: string }
-        Returns: {
-          capabilities: string[]
-          field_schema: Json
-          print_orientation: string
-          source_revision: string
-          source_sha256: string
-          structure: Json
-          template_code: string
-          template_id: string
-          title: string
-          version: number
-        }[]
-      }
       get_daily_paperwork_template_v2: {
         Args: { p_template_id: string; p_work_date: string }
         Returns: {
@@ -423,21 +408,6 @@ export type Database = {
           revision_number: number
           source_revision: string
           template_version: number
-        }[]
-      }
-      list_daily_paperwork_status: {
-        Args: { p_shift_code: string; p_work_date: string }
-        Returns: {
-          capabilities: string[]
-          configured: boolean
-          current_revision_number: number
-          display_title: string
-          print_orientation: string
-          record_id: string
-          template_code: string
-          template_id: string
-          template_version: number
-          updated_at: string
         }[]
       }
       list_daily_paperwork_status_v2: {

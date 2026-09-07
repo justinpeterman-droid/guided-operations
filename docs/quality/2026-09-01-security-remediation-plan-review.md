@@ -238,3 +238,16 @@ valid fixture produces no errors), `npm run test:operations` (69 passing),
   hosted evidence and are untouched by this review.
 - The underlying scan was cancelled and its inventory marked partial. Absence of
   a finding here is not evidence of absence.
+
+## Legacy Daily Paperwork RPC removal (2026-09-07)
+
+The forward migration `20260907120000_drop_legacy_daily_paperwork_v1_rpcs.sql`
+inlines the existing queries into the session-authorized v2 functions and
+removes the unreachable v1 functions. V2 signatures and grants remain unchanged.
+Local validation passed SQL lint and all 673 pgTAP assertions across 28 files;
+generated API types remove only the two obsolete function definitions.
+
+Recovery: existing callers use v2, so retain this migration when rolling back
+web code. If query behavior needs correction, apply a reviewed forward migration
+to the v2 definitions; do not regrant the retired v1 functions. This local
+result is not evidence of a hosted migration.
