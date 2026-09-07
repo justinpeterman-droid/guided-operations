@@ -329,6 +329,11 @@ test("an officer and administrator can use the protected per-officer report work
     page.getByRole("heading", { name: "Notes & Facts" }),
   ).toBeVisible();
   await expect(page.getByText("Officer observation")).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Not attributed to a reporting officer" })
+      .getByText("Unassigned observation"),
+  ).toBeVisible();
   await page.getByRole("tab", { name: /^Paperwork/ }).click();
   await expect(page.getByRole("heading", { name: "Paperwork" })).toBeVisible();
   await expect(
@@ -581,7 +586,11 @@ test("an officer and administrator can use the protected per-officer report work
   // officer rather than exposing an unattributed confirmed fact.
   await page.getByRole("tab", { name: /Notes & Facts/ }).click();
   await expect(page.getByText("Officer observation")).toBeVisible();
-  await expect(page.getByText("Unassigned observation")).toHaveCount(0);
+  await expect(
+    page
+      .getByRole("region", { name: "Not attributed to a reporting officer" })
+      .getByText("Unassigned observation"),
+  ).toBeVisible();
   await signOut(page);
 
   expect(browserErrors).toEqual([]);
