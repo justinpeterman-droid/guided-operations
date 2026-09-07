@@ -271,7 +271,7 @@ test("an officer and administrator can use the protected per-officer report work
   // This deliberately long scenario covers the full officer-to-administrator
   // handoff, revision conflicts, exports, print, and two verified sign-outs.
   // Keep enough CI headroom for every assertion instead of racing cleanup.
-  test.setTimeout(90_000);
+  test.setTimeout(120_000);
   const browserErrors: string[] = [];
   const failedRequests: string[] = [];
   let expectingRevisionConflict = false;
@@ -296,6 +296,45 @@ test("an officer and administrator can use the protected per-officer report work
   trackBrowserFailures(page);
 
   await signIn(page, accounts.officer);
+  // Private unfinished input must survive reopening without creating an incident.
+  await page.goto("/incidents/new");
+  await page
+    .getByRole("button", { name: "Confirm officer relationships" })
+    .click();
+  await page
+    .getByLabel("Incident number", { exact: true })
+    .fill("FICTIONAL-DRAFT-RECOVERY");
+  await page
+    .getByLabel("Incident name", { exact: true })
+    .fill("Fictional resumable input");
+  await page.getByRole("button", { name: "Save draft", exact: true }).click();
+  await expect(
+    page.getByText("Draft saved privately to your work list."),
+  ).toBeVisible();
+  const draftResponse = await page.request.get("/api/web/v1/incident-drafts");
+  expect(draftResponse.ok()).toBeTruthy();
+  const draftList = await draftResponse.json();
+  const savedDraft = draftList.data.drafts.find(
+    (draft: { incidentNumber: string }) =>
+      draft.incidentNumber === "FICTIONAL-DRAFT-RECOVERY",
+  );
+  expect(savedDraft).toBeTruthy();
+  await page.goto(`/incidents/new?draft=${savedDraft.draftId}`);
+  await page
+    .getByRole("button", { name: "Confirm officer relationships" })
+    .click();
+  await expect(page.getByLabel("Incident number", { exact: true })).toHaveValue(
+    "FICTIONAL-DRAFT-RECOVERY",
+  );
+  page.once("dialog", (dialog) => dialog.accept());
+  await page
+    .getByRole("button", { name: "Discard draft", exact: true })
+    .click();
+  await expect(
+    page.getByRole("button", { name: "Discard draft", exact: true }),
+  ).toHaveCount(0);
+  page.once("dialog", (dialog) => dialog.accept());
+
   await page.goto("/reports");
   await page.getByRole("link", { name: "F-WORKSPACE-001" }).click();
   await expect(page).toHaveURL(`/incidents/${incidentId}`);

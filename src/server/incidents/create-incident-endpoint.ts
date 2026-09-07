@@ -14,6 +14,8 @@ export type ValidatedCreateIncidentRequest = Readonly<{
     typeof createIncidentRequestSchema
   >["staffRelationships"];
   idempotencyKey: string;
+  draftId?: string;
+  draftRevision?: number;
 }>;
 
 export type CreateIncidentRequestValidation =
@@ -75,6 +77,8 @@ export async function validateCreateIncidentEndpointRequest(
       revision: parsed.data.revision,
       staffRelationships: parsed.data.staffRelationships,
       idempotencyKey: idempotency.data,
+      draftId: parsed.data.draftId,
+      draftRevision: parsed.data.draftRevision,
     },
   };
 }

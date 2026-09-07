@@ -91,8 +91,12 @@ export async function POST(request: Request): Promise<Response> {
     }
 
     return errorResponse(
-      result.kind === "denied" ? 403 : 503,
-      result.kind === "denied" ? "request_not_allowed" : "service_unavailable",
+      result.kind === "conflict" ? 409 : result.kind === "denied" ? 403 : 503,
+      result.kind === "conflict"
+        ? "draft_conflict"
+        : result.kind === "denied"
+          ? "request_not_allowed"
+          : "service_unavailable",
       requestId,
     );
   } catch {

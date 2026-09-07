@@ -318,3 +318,93 @@ describe("NewIncidentWorkspace", () => {
     },
   );
 });
+
+it("preserves restored roster relationships but requires fresh fact decisions", async () => {
+  const first = "11111111-1111-4111-8111-111111111111",
+    second = "22222222-2222-4222-8222-222222222222";
+  vi.spyOn(globalThis, "fetch").mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        data: {
+          staff: [
+            {
+              staffMemberId: first,
+              displayName: "Fictional One",
+              employeeNumberHint: "11",
+              shiftCode: "A",
+              isCurrentAccount: true,
+            },
+            {
+              staffMemberId: second,
+              displayName: "Fictional Two",
+              employeeNumberHint: "22",
+              shiftCode: "A",
+              isCurrentAccount: false,
+            },
+          ],
+        },
+      }),
+    ),
+  );
+  render(
+    <NewIncidentWorkspace
+      initialDraft={{
+        draftId: "33333333-3333-4333-8333-333333333333",
+        revisionNumber: 1,
+        incidentNumber: "F-RESUME",
+        incidentName: "Fictional resume",
+        savedAt: "2026-09-07T12:00:00Z",
+        envelope: {
+          schemaVersion: 1,
+          step: 6,
+          officerConfirmed: true,
+          selectedRelationships: [
+            `${first}:reporting_officer`,
+            `${second}:witness`,
+          ],
+          factReportingScopes: {},
+          reportsReviewed: true,
+          incidentNumber: "F-RESUME",
+          incidentName: "Fictional resume",
+          occurredAt: "2026-09-07T12:00",
+          location: "Fictional training room",
+          category: "incident_no_disciplinary",
+          categoryConfirmed: true,
+          notes: "Fictional note.",
+          factProposals: [
+            {
+              key: "fact-1",
+              sourceText: "Fictional note.",
+              value: "Fictional fact.",
+              decision: "confirmed",
+            },
+          ],
+          unknown: "",
+          checklistAnswers: [],
+        },
+      }}
+    />,
+  );
+  const group = await screen.findByRole("group", { name: /Fictional Two/ });
+  expect(
+    screen.getByText("Draft saved privately to your work list."),
+  ).toBeVisible();
+  expect(
+    screen.queryByText("Your changes are not saved to the draft yet."),
+  ).not.toBeInTheDocument();
+  expect(
+    within(group).getByRole("checkbox", { name: "Witness" }),
+  ).toBeChecked();
+  const user = userEvent.setup();
+  await user.click(
+    screen.getByRole("button", { name: "Confirm officer relationships" }),
+  );
+  await user.click(
+    screen.getByRole("button", { name: "Confirm category and review facts" }),
+  );
+  expect(screen.getByRole("button", { name: "Confirm fact" })).toHaveAttribute(
+    "aria-pressed",
+    "false",
+  );
+  expect(screen.getByDisplayValue("Fictional fact.")).toBeVisible();
+});
