@@ -245,7 +245,7 @@ describe("DocumentStudio", () => {
     ).toBeVisible();
   });
 
-  it("keeps a fact that belongs to no reporting officer off Notes & Facts", async () => {
+  it("shows incident-only facts separately in Notes & Facts", async () => {
     const user = userEvent.setup();
     const view = render(
       <DocumentStudio
@@ -271,6 +271,16 @@ describe("DocumentStudio", () => {
 
     await user.click(root.getByRole("tab", { name: /Notes & Facts/i }));
     expect(root.getByText("Location")).toBeVisible();
-    expect(root.queryByText("Unassigned observation")).toBeNull();
+    const unattributed = root.getByRole("region", {
+      name: "Not attributed to a reporting officer",
+    });
+    expect(
+      within(unattributed).getByText("Unassigned observation"),
+    ).toBeVisible();
+    expect(within(unattributed).queryByText("Location")).toBeNull();
+    await user.click(root.getByRole("tab", { name: /Incident Record/i }));
+    expect(
+      root.getByText("Confirmed facts").nextElementSibling,
+    ).toHaveTextContent("2");
   });
 });

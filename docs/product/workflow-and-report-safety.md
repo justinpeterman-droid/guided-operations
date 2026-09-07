@@ -67,7 +67,8 @@ reporting officers whose perspectives may use it. An empty scope means the fact
 is incident-only and cannot enter a generated report. When multiple reporting
 officers are selected, the user must assign every confirmed fact deliberately;
 generation and database storage both reject a fact outside the requested
-officer's scope.
+officer's scope. Notes & Facts displays incident-only facts in a separate
+labeled section; this display does not grant permission to use them in a report.
 
 **SAFE-013 — Unknown remains unknown.** Missing values remain blank or
 explicitly Unknown/Not applicable according to the target form. The system

@@ -74,25 +74,10 @@ function formatTimestamp(timestamp: string): string {
   }).format(new Date(timestamp))} UTC`;
 }
 
-/**
- * The server hands back every fact stored on the revision; scoping to a
- * reporting officer happens where facts are displayed. A confirmed version-two
- * fact with an empty scope belongs to no reporter, so it is not shown here.
- */
-function scopedFacts(
-  facts: readonly StoredReviewedFact[],
-): readonly StoredReviewedFact[] {
-  return facts.filter((fact) => {
-    if (fact.state !== "confirmed") return true;
-    if (!("reportingStaffMemberIds" in fact)) return true;
-    return fact.reportingStaffMemberIds.length > 0;
-  });
-}
-
 function countVisibleConfirmedFacts(
   facts: readonly StoredReviewedFact[],
 ): number {
-  return scopedFacts(facts).filter((fact) => fact.state === "confirmed").length;
+  return facts.filter((fact) => fact.state === "confirmed").length;
 }
 
 function ReportsPanel({ reports, workspace }: DocumentStudioProps) {
@@ -249,8 +234,45 @@ function PaperworkPanel({ workspace }: DocumentStudioProps) {
   );
 }
 
+function isUnattributedFact(fact: StoredReviewedFact): boolean {
+  return (
+    fact.state === "confirmed" &&
+    "reportingStaffMemberIds" in fact &&
+    fact.reportingStaffMemberIds.length === 0
+  );
+}
+
+function FactListItem({ fact }: Readonly<{ fact: StoredReviewedFact }>) {
+  return (
+    <li>
+      <div className="document-studio-fact-heading">
+        <strong>{fact.field}</strong>
+        <span className={`document-studio-fact-state state-${fact.state}`}>
+          {fact.state.replaceAll("_", " ")}
+        </span>
+      </div>
+      {fact.state === "confirmed" ? (
+        <>
+          <p>{fact.value}</p>
+          {"reportingStaffMemberIds" in fact &&
+          fact.reportingStaffMemberIds.length > 0 ? (
+            <p className="document-studio-footnote">
+              Approved for {fact.reportingStaffMemberIds.length} reporting
+              officer{fact.reportingStaffMemberIds.length === 1 ? "" : "s"}.
+            </p>
+          ) : null}
+        </>
+      ) : (
+        <p>{fact.reason}</p>
+      )}
+    </li>
+  );
+}
+
 function NotesAndFactsPanel({ workspace }: DocumentStudioProps) {
-  const facts = scopedFacts(workspace.reviewedFacts);
+  const facts = workspace.reviewedFacts;
+  const attributed = facts.filter((fact) => !isUnattributedFact(fact));
+  const unattributed = facts.filter(isUnattributedFact);
 
   return (
     <section
@@ -269,36 +291,35 @@ function NotesAndFactsPanel({ workspace }: DocumentStudioProps) {
         <p className="document-studio-empty" role="status">
           No reviewed facts are stored on the current revision.
         </p>
-      ) : (
+      ) : null}
+
+      {attributed.length > 0 ? (
         <ul className="document-studio-fact-list">
-          {facts.map((fact) => (
-            <li key={fact.id}>
-              <div className="document-studio-fact-heading">
-                <strong>{fact.field}</strong>
-                <span
-                  className={`document-studio-fact-state state-${fact.state}`}
-                >
-                  {fact.state.replaceAll("_", " ")}
-                </span>
-              </div>
-              {fact.state === "confirmed" ? (
-                <>
-                  <p>{fact.value}</p>
-                  {"reportingStaffMemberIds" in fact ? (
-                    <p className="document-studio-footnote">
-                      Approved for {fact.reportingStaffMemberIds.length}{" "}
-                      reporting officer
-                      {fact.reportingStaffMemberIds.length === 1 ? "" : "s"}.
-                    </p>
-                  ) : null}
-                </>
-              ) : (
-                <p>{fact.reason}</p>
-              )}
-            </li>
+          {attributed.map((fact) => (
+            <FactListItem fact={fact} key={fact.id} />
           ))}
         </ul>
-      )}
+      ) : null}
+
+      {unattributed.length > 0 ? (
+        <section
+          aria-labelledby="studio-unattributed-title"
+          className="document-studio-unattributed"
+        >
+          <h3 id="studio-unattributed-title">
+            Not attributed to a reporting officer
+          </h3>
+          <p>
+            These confirmed facts belong to the incident rather than to any one
+            officer, so no officer&rsquo;s report offers them as a source.
+          </p>
+          <ul className="document-studio-fact-list">
+            {unattributed.map((fact) => (
+              <FactListItem fact={fact} key={fact.id} />
+            ))}
+          </ul>
+        </section>
+      ) : null}
     </section>
   );
 }

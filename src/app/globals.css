@@ -5432,3 +5432,22 @@ form.account-session-controls {
     }
   }
 }
+
+.document-studio-unattributed {
+  display: grid;
+  gap: 10px;
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px dashed rgba(165, 185, 199, 0.9);
+}
+
+.document-studio-unattributed h3 {
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+.document-studio-unattributed > p {
+  margin: 0;
+  color: var(--gow-muted);
+  line-height: 1.6;
+}
