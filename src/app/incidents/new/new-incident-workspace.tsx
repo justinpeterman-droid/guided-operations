@@ -111,7 +111,12 @@ export function NewIncidentWorkspace({
   const [notes, setNotes] = useState(restored?.notes ?? "");
   const [factProposals, setFactProposals] = useState<
     readonly FactProposalReview[]
-  >(restored?.factProposals ?? []);
+  >(
+    (restored?.factProposals ?? []).map((fact) => ({
+      ...fact,
+      decision: "pending",
+    })),
+  );
   const [extractionState, setExtractionState] =
     useState<ExtractionState>("idle");
   const [unknown, setUnknown] = useState(restored?.unknown ?? "");
@@ -269,8 +274,26 @@ export function NewIncidentWorkspace({
         const current = items.filter((item) => item.isCurrentAccount);
         if (current.length !== 1) throw new Error("staff");
         setStaff(items);
-        setSelectedRelationships(
-          new Set([`${current[0].staffMemberId}:reporting_officer`]),
+        setSelectedRelationships((selected) =>
+          selected.size > 0
+            ? new Set(
+                [...selected].filter((key) =>
+                  items.some((item) =>
+                    key.startsWith(`${item.staffMemberId}:`),
+                  ),
+                ),
+              )
+            : new Set([`${current[0].staffMemberId}:reporting_officer`]),
+        );
+        setFactReportingScopes((scopes) =>
+          Object.fromEntries(
+            Object.entries(scopes).map(([key, ids]) => [
+              key,
+              ids.filter((id) =>
+                items.some((item) => item.staffMemberId === id),
+              ),
+            ]),
+          ),
         );
         setStaffLoadState("loaded");
       })
@@ -688,6 +711,11 @@ export function NewIncidentWorkspace({
         body: request.body,
       });
       if (response.status === 401) throw new Error("session_expired");
+      if (response.status === 409) {
+        setDraftState("conflict");
+        setSaveState("idle");
+        return;
+      }
       if (!response.ok) throw new Error("save");
       const result = z
         .object({ data: z.object({ incidentId: z.uuid() }) })

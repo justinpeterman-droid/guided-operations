@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it, vi } from "vitest";
 vi.mock("server-only", () => ({}));
 import {
@@ -172,4 +173,22 @@ describe("private draft boundaries", () => {
     });
     expect(c.rpc).toHaveBeenCalledTimes(1);
   });
+});
+
+it("runs the exact operational containment statements in pgTAP", () => {
+  const source = readFileSync(
+    "supabase/operations/disable_incident_drafts.sql",
+    "utf8",
+  ).trim();
+  const suite = readFileSync(
+    "supabase/tests/incident_draft_recovery.test.sql",
+    "utf8",
+  );
+  expect(
+    suite
+      .replaceAll("\r\n", "\n")
+      .split("-- BEGIN DRAFT CONTAINMENT\n")[1]
+      .split("\n-- END DRAFT CONTAINMENT")[0]
+      .trim(),
+  ).toBe(source.replaceAll("\r\n", "\n"));
 });

@@ -34,7 +34,12 @@ const command = {
 };
 
 function client(
-  options: { claims?: unknown; account?: unknown; incident?: unknown } = {},
+  options: {
+    claims?: unknown;
+    account?: unknown;
+    incident?: unknown;
+    error?: unknown;
+  } = {},
 ) {
   const rpc = vi.fn(async (name: string) => {
     if (name === "current_account") {
@@ -45,7 +50,7 @@ function client(
         options.incident === undefined
           ? "33333333-3333-4333-8333-333333333333"
           : options.incident,
-      error: null,
+      error: options.error ?? null,
     };
   });
   return {
@@ -157,4 +162,18 @@ describe("createIncidentForCurrentSession", () => {
       ),
     ).resolves.toEqual({ kind: "unavailable" });
   });
+});
+
+it("reports stale draft promotion distinctly without exposing database details", async () => {
+  expect(
+    await createIncidentForCurrentSession(
+      {
+        ...command,
+        draftId: "77777777-7777-4777-8777-777777777777",
+        draftRevision: 2,
+      },
+      client({ error: { code: "40001", message: "private details" } }),
+      "k".repeat(32),
+    ),
+  ).toEqual({ kind: "conflict" });
 });

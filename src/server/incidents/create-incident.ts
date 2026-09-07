@@ -45,7 +45,8 @@ export type CreateIncidentSessionClient = CurrentSessionClient &
 export type CreateIncidentResult =
   | Readonly<{ kind: "created"; incidentId: string }>
   | Readonly<{ kind: "denied" }>
-  | Readonly<{ kind: "unavailable" }>;
+  | Readonly<{ kind: "unavailable" }>
+  | Readonly<{ kind: "conflict" }>;
 
 function digest(value: string, key: string, purpose: string): string {
   return createHmac("sha256", key)
@@ -136,6 +137,14 @@ export async function createIncidentForAuthorizedSession(
         ),
       },
     );
+    if (
+      command.draftId &&
+      result.error &&
+      typeof result.error === "object" &&
+      "code" in result.error &&
+      result.error.code === "40001"
+    )
+      return { kind: "conflict" };
     if (result.error || typeof result.data !== "string") {
       return { kind: "unavailable" };
     }
