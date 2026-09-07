@@ -407,3 +407,7 @@ regression was found in the public workspace (`31-workspace-913x667-current.png`
 and `32-workspace-375x812-current.png`). The complete guarded authenticated
 qualification now also passes after a fictional-only reset; it remains local
 evidence only and does not imply hosted readiness.
+
+Training Count Sheet previews offer explicit fictional zeros and announce the
+signed difference and its direction. Blank previews remain incomplete; this
+helper never saves or changes an operational count sheet.

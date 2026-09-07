@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   calculateCountTotals,
   createBlankCountPayload,
+  createZeroCountPayload,
   isCountSheetReconciliationComplete,
   parseCountValue,
 } from "./calculations";
@@ -140,6 +141,16 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
         <div className="count-sheet-heading-actions">
           <span className="not-saved-label">Not saved</span>
           <PrintCountSheetButton />
+          <button
+            className="count-sheet-print-button"
+            type="button"
+            onClick={() => {
+              setPayload(createZeroCountPayload(structure));
+              setError(null);
+            }}
+          >
+            Fill fictional zeros
+          </button>
         </div>
       </div>
 
@@ -323,7 +334,7 @@ export function CountSheetPreview({ structure }: CountSheetPreviewProps) {
             {reconciliationState === "reconciled"
               ? "Reconciled — review before any future save."
               : reconciliationState === "open"
-                ? "Open difference — review the values; do not balance by guessing."
+                ? `Open difference ${totals.difference > 0 ? "+" : ""}${totals.difference} — housing total is ${totals.difference > 0 ? "higher" : "lower"} than operational total. Review the values; do not balance by guessing.`
                 : "Incomplete — enter known values to reconcile."}
           </p>
           <div className="operational-inputs">

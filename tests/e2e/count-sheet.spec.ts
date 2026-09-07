@@ -126,6 +126,10 @@ test("keeps the approved training sheet usable on a reduced-motion mobile view a
   await page.getByRole("button", { name: "Print training preview" }).focus();
   await page.keyboard.press("Tab");
   await expect(
+    page.getByRole("button", { name: "Fill fictional zeros" }),
+  ).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(
     page.getByRole("button", {
       name: "Mark A/W Office as needing attention",
       exact: true,
