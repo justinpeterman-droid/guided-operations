@@ -1,6 +1,7 @@
 import { pathToFileURL } from "node:url";
 
 import postgres from "postgres";
+import { corpusDatabaseTls } from "./policy-corpus-connection.mjs";
 
 /** Read-only evidence inspection. This tool cannot approve or activate content. */
 
@@ -253,7 +254,7 @@ export async function main(argv = process.argv.slice(2)) {
     connect_timeout: 10,
     // Anything that is not the local loopback database is treated as remote and
     // must negotiate TLS. A local Supabase container does not offer it.
-    ssl: isLoopbackDatabase(databaseUrl) ? false : "require",
+    ssl: corpusDatabaseTls(databaseUrl, { allowLoopback: true }),
   });
 
   try {

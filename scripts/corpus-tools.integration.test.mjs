@@ -31,6 +31,8 @@ it(
           );
           const match = source.match(/select lives_ok\(\s*\$\$([\s\S]*?)\$\$/);
           assert.ok(match);
+          assert.ok(match[1].includes("set status = 'ready',"));
+          assert.ok(match[1].includes("qa_status = 'approved',"));
           const fixture = match[1]
             .replace("set status = 'ready',", "set status = 'awaiting_review',")
             .replace("qa_status = 'approved',", "qa_status = 'pending',");

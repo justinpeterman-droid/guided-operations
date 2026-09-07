@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import postgres from "postgres";
+import { corpusDatabaseTls } from "./policy-corpus-connection.mjs";
 
 /**
  * Runs the policy-ingestion embedding command once per approved document
@@ -121,7 +122,7 @@ export async function main(argv = process.argv.slice(2)) {
     max: 1,
     prepare: false,
     connect_timeout: 15,
-    ssl: "require",
+    ssl: corpusDatabaseTls(databaseUrl),
   });
 
   let versions;

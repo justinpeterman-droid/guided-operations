@@ -33,3 +33,9 @@ Database quality runs `npm run test:corpus:integration` on its fresh fictional
 database. Local integration accepts only loopback test databases on ports 54322
 or 57322. It tests actual read-only evidence queries; fixture writes are rolled
 back and pending approval state is preserved.
+
+Remote database connections require certificate verification and a trusted CA
+supplied as `SUPABASE_DB_CA` PEM or the URL `sslrootcert` file. A supplied
+`sslmode` must be `verify-full`. Missing trust fails before connecting. Only
+local read-only inspection permits plaintext loopback; embedding rejects
+loopback.
