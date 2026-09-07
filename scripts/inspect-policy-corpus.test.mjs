@@ -2,12 +2,11 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 
 import {
-  applyApproval,
   printReport,
   classifyVersion,
   parseArguments,
   summarize,
-} from "./approve-policy-corpus.mjs";
+} from "./inspect-policy-corpus.mjs";
 
 /** A version that imported cleanly and is waiting only on owner approval. */
 function pendingRow(overrides = {}) {
@@ -47,34 +46,35 @@ function pendingRow(overrides = {}) {
 
 const NOW = new Date("2026-09-03T00:00:00.000Z");
 
-describe("approval argument parsing", () => {
-  it("defaults to a read-only dry run", () => {
-    const options = parseArguments([]);
-    assert.equal(options.apply, false);
-    assert.equal(options.confirmed, false);
-  });
-
-  it("reads the reviewer and the two write flags", () => {
-    const options = parseArguments([
-      "--reviewer-id",
+describe("inspection argument parsing", () => {
+  it("accepts only read-only version selection", () => {
+    assert.deepEqual(parseArguments([]), { documentVersionId: "" });
+    assert.equal(
+      parseArguments([
+        "--document-version",
+        "11111111-1111-4111-8111-111111111111",
+      ]).documentVersionId,
       "11111111-1111-4111-8111-111111111111",
-      "--apply",
-      "--confirm-production-corpus-approval",
-    ]);
-    assert.equal(options.reviewerId, "11111111-1111-4111-8111-111111111111");
-    assert.equal(options.apply, true);
-    assert.equal(options.confirmed, true);
-  });
-
-  it("rejects an unknown option rather than ignoring it", () => {
-    assert.throws(() => parseArguments(["--approve-everything"]));
+    );
+    for (const args of [
+      ["--apply"],
+      [
+        "--apply",
+        "--confirm-production-corpus-approval",
+        "--reviewer-id",
+        "11111111-1111-4111-8111-111111111111",
+      ],
+      ["--document-version"],
+      ["--document-version", "bad"],
+    ])
+      assert.throws(() => parseArguments(args));
   });
 });
 
 describe("approval classification", () => {
   it("approves a clean pending version and lists every change", () => {
     const result = classifyVersion(pendingRow(), NOW);
-    assert.equal(result.verdict, "will-approve");
+    assert.equal(result.verdict, "needs-review");
     assert.deepEqual(result.blockers, []);
     assert.ok(result.changes.includes("approve 6 page(s)"));
     assert.ok(result.changes.includes("approve 5 chunk(s)"));
@@ -184,7 +184,7 @@ describe("approval totals", () => {
       rows.map((row) => ({ row, ...classifyVersion(row, NOW) })),
     );
     assert.equal(totals.total, 3);
-    assert.equal(totals.willApprove, 1);
+    assert.equal(totals.needsReview, 1);
     assert.equal(totals.blocked, 1);
     assert.equal(totals.alreadyApproved, 1);
     assert.equal(totals.pages, 6);
@@ -210,58 +210,6 @@ describe("approval transaction and privacy", () => {
       { blocked_chunks: 1 },
     ])
       assert.equal(classifyVersion(pendingRow(change), NOW).verdict, "blocked");
-  });
-  it("rechecks eligibility after the lock and never updates newly blocked evidence", async () => {
-    const calls = [];
-    const tx = async (strings) => {
-      const query = strings.join("?");
-      calls.push(query);
-      if (query.startsWith("lock table")) return [];
-      if (query.startsWith("select staff.id")) return [{ id: "reviewer" }];
-      if (query.includes("select distinct on"))
-        return [pendingRow({ is_current: false })];
-      return [];
-    };
-    const count = await applyApproval(
-      { begin: async (fn) => fn(tx) },
-      "facility",
-      {
-        apply: true,
-        confirmed: true,
-        reviewerId: "reviewer",
-        documentVersionId: "",
-      },
-    );
-    assert.equal(count, 0);
-    assert.ok(
-      calls.findIndex((q) => q.startsWith("lock table")) <
-        calls.findIndex((q) => q.includes("select distinct on")),
-    );
-    assert.equal(
-      calls.some((q) => q.trim().startsWith("update")),
-      false,
-    );
-  });
-  it("refuses an inactive or wrong-facility reviewer before writes", async () => {
-    const calls = [];
-    const tx = async (strings) => {
-      calls.push(strings.join("?"));
-      return [];
-    };
-    await assert.rejects(() =>
-      applyApproval({ begin: async (fn) => fn(tx) }, "facility", {
-        apply: true,
-        confirmed: true,
-        reviewerId: "reviewer",
-      }),
-    );
-    assert.equal(
-      calls.some(
-        (q) =>
-          q.includes("select distinct on") || q.trim().startsWith("update"),
-      ),
-      false,
-    );
   });
   it("reports opaque version identifiers without titles or personnel", () => {
     let output = "";

@@ -1,43 +1,35 @@
-# Corpus approval and embedding tools
+# Corpus evidence inspection and embedding
 
-Both commands default to a read-only preview and require explicitly supplied
-environment variables. They do not automatically load an environment file. Use
-the existing controlled production credential procedure; never paste credentials
-into command arguments or logs.
+`npm run corpus:inspect` reads source evidence and reports eligibility, existing
+approval, and blockers. `--document-version <uuid>` narrows the selection. It
+does not approve pages or chunks, set reviewer identity, mark a version indexed,
+or activate retrieval. Write/reviewer flags are rejected before a connection is
+opened. Evidence is read in one repeatable-read, read-only transaction. Blocked
+evidence produces exit status 1 even when other versions are eligible; an
+eligible result is not approval.
 
-`npm run corpus:approve` checks evidence without changing review state.
-`--document-version <uuid>` narrows the selection. Applying requires
-`--apply --confirm-production-corpus-approval --reviewer-id <staff-uuid>`. The
-reviewer must be an active administrator linked to active staff in the selected
-facility, with no required passcode reset. This is a privileged operator tool,
-not an alternate public review API.
-
-Approval rechecks source hashes, page and chunk counts, current version, rights,
-lifecycle, and QA evidence inside a single transaction. Rejected pages or
-blocked chunks prevent approval. Table locks serialize changes to that evidence
-and reviewer authority; ordinary reads continue. Lock acquisition times out
-after five seconds and individual statements after sixty seconds. A failed
-transaction rolls back all its approvals. Logs use opaque identifiers and
-counts, never reviewer names, employee hints, source text, or raw database
-errors.
+The recovered bulk approval shortcut was deliberately excluded: it made content
+retrievable before embedding and qualification completed and accepted a reviewer
+UUID without authenticated approval proof. Corpus approval and activation must
+follow the existing controlled corpus protocol with authenticated reviewer
+authority, complete embedding and citation/refusal qualification, and atomic
+activation. This PR does not introduce that workflow.
 
 `npm run corpus:embed` calls the existing policy-ingestion CLI in dry-run mode
-for each distinct approved version. `--limit <positive-integer>` bounds the
-version count. Applying requires `--apply --confirm-production-embedding`; this
-sends eligible policy text to the configured provider under the existing CLI
-data-control guards. The Python tool must already be configured according to its
-controlled policy runbook. Shell interpolation is disabled. The wrapper reports
-malformed or failed subprocess results without exposing provider output.
-Existing persisted embeddings are skipped; an interrupted provider request can
-incur costs before persistence.
+for each distinct already-approved version. `--limit <positive-integer>` bounds
+the count. Applying requires `--apply --confirm-production-embedding`; the
+existing CLI validates the approved production project and controlled
+provider-egress requirements before processing. Shell interpolation is disabled.
+Logs contain opaque version IDs and counts, never source text, personnel,
+credentials, or raw provider errors. Persisted embeddings are skipped; an
+interrupted provider request can incur costs before persistence.
 
-Neither tool replaces human source review, provenance verification, provider
-approval, or the release procedure. No production operation is part of the
-automated tests.
+Commands use explicitly supplied environment variables, not automatic
+environment-file loading. Use the existing credential procedure. No production
+command is part of automated recovery validation.
 
-Run `npm run test:operations` for argument, evidence, and redaction tests. The
-Database quality workflow runs `npm run test:corpus:integration` against its
-freshly reset fictional database. Locally, set `CORPUS_TOOLS_TEST_DATABASE_URL`
-only to the isolated loopback test database (ports 54322 or 57322). Its
-fictional fixtures and approval changes are rolled back. It verifies approval,
-idempotency, reviewer rejection, and exclusion of a concurrent evidence writer.
+Run `npm run test:operations` for argument, evidence and redaction tests.
+Database quality runs `npm run test:corpus:integration` on its fresh fictional
+database. Local integration accepts only loopback test databases on ports 54322
+or 57322. It tests actual read-only evidence queries; fixture writes are rolled
+back and pending approval state is preserved.

@@ -89,7 +89,7 @@ jobs:
           POLICY_INGESTION_INTEGRATION_DB_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: npm run test:policy-ingestion
 
-      - name: Test fictional corpus approval and concurrency
+      - name: Test fictional read-only corpus inspection
         env:
           CORPUS_TOOLS_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:54322/postgres
         run: npm run test:corpus:integration

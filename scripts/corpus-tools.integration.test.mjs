@@ -2,10 +2,10 @@ import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import { it } from "node:test";
 import postgres from "postgres";
-import { applyApproval } from "./approve-policy-corpus.mjs";
+import { inspectCorpus } from "./inspect-policy-corpus.mjs";
 const target = process.env.CORPUS_TOOLS_TEST_DATABASE_URL;
 it(
-  "approves fictional evidence under real database constraints and serializes concurrent evidence edits",
+  "inspects fictional evidence in a read-only transaction without approving content",
   { skip: !target },
   async () => {
     const url = new URL(target);
@@ -15,6 +15,11 @@ it(
     const sql = postgres(target, { max: 1 });
     const rollback = new Error("fictional fixture rollback");
     try {
+      const existing = await inspectCorpus(
+        sql,
+        (await sql`select id from app_private.facilities`)[0].id,
+      );
+      assert.ok(Array.isArray(existing));
       await assert.rejects(
         sql.begin(async (tx) => {
           const source = readFileSync(
@@ -31,54 +36,30 @@ it(
             .replace("qa_status = 'approved',", "qa_status = 'pending',");
           await tx.unsafe(fixture);
           const [facility] = await tx`select id from app_private.facilities`;
-          await tx`insert into auth.users(id,email) values ('16161616-1616-4616-8616-161616161616','fictional-corpus-admin@example.invalid')`;
-          await tx`insert into app_private.user_accounts(auth_user_id,staff_member_id,sign_in_alias,role,status,must_change_passcode) values ('16161616-1616-4616-8616-161616161616','15151515-1515-4515-8515-151515151515','fictional-corpus-admin-auth@example.invalid','administrator','active',false)`;
-          const options = {
-            apply: true,
-            confirmed: true,
-            reviewerId: "15151515-1515-4515-8515-151515151515",
-            documentVersionId: "20202020-2020-4020-8020-202020202020",
+          const adapter = {
+            begin: async (fn) =>
+              fn((strings, ...values) => {
+                const query = strings.join("?");
+                if (query.startsWith("set transaction")) {
+                  assert.equal(
+                    query,
+                    "set transaction isolation level repeatable read, read only",
+                  );
+                  return [];
+                }
+                return tx(strings, ...values);
+              }),
           };
-          assert.equal(
-            await applyApproval(
-              { begin: (fn) => fn(tx) },
-              facility.id,
-              options,
-            ),
-            1,
+          const rows = await inspectCorpus(
+            adapter,
+            facility.id,
+            "20202020-2020-4020-8020-202020202020",
           );
-          assert.equal(
-            await applyApproval(
-              { begin: (fn) => fn(tx) },
-              facility.id,
-              options,
-            ),
-            0,
-          );
+          assert.equal(rows.length, 1);
+          assert.equal(rows[0].ingestion_qa_status, "pending");
           const [run] =
-            await tx`select status,qa_status from app_private.policy_ingestion_runs where id='30303030-3030-4030-8030-303030303030'`;
-          assert.equal(run.status, "ready");
-          assert.equal(run.qa_status, "approved");
-          await assert.rejects(
-            () =>
-              applyApproval({ begin: (fn) => fn(tx) }, facility.id, {
-                ...options,
-                reviewerId: "17171717-1717-4717-8717-171717171717",
-              }),
-            /reviewer/,
-          );
-          const competing = postgres(target, { max: 1 });
-          try {
-            await assert.rejects(
-              competing.begin(async (other) => {
-                await other`set local lock_timeout='50ms'`;
-                await other`lock table app_private.policy_pages in row exclusive mode`;
-              }),
-              (error) => error.code === "55P03",
-            );
-          } finally {
-            await competing.end();
-          }
+            await tx`select qa_status from app_private.policy_ingestion_runs where id='30303030-3030-4030-8030-303030303030'`;
+          assert.equal(run.qa_status, "pending");
           throw rollback;
         }),
         (error) => error === rollback,
