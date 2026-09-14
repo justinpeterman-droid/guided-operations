@@ -197,9 +197,9 @@ Other lifecycle states and mixed activation markers are ineligible. The tool
 does not approve evidence, authenticate a reviewer, stamp indexing completion,
 or activate a version. Those remain separate controlled actions described in
 [Corpus evidence inspection and embedding](../operations/corpus-approval-and-embedding.md).
-Controlled policy embedding is fail-closed to the explicitly
-confirmed Production connection. It must not be run until corpus rights and the
-current OpenAI project data-control review are approved.
+Controlled policy embedding is fail-closed to the explicitly confirmed
+Production connection. It must not be run until corpus rights and the current
+OpenAI project data-control review are approved.
 
 This is fictional local foundation proof, not measured corpus qualification. No
 vector index is selected yet because index type/operator, recall, latency,

@@ -16,7 +16,7 @@ class SupabaseEmbeddingRepository:
             import psycopg
         except ImportError as error:
             raise RuntimeError("Install the policy-ingestion import dependency before embedding") from error
-        options = {"sslmode": "require"} if self.environment == "production" else {}
+        options = {"sslmode": "verify-full"} if self.environment == "production" else {}
         return psycopg.connect(self.database_url, **options)
 
     def require_profile(self, profile: EmbeddingProfile) -> None:
