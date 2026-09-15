@@ -190,6 +190,15 @@ infer an ID from a filename. The command signs in through the normal guarded
 employee login with hidden terminal input and uses session-bound CSRF. Cookies
 stay only in process memory; passwords are never command-line arguments.
 
+Provision `POLICY_CORPUS_REVIEW_ORIGIN` independently in the protected operator
+environment from the verified Production release configuration. It must be the
+approved HTTPS origin, with no credentials, path, query or fragment. Do not
+derive it from `--origin` or copy it from an untrusted command. The tool
+compares the requested origin to this pin before reading private files,
+prompting for credentials or making any network request. Missing pins, hostname
+typos, different ports and Preview origins fail closed; redirects remain
+prohibited.
+
 ```powershell
 npm run corpus:review -- prepare --origin https://<approved-production-host> --document-version <version-uuid> --ingestion-run <run-uuid> --output <private-review-json>
 ```
@@ -259,14 +268,18 @@ atomic activation are still separate implementation/qualification gates.
 
 ### Candidate qualification status
 
-The operator implementation is prepared locally; no real corpus was read,
-approved, embedded or activated. Local formatting, lint, type checking,
-application/operations tests, build, secret/logging checks and npm dependency
-verification have been exercised. The new pgTAP suite is written but still
-requires execution against the full Supabase migration chain in Database
-quality. No local Docker/PostgreSQL runtime was available; local database
-package setup was unavailable in this sandbox. A passing unit test is not a
-passed SQL gate.
+The operator implementation remains a candidate; no real corpus approval,
+embedding or activation is established by its tests. On 2026-09-15, GitHub
+reported Web quality, Database quality, Authenticated browser quality and
+Recovery rehearsal successful for PR #65 commit
+`4394d376e68a5479d6a403ef4219748482faed19`. Codex review identified the missing
+independent Production-origin pin. The follow-up requires
+`POLICY_CORPUS_REVIEW_ORIGIN` before any private-file access, credential prompt
+or network request, with regression tests for missing/malformed configuration,
+unapproved hosts, ports and Preview origins. Qualification must be repeated for
+the final candidate; earlier green checks do not cover later changes. Hosted
+migration, backup/restore, operator authority and provider controls remain
+separate release gates.
 
 GitHub metadata on 2026-09-15 reports this repository as **public**, contrary to
 the private-repository wording in AGENTS.md and O-001. Do not infer permission

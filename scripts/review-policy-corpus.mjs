@@ -114,6 +114,29 @@ export function createReviewManifest(snapshot) {
   };
 }
 
+export function verifyApprovedOrigin(origin, approvedOrigin) {
+  if (!approvedOrigin) throw new Error("Approved production origin required");
+  let approved;
+  try {
+    approved = new URL(approvedOrigin);
+  } catch {
+    throw new Error("Invalid approved production origin");
+  }
+  if (
+    approved.protocol !== "https:" ||
+    approved.username ||
+    approved.password ||
+    approved.pathname !== "/" ||
+    approved.search ||
+    approved.hash ||
+    ["localhost", "127.0.0.1", "[::1]"].includes(approved.hostname) ||
+    origin !== approved.origin
+  )
+    throw new Error(
+      "Operator origin does not match approved production origin",
+    );
+}
+
 export function validateReviewedManifest(value) {
   const skeleton = createReviewManifest(value);
   if (
@@ -240,6 +263,8 @@ function hiddenInput(label, maxLength) {
 
 export async function main(argv = process.argv.slice(2)) {
   const options = parseArguments(argv);
+  // Provision independently in the protected operator environment, never from argv.
+  verifyApprovedOrigin(options.origin, process.env.POLICY_CORPUS_REVIEW_ORIGIN);
   if (process.env.NODE_TLS_REJECT_UNAUTHORIZED === "0")
     throw new Error("TLS verification required");
   let review;

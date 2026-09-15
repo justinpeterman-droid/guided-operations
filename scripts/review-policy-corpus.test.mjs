@@ -5,9 +5,59 @@ import {
   createReviewManifest,
   validateReviewedManifest,
   createOperatorClient,
+  verifyApprovedOrigin,
+  main,
 } from "./review-policy-corpus.mjs";
 
 const version = "aaaaaaaa-0000-4000-8000-000000000001";
+it("pins operator requests to independently configured production origin", () => {
+  const origin = "https://fictional.example.test";
+  verifyApprovedOrigin(origin, origin);
+  verifyApprovedOrigin(origin, `${origin}/`);
+  for (const configured of [
+    undefined,
+    "",
+    "invalid",
+    "http://fictional.example.test",
+    `${origin}/path`,
+    `${origin}?x=1`,
+    `${origin}#x`,
+    "https://user:password@fictional.example.test",
+    "https://localhost",
+  ])
+    assert.throws(() => verifyApprovedOrigin(origin, configured));
+  for (const target of [
+    "https://fictional.example.test.attacker.test",
+    "https://fictional-example.test",
+    `${origin}:444`,
+    "https://preview.example.test",
+  ])
+    assert.throws(() => verifyApprovedOrigin(target, origin));
+});
+it("rejects an unapproved origin before file reads, credential prompts or network access", async () => {
+  const previous = process.env.POLICY_CORPUS_REVIEW_ORIGIN;
+  process.env.POLICY_CORPUS_REVIEW_ORIGIN = "https://fictional.example.test";
+  try {
+    await assert.rejects(
+      main([
+        "approve",
+        "--origin",
+        "https://attacker.example.test",
+        "--manifest",
+        "missing.json",
+        "--source",
+        "missing.pdf",
+        "--review-record",
+        "missing-review.json",
+        "--confirm-reviewed-version",
+      ]),
+      /Operator origin does not match/,
+    );
+  } finally {
+    if (previous === undefined) delete process.env.POLICY_CORPUS_REVIEW_ORIGIN;
+    else process.env.POLICY_CORPUS_REVIEW_ORIGIN = previous;
+  }
+});
 const snapshot = {
   protocol: "policy-full-review-v1",
   versionId: version,
