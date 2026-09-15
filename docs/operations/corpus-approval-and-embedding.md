@@ -13,7 +13,8 @@ retrievable before embedding and qualification completed and accepted a reviewer
 UUID without authenticated approval proof. Corpus approval and activation must
 follow the existing controlled corpus protocol with authenticated reviewer
 authority, complete embedding and citation/refusal qualification, and atomic
-activation. This PR does not introduce that workflow.
+activation. The authenticated operator QA ceremony below implements review only.
+Candidate evaluation and searchable activation remain separate gates.
 
 ## Embedding eligibility is separate from activation
 
@@ -87,10 +88,10 @@ provider output out of Git and logs.
 
 Complete the controlled human page/extraction review and record authenticated
 reviewer authority against that exact immutable source/run. Retain pending
-version lifecycle and null `indexed_at`. The inspection and embedding tools do
-not provide the approval mutation ceremony; if no reviewed authenticated path is
-available, stop here and implement/qualify it. A caller-supplied reviewer UUID
-or direct bulk SQL is not a substitute.
+version lifecycle and null `indexed_at`. Use the authenticated operator ceremony
+below after its exact candidate and hosted migration are qualified. The
+inspection and embedding tools cannot approve content. A caller-supplied
+reviewer UUID or direct bulk SQL is not a substitute.
 
 ### Run a bounded first batch
 
@@ -142,3 +143,135 @@ Keep staged versions pending and unindexed; retained vectors stay inaccessible
 and can be reused after a reviewed fix. Do not delete source evidence or change
 activation markers as part of code rollback. No hosted change or corpus
 qualification is established by these tests.
+
+## Authenticated operator QA ceremony
+
+Implementation candidate: forward migration
+`20260915120000_add_authenticated_policy_review.sql`, the private
+`/api/admin/policy-review` endpoint, and `npm run corpus:review`. This is not
+hosted acceptance or evidence that any real source has been reviewed. The
+candidate includes the pending staging-eligibility and dependency fixes from PRs
+#63 and #64; those prerequisites must be qualified on the final release commit
+rather than inferred from their earlier checks.
+
+The owner performs this in the approved isolated Production operator
+environment. Do not run it in this coding workspace, CI, Preview, shared
+non-production, or a recorded terminal. The existing corpus excludes the
+deferred failed import; 235 is an inventory count, never a bulk-selection
+instruction. NCU policies stay in scope. No embedding provider is contacted by
+these review commands.
+
+### Release and authority requirements
+
+Before enabling the endpoint, qualify the forward migration and exact server
+candidate, follow the existing production migration procedure (including backup,
+dry-run and explicit release authority), and verify the isolated project/origin.
+Set `POLICY_CORPUS_REVIEW_ENABLED=true` only for that approved Production
+release. The endpoint returns 404 otherwise and in every non-production
+environment. Provide the trusted database certificate as server-only
+`SUPABASE_DB_CA`; its connection requires certificate validation and rejects
+weaker sslmode settings. Do not disable TLS verification to make an operator
+command work.
+
+This initial ceremony is deliberately owner-only: the authenticated active
+administrator must also be the exact source's recorded rights reviewer under
+O-028, in the same facility. No new administrator gains migration authority by
+role alone. Another QA reviewer requires a separately approved delegation
+contract. The live provider session, authoritative auth version, active staff,
+forced-passcode-change state, current source, unexpired rights and provider
+permission are checked again under locks. O-013 administrator assurance and all
+other existing real-data release requirements remain requirements; fresh
+passcode confirmation is not a claim to close them.
+
+### Prepare one exact source and run
+
+Use opaque IDs from the existing private inspector/operator inventory; never
+infer an ID from a filename. The command signs in through the normal guarded
+employee login with hidden terminal input and uses session-bound CSRF. Cookies
+stay only in process memory; passwords are never command-line arguments.
+
+```powershell
+npm run corpus:review -- prepare --origin https://<approved-production-host> --document-version <version-uuid> --ingestion-run <run-uuid> --output <private-review-json>
+```
+
+Preparation creates a new metadata-only file without overwriting existing work.
+It contains the exact source/run identity, a registry-evidence digest, page and
+chunk evidence fingerprints, physical page/ordinal mappings and text hashes for
+matching the private extraction artifacts, and a unique review ID. Every review
+decision starts false; preparation is neither human review nor approval. Keep
+this file in the restricted operator directory with private permissions/Windows
+ACLs. Do not paste it or content-bearing review artifacts into chat, Git, or
+logs.
+
+### Perform and record the human review
+
+For this first implementation use a full review, not an unapproved sampling
+threshold. In the authorized private source/extraction environment, compare the
+original bytes and version metadata, every physical page, extraction warnings,
+OCR/empty-page decisions, every chunk and its bounded page mapping. Verify the
+extraction is faithful and resolve discrepancies before proceeding. Never change
+canonical source text or stored hashes to fit a review.
+
+Maintain a private review record containing source/run identity, the evidence
+examined and the page/chunk decisions. After actually reviewing each item, set
+that item's `reviewed` field to true in the metadata manifest. Set
+`sourceReviewed` true only after source/version review. Put the SHA-256 of the
+completed private review record in `reviewRecordSha256`. Preserve every other
+field and the review ID. These are human attestations, not a machine-certified
+judgment; a command that automatically sets all decisions true is prohibited.
+
+### Approve for embedding
+
+```powershell
+npm run corpus:review -- approve --origin https://<approved-production-host> --manifest <private-review-json> --source <exact-original-source> --review-record <private-review-record> --confirm-reviewed-version
+```
+
+The operator verifies the source and private review-record file hashes locally;
+neither file is uploaded. It requests a fresh passcode confirmation for this
+specific submission. The server issues a purpose-bound, short-lived proof which
+never leaves that request. The database consumes the proof, rechecks the exact
+manifest against current source/page/chunk evidence, records the authenticated
+reviewer, and writes the allowlisted audit receipt atomically. Missing/duplicate
+items, stale hashes or warnings, rejected evidence, incomplete imports, multiple
+live ingestion runs, revoked sessions, or wrong owners fail closed.
+
+Success means **approved for embedding**. Version lifecycle remains `pending`
+and `indexed_at` remains null. Existing search and reader RPCs are unchanged. No
+vectors are generated and no source becomes searchable. The existing 16-chunk
+dry-run/apply procedure above remains the next step only after the OpenAI
+project/data-control evidence is verified.
+
+### Recovery
+
+A timeout is not proof of failure: re-inspect metadata first, then resubmit the
+same completed manifest and review ID through a newly authenticated command. The
+same exact review returns `already_approved` without a second receipt. Changed
+evidence or a reused ID with different input conflicts. Every retry still needs
+a fresh passcode proof; consumed proofs cannot be replayed.
+
+To withdraw the feature, set `POLICY_CORPUS_REVIEW_ENABLED=false` and stop
+operator review/embedding. Keep the forward migration and append-only receipts;
+do not edit an applied migration, undo human review via bulk SQL, delete staged
+vectors, or set searchable markers. Code rollback preserves pending versions and
+cannot activate them. Fix source evidence only through the existing
+new-run/review protocol. Evaluation against staged candidates and authenticated
+atomic activation are still separate implementation/qualification gates.
+
+### Candidate qualification status
+
+The operator implementation is prepared locally; no real corpus was read,
+approved, embedded or activated. Local formatting, lint, type checking,
+application/operations tests, build, secret/logging checks and npm dependency
+verification have been exercised. The new pgTAP suite is written but still
+requires execution against the full Supabase migration chain in Database
+quality. No local Docker/PostgreSQL runtime was available; local database
+package setup was unavailable in this sandbox. A passing unit test is not a
+passed SQL gate.
+
+GitHub metadata on 2026-09-15 reports this repository as **public**, contrary to
+the private-repository wording in AGENTS.md and O-001. Do not infer permission
+to publish controlled artifacts from that visibility. The owner explicitly
+authorized publishing the code-only candidate branch and opening a public draft
+PR on 2026-09-15 after the visibility discrepancy was surfaced. Repository
+visibility is not changed by this work. Production migration and release remain
+separately authorized actions after qualification.

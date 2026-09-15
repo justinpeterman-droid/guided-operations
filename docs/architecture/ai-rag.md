@@ -195,7 +195,11 @@ through embedding and qualification; this staging path does not grant search or
 reader access. Existing active/indexed versions retain resumable embedding.
 Other lifecycle states and mixed activation markers are ineligible. The tool
 does not approve evidence, authenticate a reviewer, stamp indexing completion,
-or activate a version. Those remain separate controlled actions described in
+or activate a version. The authenticated operator ceremony now supplies
+exact-evidence QA approval only; it derives reviewer identity from the current
+owner session, requires fresh purpose-bound confirmation, and records an
+append-only receipt while preserving pending/unindexed state. Candidate
+evaluation and atomic activation remain separate controlled actions described in
 [Corpus evidence inspection and embedding](../operations/corpus-approval-and-embedding.md).
 Controlled policy embedding is fail-closed to the explicitly confirmed
 Production connection. It must not be run until corpus rights and the current
