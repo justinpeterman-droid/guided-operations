@@ -145,6 +145,16 @@ values ('aaaaaaaa-0000-4000-8000-000000000071','15151515-1515-4515-8515-15151515
   'fictional-policy-owner-alias@example.invalid','administrator','active',false);
 insert into auth.sessions(id,user_id) values ('bbbbbbbb-0000-4000-8000-000000000071','aaaaaaaa-0000-4000-8000-000000000071');
 
+-- Keep a second administrator so negative actor tests reach this ceremony,
+-- rather than failing the unrelated last-administrator protection trigger.
+insert into auth.users(id,email) values ('ffffffff-0000-4000-8000-000000000071','fictional-backup-owner@example.invalid');
+insert into app_private.staff_members(id,facility_id,employee_lookup_hash,employee_number_hint,display_name,status)
+select 'ffffffff-0000-4000-8000-000000000072',id,repeat('f',64),'FICT-03','Fictional backup administrator','active'
+from app_private.facilities;
+insert into app_private.user_accounts(auth_user_id,staff_member_id,sign_in_alias,role,status,must_change_passcode)
+values ('ffffffff-0000-4000-8000-000000000071','ffffffff-0000-4000-8000-000000000072',
+  'fictional-backup-owner-alias@example.invalid','administrator','active',false);
+
 create function pg_temp.snapshot() returns jsonb language sql as $$
   select app_private.policy_review_snapshot('aaaaaaaa-0000-4000-8000-000000000071',
     'bbbbbbbb-0000-4000-8000-000000000071',1,
@@ -183,7 +193,7 @@ select throws_ok($$select pg_temp.approve(jsonb_set(review,'{pages,0,reviewed}',
   '22023','Incomplete policy review','every page needs explicit human review');
 select throws_ok($$select pg_temp.approve(jsonb_set(review,'{chunks,0,reviewed}','false')) from review_fixture$$,
   '22023','Incomplete policy review','every chunk needs explicit human review');
-select throws_ok($$select pg_temp.approve(jsonb_set(review,'{pages}',review->'pages' - 0)) from review_fixture$$,
+select throws_ok($$select pg_temp.approve(jsonb_set(review,'{pages}',(review->'pages') - 0)) from review_fixture$$,
   '40001','Policy review evidence changed','missing reviewed page rejected');
 select throws_ok($$select pg_temp.approve(jsonb_set(review,'{pages}',(review->'pages') || (review->'pages'->0))) from review_fixture$$,
   '40001','Policy review evidence changed','duplicate page rejected');
@@ -213,7 +223,7 @@ select throws_ok($$update app_private.user_accounts set role='officer' where aut
   select pg_temp.snapshot()$$,'42501','Policy review denied','officer denied');
 select throws_ok($$update app_private.user_accounts set status='disabled' where auth_user_id='aaaaaaaa-0000-4000-8000-000000000071';
   select pg_temp.snapshot()$$,'42501','Policy review denied','disabled account denied');
-select throws_ok($$update app_private.user_accounts set must_change_passcode=true where auth_user_id='aaaaaaaa-0000-4000-8000-000000000071';
+select throws_ok($$update app_private.user_accounts set must_change_passcode=true, temporary_passcode_expires_at=statement_timestamp()+interval '1 hour' where auth_user_id='aaaaaaaa-0000-4000-8000-000000000071';
   select pg_temp.snapshot()$$,'42501','Policy review denied','forced passcode change denied');
 select throws_ok($$update app_private.user_accounts set auth_version=2 where auth_user_id='aaaaaaaa-0000-4000-8000-000000000071';
   select pg_temp.snapshot()$$,'42501','Policy review denied','stale auth version denied');
@@ -234,7 +244,7 @@ select throws_ok($$update app_private.policy_document_versions set indexed_at=st
   where id='20202020-2020-4020-8020-202020202020'; select pg_temp.snapshot()$$,
   '22023','Policy evidence blocked','mixed activation markers denied');
 select throws_ok($$insert into app_private.staff_members(id,facility_id,employee_lookup_hash,employee_number_hint,display_name,status)
-  select 'eeeeeeee-0000-4000-8000-000000000071',id,repeat('e',64),'FICT-OTHER','Fictional other reviewer','active'
+  select 'eeeeeeee-0000-4000-8000-000000000071',id,repeat('e',64),'FICT-02','Fictional other reviewer','active'
   from app_private.facilities;
   update app_private.policy_document_versions set rights_reviewed_by='eeeeeeee-0000-4000-8000-000000000071'
   where id='20202020-2020-4020-8020-202020202020'; select pg_temp.snapshot()$$,
