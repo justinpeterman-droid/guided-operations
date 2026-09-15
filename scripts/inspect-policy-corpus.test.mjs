@@ -72,7 +72,7 @@ describe("inspection argument parsing", () => {
 });
 
 describe("approval classification", () => {
-  it("approves a clean pending version and lists every change", () => {
+  it("reports a clean pending version without granting approval", () => {
     const result = classifyVersion(pendingRow(), NOW);
     assert.equal(result.verdict, "needs-review");
     assert.deepEqual(result.blockers, []);
@@ -97,6 +97,39 @@ describe("approval classification", () => {
     );
     assert.equal(result.verdict, "already-approved");
     assert.deepEqual(result.changes, []);
+  });
+
+  it("keeps reviewed pending versions separate from activation", () => {
+    const row = pendingRow({
+      document_status: "approved",
+      approved_at: "2026-08-30T12:00:00.000Z",
+      ingestion_status: "ready",
+      ingestion_qa_status: "approved",
+      pages_approved: 6,
+      chunks_approved: 5,
+    });
+    const result = classifyVersion(row, NOW);
+    assert.equal(result.verdict, "already-approved");
+    assert.deepEqual(result.changes, []);
+    assert.equal(row.version_lifecycle, "pending");
+    assert.equal(row.indexed_at, null);
+    const pending = classifyVersion(pendingRow(), NOW);
+    assert.equal(pending.changes.includes("stamp the version indexed"), false);
+    assert.equal(pending.changes.includes("mark the version active"), false);
+  });
+
+  it("blocks inconsistent activation markers", () => {
+    for (const change of [
+      { version_lifecycle: "active", indexed_at: null },
+      {
+        version_lifecycle: "pending",
+        indexed_at: "2026-08-30T12:00:00.000Z",
+      },
+    ]) {
+      const result = classifyVersion(pendingRow(change), NOW);
+      assert.equal(result.verdict, "blocked");
+      assert.deepEqual(result.changes, []);
+    }
   });
 
   it("blocks a version whose rights were never cleared", () => {

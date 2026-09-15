@@ -3,11 +3,29 @@ from __future__ import annotations
 import os
 import unittest
 import uuid
+from types import SimpleNamespace
+from unittest.mock import Mock, patch
 
 from guided_policy_ingestion.embeddings.supabase import SupabaseEmbeddingRepository
 
 
 class EmbeddingRepositoryEligibilityTests(unittest.TestCase):
+    def test_production_connection_never_downgrades_certificate_verification(self) -> None:
+        connect = Mock()
+        target = "postgresql://fictional.invalid/postgres?sslmode=verify-full"
+        with patch.dict("sys.modules", {"psycopg": SimpleNamespace(connect=connect)}):
+            repository = SupabaseEmbeddingRepository(target, "fictional", "production")
+            repository._connect()
+            connect.assert_called_once_with(target, sslmode="verify-full")
+
+    def test_local_connection_retains_the_local_database_transport(self) -> None:
+        connect = Mock()
+        target = "postgresql://127.0.0.1:54322/postgres"
+        with patch.dict("sys.modules", {"psycopg": SimpleNamespace(connect=connect)}):
+            repository = SupabaseEmbeddingRepository(target, "fictional", "local")
+            repository._connect()
+            connect.assert_called_once_with(target)
+
     def test_shared_eligibility_requires_the_complete_page_range_approval(self) -> None:
         repository = SupabaseEmbeddingRepository(
             "postgresql://fictional.invalid/postgres",
