@@ -114,3 +114,47 @@ skipping database backup, or copying real operational data.
 - Revoke provider keys introduced solely for an abandoned dependency.
 - Record dependency removal and the evidence that its transitive risk and
   license obligations are gone.
+
+## 2026-09-15 security patch qualification
+
+This separate dependency change addresses the npm audit gate blocking corpus PR
+#63. It is a Tier 1 framework/security patch, not corpus approval or a
+production release.
+
+| Package                        | Previous | Candidate | Reason                                                     |
+| ------------------------------ | -------- | --------- | ---------------------------------------------------------- |
+| Next.js and eslint-config-next | 16.3.2   | 16.3.5    | Patched framework release with matching lint configuration |
+| js-yaml (transitive)           | 4.3.1    | 4.3.2     | Bound CPU use for empty YAML merge sources                 |
+| sharp (transitive)             | 0.35.3   | 0.35.4    | Patched prebuilt image libraries, including libheif        |
+
+The Next.js SWC/env/plugin packages and sharp platform/libvips packages move
+with their parent releases. Other package versions and unrelated platform
+metadata remain unchanged. No new install script is introduced by the changed
+lockfile entries. The sources and integrity hashes remain npm registry
+artifacts.
+
+Reviewed upstream evidence:
+
+- [Next.js Windows filesystem advisory](https://github.com/advisories/GHSA-p293-qw3h-jr36)
+  and
+  [AVIF image optimization advisory](https://github.com/advisories/GHSA-2xp9-vwfh-vxw4).
+- [Next.js 16.3.5 release notes](https://github.com/vercel/next.js/releases/tag/v16.3.5).
+- [js-yaml advisory](https://github.com/advisories/GHSA-2883-xcg3-v3hh) and
+  [4.3.2 release](https://github.com/nodeca/js-yaml/releases/tag/4.3.2).
+- [sharp advisory](https://github.com/advisories/GHSA-rgj7-g3m4-5g8c) and
+  [0.35.4 release](https://github.com/lovell/sharp/releases/tag/v0.35.4).
+- Installed version-matched Next.js guide:
+  `node_modules/next/dist/docs/01-app/01-getting-started/18-upgrading.md`.
+
+This stays within the existing Next.js 16.3 line and preserves the React pins.
+No framework source migration or codemod is needed for the dependency edits. The
+initial audit reproduced three affected packages (two high, one critical). Exact
+candidate checks and their limitations are recorded in the dependency PR. Hosted
+preview, authenticated browser qualification, independent security review, and
+owner promotion remain separate gates; a clean npm audit does not prove the
+production deployment has been patched.
+
+Rollback retains the previous manifest and lockfile in Git, but reverting them
+reintroduces the known audit failures. Prefer a corrected patch and withhold
+production promotion if qualification fails. There is no database or source-data
+migration to reverse, and no corpus approval state is changed by this update.
