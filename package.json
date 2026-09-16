@@ -46,7 +46,7 @@
     "test:corpus:integration": "node --test scripts/corpus-tools.integration.test.mjs"
   },
   "dependencies": {
-    "@supabase/supabase-js": "2.112.4",
+    "@supabase/supabase-js": "2.115.0",
     "class-variance-authority": "0.7.1",
     "clsx": "2.1.1",
     "lucide-react": "1.41.0",
