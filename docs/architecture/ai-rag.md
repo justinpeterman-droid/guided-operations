@@ -182,7 +182,7 @@ fixed configuration is `supabase-hybrid-rrf-v1`; changing its weights, constant,
 pool, or distance operator requires a new version and evaluation.
 
 The local ingestion tool also has a separate provider-style `embed` command. It
-processes one pre-registered, approved document version at a time, skips
+processes one pre-registered, QA-approved document version at a time, skips
 existing `(chunk, profile)` rows, and requires every physical page in each
 bounded chunk range to exist and be approved. It rechecks rights and QA while
 holding database share locks through each provider call, so evidence cannot be
@@ -190,9 +190,16 @@ changed between authorization and external egress. Any later page or chunk
 evidence change clears stale QA and a run cannot return to `ready` until the
 complete page range is freshly approved. The command validates
 model/order/dimension/non-zero vectors and inserts immutable profile-bound
-embeddings. Controlled policy embedding is fail-closed to the explicitly
-confirmed Production connection. It must not be run until corpus rights and the
-current OpenAI project data-control review are approved.
+embeddings. A reviewed version can remain `pending` with null `indexed_at`
+through embedding and qualification; this staging path does not grant search or
+reader access. Existing active/indexed versions retain resumable embedding.
+Other lifecycle states and mixed activation markers are ineligible. The tool
+does not approve evidence, authenticate a reviewer, stamp indexing completion,
+or activate a version. Those remain separate controlled actions described in
+[Corpus evidence inspection and embedding](../operations/corpus-approval-and-embedding.md).
+Controlled policy embedding is fail-closed to the explicitly confirmed
+Production connection. It must not be run until corpus rights and the current
+OpenAI project data-control review are approved.
 
 This is fictional local foundation proof, not measured corpus qualification. No
 vector index is selected yet because index type/operator, recall, latency,

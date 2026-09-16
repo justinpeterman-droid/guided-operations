@@ -61,6 +61,11 @@ export function classifyVersion(row, now = new Date()) {
   if (!["pending", "active"].includes(row.version_lifecycle))
     blockers.push("the version lifecycle cannot be approved");
   if (
+    (row.version_lifecycle === "pending" && row.indexed_at) ||
+    (row.version_lifecycle === "active" && !row.indexed_at)
+  )
+    blockers.push("the version activation markers are inconsistent");
+  if (
     row.ingestion_qa_status === "rejected" ||
     row.rejected_pages !== 0 ||
     row.blocked_chunks !== 0
@@ -102,11 +107,8 @@ export function classifyVersion(row, now = new Date()) {
   if (row.ingestion_status !== "ready")
     changes.push("move the ingestion run to ready");
   if (!row.approved_at) changes.push("stamp the version approved");
-  // The embedding query requires indexed_at, so embedding can never start
-  // until this is set; inspection never changes this state.
-  if (!row.indexed_at) changes.push("stamp the version indexed");
-  if (row.version_lifecycle !== "active")
-    changes.push("mark the version active");
+  // Review is separate from indexing and activation. A reviewed pending
+  // version must remain unindexed until embedding and qualification finish.
   if (row.document_status !== "approved")
     changes.push("mark the document approved");
 
@@ -197,7 +199,7 @@ export function printReport(classified) {
   line("");
   line(`Document versions examined : ${totals.total}`);
   line(`Eligible for review          : ${totals.needsReview}`);
-  line(`Already approved           : ${totals.alreadyApproved}`);
+  line(`QA review complete         : ${totals.alreadyApproved}`);
   line(`Blocked (needs attention)  : ${totals.blocked}`);
   line("");
   line(`Pages awaiting review  : ${totals.pages}`);

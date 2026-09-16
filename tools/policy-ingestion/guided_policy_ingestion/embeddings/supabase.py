@@ -16,7 +16,7 @@ class SupabaseEmbeddingRepository:
             import psycopg
         except ImportError as error:
             raise RuntimeError("Install the policy-ingestion import dependency before embedding") from error
-        options = {"sslmode": "require"} if self.environment == "production" else {}
+        options = {"sslmode": "verify-full"} if self.environment == "production" else {}
         return psycopg.connect(self.database_url, **options)
 
     def require_profile(self, profile: EmbeddingProfile) -> None:
@@ -34,13 +34,18 @@ class SupabaseEmbeddingRepository:
             raise RuntimeError("The registered embedding profile does not match the provider configuration")
 
     def _eligible_where(self) -> str:
+        # QA-approved pending versions may be embedded without activating retrieval.
+        # Keep the existing active/indexed path for resumable accepted versions.
+        # This predicate authorizes provider egress, not search or reader access.
         return """
           document.facility_id = %s
           and version.id = %s
           and document.status = 'approved'
           and version.approved_at is not null
-          and version.indexed_at is not null
-          and version.lifecycle_status = 'active'
+          and (
+            (version.lifecycle_status = 'pending' and version.indexed_at is null)
+            or (version.lifecycle_status = 'active' and version.indexed_at is not null)
+          )
           and version.is_current
           and version.rights_status in ('approved_internal_search', 'approved_full_reader')
           and version.external_ai_allowed
